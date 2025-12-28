@@ -352,3 +352,54 @@ h3 {
   }
 
 }
+@media (max-width: 480px) {
+  .movie-detail-container {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .movie-detail-content {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .movie-detail-poster {
+    width: 70%;
+    max-width: 260px;
+    margin: 0 auto;
+    border-radius: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .movie-detail-title {
+    font-size: 1.9rem;
+    text-align: center;
+  }
+
+  .movie-detail-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .movie-detail-meta {
+    text-align: center;
+    font-size: 0.9rem;
+  }
+}
+@media (max-width: 480px) {
+  .movie-detail-play-button {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+  }
+
+  .movie-detail-add-button {
+    width: 100%;
+    justify-content: center;
+    border-radius: 12px;
+  }
+}

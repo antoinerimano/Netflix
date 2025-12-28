@@ -149,3 +149,149 @@
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.65), 0 10px 22px rgba(0,0,0,.35) !important;
 }
+/* ===========================
+   MOBILE PREMIUM (TVShows)
+   =========================== */
+@media (max-width: 600px) {
+  .tvs {
+    background: radial-gradient(1200px 700px at 30% -20%, rgba(229,9,20,.18), transparent 55%),
+                radial-gradient(900px 600px at 110% 0%, rgba(255,255,255,.06), transparent 45%),
+                #141414 !important;
+    min-height: 100vh !important;
+  }
+
+  /* Filters: compact, sticky, premium glass */
+  .tvs-filters{
+    position: relative !important;
+    top: 0 !important;
+    z-index: 50 !important;
+
+    padding: 12px 12px 14px !important;
+    gap: 10px !important;
+
+    background: rgba(16,16,16,.72) !important;
+    border-bottom: 1px solid rgba(255,255,255,.08) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+
+  .tvs-filters select,
+  .tvs-filters input[type="number"],
+  .tvs-filters input[type="text"]{
+    width: 100% !important;
+    height: 46px !important;
+    border-radius: 14px !important;
+
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+
+    font-size: 0.98rem !important;
+    padding: 0 14px !important;
+
+    box-shadow: 0 10px 22px rgba(0,0,0,.22) !important;
+  }
+
+  .tvs-filters input::placeholder{
+    color: rgba(255,255,255,.55) !important;
+  }
+
+  .tvs-filters select:focus,
+  .tvs-filters input:focus{
+    border-color: rgba(229,9,20,.65) !important;
+    box-shadow: 0 0 0 4px rgba(229,9,20,.30), 0 10px 22px rgba(0,0,0,.22) !important;
+    background: rgba(255,255,255,.10) !important;
+  }
+
+  /* Rating wrapper */
+  .tvs-rating-input{
+    width: 100% !important;
+    padding: 0 14px !important;
+    height: 46px !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+  }
+
+  /* Search/Clear row -> 2 buttons full width */
+  .tvs-filters .load-more-container{
+    width: 100% !important;
+    margin: 4px 0 0 !important;
+    gap: 10px !important;
+  }
+
+  .tvs-filters .load-more-button{
+    flex: 1 !important;
+    justify-content: center !important;
+
+    height: 46px !important;
+    border-radius: 14px !important;
+
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+
+    box-shadow: 0 10px 22px rgba(0,0,0,.22) !important;
+    letter-spacing: .2px !important;
+  }
+
+  /* Make first button (Search) red without touching HTML */
+  .tvs-filters .load-more-container .load-more-button:first-child{
+    background: linear-gradient(180deg, rgba(229,9,20,1), rgba(180,5,12,1)) !important;
+    border-color: rgba(229,9,20,.65) !important;
+  }
+
+  .tvs-filters .load-more-container .load-more-button:first-child:hover{
+    filter: brightness(1.06) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .tvs-filters .load-more-container .load-more-button:last-child:hover{
+    background: rgba(255,255,255,.12) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .tvs-filters .load-more-container .load-more-button:active{
+    transform: translateY(0) scale(.99) !important;
+  }
+
+  /* Grid: denser + nicer cards */
+  .tvs-grid{
+    padding: 12px 12px 44px !important;
+    gap: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .tvs-card{
+    border-radius: 18px !important;
+    box-shadow: 0 14px 30px rgba(0,0,0,.45) !important;
+    transform: none !important;
+  }
+
+  .tvs-card img{
+    filter: brightness(.98) contrast(1.02) !important;
+    transform: none !important;
+  }
+
+  .tvs-card:active{
+    transform: scale(.985) !important;
+  }
+
+  .tvs-card__meta{
+    padding: 12px 12px 12px !important;
+    background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.86)) !important;
+  }
+
+  .tvs-card__title{
+    font-size: 0.95rem !important;
+    letter-spacing: .2px !important;
+  }
+
+  .tvs-card__sub{
+    font-size: 0.85rem !important;
+  }
+
+  /* Dropdown options dark (fix blanc) */
+  .tvs-filters select option{
+    background: #141414 !important;
+    color: rgba(255,255,255,.92) !important;
+  }
+}

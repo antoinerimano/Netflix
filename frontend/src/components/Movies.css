@@ -413,3 +413,65 @@
   box-shadow: 0 0 0 4px var(--filters-focus);
   border-color: rgba(229,9,20,0.55);
 }
+/* ===========================
+   MOBILE PREMIUM (Movies)
+   =========================== */
+@media (max-width: 600px){
+  /* Filters: 1 colonne, gros touch targets */
+  .movie-filters{
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin: 10px 10px 14px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .movie-filters input,
+  .movie-filters select{
+    height: 46px !important;
+    border-radius: 14px !important;
+    font-size: 0.98rem !important;
+  }
+
+  .movie-filters > div:last-child{
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .movie-filters button{
+    height: 46px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Grid: 2 colonnes + spacing premium */
+  .ps-store-movie-grid{
+    padding: 12px !important;
+    gap: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ps-store-movie-card{
+    border-radius: 18px !important;
+    box-shadow: 0 14px 30px rgba(0,0,0,.45) !important;
+  }
+
+  .ps-store-movie-card:active{
+    transform: scale(.985) !important;
+  }
+
+  .ps-store-movie-poster{
+    height: auto !important;
+    aspect-ratio: 2 / 3 !important;
+  }
+
+  .ps-store-movie-title{
+    font-size: 1.02rem !important;
+    letter-spacing: .2px !important;
+  }
+
+  .ps-store-movie-description{
+    font-size: 0.88rem !important;
+  }
+}

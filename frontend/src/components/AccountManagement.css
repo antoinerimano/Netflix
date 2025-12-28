@@ -1,61 +1,130 @@
-.account-management-container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 30px;
-  background-color: #1c1c1c;
-  color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+/* AccountManagement.css — Mobile-first polish (keeps desktop vibe) */
+
+:root{
+  --am-bg: #0f0f10;
+  --am-surface: #1c1c1c;
+  --am-surface-2: #232323;
+  --am-surface-3: #2b2b2b;
+  --am-text: #ffffff;
+  --am-muted: rgba(255,255,255,.72);
+  --am-border: rgba(255,255,255,.10);
+  --am-shadow: 0 18px 60px rgba(0,0,0,.55);
+  --am-shadow-soft: 0 10px 26px rgba(0,0,0,.35);
+  --am-accent: #e50914;
+  --am-accent-2: #ff2a36;
+  --am-radius: 16px;
+  --am-radius-sm: 12px;
 }
 
-.account-management-container h2 {
+*{ box-sizing: border-box; }
+
+.account-management-container{
+  max-width: 900px;
+  margin: 48px auto;
+  padding: 28px;
+  background: radial-gradient(1200px 600px at 20% -20%, rgba(229,9,20,.22), transparent 55%),
+              radial-gradient(900px 480px at 110% 10%, rgba(255,42,54,.10), transparent 55%),
+              var(--am-surface);
+  color: var(--am-text);
+  border-radius: var(--am-radius);
+  box-shadow: var(--am-shadow);
+  border: 1px solid var(--am-border);
+  overflow: hidden;
+}
+
+.account-management-container h2{
   text-align: center;
-  margin-bottom: 40px;
-  font-size: 28px;
-  font-weight: 600;
+  margin: 0 0 28px;
+  font-size: clamp(22px, 2.8vw, 30px);
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-shadow: 0 10px 32px rgba(0,0,0,.55);
 }
 
-.account-section {
-  margin-bottom: 40px;
-  padding: 20px;
-  background-color: #292929;
-  border-radius: 8px;
+.account-section{
+  margin-bottom: 22px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border-radius: var(--am-radius-sm);
+  border: 1px solid var(--am-border);
+  box-shadow: var(--am-shadow-soft);
 }
 
-.account-section h3 {
-  margin-bottom: 20px;
-  font-size: 22px;
-  font-weight: 500;
-  color: #e50914;
-  border-bottom: 2px solid #444;
-  padding-bottom: 10px;
-}
-
-.account-details label {
-  display: block;
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #bbb;
-}
-
-.account-details input,
-.account-details select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 2vh;
-  border: 1px solid #444;
-  border-radius: 4px;
-  background-color: #333;
-  color: #fff;
-  font-size: 16px;
-}
-
-.account-actions {
-  margin-top: 20px;
+.account-section h3{
+  margin: 0 0 14px;
+  font-size: clamp(16px, 2.2vw, 22px);
+  font-weight: 800;
+  color: var(--am-text);
   display: flex;
-  gap: 15px;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  position: relative;
 }
 
+.account-section h3::before{
+  content:"";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--am-accent);
+  box-shadow: 0 0 0 6px rgba(229,9,20,.14);
+}
+
+.account-details p{
+  margin: 10px 0;
+  color: var(--am-muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.account-details p strong{ color: var(--am-text); }
+
+.account-details label{
+  display:block;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--am-muted);
+}
+
+/* Inputs / selects */
+.account-details input,
+.account-details select,
+.email-input{
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px;
+  background: rgba(0,0,0,.28);
+  color: var(--am-text);
+  font-size: 16px; /* avoid iOS zoom */
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+}
+
+.account-details input::placeholder,
+.email-input::placeholder{ color: rgba(255,255,255,.45); }
+
+.account-details input:focus,
+.account-details select:focus,
+.email-input:focus{
+  border-color: rgba(229,9,20,.55);
+  box-shadow: 0 0 0 4px rgba(229,9,20,.18);
+}
+
+.error-input{
+  border-color: rgba(255,56,56,.9) !important;
+  box-shadow: 0 0 0 4px rgba(255,56,56,.14) !important;
+}
+
+.error-message{
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Buttons (unified + nicer on touch) */
 .save-button,
 .edit-button,
 .cancel-button,
@@ -63,348 +132,330 @@
 .add-profile-button,
 .remove-profile-button,
 .renew-button,
-.upgrade-button {
-  padding: 12px 20px;
+.upgrade-button,
+.change-button,
+.profile-button,
+.profile-edit button{
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
   border: none;
-  border-radius: 4px;
-  background-color: #e50914;
-  color: #fff;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 2vh;
-  transition: background-color 0.3s ease;
-  margin-top: 10px;
-  padding: 1vw;
-
+  font-weight: 800;
+  letter-spacing: .2px;
+  transition: transform .15s ease, filter .2s ease, background .2s ease, opacity .2s ease;
+  user-select: none;
 }
 
-.cancel-button:disabled {
-  background-color: #333;
-  /* Gray out the button */
-  cursor: not-allowed;
-  /* Change cursor to indicate it's disabled */
+/* Primary */
+.change-button,
+.profile-button,
+.profile-edit button,
+.save-button,
+.edit-button,
+.update-payment-button,
+.add-profile-button,
+.remove-profile-button,
+.renew-button,
+.upgrade-button{
+  background: linear-gradient(180deg, var(--am-accent-2), var(--am-accent));
+  color: #fff;
+  box-shadow: 0 12px 26px rgba(229,9,20,.22);
+}
+
+/* Secondary */
+.cancel-button{
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.90);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: none;
+}
+
+/* Sizes */
+.change-button{
+  font-size: 15px;
+  padding: 12px 14px;
+  margin: 10px 10px 0 0;
+  width: auto;
+}
+.profile-button{
+  font-size: 14px;
+  padding: 10px 12px;
+  margin-right: 1vw;
+}
+.profile-edit button{
+  font-size: 14px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  margin-right: 10px;
 }
 
 .save-button:hover,
 .edit-button:hover,
-.cancel-button:hover,
 .update-payment-button:hover,
 .add-profile-button:hover,
-.remove-profile-button:hover {
-  background-color: #b20710;
+.remove-profile-button:hover,
+.change-button:hover,
+.profile-button:hover,
+.profile-edit button:hover{
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.cancel-button:hover{
+  background: rgba(255,255,255,.14);
+  transform: translateY(-1px);
 }
 
-.profiles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+.cancel-button:disabled,
+.change-button:disabled,
+.profile-button:disabled,
+.profile-edit button:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.profile {
-  background-color: #333;
-  padding: 10px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: calc(50% - 10px);
-  /* Two profiles per row */
-}
-
-.profile-edit {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 20px;
-  background-color: #333;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.profile-edit label {
-  margin-bottom: 15px;
-  width: 100%;
-}
-
-.profile-edit label input[type="text"],
-.profile-edit label select,
-.profile-edit label input[type="file"] {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.profile-edit label select {
-  appearance: none;
-  background-color: #fff;
-  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M0 0l5 5 5-5z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 10px;
-}
-
-.profile-edit button {
-  padding: 10px 20px;
-  margin-right: 10px;
-  margin-top: 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  background-color: #e50914;
-  color: #fff;
-}
-
-.profile-button svg {
-  height: 20px;
-  width: 20px;
-}
-
-.profile-edit button:hover {
-  background-color: #b20710;
-}
-
-.profile-edit button:last-child {
-  background-color: #6c757d;
-}
-
-.profile-edit button:last-child:hover {
-  background-color: #5a6268;
-}
-
-
-.profile span {
-  flex-grow: 1;
-  font-size: 16px;
-  color: #fff;
-}
-
-.profile-view img {
-  height: 40px;
-  width: 40px;
-  border-radius: 50%;
-}
-
-.add-profile-button {
-  max-width: 100px;
-  max-height: 40px;
-  padding: 10px;
-  position: relative;
-  font-size: 1rem;
-}
-
-.add-profile-button svg {
-  height: 20px;
-  width: 20px;
-}
-
-.profile-button {
-  margin-right: 10px;
-  margin-top: 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  background-color: #e50914;
-  color: #fff;
-  margin-left: 10px;
-  padding: 0.5rem;
-}
-
-.delete-button:hover {
-  background-color: #c82333;
-}
-
-.profile-button svg {
-  height: 20px;
-  width: 20px;
-  fill: white;
-}
-
-
-.payment-history {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.payment-history th,
-.payment-history td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #444;
-}
-
-.payment-history th {
-  background-color: #444;
-  color: #fff;
-  font-weight: 600;
-}
-
-.payment-history tbody tr {
-  transition: background-color 0.3s ease;
-}
-
-.payment-history tbody tr:hover {
-  background-color: #333;
-}
-
-.avatar-options {
-  display: flex;
+/* Email input block */
+.email-input-container{
+  display: grid;
   gap: 10px;
   margin-top: 10px;
 }
 
-.avatar-option {
-  width: 50px;
-  height: 50px;
+/* Profiles grid */
+.profiles{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+/* Profile card */
+.profile{
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  width: 100%;
+  min-height: 110px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.profile:hover{
+  transform: translateY(-2px);
+  border-color: rgba(229,9,20,.25);
+}
+
+/* View mode layout */
+.profile-view{
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.profile-view img,
+.profile-avatar{
+  height: 52px;
+  width: 52px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 22px rgba(0,0,0,.35);
+}
+
+.profile-details p{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(255,255,255,.78);
+}
+.profile-details p strong{ color: rgba(255,255,255,.95); }
+
+/* Profile edit */
+.profile-edit{
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  width: 100%;
+  max-width: none;
+  box-shadow: none;
+}
+
+.profile-edit label{
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255,255,255,.75);
+}
+
+.profile-edit label input[type="text"],
+.profile-edit label select,
+.profile-edit label input[type="file"]{
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 8px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px;
+  background: rgba(0,0,0,.28);
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Avatar picker */
+.avatar-options{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.avatar-option{
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
   cursor: pointer;
   border: 2px solid transparent;
-  border-radius: 50%;
-  transition: border-color 0.3s ease;
+  transition: transform .15s ease, border-color .2s ease;
+}
+.avatar-option:hover{ transform: translateY(-2px); border-color: rgba(255,255,255,.22); }
+.avatar-option.selected{ border-color: rgba(229,9,20,.85); box-shadow: 0 0 0 6px rgba(229,9,20,.14); }
+
+/* Add profile button */
+.add-profile-button{
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-radius: 14px;
+  max-width: none;
+  max-height: none;
 }
 
-.avatar-option:hover {
-  border-color: #007bff;
+/* Payment history: keep scroll but make it feel intentional */
+.payment-history{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  background: rgba(0,0,0,.18);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
 }
 
-.avatar-option.selected {
-  border-color: #007bff;
-}
-
-.change-button {
-  background-color: #e50914;
-  color: white;
-  font-size: 2vh;
-  font-weight: bold;
-  border: none;
-  padding: 1vh;
-  margin: 1vh 2vh 2vh 0vh;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.change-button:hover {
-  background-color: #b20710;
-}
-
-.hidden {
-  display: none;
-}
-
-.email-input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1vh;
-}
-
-.cancel-button {
-  background-color: #333;
-  margin-left: 10px;
-}
-
-.cancel-button:hover {
-  background-color: #555;
-}
-
-.error-message {
-  color: red;
+.payment-history th,
+.payment-history td{
+  padding: 12px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,.08);
   font-size: 14px;
-  margin-top: 5px;
 }
 
-.error-input {
-  border: 1px solid red;
+.payment-history th{
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.92);
+  font-weight: 800;
 }
 
-@media screen and (max-width: 600px) {
-  .payment-history {
-    display: block;
-    overflow-x: auto;
+.payment-history tbody tr:hover{
+  background: rgba(255,255,255,.04);
+}
+
+/* ----------------------- */
+/* Mobile (<= 600px)       */
+/* ----------------------- */
+@media (max-width: 600px){
+  .account-management-container{
+    margin: 14px 12px !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .account-section{
+    padding: 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .account-details p{
+    font-size: 14px !important;
+  }
+
+  /* Buttons become stacked and easy to tap */
+  .account-details .change-button{
+    width: 100% !important;
+    margin: 10px 0 0 0 !important;
+    padding: 13px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .email-input-container{
+    gap: 10px !important;
+  }
+
+  .profiles{
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .profile{
+    padding: 12px !important;
+  }
+
+  .profile-view{
+    grid-template-columns: 56px 1fr !important;
+    gap: 12px !important;
+  }
+
+  .profile-view img,
+  .profile-avatar{
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .profile-details{
+    display: grid;
+    gap: 6px;
+  }
+
+  /* Action buttons aligned */
+  .profile-details .profile-button{
+    width: 100% !important;
+    padding: 12px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  /* payment table scroll */
+  .payment-history{
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
     white-space: nowrap;
-    /* Prevents content from wrapping */
   }
-
   .payment-history th,
-  .payment-history td {
-    padding: 8px;
-    font-size: 12px;
+  .payment-history td{
+    padding: 10px 10px !important;
+    font-size: 13px !important;
   }
 
-  .profile-edit {
-    font-size: 9px;
-    margin: 1px;
-
-  }
-
-  .profile-edit input,
-  .profile-edit select {
-    height: 10px;
-    width: 30px;
-    font-size: 8px;
-  }
-
-  .profile-edit button {
-    height: auto;
-    width: auto;
-    font-size: 10px;
-  }
-
-  .profile-edit img {
-    height: 7vw;
-    width: 7vw;
-  }
-
-  .avatar-options {
-    gap: 0px;
+  /* Avatar grid */
+  .avatar-option{
+    width: 56px !important;
+    height: 56px !important;
   }
 }
 
-@media (min-width:2500px) and (min-height: 1500px) {
-  .account-management-container {
-    max-width: 50%;
-    padding: 3vh;
+/* Big screens keep looking crisp */
+@media (min-width:2500px) and (min-height: 1500px){
+  .account-management-container{
+    max-width: 55%;
+    padding: 3.2vh;
   }
-
-  .account-section h3 {
-    font-size: 3vh;
-  }
-
-  .account-section {
-    padding: 2vh;
-  }
-
-  p {
-    font-size: 2vh;
-  }
-
-  .account-management-container h2 {
-    font-size: 4vh;
-  }
-
-  .profile-button svg {
-    height: 2vw;
-    width: 2vw;
-  }
-
-  .payment-history {
-    font-size: 2vh;
-  }
-
-  .add-profile-button svg {
-    height: 2vh;
-    width: 2vh;
-  }
-
-  .add-profile-button {
-    max-width: 2vw;
-    max-height: 3vh;
-    border-radius: 1vh;
-  }
+  .account-section h3{ font-size: 3vh; }
+  .account-section{ padding: 2.2vh; }
+  .account-management-container h2{ font-size: 4vh; }
+  .payment-history{ font-size: 2vh; }
 }

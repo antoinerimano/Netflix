@@ -238,78 +238,76 @@
   vertical-align: middle;
 }
 
-/* Mobile adjustments */
+/* =========================
+   MOBILE PRO (override only)
+   Colle ceci tout en bas
+   ========================= */
+
 @media (max-width: 768px) {
-  .row h2 {
-    font-size: 20px;
-    margin-left: 10px;
-  }
-
+  /* Sur mobile: pas besoin des grosses flèches */
   .custom-arrow {
-    width: 5vh;
-    height: 5vh;
-    font-size: 3vh;
-    top: 50%;
+    display: none !important;
   }
 
-  .movie-card {
-    max-height: 50vh;
+  .row {
+    margin-left: 10px !important;
+    margin-top: 14px !important;
+  }
+
+  .row h2 {
+    margin-left: 10px !important;
+    margin-bottom: 10px !important;
+    letter-spacing: 1px !important;
+    font-size: 18px !important;
   }
 
   .row .slick-slide img {
-    width: 95%;
-    height: auto;
-    max-height: 50vh;
+    border-radius: 14px !important;
+  }
+
+  .movie-card {
+    border-radius: 14px !important;
+  }
+
+  .movie-card img,
+  .movie-card video {
+    border-radius: 14px !important;
   }
 
   .movie-info {
-    padding: 5px;
-    font-size: 12px;
+    padding: 10px 10px 10px !important;
+  }
+}
+
+/* Touch devices: pas de hover => on garde l'info visible, sans casser desktop */
+@media (hover: none) and (pointer: coarse) {
+  .movie-info {
+    opacity: 1 !important;
   }
 
-  .title-line {
-    font-size: 15px;
-  }
-
-  .meta-row {
-    font-size: 11px;
-  }
-
-  .movie-description {
-    font-size: 12px;
-    -webkit-line-clamp: 2;
+  .movie-card:hover,
+  .movie-card:hover img,
+  .row .slick-slide img:hover {
+    transform: none !important;
   }
 }
 
 @media (max-width: 480px) {
   .row h2 {
-    font-size: 18px;
-    margin-left: 5px;
-  }
-
-  .movie-card {
-    max-height: 30vh;
-  }
-
-  .row .slick-slide img {
-    max-height: 35vh;
+    font-size: 16px !important;
+    margin-left: 6px !important;
   }
 
   .movie-info {
-    padding: 3px;
-    font-size: 10px;
+    padding: 9px !important;
   }
 
   .title-line {
-    font-size: 14px;
-  }
-
-  .meta-row {
-    font-size: 10px;
+    font-size: 14px !important;
   }
 
   .movie-description {
-    font-size: 11px;
-    -webkit-line-clamp: 2;
+    font-size: 11px !important;
   }
 }
+
