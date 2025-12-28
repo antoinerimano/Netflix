@@ -401,4 +401,7 @@
   .tvd-hero { height: 28vh; min-height: 200px; }
   .tvd-content { padding: 1.25rem min(5vw, 20px); gap: 1.25rem; }
   .tvd-actions .tvd-play { font-size: .95rem; padding: 9px 14px; }
+  .tvd-cast-grid {
+    display: none;
+  }
 }

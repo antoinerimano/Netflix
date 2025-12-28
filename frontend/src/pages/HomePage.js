@@ -70,41 +70,44 @@ const HomePage = () => {
     let startedAt = 0;
 
     const startFakeProgress15s = (durationMs = 15000, cap = 95) => {
-      // ✅ Coercion + garde-fous (évite NaN)
-      durationMs = Number(durationMs);
-      cap = Number(cap);
+      const safeDurationMs = Number(durationMs);
+      const safeCap = Number(cap);
 
-      if (!Number.isFinite(durationMs) || durationMs <= 0) durationMs = 15000;
-      if (!Number.isFinite(cap) || cap <= 0) cap = 95;
-      if (cap > 100) cap = 100;
+      const D = Number.isFinite(safeDurationMs) && safeDurationMs > 0 ? safeDurationMs : 15000;
+      const C = Number.isFinite(safeCap) && safeCap > 0 ? safeCap : 95;
 
       startedAt = Date.now();
       setProgress(0);
-      setElapsedSec(Math.ceil(durationMs / 1000));
+      setElapsedSec(Math.ceil(D / 1000));
       setStepIndex(0);
       setLoadingLabel(FAKE_STEPS[0].label);
 
+      let logged = false;
+
       timer = setInterval(() => {
         const elapsed = Date.now() - startedAt;
-
-        // countdown
         const remaining = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+
+        if (!logged) {
+          logged = true;
+          console.log("[fake-progress]", {
+            durationMs,
+            typeofDuration: typeof durationMs,
+            startedAt,
+            elapsed,
+            remaining,
+          });
+        }
+
         setElapsedSec(remaining);
 
-        // ✅ Evite division par 0 / NaN
-        const t = durationMs > 0 ? Math.min(1, elapsed / durationMs) : 1;
 
-        // progress eased (0 -> cap)
+        const t = Math.min(1, elapsed / D);
+
         const eased = 1 - Math.pow(1 - t, 3);
-        const nextProgress = Math.min(cap, Math.round(eased * cap));
+        const nextProgress = Math.min(C, Math.round(eased * C));
+        setProgress((p) => (p >= C ? p : Math.max(p, nextProgress)));
 
-        setProgress((p) => {
-          const prev = Number(p);
-          const safePrev = Number.isFinite(prev) ? prev : 0;
-          return safePrev >= cap ? safePrev : Math.max(safePrev, nextProgress);
-        });
-
-        // step label
         let idx = 0;
         for (let i = 0; i < FAKE_STEPS.length; i++) {
           if (nextProgress >= FAKE_STEPS[i].pct) idx = i;
@@ -113,6 +116,7 @@ const HomePage = () => {
         setLoadingLabel(FAKE_STEPS[idx].label);
       }, 120);
     };
+
 
 
     const stopFakeProgress = () => {

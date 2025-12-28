@@ -290,13 +290,7 @@ export default function WatchPage() {
     if (selectedKey === "custom") return;
 
     showHint("Loading source…");
-    const t1 = window.setTimeout(() => showHint("If the player is blank, try another provider."), 2400);
-    const t2 = window.setTimeout(() => showHint("Some sources block embedding. Switch provider."), 5200);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
   }, [resolvedUrl, selectedKey, showHint]);
 
   useEffect(() => {

@@ -388,6 +388,7 @@ fill: #ffffff;
 
   .search-profile input {
     font-size: 2vh;
+    max-width: 30vw;
   }
 
   .search-result-info p {
@@ -459,4 +460,10 @@ fill: #ffffff;
   .search-profile .search-results {
     transition: none !important;
   }
+}
+.logo-img{
+  height: auto;
+  max-width: 10vw;
+  margin: 2%;
+  margin-bottom: 0;
 }
