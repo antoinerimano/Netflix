@@ -16,5 +16,7 @@ ssh -L 3307:172.18.0.2:3306 root@5.181.1.90
 
 docker compose logs backend
 
+tmux new -s trailers
+
 
 

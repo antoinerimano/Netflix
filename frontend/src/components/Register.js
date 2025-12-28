@@ -17,6 +17,7 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
@@ -88,8 +89,13 @@ const Register = () => {
                         required
                         className="register-input"
                     />
-                    <button type="submit" className="register-button" disabled={loading}>
-                        {loading ? 'Registering...' : 'Sign Up'}
+                    <button
+                        type="submit"
+                        className={"register-button" + (loading ? " is-loading" : "")}
+                        disabled={loading}
+                        aria-busy={loading}
+                    >
+                        {loading ? "Registering..." : "Sign Up"}
                     </button>
                 </form>
                 <p className="login-redirect">

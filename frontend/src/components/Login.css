@@ -105,3 +105,37 @@
         font-size: 2vh;
     }
 }
+
+/* état disabled visible */
+.login-button:disabled,
+.register-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* état loading plus “clair” */
+.login-button.is-loading,
+.register-button.is-loading {
+  position: relative;
+  pointer-events: none;
+  filter: grayscale(10%);
+}
+
+/* mini spinner dans le bouton (optionnel) */
+.login-button.is-loading::after,
+.register-button.is-loading::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 10px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  vertical-align: -2px;
+  animation: btnspin 0.8s linear infinite;
+}
+
+@keyframes btnspin {
+  to { transform: rotate(360deg); }
+}
