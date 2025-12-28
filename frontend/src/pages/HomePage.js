@@ -86,7 +86,7 @@ const HomePage = () => {
 
       timer = setInterval(() => {
         const elapsed = Date.now() - startedAt;
-        const remaining = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+        const remaining = Math.max(0, Math.ceil((D - elapsed) / 1000));
 
         if (!logged) {
           logged = true;
@@ -99,7 +99,7 @@ const HomePage = () => {
           });
         }
 
-        setElapsedSec(remaining);
+        setElapsedSec(Number.isFinite(remaining) ? remaining : Math.ceil(D / 1000));
 
 
         const t = Math.min(1, elapsed / D);

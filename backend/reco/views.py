@@ -55,6 +55,12 @@ TITLE_HOME_CACHE_VERSION = "v1"
 TITLE_HOME_CACHE_TTL = 24 * 3600
 TITLE_HOME_CACHE_PREFIX = f"reco:titlehome:{TITLE_HOME_CACHE_VERSION}:"
 
+GENRE_ROWS_MAX = 2          # <= allège: 1 ou 2
+GENRE_CANDS_LIMIT = 250     # <= allège: 200-300 (au lieu de 700)
+GENRE_TOP_TTL = 30 * 60     # 30 min cache des top genres par profil
+GENRE_IDS_TTL = 6 * 3600    # 6h cache ids par genre (comme heavy)
+
+
 RANK_FIELDS = [
     "id", "type", "release_date", "first_air_date",
     "vote_average", "vote_count", "popularity", "original_language",
@@ -559,30 +565,59 @@ class RecoHomeView(APIView):
 
             _plan_mark("because_rows", n_seeds=len(seed2), planned=len(planned_rows))
 
-        # GENRES (heavy if cache miss, but you HAVE primary_genre_norm indexed)
+               # ====================================================
+        # GENRES (ALLÉGÉ + CACHÉ)
+        # Objectif:
+        # - Ne jamais refaire des grosses requêtes genres à chaque request
+        # - Limiter à 1-2 rows genres
+        # - Limiter cand_ids (250 au lieu de 700)
+        # ====================================================
         if recent_action_ids and _can_continue():
-            recent_titles = list(Title.objects.filter(id__in=recent_action_ids[:80]).only("id", "primary_genre_norm", "genre"))
-            genres = Counter()
-            for t in recent_titles:
-                g = (getattr(t, "primary_genre_norm", "") or "").strip().lower()
-                if not g:
-                    g = _primary_genre(getattr(t, "genre", "") or "")
-                if g:
-                    genres[g] += 1
+            # 1) Cache des "top genres" par profil (très rapide)
+            top_genres_ck = f"reco:home:top_genres:p{profile.id}"
+            top_genres = cache.get(top_genres_ck)
 
-            for g, _ in genres.most_common(2):
-                ids = _cached_ids(
-                    f"genre:{g}",
-                    lambda gg=g: (
-                        Title.objects.filter(primary_genre_norm=gg)
-                        .order_by("-popularity", "-vote_average")
-                        .values_list("id", flat=True)[:700]
-                    ),
-                    ttl=HEAVY_CANDS_TTL,
+            if not top_genres:
+                # Ne charge que le minimum
+                recent_titles = list(
+                    Title.objects
+                    .filter(id__in=recent_action_ids[:80])
+                    .only("id", "primary_genre_norm", "genre")
                 )
+                genres = Counter()
+                for t in recent_titles:
+                    g = (getattr(t, "primary_genre_norm", "") or "").strip().lower()
+                    if not g:
+                        g = _primary_genre(getattr(t, "genre", "") or "")
+                    if g:
+                        genres[g] += 1
+
+                # garde seulement 1-2 genres max
+                top_genres = [g for g, _ in genres.most_common(GENRE_ROWS_MAX)]
+                cache.set(top_genres_ck, top_genres, GENRE_TOP_TTL)
+
+            # 2) Pour chaque genre, cache la liste d'IDs (évite DB lente)
+            for g in (top_genres or [])[:GENRE_ROWS_MAX]:
+                if not _can_continue():
+                    break
+
+                # IMPORTANT: si tu as d'autres dimensions (lang/pays), ajoute-les au cache key
+                genre_ids_ck = f"reco:home:genre_ids:{g}"
+                ids = cache.get(genre_ids_ck)
+
+                if not ids:
+                    # Query simple, index-friendly (primary_genre_norm)
+                    ids = list(
+                        Title.objects
+                        .filter(primary_genre_norm=g)
+                        .order_by("-popularity", "-vote_average")
+                        .values_list("id", flat=True)[:GENRE_CANDS_LIMIT]
+                    )
+                    cache.set(genre_ids_ck, ids, GENRE_IDS_TTL)
+
                 planned_rows.append((f"genre:{g}", f"More {g.title()}", list(ids), 30))
 
-            _plan_mark("genres", top=len(genres), planned=len(planned_rows))
+            _plan_mark("genres", top=len(top_genres or []), planned=len(planned_rows))
 
         # STUDIO / NETWORK / COUNTRY via mapping tables
         if recent_action_ids and _can_continue():
