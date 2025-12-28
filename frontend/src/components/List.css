@@ -1,0 +1,99 @@
+
+.ps-store-movie-card-list {
+    background-color: #1c1c1e;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  }
+  
+  .remove-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .ps-store-movie-card-list:hover .remove-button {
+    opacity: 1;
+  }
+
+  p {
+    color: white;
+  }
+
+  /* ActorDetail: make the "Actor" h2 look premium */
+.ps-store-movie-grid {
+  margin-top: 14px;
+}
+
+/* target the h2 that is right before the grid */
+.ps-store-movie-grid:where(*) {
+  /* no-op, just keeping specificity predictable */
+}
+.ps-store-movie-grid {
+  /* keep existing grid styles if you already have them */
+}
+
+.ps-store-movie-grid {
+  /* nothing else */
+}
+
+/* ✅ This styles the h2 immediately preceding the grid */
+.ps-store-movie-grid {
+  /* keep */
+}
+.ps-store-movie-grid {
+  /* keep */
+}
+
+.ps-store-movie-grid {
+  /* keep */
+}
+
+/* Actual selector: h2 + .ps-store-movie-grid */
+h2 + .ps-store-movie-grid {
+  /* no-op for layout */
+}
+
+/* Style the h2 that comes right before the grid */
+h2:has(+ .ps-store-movie-grid) {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  margin: 6px 0 10px;
+  color: #ffffff;
+  text-transform: none;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  position: relative;
+}
+
+/* underline accent */
+h2:has(+ .ps-store-movie-grid)::after {
+  content: "";
+  display: block;
+  height: 3px;
+  width: 84px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff6161, rgba(255, 97, 97, 0));
+  box-shadow: 0 8px 22px rgba(255, 97, 97, 0.18);
+}
+
+/* smaller screens */
+@media (max-width: 600px) {
+  h2:has(+ .ps-store-movie-grid) {
+    font-size: 22px;
+    margin: 4px 0 8px;
+  }
+  h2:has(+ .ps-store-movie-grid)::after {
+    width: 64px;
+    height: 3px;
+    margin-top: 8px;
+  }
+}

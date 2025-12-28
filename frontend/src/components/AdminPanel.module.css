@@ -1,0 +1,268 @@
+/* ===== Admin Panel v2 (Netflix-dark, accessible, responsive) ===== */
+
+:root {
+  --bg: #141414;
+  --panel: #181818;
+  --surface: #232323;
+  --muted: #2b2b2b;
+  --text: #f5f5f5;
+  --text-muted: #c9c9c9;
+  --primary: #e50914;
+  --primary-600: #b0060f;
+  --ring: rgba(229, 9, 20, 0.55);
+  --shadow: 0 8px 48px rgba(0, 0, 0, 0.32);
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --gap: 14px;
+  --pad: 16px;
+}
+
+.admin-panel {
+  max-width: min(1200px, 95vw);
+  margin: 48px auto;
+  padding: 32px;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Inter", sans-serif;
+  color: var(--text);
+  border: 1.5px solid var(--primary);
+}
+
+.admin-panel h2 {
+  text-align: center;
+  margin: 0 0 22px 0;
+  color: var(--primary);
+  letter-spacing: 0.04em;
+  font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+  font-weight: 800;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+}
+
+/* ---------- Toolbar / Button row ---------- */
+.admin-panel .button-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 18px;
+}
+
+.admin-panel .button-row > div {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* ---------- Form ---------- */
+.admin-panel form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 14px;
+  align-items: start;
+  margin-bottom: 26px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allow shrinking */
+  position: relative;
+}
+
+.form-group > label {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin: 0 0 6px 2px;
+}
+
+/* Inputs & Buttons */
+.admin-panel input,
+.admin-panel button {
+  appearance: none;
+  padding: 11px 14px;
+  border: 1px solid #333;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  outline: none;
+  background: #101010;
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 120ms, box-shadow 120ms, transform 80ms;
+}
+
+.admin-panel input::placeholder {
+  color: #9a9a9a;
+}
+
+.admin-panel input:hover {
+  border-color: #3a3a3a;
+}
+
+.admin-panel input:focus,
+.admin-panel input:focus-visible {
+  border-color: var(--primary);
+  background: #1a1a1a;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* Primary button */
+.admin-panel button {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 10px rgba(229, 9, 20, 0.12);
+}
+
+.admin-panel button:hover {
+  background: var(--primary-600);
+  box-shadow: 0 4px 18px rgba(229, 9, 20, 0.22);
+}
+
+.admin-panel button:active {
+  transform: translateY(1px);
+}
+
+.admin-panel button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Variant buttons */
+.admin-panel .edit-btn {
+  background: #ffffff;
+  color: #181818;
+  border: 1px solid var(--primary);
+}
+.admin-panel .edit-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.admin-panel .delete-btn {
+  background: var(--primary);
+  color: #fff;
+}
+.admin-panel .delete-btn:hover {
+  background: var(--primary-600);
+}
+
+.reset-btn {
+  background: #fff;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  font-weight: 600;
+  padding: 9px 14px;
+}
+.reset-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Submit / Cancel row inside form (spans full width) */
+.admin-panel form .button-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ---------- Table ---------- */
+.admin-table-wrapper {
+  overflow: auto; /* enables sticky header */
+  margin-top: 6px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 14px rgba(0,0,0,0.25);
+}
+
+.admin-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  min-width: 680px; /* keep structure on small screens */
+}
+
+.admin-panel th,
+.admin-panel td {
+  padding: 12px 12px;
+  border-bottom: 1px solid #333;
+  text-align: left;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.admin-panel thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1a1a1a;
+  color: var(--primary);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--primary);
+}
+
+.admin-panel tbody tr:nth-child(odd) {
+  background: #202020;
+}
+.admin-panel tbody tr:hover {
+  background: #262626;
+}
+
+.admin-panel td:last-child {
+  white-space: nowrap;
+}
+
+.admin-panel td button {
+  margin-right: 8px;
+}
+
+/* ---------- Error text ---------- */
+.error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  min-height: 16px;
+}
+
+/* ---------- Compact on mobile ---------- */
+@media (max-width: 900px) {
+  .admin-panel {
+    padding: 16px;
+    margin: 28px auto;
+  }
+  .admin-panel .button-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .admin-panel form {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+  .admin-panel table,
+  .admin-panel th,
+  .admin-panel td {
+    font-size: 0.95rem;
+  }
+}
+
+/* ---------- Respect reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .admin-panel *,
+  .admin-panel *::before,
+  .admin-panel *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

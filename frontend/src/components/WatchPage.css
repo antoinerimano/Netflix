@@ -1,0 +1,870 @@
+.watchpage {
+  position: relative;
+  min-height: 100vh;
+  background: #07070b;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* Background layers */
+.watchpage__bg {
+  position: absolute;
+  inset: -24px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(18px);
+  transform: scale(1.08);
+  opacity: 0.30;
+}
+
+.watchpage__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(255,255,255,0.10), transparent 60%),
+    radial-gradient(900px 520px at 82% 10%, rgba(255,255,255,0.06), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.92));
+}
+
+.watchpage__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+/* Shell */
+.watchpage__shell {
+  position: relative;
+  z-index: 2;
+  width: min(1520px, 94vw);
+  margin: 0 auto;
+  padding: 18px 0 40px;
+}
+
+/* Topbar */
+.watchpage__topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10,10,14,0.50);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 70px rgba(0,0,0,0.45);
+}
+
+.watchpage__topmeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.watchpage__topTitle {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchpage__topSub {
+  font-size: 12px;
+  opacity: 0.80;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchpage__topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Buttons */
+.watchpage__pillBtn {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.watchpage__pillBtn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.watchpage__iconBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.watchpage__iconBtn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.watchpage__iconBtn:focus-visible,
+.watchpage__pillBtn:focus-visible,
+.watchpage__btn:focus-visible,
+.watchpage__chip:focus-visible,
+.watchpage__input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.32);
+}
+
+/* Layout */
+.watchpage__layout {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 14px;
+  align-items: start;
+}
+
+.watchpage__layout.panel-closed {
+  grid-template-columns: 1fr;
+}
+
+.watchpage__stage {
+  min-width: 0;
+}
+
+.watchpage__stage.is-pulsing .watchpage__playerWrap {
+  animation: wpPulse 650ms ease-out;
+}
+
+@keyframes wpPulse {
+  0% { transform: scale(0.997); filter: saturate(0.98); }
+  100% { transform: scale(1); filter: saturate(1); }
+}
+
+/* Stage header */
+.watchpage__stageHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(10,10,14,0.46);
+  backdrop-filter: blur(16px);
+}
+
+.watchpage__stageLeft {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.watchpage__posterMini {
+  width: 52px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.60);
+  flex: 0 0 auto;
+}
+
+.watchpage__stageText {
+  min-width: 0;
+}
+
+.watchpage__stageTitle {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchpage__stageDesc {
+  font-size: 12px;
+  opacity: 0.82;
+  margin-top: 3px;
+  max-width: 92ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchpage__stageRight {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Player */
+.watchpage__playerWrap {
+  position: relative;
+  margin-top: 14px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.72);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 34px 140px rgba(0,0,0,0.58);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+
+  /* ✅ reserve room above native controls for the hint */
+  --controls-safe-area: 56px;
+}
+
+.watchpage__iframe,
+.watchpage__video {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #000;
+}
+
+/* Soft hint overlay */
+.watchpage__softHint {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+
+  /* ✅ moved higher so it won't cover video controls */
+  bottom: calc(var(--controls-safe-area) + 14px);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(10,10,14,0.62);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+  animation: wpSlideUp 180ms ease-out;
+
+  /* ✅ do not block video clicks */
+  pointer-events: none;
+}
+
+.watchpage__softHintBtn {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  font-size: 12px;
+
+  /* ✅ button still clickable */
+  pointer-events: auto;
+}
+
+@keyframes wpSlideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.watchpage__softHintDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.90);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.10);
+}
+
+.watchpage__softHintText {
+  font-size: 12px;
+  opacity: 0.92;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.watchpage__softHintBtn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.22);
+}
+
+/* Empty state */
+.watchpage__empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.watchpage__emptyCard {
+  width: min(560px, 92%);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10,10,14,0.58);
+  backdrop-filter: blur(16px);
+  padding: 18px;
+  text-align: center;
+}
+
+.watchpage__emptyTitle {
+  font-size: 16px;
+  font-weight: 900;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.watchpage__emptyDesc {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.84;
+}
+
+/* Shortcuts */
+.watchpage__shortcuts {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.80;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ✅ section labels */
+.watchpage__shortcuts strong {
+  font-weight: 900;
+  opacity: 0.92;
+  margin-left: 6px;
+  margin-right: 2px;
+}
+
+.watchpage__kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  font-size: 11px;
+  opacity: 0.92;
+}
+
+/* Panel */
+.watchpage__panel {
+  position: sticky;
+  top: 84px;
+  height: calc(90vh - 300px);
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10,10,14,0.60);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 34px 140px rgba(0,0,0,0.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.watchpage__panelHeader {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.watchpage__panelTitle {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.watchpage__panelSub {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.80;
+}
+
+.watchpage__controls {
+  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+/* Provider chips */
+.watchpage__providerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.watchpage__chip {
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.watchpage__chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.watchpage__chip.is-active {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.34);
+}
+
+.watchpage__chipBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  opacity: 0.90;
+}
+
+/* Custom input */
+.watchpage__customBox {
+  display: flex;
+  gap: 10px;
+}
+
+.watchpage__input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.32);
+  color: #fff;
+  outline: none;
+}
+
+/* Buttons */
+.watchpage__btn {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.watchpage__btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.11);
+  border-color: rgba(255,255,255,0.24);
+}
+
+.watchpage__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.watchpage__btn--primary {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.26);
+}
+
+.watchpage__panelActions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Source info card */
+.watchpage__sourceInfo {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+}
+
+.watchpage__sourceTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.watchpage__sourceLabel {
+  font-size: 11px;
+  opacity: 0.76;
+}
+
+.watchpage__sourcePill {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  opacity: 0.92;
+}
+
+.watchpage__sourcePill.is-direct {
+  background: rgba(255,255,255,0.12);
+}
+
+.watchpage__sourcePill.is-embed {
+  background: rgba(255,255,255,0.06);
+}
+
+.watchpage__sourceValue {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.watchpage__sourceUrl {
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.80;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+/* Divider + tip */
+.watchpage__divider {
+  height: 1px;
+  background: rgba(255,255,255,0.10);
+  margin: 2px 0;
+}
+
+.watchpage__tipCard {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+}
+
+.watchpage__tipTitle {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.watchpage__tipText {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.80;
+  line-height: 1.35;
+}
+
+/* Panel foot */
+.watchpage__panelFoot {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.watchpage__panelFootTitle {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.watchpage__panelFootText {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.80;
+  line-height: 1.35;
+}
+
+/* Toast */
+.watchpage__toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(10,10,14,0.78);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 70px rgba(0,0,0,0.55);
+  font-size: 12px;
+  z-index: 9999;
+}
+
+/* Skeleton loader */
+.watchpage__center {
+  position: relative;
+  z-index: 2;
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+}
+
+.watchpage__skeleton {
+  width: min(1200px, 94vw);
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 14px;
+}
+
+.watchpage__skeleton .sk {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+.watchpage__skeleton .sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-60%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+  animation: shimmer 1.1s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-60%); }
+  100% { transform: translateX(60%); }
+}
+
+.sk-top { height: 70px; grid-column: 1 / -1; }
+.sk-main { height: 520px; }
+.sk-side { height: 520px; }
+
+.watchpage__errorCard {
+  width: min(520px, 92vw);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(10,10,14,0.60);
+  backdrop-filter: blur(18px);
+  padding: 16px;
+  text-align: center;
+}
+
+.watchpage__errorTitle {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.watchpage__errorText {
+  margin-top: 8px;
+  opacity: 0.82;
+  font-size: 12px;
+}
+
+/* Theater / Lights */
+.watchpage.is-theater .watchpage__layout {
+  grid-template-columns: 1fr 380px;
+}
+
+.watchpage.lights-off .watchpage__bg {
+  opacity: 0.18;
+}
+
+.watchpage.lights-off .watchpage__overlay {
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(255,255,255,0.05), transparent 62%),
+    radial-gradient(900px 520px at 82% 10%, rgba(255,255,255,0.03), transparent 62%),
+    linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.95));
+}
+
+.watchpage__sourcePrivate {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.78;
+  border: 1px dashed rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+  padding: 10px 10px;
+  border-radius: 12px;
+}
+
+/* --- Theme system (Dark/Bright) --- */
+.watchpage {
+  --wp-text: #ffffff;
+  --wp-muted: rgba(255,255,255,0.80);
+  --wp-border: rgba(255,255,255,0.12);
+  --wp-card: rgba(10,10,14,0.60);
+  --wp-card2: rgba(255,255,255,0.06);
+  --wp-bg: #07070b;
+  --wp-overlay-a: rgba(0,0,0,0.35);
+  --wp-overlay-b: rgba(0,0,0,0.92);
+  background: var(--wp-bg);
+  color: var(--wp-text);
+}
+
+/* ================================
+   NETFLIX STYLE (theme-light)
+   ================================ */
+.watchpage.theme-light {
+  /* Netflix-ish palette */
+  --wp-text: #f5f5f5;
+  --wp-muted: rgba(245,245,245,0.72);
+
+  --wp-bg: #ffffff;
+  --wp-card: rgba(255, 150, 168, 0.86);
+  --wp-card2: rgba(62, 22, 22, 0.06);
+  --wp-border: rgba(255,255,255,0.12);
+
+  --wp-accent: #e50914;
+  --wp-accentSoft: rgba(229,9,20,0.22);
+  --wp-accentGlow: rgba(229,9,20,0.35);
+
+  --wp-overlay-a: rgba(0,0,0,0.28);
+  --wp-overlay-b: rgba(0,0,0,0.92);
+
+  background: var(--wp-bg);
+  color: var(--wp-text);
+}
+
+/* Make overlay look like cinema Netflix */
+.watchpage.theme-light .watchpage__bg {
+  opacity: 0.22;
+  filter: blur(18px) saturate(1.1);
+}
+
+.watchpage.theme-light .watchpage__overlay {
+  background:
+    radial-gradient(860px 520px at 22% 0%, rgba(229,9,20,0.16), transparent 62%),
+    radial-gradient(860px 520px at 78% 8%, rgba(255,255,255,0.06), transparent 62%),
+    linear-gradient(180deg, var(--wp-overlay-a), var(--wp-overlay-b));
+}
+
+/* Buttons/chips adopt red accent */
+.watchpage.theme-light .watchpage__pillBtn:hover,
+.watchpage.theme-light .watchpage__iconBtn:hover,
+.watchpage.theme-light .watchpage__btn:hover,
+.watchpage.theme-light .watchpage__chip:hover {
+  border-color: rgba(255,255,255,0.20);
+  background: rgba(255,255,255,0.09);
+}
+
+/* Active chip = Netflix red */
+.watchpage.theme-light .watchpage__chip.is-active {
+  background: var(--wp-accentSoft);
+  border-color: rgba(229,9,20,0.55);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 0 4px rgba(229,9,20,0.10);
+}
+
+/* Small red badge */
+.watchpage.theme-light .watchpage__chipBadge {
+  border-color: rgba(229,9,20,0.55);
+  background: rgba(229,9,20,0.18);
+}
+
+/* Primary-feel buttons (keep your structure) */
+.watchpage.theme-light .watchpage__pillBtn {
+  position: relative;
+}
+.watchpage.theme-light .watchpage__pillBtn::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 0 4px rgba(229,9,20,0.12);
+  transition: opacity 140ms ease;
+}
+.watchpage.theme-light .watchpage__pillBtn:focus-visible::after {
+  opacity: 1;
+}
+
+/* Player wrap gets a subtle red edge glow */
+.watchpage.theme-light .watchpage__playerWrap {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow:
+    0 34px 140px rgba(0,0,0,0.62),
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 0 38px rgba(229,9,20,0.14);
+}
+
+/* Soft hint looks Netflix clean */
+.watchpage.theme-light .watchpage__softHint {
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(14,14,16,0.70);
+}
+.watchpage.theme-light .watchpage__softHintDot {
+  background: var(--wp-accent);
+  box-shadow: 0 0 0 4px rgba(229,9,20,0.18);
+}
+
+/* KBD keys slightly brighter */
+.watchpage.theme-light .watchpage__kbd {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+}
+
+.watchpage__sourceLoading {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.watchpage__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.18);
+  border-top-color: rgba(255,255,255,0.75);
+  animation: wpSpin 700ms linear infinite;
+}
+
+@keyframes wpSpin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .watchpage__layout {
+    grid-template-columns: 1fr;
+  }
+  .watchpage__panel {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+  .watchpage__skeleton {
+    grid-template-columns: 1fr;
+  }
+  .sk-side { display: none; }
+}
+
+@media (max-width: 560px) {
+  .watchpage__topActions { display: none; }
+  .watchpage__posterMini { display: none; }
+  .watchpage__playerWrap { border-radius: 18px; }
+
+  /* ✅ a bit smaller safe area on mobile */
+  .watchpage__playerWrap { --controls-safe-area: 44px; }
+}

@@ -1,0 +1,13 @@
+# dumps/logs
+Dump*.sql
+*.log
+backend/*.log
+
+# python
+__pycache__/
+*.pyc
+
+# node
+node_modules/
+dist/
+build/

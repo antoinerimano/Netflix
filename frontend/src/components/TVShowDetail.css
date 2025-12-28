@@ -1,0 +1,404 @@
+/* =========================================================
+   TVShowDetail.css — full stylesheet (Netflix-style)
+   Namespaced with .tvd* to avoid clashes
+   Behavior:
+   - Episode tiles EXPAND VERTICALLY on hover/focus to fit long descriptions
+   - Clean Netflix-like buttons, chips, and layout
+   - Sticky episodes header + season badge per card + fade-in on season change
+   ========================================================= */
+
+/* ---------- Page shell ---------- */
+.tvd {
+  color: #fff;
+  background: #0b0b0b;
+  min-height: 100vh;
+}
+
+/* ---------- Hero ---------- */
+.tvd-hero {
+  position: relative;
+  height: 38vh;
+  min-height: 240px;
+  max-height: 520px;
+}
+.tvd-hero__backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.6) saturate(1.05);
+}
+.tvd-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.0) 60%),
+    linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.2));
+}
+
+/* ---------- Main content (poster + info) ---------- */
+.tvd-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem min(5vw, 48px);
+}
+.tvd-content__poster {
+  width: min(200px, 28vw);
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+  border: 1px solid #1f1f1f;
+}
+.tvd-content__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.tvd-title {
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+.tvd-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  opacity: 0.9;
+  font-size: 0.95rem;
+  align-items: end;
+}
+.tvd-meta span::after {
+  content: '•';
+  margin: 0 0.55rem;
+  opacity: 0.55;
+}
+.tvd-meta span:last-child::after { content: ''; margin: 0; }
+.tvd-description {
+  opacity: 0.95;
+  line-height: 1.5;
+  max-width: 70ch;
+}
+
+/* ---------- Main actions (Play on … / Trailer) ---------- */
+.tvd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.tvd-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #e50914; /* Netflix red */
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 8px 18px rgba(229, 9, 20, 0.28);
+}
+.tvd-play:hover { background: #f6121d; transform: translateY(-1px) scale(1.03); }
+.tvd-play:active { transform: translateY(0) scale(0.99); }
+.tvd-play--2 { background: #333; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
+.tvd-play--2:hover { background: #3b3b3b; }
+.tvd-play--3 { background: #555; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
+.tvd-play--3:hover { background: #5f5f5f; }
+.tvd-play--4 { background: #6a6a6a; } /* trailer if present */
+.tvd-play--4:hover { background: #767676; }
+
+/* ---------- Seasons chips ---------- */
+.tvd-seasons {
+  padding: 0 min(5vw, 48px);
+  margin-top: 0.25rem;
+}
+.tvd-section-title {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.05rem;
+  opacity: 0.95;
+  font-weight: 700;
+}
+.tvd-seasons__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem;
+}
+.tvd-chip {
+  background: #1b1b1b;
+  color: #ddd;
+  border: 1px solid #2b2b2b;
+  padding: 0.44rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.tvd-chip:hover { background: #242424; border-color: #3a3a3a; transform: translateY(-1px); }
+.tvd-chip.is-active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(229, 9, 20, 0.35), inset 0 0 0 1px rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}
+
+/* ---------- Episodes grid ---------- */
+.tvd-episodes {
+  padding: 0 min(5vw, 48px) 2.6rem;
+  position: relative;
+}
+
+.tvd-add-button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #e50914;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  max-width: max-content;
+}
+.tvd-add-button:hover {
+  filter: brightness(1.1);
+}
+
+
+/* Sticky episodes header with season identity + count */
+.tvd-episodes__header {
+  top: 56px; /* adjust if your Navbar height differs */
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  background: linear-gradient(180deg, rgba(20,20,20,0.95), rgba(20,20,20,0.75) 80%, rgba(20,20,20,0));
+  backdrop-filter: blur(2px);
+}
+.tvd-episodes__header .tvd-section-title {
+  margin-right: 6px;
+}
+.tvd-season-pill {
+  display: inline-block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e50914;
+  color: #fff;
+  background: rgba(229, 9, 20, 0.18);
+}
+.tvd-ep-count {
+  color: #bdbdbd;
+  font-size: 0.9rem;
+}
+
+.tvd-episodes__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start; /* let items grow in height independently */
+}
+
+/* Fade-in when season changes */
+.tvd-episodes__grid--fadein {
+  animation: tvdFadeIn 220ms ease-out;
+}
+
+/* ---------- Episode card (VERTICAL EXPANSION ON HOVER) ---------- */
+.tvd-ep-card {
+  position: relative;
+  background: #141414;
+  border: 1px solid #1f1f1f;
+  border-radius: 12px;
+  overflow: hidden; /* keeps image rounded; hover body is inside flow */
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  will-change: transform;
+}
+.tvd-ep-card:focus-visible {
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.6);
+}
+
+/* Slight lift on hover; card grows to fit hover body */
+.tvd-ep-card:hover {
+  transform: translateY(-2px);
+  border-color: #262626;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.55);
+  z-index: 2;
+}
+
+/* On-card season badge */
+.tvd-ep-card__season-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 8px;
+  color: #fff;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.2);
+  pointer-events: none;
+}
+
+/* Still image row */
+.tvd-ep-card__still {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Basic info row (always visible) */
+.tvd-ep-card__info {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.tvd-ep-card__title {
+  font-weight: 700;
+  font-size: .98rem;
+  letter-spacing: .2px;
+}
+.tvd-ep-card__meta {
+  opacity: .8;
+  font-size: .85rem;
+}
+
+/* Hover body (IN-FLOW) — hidden by default, shown on hover/focus */
+.tvd-ep-card__hover {
+  display: none;
+  padding: 12px;
+  background: #181818;
+  border-top: 1px solid #222;
+  gap: 10px;
+  line-height: 1.38;
+}
+.tvd-ep-card__hover-title {
+  font-weight: 800;
+  font-size: 1rem;
+}
+.tvd-ep-card__hover-desc {
+  font-size: .92rem;
+  opacity: .95;
+  /* No max-height — let the card GROW to fit long descriptions */
+  white-space: pre-wrap;
+  margin-bottom: 3vh;
+}
+
+/* Show hover section when hovering or keyboard focusing inside */
+.tvd-ep-card:hover .tvd-ep-card__hover,
+.tvd-ep-card:focus-within .tvd-ep-card__hover {
+  display: grid;
+}
+
+/* Provider buttons inside the card */
+.tvd-ep-card__hover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.tvd-ep-card__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #e50914;
+  color: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 8px 18px rgba(229, 9, 20, 0.25);
+}
+.tvd-ep-card__play:hover { background: #f6121d; transform: translateY(-1px); }
+.tvd-ep-card__play:active { transform: translateY(0); }
+.tvd-ep-card__play--2 { background: #333; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
+.tvd-ep-card__play--2:hover { background: #3a3a3a; }
+.tvd-ep-card__play--3 { background: #555; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
+.tvd-ep-card__play--3:hover { background: #5f5f5f; }
+.tvd-ep-card__play--4 { background: #6a6a6a; }
+.tvd-ep-card__play--4:hover { background: #767676; }
+
+/* ---------- Footer & Buttons ---------- */
+.tvd-footer {
+  padding: 1.6rem min(5vw, 48px) 3rem;
+}
+.tvd-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: .5ch;
+  padding: .6rem .9rem;
+  border-radius: 8px;
+  color: #e4e4e4;
+  background: #1b1b1b;
+  text-decoration: none;
+  border: 1px solid #2a2a2a;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.tvd-btn-secondary:hover { background: #262626; border-color: #3a3a3a; transform: translateY(-1px); }
+
+
+/* TVShowDetail */
+.tvd-cast-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap:12px;
+}
+.tvd-cast-photo img{
+  width:100%;
+  aspect-ratio: 2/3;
+  object-fit:cover;
+  border-radius:12px;
+}
+.tvd-cast-photo--placeholder{
+  width:100%;
+  aspect-ratio: 2/3;
+  border-radius:12px;
+  background: rgba(255,255,255,0.08);
+}
+.tvd-cast-name{ font-weight:600;margin-top: 1vh; }
+.tvd-cast-role{ font-size:0.8rem; opacity:0.8; }
+
+/* ---------- Animations ---------- */
+@keyframes tvd-spin { to { transform: rotate(360deg); } }
+@keyframes tvdFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .tvd-hero { height: 32vh; }
+}
+@media (max-width: 820px) {
+  .tvd-content { grid-template-columns: 1fr; }
+  .tvd-content__poster { width: 42vw; max-width: 240px; }
+  .tvd-actions { gap: 10px; }
+  .tvd-episodes__grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+}
+@media (max-width: 520px) {
+  .tvd-hero { height: 28vh; min-height: 200px; }
+  .tvd-content { padding: 1.25rem min(5vw, 20px); gap: 1.25rem; }
+  .tvd-actions .tvd-play { font-size: .95rem; padding: 9px 14px; }
+}

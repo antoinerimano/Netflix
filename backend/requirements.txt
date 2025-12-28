@@ -1,0 +1,16 @@
+Django>=5.0
+gunicorn>=21.2
+mysqlclient>=2.2
+django-environ
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+django-sslserver
+drf-nested-routers
+numpy
+yt-dlp
+requests
+lightgbm
+scikit-learn
+python-dotenv
+sentence-transformers

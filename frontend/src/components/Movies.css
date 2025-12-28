@@ -1,0 +1,415 @@
+
+.ps-store-movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.ps-store-movie-card {
+  background-color: #1c1c1e;
+  border-radius: 2vh;
+  overflow: hidden;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.ps-store-movie-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.ps-store-movie-poster {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.ps-store-movie-info {
+  padding: 10px;
+  color: white;
+  text-align: center;
+}
+
+.ps-store-movie-title {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+.ps-store-movie-description {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #ccc;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;     /* number of lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 4.2em;  
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+@media (min-width:2500px) and (min-height: 1500px){
+  .ps-store-movie-grid{    
+    grid-template-columns: repeat(auto-fill, minmax(15vw, 1fr));
+  }
+  .ps-store-movie-poster{
+    height: 38vh;
+  }
+  .ps-store-movie-title {
+    font-size: 3vh;
+  }
+  .ps-store-movie-description {
+    font-size: 2vh;
+  }
+  .profile-dropdown{
+    width: 20vw;
+    font-size: 2vh;
+  }
+  select{width: 20vw; height: 3vh;}
+  input{width: 20vw; height: 3vh;}
+}
+
+
+  /* =========================
+   PRO FILTER BAR (Netflix-ish)
+   ========================= */
+
+/* Theme tokens (safe even if you already have variables) */
+:root{
+  --filters-bg: rgba(20,20,20,0.75);
+  --filters-border: rgba(255,255,255,0.08);
+  --filters-field: rgba(255,255,255,0.08);
+  --filters-field-hover: rgba(255,255,255,0.12);
+  --filters-text: rgba(255,255,255,0.92);
+  --filters-muted: rgba(255,255,255,0.55);
+  --filters-accent: #e50914; /* Netflix-ish red */
+  --filters-accent-hover: #ff2732;
+  --filters-focus: rgba(229,9,20,0.35);
+}
+
+/* Container */
+.movie-filters{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr 1.4fr 1.4fr auto;
+  gap: 12px;
+
+  padding: 14px 14px;
+  margin: 0 12px 18px;
+
+  border: 1px solid var(--filters-border);
+  background: var(--filters-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* Inputs / Select */
+.movie-filters input,
+.movie-filters select{
+  width: 100%;
+  height: 44px;
+
+  padding: 0 12px;
+  margin: 0;
+
+  font-size: 0.95rem;
+  color: var(--filters-text);
+
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--filters-field);
+
+  outline: none;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+/* Better placeholder */
+.movie-filters input::placeholder{
+  color: var(--filters-muted);
+}
+
+/* Hover / Focus */
+.movie-filters input:hover,
+.movie-filters select:hover{
+  background: var(--filters-field-hover);
+}
+
+.movie-filters input:focus,
+.movie-filters select:focus{
+  border-color: rgba(229,9,20,0.55);
+  box-shadow: 0 0 0 4px var(--filters-focus);
+  background: rgba(255,255,255,0.11);
+}
+
+/* Select arrow styling (cross-browser best-effort) */
+.movie-filters select{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding-right: 38px;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.70) 50%),
+    linear-gradient(135deg, rgba(255,255,255,0.70) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 18px,
+    calc(100% - 12px) 18px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Group blocks */
+.filter-group{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Range rows (rating + year range) */
+.range-row{
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+/* "to" between years */
+.to-text{
+  color: var(--filters-muted);
+  font-size: 0.9rem;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+/* Rating mini layout */
+.rating-input-wrapper{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.movie-filters label{
+  color: var(--filters-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Add room for star icon */
+.rating-input-wrapper input{
+  padding-right: 34px;
+}
+
+/* Star badge */
+.star{
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Buttons area (you have inline style in JSX; this will still apply) */
+.movie-filters button{
+  height: 44px;
+  padding: 0 14px;
+
+  border-radius: 12px;
+  border: 1px solid transparent;
+
+  background: var(--filters-accent);
+  color: #fff;
+
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  box-shadow: 0 10px 22px rgba(229,9,20,0.22);
+}
+
+.movie-filters button:hover{
+  background: var(--filters-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(229,9,20,0.28);
+}
+
+.movie-filters button:active{
+  transform: translateY(0px);
+  opacity: 0.95;
+}
+
+/* Make "Clear" look secondary without changing HTML:
+   It's the second button in the button row. */
+.movie-filters > div:last-child button:last-child{
+  background: rgba(255,255,255,0.10);
+  box-shadow: none;
+  border-color: rgba(255,255,255,0.14);
+}
+
+.movie-filters > div:last-child button:last-child:hover{
+  background: rgba(255,255,255,0.14);
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 1100px){
+  .movie-filters{
+    grid-template-columns: 1fr 1fr;
+  }
+  .movie-filters > div:last-child{
+    justify-content: flex-start !important; /* override your inline flex group */
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 520px){
+  .movie-filters{
+    grid-template-columns: 1fr;
+    margin: 0 10px 16px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+  .movie-filters input,
+  .movie-filters select,
+  .movie-filters button{
+    height: 46px;
+    border-radius: 12px;
+  }
+  .range-row{
+    gap: 8px;
+  }
+}
+
+/* Optional: reduce number input arrows (cleaner look) */
+.movie-filters input[type="number"]::-webkit-outer-spin-button,
+.movie-filters input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+.movie-filters input[type="number"]{
+  -moz-appearance: textfield;
+}
+
+/* =========================
+   GENRE SELECT (fix "white dropdown")
+   ========================= */
+
+/* Closed select */
+.movie-filters select {
+  background-color: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* When open (Chrome/Edge mostly): style the option list */
+.movie-filters select option {
+  background-color: #141414;   /* dark menu */
+  color: rgba(255,255,255,0.92);
+}
+
+/* If you have optgroups one day */
+.movie-filters select optgroup {
+  background-color: #141414;
+  color: rgba(255,255,255,0.70);
+}
+
+/* Better hover for the closed field */
+.movie-filters select:hover {
+  background-color: rgba(255,255,255,0.12);
+}
+
+/* Sometimes the first option "All Genres" looks washed out */
+.movie-filters select option[value=""] {
+  color: rgba(255,255,255,0.70);
+}
+
+/* (Optional) Improve dropdown on Windows high-contrast-ish cases */
+.movie-filters select:focus {
+  border-color: rgba(229,9,20,0.55);
+  box-shadow: 0 0 0 4px rgba(229,9,20,0.35);
+}
+/* =========================
+   YearMax arrows (custom)
+   ========================= */
+.year-max-control{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.year-max-control input{
+  flex: 1;
+}
+
+/* YearMax arrows: 2 flèches = 1 input (44px) */
+.year-max-arrows{
+  display: flex;
+  flex-direction: column;
+  height: 44px;      /* même hauteur que tes inputs */
+  gap: 0;            /* pas d’espace entre les deux */
+}
+
+.year-arrow-btn{
+  width: 34px;       /* largeur compacte (ajuste si tu veux) */
+  flex: 1;           /* chaque flèche = moitié de 44px */
+  height: auto;      /* laisse flex gérer la hauteur */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.80);
+
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 140ms ease;
+  user-select: none;
+
+  font-size: 10px;   /* flèches plus petites */
+  line-height: 1;
+  padding: 0;        /* important: évite qu’elles grossissent */
+}
+
+/* coins arrondis propres (comme un mini "input") */
+.year-arrow-btn.up{
+  border-radius: 10px 10px 0 0;
+  border-bottom: none;
+}
+.year-arrow-btn.down{
+  border-radius: 0 0 10px 10px;
+}
+
+.year-arrow-btn:hover{
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+.year-arrow-btn:active{
+  transform: translateY(0px);
+  opacity: 0.95;
+}
+.year-arrow-btn:focus{
+  outline: none;
+  box-shadow: 0 0 0 4px var(--filters-focus);
+  border-color: rgba(229,9,20,0.55);
+}

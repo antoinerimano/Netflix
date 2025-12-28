@@ -1,0 +1,354 @@
+/* src/components/MovieDetail.css */
+.movie-detail-container {
+  position: relative;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  min-height: 100vh;
+  /* Ensure minimum height for scrolling */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 3vh;
+  /* Increased padding around the container */
+  box-sizing: border-box;
+}
+
+.movie-detail-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.movie-detail-backdrop {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(20px);
+}
+
+.movie-detail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9));
+  z-index: -1;
+}
+
+.movie-detail-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  /* Align items to the top on large screens */
+  gap: 3vh;
+  /* Increased gap between poster and info */
+  max-width: 90%;
+  max-height: 90%;
+  padding: 4vw;
+  /* Increased padding inside the content */
+  box-sizing: border-box;
+  flex-direction: row;
+  /* Default layout for larger screens */
+  overflow: hidden;
+  /* Enable scrolling if needed */
+}
+
+.movie-detail-poster {
+  border-radius: 12px;
+  /* Slightly larger border radius */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+  /* Larger shadow for more depth */
+  width: 20vw;
+  /* Slightly wider poster */
+  transition: transform 0.3s ease;
+  height: auto;
+}
+
+.movie-detail-poster:hover {
+  transform: scale(1.1);
+  /* Slightly larger scale on hover */
+}
+
+.movie-detail-info {
+  max-width: 75vw;
+  /* Increased max width for better spacing */
+}
+
+.movie-detail-title {
+  font-size: 5vh;
+  /* Larger font size */
+  font-weight: bold;
+  margin-bottom: 1vh;
+  /* Increased margin bottom */
+}
+
+.movie-detail-description {
+  font-size: 2vh;
+  /* Larger font size */
+  line-height: 1.8;
+  /* Increased line height for readability */
+  margin-bottom: 1vh;
+  /* Increased margin bottom */
+}
+
+.movie-detail-meta {
+  font-size: 2vh;
+  /* Larger font size */
+  margin-bottom: 1vh;
+  /* Increased margin bottom */
+}
+
+.movie-detail-meta span {
+  display: block;
+  margin-bottom: 1vh;
+  /* Increased margin bottom */
+}
+
+.movie-detail-director,
+.movie-detail-cast {
+  font-size: 2vh;
+  /* Larger font size */
+  margin-bottom: 1vh;
+  /* Increased margin bottom */
+}
+
+.movie-detail-play-button {
+  background-color: #e50914;
+  color: white;
+  font-size: 1rem;
+  border: none;
+  border-radius: 1vh;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 2vh 0;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.movie-detail-play-button svg {
+  fill: white;
+  height: 3vh;
+  width: 3vh;
+  margin-right: 1vh;
+}
+
+
+.movie-detail-play-button:hover {
+  background-color: #f40612;
+}
+
+h3 {
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+}
+
+.movie-detail-add-button {
+  background-color: #000000;
+  color: white;
+  padding: 2vh;
+  /* Larger padding for the button */
+  font-size: 2vh;
+  /* Larger font size */
+  border: none;
+  border-radius: 1vh;
+  /* Larger border radius */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-items: center;
+  margin-top: 1vh;
+  display: flex;
+}
+
+.movie-detail-add-button svg {
+  fill: white;
+  height: 2vh;
+  width: 2vh;
+}
+
+
+.movie-detail-add-button:hover {
+  background-color: #f40612;
+}
+
+.btn {
+  padding: 1vh;
+  margin-right: 1vh;
+  border: none;
+  border-radius: 1vh;
+  font-size: 2vh;
+  cursor: pointer;
+  margin-bottom: 1vh;
+  transition: background-color 0.3s ease;
+}
+
+.btn-continue {
+  background-color: #f44336;
+  /* Green */
+  color: white;
+}
+
+.btn-continue:hover {
+  background-color: #da190b;
+  ;
+}
+
+.btn-start-over {
+  background-color: #f44336;
+  /* Red */
+  color: white;
+}
+
+.btn-start-over:hover {
+  background-color: #da190b;
+}
+
+
+/* MovieDetail */
+.movie-detail-cast-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap:12px;
+  margin-top:10px;
+}
+.movie-detail-cast-card{ display:flex; flex-direction:column; gap:6px; }
+.movie-detail-cast-photo img{
+  width:100%;
+  aspect-ratio: 2/3;
+  object-fit:cover;
+  border-radius:10px;
+}
+.movie-detail-cast-photo--placeholder{
+  width:100%;
+  aspect-ratio: 2/3;
+  border-radius:10px;
+  background: rgba(255,255,255,0.08);
+}
+.movie-detail-cast-name{ font-size: 0.9rem; font-weight:600; }
+.movie-detail-cast-role{ font-size: 0.8rem; opacity:0.8; }
+
+ 
+/* Responsive Design */
+@media (max-width: 768px) {
+  .movie-detail-content {
+    flex-direction: column;
+    /* Stack elements vertically on tablets and smaller screens */
+    padding: 20px;
+    /* Adjust padding for smaller screens */
+    align-items: center;
+    /* Center align items on smaller screens */
+    overflow: auto;
+    /* Ensure scrolling is enabled */
+    gap: 20px;
+    /* Reduced gap for smaller screens */
+  }
+
+  .movie-detail-poster {
+    width: 100%;
+    /* Full width for mobile devices */
+    max-width: 280px;
+    /* Max width for mobile devices */
+  }
+
+  .movie-detail-title {
+    font-size: 2.5em;
+    /* Adjust font size for tablets and mobile devices */
+    margin-bottom: 15px;
+    /* Adjust margin bottom */
+    margin: 10px;
+  }
+
+  .movie-detail-description {
+    font-size: 1.2em;
+    /* Adjust font size for tablets and mobile devices */
+    margin-bottom: 25px;
+    /* Adjust margin bottom */
+    margin: 10px;
+  }
+
+  .movie-detail-meta {
+    font-size: 1.2em;
+    /* Adjust font size for tablets and mobile devices */
+    margin-bottom: 25px;
+    /* Adjust margin bottom */
+    margin: 10px;
+  }
+
+  .movie-detail-director,
+  .movie-detail-cast {
+    font-size: 1.2em;
+    /* Adjust font size for tablets and mobile devices */
+    margin-bottom: 15px;
+    /* Adjust margin bottom */
+    margin: 10px;
+  }
+
+  .movie-detail-play-button {
+    font-size: 1.2em;
+    /* Adjust font size for tablets and mobile devices */
+    padding: 1vh;
+    /* Adjust padding */
+    margin: 10px;
+    display: flex;
+  }
+
+  .movie-detail-add-button {
+    margin-left: 1vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .movie-detail-title {
+    font-size: 2em;
+    /* Smaller font size for very small screens */
+    margin-bottom: 1vh;
+    /* Adjust margin bottom */
+    margin: 1vh;
+  }
+
+    .movie-detail-description {
+        font-size: 1em;
+        margin-bottom: 20px;
+        margin: 1vh;
+        line-height: normal;
+    }
+
+  .movie-detail-meta {
+    font-size: 1em;
+    /* Smaller font size for very small screens */
+    margin-bottom: 20px;
+    /* Adjust margin bottom */
+    margin: 10px;
+  }
+
+  .movie-detail-director,
+  .movie-detail-cast {
+    display: none;
+  }
+
+  .movie-detail-play-button {
+    font-size: 1em;
+    /* Smaller font size for very small screens */
+    padding: 1vh;
+    /* Adjust padding */
+    margin: 10px;
+    display: flex;
+  }
+
+  .movie-detail-locale{
+    display: none;
+  }
+
+  .movie-detail-add-button {
+    margin-left: 2vw;
+  }
+
+}

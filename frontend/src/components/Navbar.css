@@ -1,0 +1,462 @@
+/* src/components/Navbar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  width: 100%;
+  height: auto;
+}
+
+.logo {
+  font-size: 3vh;
+  font-weight: bold;
+  color: #e50914;
+  flex: 1;
+}
+
+.logo svg{
+height: auto;
+max-width: 10vw;
+margin: 2%;
+margin-bottom: 0;
+fill: #ffffff;
+}
+
+.logo:hover {
+  cursor: pointer;
+
+}
+
+.nav-links {
+  display: flex;
+  margin-right: 100px;
+  flex: 2;
+}
+
+.nav-links li {
+  margin: 0 15px;
+  font-size: 1rem;
+}
+
+.nav-links li:hover {
+  background-color: rgb(196, 67, 67);
+  /* Background color on hover */
+  font-weight: bold;
+  cursor: pointer;
+  font-size: large;
+  padding: 3px;
+}
+
+.menu-toggle {
+  display: none;
+  /* Hide menu toggle by default */
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  margin-left: 15px;
+  flex: 2;
+}
+
+.menu-profile {
+  display: flex;
+  align-items: center;
+}
+
+.search-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: 15px;
+
+
+}
+
+.search-profile input {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  /* compact default width, scales with viewport but capped */
+  width: clamp(180px, 18vw, 360px);
+  transition: width 0.35s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.profile-icon,
+.profile-icon img {
+  width: 40px;
+  /* Set the desired width */
+  height: 40px;
+  /* Set the desired height */
+  border-radius: 50%;
+  /* Make it a circle */
+  object-fit: cover;
+  /* Crop to fit within the circle */
+  cursor: pointer;
+}
+
+.profile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  /* Space between input and profile icon */
+
+}
+
+.search-profile {
+  position: relative;
+  /* This allows the dropdown to be positioned relative to this div */
+  margin-right: 15px;
+}
+
+.search-results {
+  position: absolute;
+  top: 130%;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid #333;
+  max-height: max-content;
+  overflow-y: auto;
+  width: 100%;
+  z-index: 3000000;
+}
+
+.search-results ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #555;
+}
+
+.search-result-image {
+  width: 60px;
+  height: 90px;
+  object-fit: contain;
+  margin-right: 10px;
+}
+
+.search-result-info h3 {
+  margin: 0;
+  font-size: 16px;
+  color: white;
+  display: flex;
+  align-items: flex-start;
+}
+
+.search-result-info p {
+  margin: 0;
+  font-size: 10px;
+  color: #ccc;
+}
+
+.navbar .logout-button,
+.navbar .login-button {
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.navbar .logout-button:hover,
+.navbar .login-button:hover {
+  text-decoration: underline;
+}
+
+.profile-container {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #141414;
+  border: 1px solid #333;
+  border-radius: 5px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  width: 200px;
+  z-index: 30000000;
+}
+
+.profile-option {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.profile-option img {
+  width: 4vh;
+  height: 4vh;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.profile-option:hover {
+  background-color: #333;
+}
+
+.dropdown-divider {
+  border-top: 1px solid #ccc;
+  margin: 5px 0;
+}
+
+.profile-option.selected {
+  background-color: #413d3d;
+  /* Light gray background for highlight */
+  border-left: 4px solid rgb(196, 67, 67);
+  /* Blue border on the left for emphasis */
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.badge--movie {
+  background: #2a2a2a;
+  color: #eee;
+}
+
+.badge--tv {
+  background: #e50914;
+  color: #fff;
+}
+
+.search-result-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  /* clip desc to 2 lines in dropdown */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.9;
+}
+
+@media (min-width:2500px) and (min-height: 1500px) {
+
+  .search-profile input {
+    width: 30vw;
+    border-radius: 1vw;
+    height: 3vh;
+    font-size: 2rem;
+  }
+
+  .profile-icon,
+  .profile-icon img {
+    width: 5vh;
+    height: 5vh;
+  }
+
+  .search-result-item {}
+
+  .search-result-info p {
+    display: none;
+  }
+
+  .search-result-image {
+    width: 300px;
+    height: 400px;
+  }
+
+  .search-results {
+    max-height: 50vh;
+  }
+
+  .search-result-info h3 {
+    font-size: 3vh;
+  }
+
+  .search-result-info p {
+    font-size: 2vh;
+
+  }
+
+}
+
+
+@media (max-width: 768px) {
+  .navbar {
+    gap: auto;
+    width: auto;
+  }
+
+  .nav-links {
+    display: none;
+    /* Hide nav-links by default */
+    position: absolute;
+    top: 60px;
+    /* Adjust as needed */
+    left: -250px;
+    width: 100%;
+    /* Adjust width for mobile */
+    background-color: rgba(0, 0, 0, 0.5);
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    z-index: 3000000;
+    /* Ensure dropdown is on top */
+  }
+
+  .nav-links.open {
+    display: flex;
+    /* Show menu when open */
+    left: 0;
+    /* Slide in from the left */
+    top: 7%;
+  }
+
+  .nav-links li {
+    margin: 20px 0;
+    /* Space between items */
+    font-size: 18px;
+    /* Improved font size */
+    font-family: 'Arial', sans-serif;
+    /* Better font */
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    /* Pointer cursor on hover */
+    transition: background-color 0.3s ease;
+    /* Smooth background color change */
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    /* Remove underline from links */
+
+  }
+
+  .nav-links li:hover {
+    background-color: rgb(196, 67, 67);
+    /* Background color on hover */
+    border-radius: 4px;
+    /* Optional: Rounded corners */
+    font-weight: bold;
+  }
+
+  .menu-toggle {
+    display: block;
+    /* Show menu toggle on mobile */
+  }
+
+  .search-profile {
+    min-width: 150px;
+    padding: 0 10px;
+  }
+
+  .profile-icon,
+  .profile-icon img {
+    width: 40px;
+    /* Set the desired width */
+    height: 40px;
+    /* Set the desired height */
+
+  }
+
+  .profile-icon,
+  .profile-icon img {
+    width: 40px;
+    /* Set the desired width */
+    height: 40px;
+    /* Set the desired height */
+    object-fit: cover;
+    /* Crop to fit within the circle */
+  }
+
+  .search-profile input {
+    font-size: 2vh;
+  }
+
+  .search-result-info p {
+    display: none;
+  }
+
+  .search-result-image {
+    display: none;
+  }
+}
+
+/* ============================
+   Desktop expanding search
+   ============================ */
+@media (min-width: 769px) {
+
+  /* Keep the search area from stretching the whole row */
+  .search-profile {
+    position: relative;
+    flex: 0 0 auto;
+    z-index: 3000000;
+    /* stay above neighbors while expanded */
+  }
+
+  /* Compact by default on desktop using clamp; smooth width animation */
+  .search-profile input {
+    width: clamp(200px, 18vw, 360px);
+    transition: width 0.35s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* Expand to 40vw when focused */
+  .search-profile input:focus {
+    width: 40vw;
+    outline: none;
+    background: #0d0d0d;
+    box-shadow: 0 0 0 2px #e50914;
+  }
+
+  /* Results panel: widen & animate when input is focused */
+  .search-profile .search-results {
+    /* start compact to match initial input */
+    width: clamp(200px, 18vw, 360px);
+    max-height: 50vh;
+    /* taller view while expanded */
+    overflow-y: auto;
+    border: 1px solid #333;
+    background: rgba(0, 0, 0, 0.92);
+    /* nice reveal animation */
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    /* ignore clicks until visible */
+    transition: width 0.35s ease, opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* When input is focused, make results more visible and match 40vw width */
+  .search-profile:has(input:focus) .search-results {
+    width: 40vw;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .search-profile input,
+  .search-profile .search-results {
+    transition: none !important;
+  }
+}

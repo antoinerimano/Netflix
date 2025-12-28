@@ -1,0 +1,93 @@
+/* Register.css */
+
+.register-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #141414;
+    color: #fff;
+    background: url("https://zuvo-movies-cdn.b-cdn.net/mosaic_4k_landscape.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+.register-container {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 40px;
+    border-radius: 10px;
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+}
+
+.register-title {
+    font-size: 32px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.register-input {
+    padding: 15px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    background-color: #333;
+    color: #fff;
+}
+
+.register-input::placeholder {
+    color: #8c8c8c;
+}
+
+.register-button {
+    padding: 15px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    background-color: #e50914;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-bottom: 10px;
+}
+
+.register-button:hover {
+    background-color: #f40612;
+}
+
+.error-message {
+    color: #e50914;
+    margin-bottom: 20px;
+}
+
+.success-message {
+    color: #46d369;
+    margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+    .register-container {
+        padding: 20px;
+    }
+
+    .register-title {
+        font-size: 24px;
+    }
+
+    .register-button {
+        font-size: 16px;
+    }
+}
+@media (min-width:2500px) and (min-height: 1500px){
+    .register-container {max-width: 25vw; border-radius: 2vh;}
+    .register-input{width: 100%;}
+    .register-title {font-size: 3vh;}
+    .register-button{font-size: 2vh;}
+}

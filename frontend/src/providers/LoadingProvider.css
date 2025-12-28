@@ -1,0 +1,70 @@
+/* src/providers/global-spinner.css */
+
+.nf-loader-overlay {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  background: #000; /* pure black like netflix splash */
+  opacity: 0; pointer-events: none; transition: opacity 180ms ease;
+  z-index: 9999;
+}
+
+.nf-loader-overlay.show { opacity: 1; pointer-events: auto; }
+
+/* Ring spinner with conic sweep + inner cutout */
+.nf-spinner {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    #e50914 0 90deg,
+    #b20710 90deg 180deg,
+    #8f0a12 180deg 270deg,
+    #4d0b0f 270deg 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
+          mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
+  animation: nf-spin 900ms linear infinite, nf-glow 1300ms ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 12px rgba(229,9,20,.45));
+}
+
+/* Subtle brand “N” with a sweeping sheen */
+.nf-brand {
+  position: absolute; display: grid; place-items: center;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 220px; height: 120px; pointer-events: none;
+}
+
+.nf-n {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-weight: 900; font-size: 86px; letter-spacing: 2px;
+  color: #e50914;
+  text-shadow: 0 0 28px rgba(229,9,20,.25), 0 10px 40px rgba(229,9,20,.18);
+  transform: translateY(4px);
+}
+
+/* diagonal sheen sweep */
+.nf-sheen {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.18) 50%, transparent 65%);
+  transform: translateX(-140%);
+  animation: nf-sheen 1600ms ease-in-out 200ms infinite;
+  mix-blend-mode: screen; border-radius: 18px;
+}
+
+
+@keyframes nf-spin { to { transform: rotate(360deg); } }
+
+@keyframes nf-glow {
+  from { filter: drop-shadow(0 0 10px rgba(229,9,20,.25)); }
+  to   { filter: drop-shadow(0 0 22px rgba(229,9,20,.55)); }
+}
+
+@keyframes nf-sheen {
+  0%   { transform: translateX(-140%) skewX(-8deg); opacity: .0; }
+  25%  { opacity: .8; }
+  60%  { transform: translateX(140%) skewX(-8deg); opacity: .0; }
+  100% { opacity: .0; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nf-spinner { animation: none; }
+  .nf-sheen { display: none; }
+}

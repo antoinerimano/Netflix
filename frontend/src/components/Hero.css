@@ -1,0 +1,154 @@
+/* src/components/Hero.css */
+
+.hero {
+  height: 90vh;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 50px;
+  color: white;
+  width: 100%;
+}
+
+.hero-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 20%, transparent 100%);
+  padding: 20px;
+  max-width: 50%;
+}
+
+.hero h1 {
+  font-size: 5vh;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.hero-button {
+  background-color: #e50914;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 2vh;
+  cursor: pointer;
+  border-radius: 1vh;
+  transition: background-color 0.3s ease;
+}
+
+.play-button:hover {
+  background-color: #f40612;
+}
+
+.info-button {
+  background-color: rgba(109, 109, 110, 0.7);
+}
+
+.info-button:hover {
+  background-color: rgba(109, 109, 110, 1);
+}
+
+/* Media Queries for Responsiveness */
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 30px;
+    align-items: center;
+    text-align: center;
+    background-size: contain;
+    background: no-repeat;
+    height: 60vh; /* Reduced height on medium screens */
+    width: 100%;
+  }
+
+  .hero-overlay {
+    max-width: 80%;
+    padding: 15px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .hero p {
+    font-size: 16px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+/* Tiny pill button in the top-right of the overlay */
+.unmute-btn {
+  position: absolute;
+  top: 3vw;
+  right: 3vw;
+  z-index: 3;                  /* above video and overlay */
+  width: 3vw;
+  height: 3vw;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unmute-btn:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+
+.unmute-btn:active {
+  transform: translateY(1px);
+}
+
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 20px;
+    background-size: contain; /* Ensure the image fits within the container */
+    background: no-repeat;
+    width: 100%;; /* Reduced height on medium screens */
+    height: 50vh;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .hero p {
+    display: none;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hero-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+
+  

@@ -1,0 +1,22 @@
+VidSrc
+VidKing
+VidEasy
+
+
+VidFast : 
+
+https://vidfast.pro/movie/{tmbd_id}
+
+https://vidfast.pro/tv/95396/1/1 pour les series
+
+
+VidPlus : https://player.vidplus.to/embed/movie/{tmbd_id}?autoplay=false&poster=true&title=true&watchparty=false&chromecast=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5
+
+
+serie : https://player.vidplus.to/embed/tv/70523/1/1?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5
+
+
+
+111movies : https://111movies.com/movie/{tmbd_id} et ex: https://111movies.com/tv/240411/1/1
+
+

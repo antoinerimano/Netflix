@@ -1,0 +1,123 @@
+.create-profile-container {
+    max-width: 600px;
+    margin: 50px auto;
+    background-color: #141414;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    color: white;
+    text-align: center;
+    
+}
+
+
+.title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #e50914;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-label {
+    font-size: 1.2rem;
+    text-align: left;
+}
+
+.profile-input, .profile-select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    background-color: #222;
+    color: white;
+    font-size: 1rem;
+}
+
+.profile-input:focus, .profile-select:focus {
+    outline: none;
+    border-color: #e50914;
+}
+
+.avatar-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+
+.avatar-option {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, border 0.2s;
+    border: 3px solid transparent;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1);
+}
+
+.avatar-option.selected {
+    border-color: #e50914;
+}
+
+.profile-submit-button {
+    padding: 15px 20px;
+    background-color: #e50914;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.profile-submit-button:hover {
+    background-color: #f40612;
+}
+
+.error-message {
+    margin-top: 20px;
+    color: #e50914;
+    font-size: 1rem;
+}
+@media (min-width:2500px) and (min-height: 1500px){
+    .create-profile-container {
+        max-width: 45vw;
+        padding: 6vh;
+        margin-top: 20vh;
+    }
+
+    .title {
+        font-size: 4vh;
+    }
+
+    .profile-label {
+        font-size: 2vh;
+    }
+
+    .profile-input, .profile-select {
+        padding: 0.2vh;
+        font-size: 2vh;
+    }
+
+    .avatar-option {
+        width: 5vh;
+        height: 5vh;
+    }
+
+    .profile-submit-button {
+        padding: 20px 30px;
+        font-size: 2vh;
+    }
+
+    .error-message {
+        font-size: 2vh;
+    }
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <h2 style="color:#e50914;">Confirm your new email address</h2>
+    <p>Hello {{ user.name }},</p>
+
+    <p>We received a request to update your account email to 
+    <strong>{{ new_email }}</strong>.</p>
+
+    <p style="margin: 20px 0;">
+      Please confirm this change by clicking the button below:
+    </p>
+
+    <p>
+      <a href="{{ confirm_url }}" 
+         style="background-color:#e50914;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;">
+         Confirm Email Change
+      </a>
+    </p>
+
+    <p>If you didn’t request this, you can safely ignore this message.</p>
+
+    <hr style="margin:30px 0; border:none; border-top:1px solid #ddd;" />
+
+    <p style="font-size:12px; color:#777;">
+      This email was sent by {{ company_name }}.  
+      For help, contact <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+    </p>
+  </body>
+</html>

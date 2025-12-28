@@ -1,0 +1,5 @@
+docker compose exec backend python manage.py train_ranker
+docker compose exec backend python manage.py build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2
+docker compose exec backend python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
+docker compose exec backend python manage.py clean_db --dedupe --backfill-links --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
+docker compose exec backend python /app/add_trailer_to_cdn.py
