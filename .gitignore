@@ -7,6 +7,10 @@ backend/*.log
 __pycache__/
 *.pyc
 
+*.env
+.env
+.env.*
+!.env.example
 # node
 node_modules/
 dist/

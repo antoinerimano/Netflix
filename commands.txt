@@ -3,3 +3,18 @@ docker compose exec backend python manage.py build_embeddings --type all --topk 
 docker compose exec backend python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
 docker compose exec backend python manage.py clean_db --dedupe --backfill-links --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
 docker compose exec backend python /app/add_trailer_to_cdn.py
+
+
+docker compose down
+docker compose up -d --build
+
+docker compose restart backend
+
+
+
+ssh -L 3307:172.18.0.2:3306 root@5.181.1.90
+
+docker compose logs backend
+
+
+
