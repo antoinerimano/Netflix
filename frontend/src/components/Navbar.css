@@ -492,7 +492,7 @@ fill: #ffffff;
   .nav-links.open {
     position: fixed !important;
     inset: 0 !important;
-    top: calc(100% - 10%) !important;
+    top: 13vw !important;
 
     height: fit-content !important;
     left: 0 !important;

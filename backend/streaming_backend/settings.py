@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
 
-    "users",
+    "users.apps.UsersConfig",
     "reco",
 
     "rest_framework_simplejwt",

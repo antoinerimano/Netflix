@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.db import models
 from users.models import Title, Profile
 
@@ -97,3 +98,23 @@ class RecoModelArtifact(models.Model):
     trained_at = models.DateTimeField(auto_now_add=True)
     notes = models.CharField(max_length=255, blank=True, default="")
 
+class RecoHomeSnapshot(models.Model):
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name="home_snapshot")
+
+    algo_version = models.CharField(max_length=32, default="home_v1", db_index=True)
+    payload = models.JSONField(default=dict)  # {"rows":[...]} comme aujourd'hui
+
+    built_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    # optionnel: pour debug
+    last_error = models.TextField(blank=True, default="")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["algo_version", "expires_at"]),
+        ]
+
+    def is_valid(self, now=None):
+        now = now or timezone.now()
+        return bool(self.payload) and self.expires_at and self.expires_at > now

@@ -11,10 +11,27 @@ const http = axios.create({
 });
 
 http.interceptors.request.use((config) => {
+  const url = config.url || "";
+
+  const isPublic =
+    url.includes("/users/login/") ||
+    url.includes("/users/register/") ||
+    url.includes("/token/") ||
+    url.includes("/password-reset");
+
+  if (isPublic) {
+    delete config.headers.Authorization;
+    return config;
+  }
+
   const token = localStorage.getItem("access");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
+
 
 function isJwtInvalidOrExpired(error) {
   const status = error?.response?.status;

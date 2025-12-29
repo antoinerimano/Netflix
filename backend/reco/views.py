@@ -24,7 +24,7 @@ from users.models import (
 from users.serializers import TitleHomeSerializer
 
 from .models import (
-    TitleEmbedding, TitleSimilar,
+    RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
     EditorialCollection, RecoModelArtifact
 )
@@ -294,44 +294,6 @@ def _title_cache_key(tid: int) -> str:
     return f"{TITLE_HOME_CACHE_PREFIX}{int(tid)}"
 
 
-def _serialize_titles_cached(objs):
-    if not objs:
-        return []
-
-    ids = [int(o.id) for o in objs]
-    key_by_id = {tid: _title_cache_key(tid) for tid in ids}
-
-    cached_map = cache.get_many([key_by_id[tid] for tid in ids]) or {}
-    out = []
-    missing = []
-    missing_keys = []
-
-    for o in objs:
-        ck = key_by_id[int(o.id)]
-        hit = cached_map.get(ck)
-        if hit is not None:
-            out.append(hit)
-        else:
-            out.append(None)
-            missing.append(o)
-            missing_keys.append(ck)
-
-    if missing:
-        serialized = TitleHomeSerializer(missing, many=True).data
-        to_set = {}
-        j = 0
-        for i in range(len(out)):
-            if out[i] is None:
-                item = serialized[j]
-                out[i] = item
-                to_set[missing_keys[j]] = item
-                j += 1
-        if to_set:
-            cache.set_many(to_set, timeout=TITLE_HOME_CACHE_TTL)
-
-    return out
-
-
 # ============================================================
 # RANK + PICK
 # ============================================================
@@ -415,10 +377,423 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
     return picked_ids, picked_set
 
 
+# views.py
+
+def build_home_payload_exact(profile, user_id=None, do_logs=True):
+    """
+    EXACT copy of RecoHomeView.get() compute path, but:
+    - no request/Response
+    - returns payload {"rows": rows}
+    - user_id is optional for logs
+    """
+    start_t = time.perf_counter()
+    t0 = start_t
+
+    if do_logs:
+        logger.info(f"[reco-home] start profile_id={profile.id} user_id={user_id}")
+
+    rank_model, _schema = _get_latest_ranker()
+    t0 = _log_step("load_ranker", t0) if do_logs else t0
+
+    prof_vec = _build_profile_vector(profile.id)
+    t0 = _log_step("build_profile_vector", t0, has_vec=bool(prof_vec is not None)) if do_logs else t0
+
+    # 1) recent actions
+    recent_action_ids = list(
+        TitleAction.objects
+        .filter(profile_id=profile.id)
+        .order_by("-created_at")
+        .values_list("title_id", flat=True)[:200]
+    )
+    recent_action_ids = [tid for tid in recent_action_ids if tid]
+    t0 = _log_step("recent_actions", t0, n=len(recent_action_ids)) if do_logs else t0
+
+    # 2) seen ids
+    seen_ids = set(
+        TitleAction.objects
+        .filter(profile_id=profile.id)
+        .values_list("title_id", flat=True)[:4000]
+    )
+    t0 = _log_step("seen_ids", t0, n=len(seen_ids)) if do_logs else t0
+
+    rows = []
+    exclude = set(seen_ids)
+
+    planned_rows = []  # (row_type, title, cand_ids, k)
+
+    _tplan = time.perf_counter()
+
+    def _plan_mark(name, **kv):
+        nonlocal _tplan
+        if do_logs:
+            _tplan = _log_step(f"plan_rows:{name}", _tplan, **kv)
+
+    # ---- cold start (identique)
+    if not recent_action_ids:
+        popular_ids = _cached_ids(
+            "popular",
+            lambda: Title.objects.order_by("-popularity", "-vote_average").values_list("id", flat=True)[:1200]
+        )
+        planned_rows.append(("popular", "Popular right now", list(popular_ids), 30))
+
+        top_ids = _cached_ids(
+            "top_rated",
+            lambda: Title.objects.order_by("-vote_average", "-vote_count").values_list("id", flat=True)[:1200]
+        )
+        planned_rows.append(("top_rated", "Top rated", list(top_ids), 30))
+
+        new_movies_ids = _cached_ids(
+            "new_movies",
+            lambda: (
+                Title.objects.filter(type="movie")
+                .exclude(release_date="")
+                .order_by("-release_date")
+                .values_list("id", flat=True)[:1200]
+            )
+        )
+        planned_rows.append(("new_movies", "New movies", list(new_movies_ids), 30))
+
+        tv_hits_ids = _cached_ids(
+            "tv_hits",
+            lambda: (
+                Title.objects.filter(type="tv")
+                .order_by("-popularity", "-vote_average")
+                .values_list("id", flat=True)[:1200]
+            )
+        )
+        planned_rows.append(("tv_hits", "TV hits", list(tv_hits_ids), 30))
+
+        lang = getattr(profile, "language_preference", "") or ""
+        if lang:
+            in_lang_ids = _cached_ids(
+                f"in_lang:{lang}",
+                lambda: (
+                    Title.objects.filter(original_language=lang)
+                    .order_by("-popularity", "-vote_average")
+                    .values_list("id", flat=True)[:1200]
+                )
+            )
+            planned_rows.append(("in_lang", f"In {lang.upper()}", list(in_lang_ids), 30))
+
+    _plan_mark("cold_start", planned=len(planned_rows))
+
+    # ---- normal reco (identique)
+    if recent_action_ids:
+        seed_ids = recent_action_ids[:6]
+        sim_ids = list(
+            TitleSimilar.objects
+            .filter(title_id__in=seed_ids, model_name=MODEL_NAME)
+            .order_by("-score")
+            .values_list("similar_id", flat=True)[:800]
+        )
+        planned_rows.append(("for_you", "For you", sim_ids, 30))
+        _plan_mark("for_you_similars", seeds=len(seed_ids), sim=len(sim_ids), planned=len(planned_rows))
+
+        seed2 = []
+        seen_seed = set()
+        for tid in recent_action_ids:
+            if tid in seen_seed:
+                continue
+            seen_seed.add(tid)
+            seed2.append(tid)
+            if len(seed2) >= 2:
+                break
+
+        seed_title_map = {}
+        if seed2:
+            for t in Title.objects.filter(id__in=seed2).only("id", "title", "original_title"):
+                seed_title_map[t.id] = (t.title or t.original_title or "this")
+
+        for tid in seed2:
+            seed_title = seed_title_map.get(tid, "this")
+            sim_ids = list(
+                TitleSimilar.objects
+                .filter(title_id=tid, model_name=MODEL_NAME)
+                .order_by("-score")
+                .values_list("similar_id", flat=True)[:700]
+            )
+            planned_rows.append((f"because:{tid}", f"Because you watched {seed_title}", sim_ids, 30))
+
+        _plan_mark("because_rows", n_seeds=len(seed2), planned=len(planned_rows))
+
+        recent_titles_for_features = list(
+            Title.objects.filter(id__in=recent_action_ids[:80]).only("id", "genre")
+        )
+        genres = Counter()
+        for t in recent_titles_for_features:
+            g = _primary_genre(getattr(t, "genre", "") or "")
+            if g:
+                genres[g] += 1
+
+        genre_field = _model_field(Title, ["primary_genre_norm"])
+        for g, _ in genres.most_common(2):
+            ids = _cached_ids(
+                f"genre:{g}",
+                lambda gg=g: (
+                    Title.objects.filter(**({genre_field: gg} if genre_field else {"genre__icontains": gg}))
+                    .order_by("-popularity", "-vote_average")
+                    .values_list("id", flat=True)[:1200]
+                )
+            )
+            planned_rows.append((f"genre:{g}", f"More {g.title()}", list(ids), 30))
+
+        _plan_mark("genres", top=len(genres), planned=len(planned_rows))
+
+        seed_title_ids = recent_action_ids[:80]
+
+        comp_vals = _values_for_seed_titles(
+            TitleCompany, seed_title_ids,
+            ["company_norm", "name_norm", "company", "name"],
+            limit=4000,
+        )
+        if comp_vals:
+            comp, _ = Counter(comp_vals).most_common(1)[0]
+            comp_ids = _ids_from_index(TitleCompany, ["company_norm", "name_norm", "company", "name"], comp)
+            planned_rows.append((f"studio:{comp}", f"From {str(comp).title()}", comp_ids, 30))
+
+        net_vals = _values_for_seed_titles(
+            TitleNetwork, seed_title_ids,
+            ["network_norm", "name_norm", "network", "name"],
+            limit=4000,
+        )
+        if net_vals:
+            net, _ = Counter(net_vals).most_common(1)[0]
+            net_ids = _ids_from_index(TitleNetwork, ["network_norm", "name_norm", "network", "name"], net)
+            planned_rows.append((f"network:{net}", f"On {str(net).title()}", net_ids, 30))
+
+        country_vals = _values_for_seed_titles(
+            TitleCountry, seed_title_ids,
+            ["country_norm", "name_norm", "country", "name"],
+            limit=4000,
+        )
+        if country_vals:
+            ctry, _ = Counter(country_vals).most_common(1)[0]
+            ctry_ids = _ids_from_index(TitleCountry, ["country_norm", "name_norm", "country", "name"], ctry)
+            planned_rows.append((f"country:{ctry}", f"Made in {str(ctry).upper()}", ctry_ids, 30))
+
+        _plan_mark("studio_network_country", planned=len(planned_rows))
+
+        recent_titles_for_features = list(
+            Title.objects.filter(id__in=recent_action_ids[:120]).only("id", "cast", "keywords")
+        )
+
+        actors = Counter()
+        for t in recent_titles_for_features:
+            for name in (t.cast or [])[:5]:
+                actors[str(name).lower()] += 1
+        for actor, _ in actors.most_common(2):
+            ids = _ids_from_table(Actor.objects.filter(name_norm=actor))
+            planned_rows.append((f"actor:{actor}", f"Starring {actor.title()}", ids, 30))
+
+        keywords = Counter()
+        for t in recent_titles_for_features:
+            for k in (t.keywords or [])[:5]:
+                keywords[str(k).lower()] += 1
+        for kw, _ in keywords.most_common(2):
+            ids = _ids_from_table(TitleKeyword.objects.filter(keyword_norm=kw))
+            planned_rows.append((f"kw:{kw}", f"Based on “{kw}”", ids, 30))
+
+        _plan_mark("actors_keywords", planned=len(planned_rows), actors=len(actors), keywords=len(keywords))
+
+    hidden_ids = _cached_ids(
+        "hidden_gems",
+        lambda: (
+            Title.objects
+            .filter(vote_average__gte=7.2, vote_count__gte=250)
+            .order_by("popularity", "-vote_average")
+            .values_list("id", flat=True)[:1400]
+        )
+    )
+    planned_rows.append(("hidden_gems", "Hidden gems", list(hidden_ids), 30))
+    _plan_mark("hidden_gems", n=len(hidden_ids), planned=len(planned_rows))
+
+    fresh_movies_ids = _cached_ids(
+        "fresh_movies",
+        lambda: (
+            Title.objects
+            .filter(type="movie", release_date__isnull=False)
+            .exclude(release_date="")
+            .order_by("-release_date")
+            .values_list("id", flat=True)[:900]
+        )
+    )
+    fresh_tv_ids = _cached_ids(
+        "fresh_tv",
+        lambda: (
+            Title.objects
+            .filter(type="tv", first_air_date__isnull=False)
+            .exclude(first_air_date="")
+            .order_by("-first_air_date")
+            .values_list("id", flat=True)[:900]
+        )
+    )
+    planned_rows.append(("fresh_for_you", "New for you", list(fresh_movies_ids) + list(fresh_tv_ids), 30))
+    _plan_mark("fresh_for_you", n=len(fresh_movies_ids) + len(fresh_tv_ids), planned=len(planned_rows))
+
+    trend_ids = _cached_trending_ids(hours=72)
+    lang = getattr(profile, "language_preference", "") or ""
+    if lang:
+        lang_trend_ids = list(
+            Title.objects.filter(id__in=list(trend_ids), original_language=lang)
+            .order_by("-popularity", "-vote_average")
+            .values_list("id", flat=True)[:1200]
+        )
+        planned_rows.append(("lang_trending", f"Trending in {lang.upper()}", lang_trend_ids, 30))
+        _plan_mark("lang_trending", n=len(lang_trend_ids), planned=len(planned_rows))
+
+    planned_rows.append(("trending", "Trending", list(trend_ids), 30))
+    _plan_mark("trending", n=len(trend_ids), planned=len(planned_rows))
+
+    t0 = _log_step("plan_rows", t0, planned=len(planned_rows)) if do_logs else t0
+
+    # collect candidates (identique)
+    all_cand_ids = []
+    for _, __, ids, ___ in planned_rows:
+        if ids:
+            all_cand_ids.extend(ids)
+
+    all_cand_ids = list(dict.fromkeys(all_cand_ids))
+    t0 = _log_step("collect_candidates", t0, unique=len(all_cand_ids)) if do_logs else t0
+
+    title_by_id = {}
+    if all_cand_ids:
+        qs = Title.objects.filter(id__in=all_cand_ids).only(*RANK_FIELDS)
+        title_by_id = {t.id: t for t in qs}
+    t0 = _log_step("fetch_titles", t0, fetched=len(title_by_id)) if do_logs else t0
+
+    rows_plan = []
+    picked_total = []
+    emb_cache = {}
+
+    for row_type, row_title, cand_ids, k in planned_rows:
+        _row_t0 = time.perf_counter()
+
+        picked_ids_list, picked_set = _rank_and_pick_ids(
+            profile=profile,
+            prof_vec=prof_vec,
+            rank_model=rank_model,
+            row_type=row_type,
+            cand_ids=cand_ids,
+            k=k,
+            exclude_ids=exclude,
+            emb_cache=emb_cache,
+            title_by_id=title_by_id,
+            logger=logger if do_logs else None,
+        )
+
+        if do_logs:
+            _row_dt = time.perf_counter() - _row_t0
+            logger.info(
+                f"[reco-home] build_row row_type={row_type} cand={len(cand_ids) if cand_ids else 0} "
+                f"picked={len(picked_set)} took={_ms(_row_dt):.1f}ms"
+            )
+
+        if picked_ids_list:
+            rows_plan.append((row_type, row_title, picked_ids_list))
+            picked_total.extend(picked_ids_list)
+            exclude |= picked_set
+
+    picked_total = list(dict.fromkeys(picked_total))
+    display_by_id = {}
+    if picked_total:
+        dqs = Title.objects.filter(id__in=picked_total).only(*DISPLAY_ONLY_FIELDS)
+        display_by_id = {t.id: t for t in dqs}
+
+    rows = []
+    for row_type, row_title, ids in rows_plan:
+        objs = [display_by_id[i] for i in ids if i in display_by_id]
+        rows.append({
+            "row_type": row_type,
+            "title": row_title,
+            "items": TitleHomeSerializer(objs, many=True).data,
+        })
+
+    payload = {"rows": rows}
+    t0 = _log_step("finalize_payload", t0, rows=len(rows)) if do_logs else t0
+
+    if do_logs:
+        logger.info(f"[reco-home] done profile_id={profile.id} total_ms={_ms(time.perf_counter() - start_t):.1f} rows={len(rows)}")
+
+    return payload
+
+
+
+def build_seed_home_payload(profile):
+    rows_plan = []
+
+    # 1) Popular
+    popular_ids = _cached_ids(
+        "popular_seed",
+        lambda: Title.objects.order_by("-popularity", "-vote_average")
+            .values_list("id", flat=True)[:1200]
+    )
+    rows_plan.append(("popular", "Popular right now", list(popular_ids)[:30]))
+
+    # 2) Top rated
+    top_ids = _cached_ids(
+        "top_seed",
+        lambda: Title.objects.order_by("-vote_average", "-vote_count")
+            .values_list("id", flat=True)[:1200]
+    )
+    rows_plan.append(("top_rated", "Top rated", list(top_ids)[:30]))
+
+    # 3) Trending
+    trend_ids = list(_cached_trending_ids(hours=72))[:1200]
+    rows_plan.append(("trending", "Trending", trend_ids[:30]))
+
+    # 4) Language row (si dispo)
+    lang = getattr(profile, "language_preference", "") or ""
+    if lang:
+        in_lang_ids = _cached_ids(
+            f"in_lang_seed:{lang}",
+            lambda: Title.objects.filter(original_language=lang)
+                .order_by("-popularity", "-vote_average")
+                .values_list("id", flat=True)[:1200]
+        )
+        rows_plan.insert(1, ("in_lang", f"In {lang.upper()}", list(in_lang_ids)[:30]))
+
+    # Fetch display fields en 1 query
+    picked = []
+    for _, __, ids in rows_plan:
+        picked.extend(ids)
+    picked = list(dict.fromkeys(picked))
+
+    display_by_id = {}
+    if picked:
+        qs = Title.objects.filter(id__in=picked).only(*DISPLAY_ONLY_FIELDS)
+        display_by_id = {t.id: t for t in qs}
+
+    rows = []
+    for row_type, title, ids in rows_plan:
+        objs = [display_by_id[i] for i in ids if i in display_by_id]
+        rows.append({
+            "row_type": row_type,
+            "title": title,
+            "items": TitleHomeSerializer(objs, many=True).data,
+        })
+
+    return {"rows": rows}
+
+def upsert_seed_snapshot(profile, hours=6):
+    payload = build_seed_home_payload(profile)
+    now = timezone.now()
+    RecoHomeSnapshot.objects.update_or_create(
+        profile_id=profile.id,
+        defaults={
+            "algo_version": "home_v1_seed",
+            "payload": payload,
+            "expires_at": now + timedelta(hours=hours),
+            "last_error": "",
+        }
+    )
+    return payload
+
+
 # ============================================================
 # RECO: HOME
 # ============================================================
 
+# dans reco/views.py (RecoHomeView.get)
 class RecoHomeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -426,391 +801,34 @@ class RecoHomeView(APIView):
         profile_id = request.query_params.get("profileId")
         profile = get_object_or_404(Profile, id=profile_id, user=request.user)
 
-        start_t = time.perf_counter()
-        t0 = start_t
-        logger.info(f"[reco-home] start profile_id={profile.id} user_id={request.user.id}")
-
-        cache_key = f"reco:home:p{profile.id}"
-        cached = cache.get(cache_key)
-        if cached:
-            logger.info(f"[reco-home] cache_hit profile_id={profile.id} rows={len(cached.get('rows', []))}")
-            return Response(cached)
-
-        rank_model, _schema = _get_latest_ranker()
-        t0 = _log_step("load_ranker", t0)
-
-        prof_vec = _build_profile_vector(profile.id)
-        t0 = _log_step("build_profile_vector", t0, has_vec=bool(prof_vec is not None))
-
-        recent_action_ids = list(
-            TitleAction.objects
-            .filter(profile_id=profile.id)
-            .order_by("-created_at")
-            .values_list("title_id", flat=True)[:200]
+        # 1) Snapshot principal (cron)
+        snap = (
+            RecoHomeSnapshot.objects
+            .filter(profile_id=profile.id, algo_version="home_v1")
+            .only("payload", "built_at", "expires_at")
+            .order_by("-built_at")
+            .first()
         )
-        recent_action_ids = [tid for tid in recent_action_ids if tid]
-        t0 = _log_step("recent_actions", t0, n=len(recent_action_ids))
+        if snap and snap.payload and snap.payload.get("rows") is not None:
+            payload = snap.payload
+            payload.setdefault("mode", "snapshot")
+            return Response(payload)
 
-        seen_ids = set(
-            TitleAction.objects
-            .filter(profile_id=profile.id)
-            .values_list("title_id", flat=True)[:4000]
+        # 2) Snapshot seed (créé au moment de la création du profile)
+        seed = (
+            RecoHomeSnapshot.objects
+            .filter(profile_id=profile.id, algo_version="home_v1_seed")
+            .only("payload", "built_at")
+            .order_by("-built_at")
+            .first()
         )
-        t0 = _log_step("seen_ids", t0, n=len(seen_ids))
-        exclude = set(seen_ids)
+        if seed and seed.payload and seed.payload.get("rows") is not None:
+            payload = seed.payload
+            payload.setdefault("mode", "seed_snapshot")
+            return Response(payload)
 
-        planned_rows = []  # (row_type, title, cand_ids, k)
-
-        _tplan = time.perf_counter()
-        deadline = _tplan + (PLAN_ROWS_BUDGET_MS / 1000.0)
-
-        def _plan_mark(name, **kv):
-            nonlocal _tplan
-            _tplan = _log_step(f"plan_rows:{name}", _tplan, **kv)
-
-        def _can_continue():
-            return (time.perf_counter() < deadline) and (len(planned_rows) < MAX_PLANNED_ROWS)
-
-        # ---- cold start
-        if not recent_action_ids and _can_continue():
-            popular_ids = _cached_ids(
-                "popular",
-                lambda: Title.objects.order_by("-popularity", "-vote_average").values_list("id", flat=True)[:900],
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("popular", "Popular right now", list(popular_ids), 30))
-
-            top_ids = _cached_ids(
-                "top_rated",
-                lambda: Title.objects.order_by("-vote_average", "-vote_count").values_list("id", flat=True)[:900],
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("top_rated", "Top rated", list(top_ids), 30))
-
-            new_movies_ids = _cached_ids(
-                "new_movies",
-                lambda: (
-                    Title.objects.filter(type="movie")
-                    .exclude(release_date="")
-                    .order_by("-release_date")
-                    .values_list("id", flat=True)[:900]
-                ),
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("new_movies", "New movies", list(new_movies_ids), 30))
-
-            tv_hits_ids = _cached_ids(
-                "tv_hits",
-                lambda: (
-                    Title.objects.filter(type="tv")
-                    .order_by("-popularity", "-vote_average")
-                    .values_list("id", flat=True)[:900]
-                ),
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("tv_hits", "TV hits", list(tv_hits_ids), 30))
-
-            lang = getattr(profile, "language_preference", "") or ""
-            if lang and _can_continue():
-                in_lang_ids = _cached_ids(
-                    f"in_lang:{lang}",
-                    lambda: (
-                        Title.objects.filter(original_language=lang)
-                        .order_by("-popularity", "-vote_average")
-                        .values_list("id", flat=True)[:900]
-                    ),
-                    ttl=HEAVY_CANDS_TTL,
-                )
-                planned_rows.append(("in_lang", f"In {lang.upper()}", list(in_lang_ids), 30))
-
-        _plan_mark("cold_start", planned=len(planned_rows))
-
-        # ---- normal reco
-        if recent_action_ids and _can_continue():
-            seed_ids = recent_action_ids[:6]
-            sim_ids = list(
-                TitleSimilar.objects
-                .filter(title_id__in=seed_ids, model_name=MODEL_NAME)
-                .order_by("-score")
-                .values_list("similar_id", flat=True)[:800]
-            )
-            planned_rows.append(("for_you", "For you", sim_ids, 30))
-            _plan_mark("for_you_similars", seeds=len(seed_ids), sim=len(sim_ids), planned=len(planned_rows))
-
-        if recent_action_ids and _can_continue():
-            seed2 = []
-            seen_seed = set()
-            for tid in recent_action_ids:
-                if tid in seen_seed:
-                    continue
-                seen_seed.add(tid)
-                seed2.append(tid)
-                if len(seed2) >= 2:
-                    break
-
-            seed_title_map = {}
-            if seed2:
-                for t in Title.objects.filter(id__in=seed2).only("id", "title", "original_title"):
-                    seed_title_map[t.id] = (t.title or t.original_title or "this")
-
-            for tid in seed2:
-                seed_title = seed_title_map.get(tid, "this")
-                sim_ids = list(
-                    TitleSimilar.objects
-                    .filter(title_id=tid, model_name=MODEL_NAME)
-                    .order_by("-score")
-                    .values_list("similar_id", flat=True)[:700]
-                )
-                planned_rows.append((f"because:{tid}", f"Because you watched {seed_title}", sim_ids, 30))
-
-            _plan_mark("because_rows", n_seeds=len(seed2), planned=len(planned_rows))
-
-               # ====================================================
-        # GENRES (ALLÉGÉ + CACHÉ)
-        # Objectif:
-        # - Ne jamais refaire des grosses requêtes genres à chaque request
-        # - Limiter à 1-2 rows genres
-        # - Limiter cand_ids (250 au lieu de 700)
-        # ====================================================
-        if recent_action_ids and _can_continue():
-            # 1) Cache des "top genres" par profil (très rapide)
-            top_genres_ck = f"reco:home:top_genres:p{profile.id}"
-            top_genres = cache.get(top_genres_ck)
-
-            if not top_genres:
-                # Ne charge que le minimum
-                recent_titles = list(
-                    Title.objects
-                    .filter(id__in=recent_action_ids[:80])
-                    .only("id", "primary_genre_norm", "genre")
-                )
-                genres = Counter()
-                for t in recent_titles:
-                    g = (getattr(t, "primary_genre_norm", "") or "").strip().lower()
-                    if not g:
-                        g = _primary_genre(getattr(t, "genre", "") or "")
-                    if g:
-                        genres[g] += 1
-
-                # garde seulement 1-2 genres max
-                top_genres = [g for g, _ in genres.most_common(GENRE_ROWS_MAX)]
-                cache.set(top_genres_ck, top_genres, GENRE_TOP_TTL)
-
-            # 2) Pour chaque genre, cache la liste d'IDs (évite DB lente)
-            for g in (top_genres or [])[:GENRE_ROWS_MAX]:
-                if not _can_continue():
-                    break
-
-                # IMPORTANT: si tu as d'autres dimensions (lang/pays), ajoute-les au cache key
-                genre_ids_ck = f"reco:home:genre_ids:{g}"
-                ids = cache.get(genre_ids_ck)
-
-                if not ids:
-                    # Query simple, index-friendly (primary_genre_norm)
-                    ids = list(
-                        Title.objects
-                        .filter(primary_genre_norm=g)
-                        .order_by("-popularity", "-vote_average")
-                        .values_list("id", flat=True)[:GENRE_CANDS_LIMIT]
-                    )
-                    cache.set(genre_ids_ck, ids, GENRE_IDS_TTL)
-
-                planned_rows.append((f"genre:{g}", f"More {g.title()}", list(ids), 30))
-
-            _plan_mark("genres", top=len(top_genres or []), planned=len(planned_rows))
-
-        # STUDIO / NETWORK / COUNTRY via mapping tables
-        if recent_action_ids and _can_continue():
-            seed_title_ids = recent_action_ids[:80]
-
-            comp_vals = _values_for_seed_titles(TitleCompany, seed_title_ids, ["company_norm"], limit=4000)
-            if comp_vals and _can_continue():
-                comp, _ = Counter(comp_vals).most_common(1)[0]
-                comp_ids = _ids_from_index(TitleCompany, ["company_norm"], comp, limit=600)
-                planned_rows.append((f"studio:{comp}", f"From {str(comp).title()}", comp_ids, 30))
-
-            net_vals = _values_for_seed_titles(TitleNetwork, seed_title_ids, ["network_norm"], limit=4000)
-            if net_vals and _can_continue():
-                net, _ = Counter(net_vals).most_common(1)[0]
-                net_ids = _ids_from_index(TitleNetwork, ["network_norm"], net, limit=600)
-                planned_rows.append((f"network:{net}", f"On {str(net).title()}", net_ids, 30))
-
-            # IMPORTANT: TitleCountry uses country_code in your models.py
-            ctry_vals = _values_for_seed_titles(TitleCountry, seed_title_ids, ["country_code"], limit=4000)
-            if ctry_vals and _can_continue():
-                ctry, _ = Counter(ctry_vals).most_common(1)[0]
-                ctry_ids = _ids_from_index(TitleCountry, ["country_code"], ctry, limit=600)
-                planned_rows.append((f"country:{ctry}", f"Made in {str(ctry).upper()}", ctry_ids, 30))
-
-            _plan_mark("studio_network_country", planned=len(planned_rows))
-
-        # ACTORS / KEYWORDS
-        if recent_action_ids and _can_continue():
-            recent_titles = list(Title.objects.filter(id__in=recent_action_ids[:120]).only("id", "cast", "keywords"))
-
-            actors = Counter()
-            for t in recent_titles:
-                for name in (t.cast or [])[:5]:
-                    actors[str(name).lower()] += 1
-            for actor, _ in actors.most_common(2):
-                ids = _ids_from_table(Actor.objects.filter(name_norm=actor), limit=600)
-                planned_rows.append((f"actor:{actor}", f"Starring {actor.title()}", ids, 30))
-
-            keywords = Counter()
-            for t in recent_titles:
-                for k in (t.keywords or [])[:5]:
-                    keywords[str(k).lower()] += 1
-            for kw, _ in keywords.most_common(2):
-                ids = _ids_from_table(TitleKeyword.objects.filter(keyword_norm=kw), limit=600)
-                planned_rows.append((f"kw:{kw}", f"Based on “{kw}”", ids, 30))
-
-            _plan_mark("actors_keywords", planned=len(planned_rows), actors=len(actors), keywords=len(keywords))
-
-        # HIDDEN GEMS (very heavy when cache miss) -> budget guarded + long TTL
-        if _can_continue():
-            hidden_ids = _cached_ids(
-                "hidden_gems",
-                lambda: (
-                    Title.objects
-                    .filter(vote_average__gte=7.2, vote_count__gte=250)
-                    .order_by("popularity", "-vote_average")
-                    .values_list("id", flat=True)[:600]
-                ),
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("hidden_gems", "Hidden gems", list(hidden_ids), 30))
-            _plan_mark("hidden_gems", n=len(hidden_ids), planned=len(planned_rows))
-
-        # FRESH FOR YOU (heavy) -> budget guarded + long TTL
-        if _can_continue():
-            fresh_movies_ids = _cached_ids(
-                "fresh_movies",
-                lambda: (
-                    Title.objects
-                    .filter(type="movie")
-                    .exclude(release_date="")
-                    .order_by("-release_date")
-                    .values_list("id", flat=True)[:450]
-                ),
-                ttl=HEAVY_CANDS_TTL,
-            )
-            fresh_tv_ids = _cached_ids(
-                "fresh_tv",
-                lambda: (
-                    Title.objects
-                    .filter(type="tv")
-                    .exclude(first_air_date="")
-                    .order_by("-first_air_date")
-                    .values_list("id", flat=True)[:450]
-                ),
-                ttl=HEAVY_CANDS_TTL,
-            )
-            planned_rows.append(("fresh_for_you", "New for you", list(fresh_movies_ids) + list(fresh_tv_ids), 30))
-            _plan_mark("fresh_for_you", n=len(fresh_movies_ids) + len(fresh_tv_ids), planned=len(planned_rows))
-
-        # TRENDING
-        trend_ids = _cached_trending_ids(hours=72)
-        lang = getattr(profile, "language_preference", "") or ""
-        if lang and _can_continue():
-            lang_trend_ids = list(
-                Title.objects.filter(id__in=list(trend_ids), original_language=lang)
-                .order_by("-popularity", "-vote_average")
-                .values_list("id", flat=True)[:700]
-            )
-            planned_rows.append(("lang_trending", f"Trending in {lang.upper()}", lang_trend_ids, 30))
-            _plan_mark("lang_trending", n=len(lang_trend_ids), planned=len(planned_rows))
-
-        planned_rows.append(("trending", "Trending", list(trend_ids), 30))
-        _plan_mark("trending", n=len(trend_ids), planned=len(planned_rows))
-
-        t0 = _log_step("plan_rows", t0, planned=len(planned_rows))
-
-        # ====================================================
-        # Fetch titles for ranking (light fields)
-        # ====================================================
-        all_cand_ids = []
-        for _, __, ids, ___ in planned_rows:
-            if ids:
-                all_cand_ids.extend(ids)
-        all_cand_ids = list(dict.fromkeys(all_cand_ids))
-        t0 = _log_step("collect_candidates", t0, unique=len(all_cand_ids))
-
-        title_by_id = {}
-        if all_cand_ids:
-            qs = Title.objects.filter(id__in=all_cand_ids).only(*RANK_FIELDS)
-            title_by_id = {t.id: t for t in qs}
-        t0 = _log_step("fetch_titles", t0, fetched=len(title_by_id))
-
-        # ====================================================
-        # Rank rows
-        # ====================================================
-        rows_plan = []
-        picked_total = []
-        emb_cache = {}
-
-        for row_type, row_title, cand_ids, k in planned_rows:
-            _row_t0 = time.perf_counter()
-
-            picked_ids_list, picked_set = _rank_and_pick_ids(
-                profile=profile,
-                prof_vec=prof_vec,
-                rank_model=rank_model,
-                row_type=row_type,
-                cand_ids=cand_ids,
-                k=k,
-                exclude_ids=exclude,
-                emb_cache=emb_cache,
-                title_by_id=title_by_id,
-                logger=logger,
-            )
-
-            _row_dt = time.perf_counter() - _row_t0
-            logger.info(
-                f"[reco-home] build_row row_type={row_type} cand={len(cand_ids) if cand_ids else 0} "
-                f"picked={len(picked_set)} took={_ms(_row_dt):.1f}ms"
-            )
-
-            if picked_ids_list:
-                rows_plan.append((row_type, row_title, picked_ids_list))
-                picked_total.extend(picked_ids_list)
-                exclude |= picked_set
-
-        picked_total = list(dict.fromkeys(picked_total))
-
-        display_by_id = {}
-        if picked_total:
-            dqs = Title.objects.filter(id__in=picked_total).only(*DISPLAY_ONLY_FIELDS)
-            display_by_id = {t.id: t for t in dqs}
-
-        rows = []
-        for row_type, row_title, ids in rows_plan:
-            objs = [display_by_id[i] for i in ids if i in display_by_id]
-            rows.append({
-                "row_type": row_type,
-                "title": row_title,
-                "items": _serialize_titles_cached(objs),  # NEW: cached serializer
-            })
-
-        # payload stats
-        try:
-            import json
-            total_items = sum(len(r.get("items", [])) for r in rows)
-            empty_rows = sum(1 for r in rows if not r.get("items"))
-            max_items = max((len(r.get("items", [])) for r in rows), default=0)
-            approx_bytes = len(json.dumps({"rows": rows}))
-            logger.info(
-                "[reco-home] payload_stats rows=%s total_items=%s empty_rows=%s max_items=%s approx_bytes=%s",
-                len(rows), total_items, empty_rows, max_items, approx_bytes
-            )
-        except Exception as e:
-            logger.info("[reco-home] payload_stats_error %s", e)
-
-        payload = {"rows": rows}
-        t0 = _log_step("finalize_payload", t0, rows=len(rows))
-        cache.set(cache_key, payload, HOME_CACHE_TTL)
-
-        logger.info(f"[reco-home] done profile_id={profile.id} total_ms={_ms(time.perf_counter() - start_t):.1f} rows={len(rows)}")
-        return Response(payload)
+        # 3) ultime fallback (ne devrait plus arriver)
+        return Response({"mode": "no_snapshot_yet", "rows": []})
 
 
 # ============================================================

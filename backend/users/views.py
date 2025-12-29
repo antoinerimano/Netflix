@@ -339,10 +339,26 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user_id = self.kwargs.get('user_id')
+
         if Profile.objects.filter(user__id=user_id).count() >= 4:
             return Response({"detail": "Maximum of 4 profiles per account allowed."},
                             status=status.HTTP_400_BAD_REQUEST)
-        return super().create(request, *args, **kwargs)
+
+        # 1) crée le profile normalement
+        response = super().create(request, *args, **kwargs)
+
+        # 2) seed snapshot tout de suite (home jamais vide)
+        try:
+            profile_id = response.data.get("id")
+            if profile_id:
+                from reco.views import upsert_seed_snapshot  # tu crées ce fichier reco/seed.py
+                p = Profile.objects.get(id=profile_id)
+                upsert_seed_snapshot(p, hours=6)
+        except Exception:
+            # on ne bloque pas la création du profil si le seed échoue
+            pass
+
+        return response
 
 
 class PaymentHistoryViewSet(viewsets.ModelViewSet):
