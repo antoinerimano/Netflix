@@ -330,6 +330,8 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
 
 # ------------------ Profiles & Payments history ------------------
+import logging
+logger = logging.getLogger(__name__)
 
 class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
@@ -338,25 +340,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return Profile.objects.filter(user__id=self.kwargs.get('user_id'))
 
     def create(self, request, *args, **kwargs):
-        user_id = self.kwargs.get('user_id')
-
-        if Profile.objects.filter(user__id=user_id).count() >= 4:
-            return Response({"detail": "Maximum of 4 profiles per account allowed."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # 1) crée le profile normalement
         response = super().create(request, *args, **kwargs)
 
-        # 2) seed snapshot tout de suite (home jamais vide)
-        try:
-            profile_id = response.data.get("id")
-            if profile_id:
-                from reco.views import upsert_seed_snapshot  # tu crées ce fichier reco/seed.py
+        profile_id = response.data.get("id")
+        if profile_id:
+            try:
+                from reco.views import upsert_seed_snapshot  # ou reco.seed, mais il faut que ça match ton vrai fichier
                 p = Profile.objects.get(id=profile_id)
-                upsert_seed_snapshot(p, hours=6)
-        except Exception:
-            # on ne bloque pas la création du profil si le seed échoue
-            pass
+                upsert_seed_snapshot(p, hours=24*365*10)
+                logger.info("[seed] snapshot created for profile_id=%s", profile_id)
+            except Exception as e:
+                logger.exception("[seed] FAILED for profile_id=%s error=%s", profile_id, e)
 
         return response
 
