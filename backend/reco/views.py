@@ -60,6 +60,9 @@ GENRE_CANDS_LIMIT = 250     # <= allège: 200-300 (au lieu de 700)
 GENRE_TOP_TTL = 30 * 60     # 30 min cache des top genres par profil
 GENRE_IDS_TTL = 6 * 3600    # 6h cache ids par genre (comme heavy)
 
+IMPRESSION_EXCLUDE_DAYS = 7
+IMPRESSION_EXCLUDE_LIMIT = 4000
+
 
 RANK_FIELDS = [
     "id", "type", "release_date", "first_air_date",
@@ -408,13 +411,28 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
     recent_action_ids = [tid for tid in recent_action_ids if tid]
     t0 = _log_step("recent_actions", t0, n=len(recent_action_ids)) if do_logs else t0
 
-    # 2) seen ids
+    # 2) seen ids (actions + impressions recentes)
     seen_ids = set(
         TitleAction.objects
         .filter(profile_id=profile.id)
         .values_list("title_id", flat=True)[:4000]
     )
-    t0 = _log_step("seen_ids", t0, n=len(seen_ids)) if do_logs else t0
+    action_seen_count = len(seen_ids)
+    imp_since = timezone.now() - timedelta(days=IMPRESSION_EXCLUDE_DAYS)
+    impression_ids = list(
+        TitleImpression.objects
+        .filter(profile_id=profile.id, created_at__gte=imp_since)
+        .order_by("-created_at")
+        .values_list("title_id", flat=True)[:IMPRESSION_EXCLUDE_LIMIT]
+    )
+    seen_ids.update([tid for tid in impression_ids if tid])
+    t0 = _log_step(
+        "seen_ids",
+        t0,
+        actions=action_seen_count,
+        impressions=len(impression_ids),
+        total=len(seen_ids),
+    ) if do_logs else t0
 
     rows = []
     exclude = set(seen_ids)
