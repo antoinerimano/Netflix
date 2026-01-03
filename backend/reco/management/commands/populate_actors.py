@@ -1,4 +1,5 @@
 import time
+import re
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from users.models import Title, Actor
@@ -6,6 +7,29 @@ from users.models import Title, Actor
 
 def norm(s: str) -> str:
     return " ".join((s or "").strip().lower().split())
+
+
+_AS_SPLIT_RE = re.compile(r"\s+as\s+", re.IGNORECASE)
+_TRAILING_PARENS_RE = re.compile(r"\(([^)]+)\)\s*$")
+
+
+def split_name_character(name: str, character: str):
+    n = (name or "").strip()
+    c = (character or "").strip()
+    if n and not c:
+        m = _TRAILING_PARENS_RE.search(n)
+        if m:
+            cand = m.group(1).strip()
+            base = n[:m.start()].strip()
+            if base and cand:
+                return base, cand
+        parts = _AS_SPLIT_RE.split(n)
+        if len(parts) >= 2:
+            base = " ".join(parts[:-1]).strip()
+            cand = parts[-1].strip()
+            if base and cand:
+                return base, cand
+    return n, c
 
 
 class Command(BaseCommand):
@@ -67,6 +91,11 @@ class Command(BaseCommand):
                 else:
                     continue
 
+                if not name:
+                    skipped_empty += 1
+                    continue
+
+                name, character = split_name_character(name, character)
                 if not name:
                     skipped_empty += 1
                     continue
