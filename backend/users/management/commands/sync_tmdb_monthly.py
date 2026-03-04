@@ -3,7 +3,7 @@ import os
 import re
 import time
 import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import requests
 from django.conf import settings
@@ -16,7 +16,6 @@ from users.models import Title, TVShowExtras, Season, Episode, Actor
 
 # =========================
 # Provider URL templates
-# (from your backfill script)
 # =========================
 TEMPLATES: Dict[str, str] = {
     # Titles (movies)
@@ -88,7 +87,6 @@ def norm(s: str) -> str:
 
 
 def primary_genre_norm_from_genre_string(genre_str: str) -> str:
-    # genre is stored like "Action, Drama, Thriller"
     g = (genre_str or "").split(",")[0].strip()
     return norm(g)[:32] if g else ""
 
@@ -96,8 +94,7 @@ def primary_genre_norm_from_genre_string(genre_str: str) -> str:
 def fill_field(obj, field: str, new_val, overwrite: bool) -> bool:
     """
     Returns True if changed.
-    Matches your seed_titlesV2 behavior:
-      - overwrite=False: fill only if current is empty (None/" "/[])
+      - overwrite=False: fill only if current is empty (None/""/[])
       - overwrite=True: set if different
     """
     curr = getattr(obj, field, None)
@@ -161,13 +158,10 @@ def movie_title_links(tmdb_id: int, imdb_code: Optional[str]) -> Dict[str, str]:
 
 
 def tv_title_links(tv_tmdb_id: int) -> Dict[str, str]:
-    # Title-level default = S1E1 + selector=true for the first 3 providers
     return {
         "video_url":   f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
         "movie_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
         "movie_link3": f"https://vidsrc.xyz/embed/tv/{tv_tmdb_id}/1-1",
-
-        # For 4/5/6, your convention is S1E1
         "movie_link4": fmt(TEMPLATES["tv_link4"], tmdb_id=tv_tmdb_id, season=1, episode=1),
         "movie_link5": fmt(TEMPLATES["tv_link5"], tmdb_id=tv_tmdb_id, season=1, episode=1),
         "movie_link6": fmt(TEMPLATES["tv_link6"], tmdb_id=tv_tmdb_id, season=1, episode=1),
@@ -187,7 +181,6 @@ def episode_links(tv_tmdb_id: int, season: int, episode: int) -> Dict[str, str]:
 
 class TMDbClient:
     def __init__(self, api_key: Optional[str] = None, timeout: int = 30):
-        # Prefer env, else settings, else user constant if you put it in settings.py
         self.api_key = (
             api_key
             or os.environ.get("TMDB_API_KEY")
@@ -211,25 +204,46 @@ class TMDbClient:
 
 
 class Command(BaseCommand):
-    help = "Monthly TMDB sync: discover popular movies/tv not yet in DB, upsert fields like seed_titlesV2, optional sync tv seasons/episodes."
+    help = (
+        "TMDB sync: discover popular movies/tv not yet in DB, fill like seed_titlesV2, "
+        "and improve TV syncing by also using TMDb airing/on_the_air/trending lists to catch new popular shows."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--pages", type=int, default=10, help="How many discover pages to scan per type.")
-        parser.add_argument("--min-votes", type=int, default=800, help="discover.vote_count.gte (filters obscure titles).")
+        parser.add_argument("--min-votes", type=int, default=800, help="discover.vote_count.gte")
+        parser.add_argument("--min-rating", type=float, default=0.0, help="discover.vote_average.gte (0 = disabled).")
         parser.add_argument("--language", type=str, default="en-US")
         parser.add_argument("--overwrite", action="store_true", help="Overwrite non-empty fields (default: fill only if empty).")
         parser.add_argument("--verbose-adds", action="store_true", help="Print created/updated titles.")
-        parser.add_argument("--only-created", action="store_true", help="If verbose, print only created (not updated).")        # TV episodes sync is ON by default (so new TV titles always get seasons/episodes like seed_titlesV2).
+        parser.add_argument("--only-created", action="store_true", help="If verbose, print only created (not updated).")
+
+        # TV episodes sync is ON by default
         parser.set_defaults(tv_sync_episodes=True)
         parser.add_argument("--tv-sync-episodes", dest="tv_sync_episodes", action="store_true", help="Also sync seasons/episodes for tv (default: ON).")
         parser.add_argument("--no-tv-sync-episodes", dest="tv_sync_episodes", action="store_false", help="Disable syncing seasons/episodes for tv.")
-        parser.add_argument("--tv-max-seasons", type=int, default=2, help="Max seasons to sync per tv show (starting at season 1).")
+
+        # Old behavior: season 1..N
+        parser.add_argument("--tv-max-seasons", type=int, default=2, help="(Discover TV) Max seasons to sync per tv show starting at season 1.")
         parser.add_argument("--skip-specials", action="store_true", help="Skip season 0.")
 
-        parser.add_argument("--sleep", type=float, default=0.2, help="Sleep between detail calls (avoid TMDB rate spikes).")
+        # NEW: Airing/On-the-air/Trending sources to catch new popular shows + sync latest seasons
+        parser.set_defaults(tv_use_airing_sources=True)
+        parser.add_argument("--tv-use-airing-sources", dest="tv_use_airing_sources", action="store_true", help="Use TMDb airing/on_the_air/trending sources (default: ON).")
+        parser.add_argument("--no-tv-use-airing-sources", dest="tv_use_airing_sources", action="store_false", help="Disable airing/on_the_air/trending sources.")
 
+        parser.add_argument("--tv-airing-pages", type=int, default=5, help="Pages to scan for airing_today/on_the_air/trending.")
+        parser.add_argument("--tv-min-votes-airing", type=int, default=100, help="Minimum vote_count for airing/trending candidates.")
+        parser.add_argument("--tv-min-rating-airing", type=float, default=6.5, help="Minimum vote_average for airing/trending candidates.")
+        parser.add_argument("--tv-sync-latest-seasons", type=int, default=1, help="For airing/trending shows: sync the latest N seasons (default: 1).")
+
+        parser.add_argument("--sleep", type=float, default=0.2, help="Sleep between detail calls (avoid TMDB rate spikes).")
         parser.add_argument("--check-dups", action="store_true", help="Print duplicate groups (type,tmdb_id) if any.")
         parser.add_argument("--max-print", type=int, default=200, help="Max verbose lines printed per type.")
+
+        # Optional one-off force sync
+        parser.add_argument("--tv-id", type=int, default=0, help="Force sync a specific TV tmdb_id and exit.")
+        parser.add_argument("--movie-id", type=int, default=0, help="Force sync a specific Movie tmdb_id and exit.")
 
     def _log(self, msg: str):
         self.stdout.write(msg)
@@ -254,8 +268,13 @@ class Command(BaseCommand):
         for row in qs[:25]:
             self._log(f"  - type={row['type']} tmdb_id={row['tmdb_id']} count={row['c']}")
 
+    # --- NEW: safer actor character field to avoid MySQL 1406 errors ---
+    def _safe_character(self, s: str) -> str:
+        # If your DB column is VARCHAR(255), this prevents "Data too long" crashes.
+        # If you later change it to TEXT, this truncation is still harmless.
+        return (s or "")[:255]
+
     def _sync_actors(self, title_obj: Title, full: dict):
-        # uses Actor unique constraint (title, name_norm)
         cast_list = (full.get("credits") or {}).get("cast", []) or []
         for c in cast_list[:30]:
             name = (c.get("name") or "").strip()
@@ -268,20 +287,67 @@ class Command(BaseCommand):
                     "name": name,
                     "tmdb_id": safe_int(c.get("id")),
                     "profile_path": c.get("profile_path") or "",
-                    "character": c.get("character") or "",
+                    "character": self._safe_character(c.get("character") or ""),
                 },
             )
 
-    @transaction.atomic
-    def _upsert_movie(self, tmdb: TMDbClient, tmdb_id: int, language: str, overwrite: bool,
-                      verbose: bool, only_created: bool, max_print: int, sleep_s: float,
-                      stats: dict):
+    # --- NEW: collect IDs from airing/on_the_air/trending with quality filter ---
+    def _collect_tv_ids_from_list(
+        self,
+        tmdb: TMDbClient,
+        path: str,
+        pages: int,
+        language: str,
+        min_votes: int,
+        min_rating: float,
+        sleep_s: float,
+        is_trending: bool = False,
+    ) -> List[int]:
+        out: List[int] = []
+        params_base = {}
+        if not is_trending:
+            params_base["language"] = language
 
-        # full movie + credits/videos/keywords
+        for page in range(1, pages + 1):
+            params = dict(params_base)
+            params["page"] = page
+            data = tmdb.get(path, params=params)
+            self._maybe_sleep(sleep_s)
+
+            for it in (data.get("results") or []):
+                tid = safe_int(it.get("id"))
+                if not tid:
+                    continue
+                vc = safe_int(it.get("vote_count"), 0) or 0
+                va = safe_float(it.get("vote_average"), 0.0) or 0.0
+                if vc >= min_votes and va >= min_rating:
+                    out.append(tid)
+
+        # unique preserving order
+        seen = set()
+        uniq: List[int] = []
+        for tid in out:
+            if tid not in seen:
+                seen.add(tid)
+                uniq.append(tid)
+        return uniq
+
+    @transaction.atomic
+    def _upsert_movie(
+        self,
+        tmdb: TMDbClient,
+        tmdb_id: int,
+        language: str,
+        overwrite: bool,
+        verbose: bool,
+        only_created: bool,
+        max_print: int,
+        sleep_s: float,
+        stats: dict,
+    ):
         full = tmdb.get(f"/movie/{tmdb_id}", params={"language": language, "append_to_response": "credits,videos,keywords"})
         self._maybe_sleep(sleep_s)
 
-        # external_ids for imdb_id (needed for movie_link3)
         ext = {}
         try:
             ext = tmdb.get(f"/movie/{tmdb_id}/external_ids")
@@ -299,7 +365,6 @@ class Command(BaseCommand):
         release_year = parse_year_from_ymd(release_date)
 
         links = movie_title_links(tmdb_id, imdb_code)
-
         genre_str = ", ".join([g.get("name") for g in (full.get("genres") or []) if g.get("name")])
 
         row = {
@@ -360,7 +425,6 @@ class Command(BaseCommand):
             if changed:
                 obj.save()
 
-        # also update actors table (optional but keeps your Actor list fresh)
         self._sync_actors(obj, full)
 
         if created:
@@ -374,16 +438,64 @@ class Command(BaseCommand):
                 self._log(f"[{tag}] movie tmdb_id={tmdb_id} year={release_year or '????'} title={title_str}")
                 stats["movie"]["printed"] += 1
 
-    @transaction.atomic
-    def _upsert_tv(self, tmdb: TMDbClient, tv_id: int, language: str, overwrite: bool,
-                   verbose: bool, only_created: bool, max_print: int, sleep_s: float,
-                   sync_eps: bool, max_seasons: int, skip_specials: bool,
-                   stats: dict):
+    def _pick_season_numbers(
+        self,
+        full_tv: dict,
+        skip_specials: bool,
+        mode: str,
+        max_seasons_from_start: int,
+        latest_n: int,
+    ) -> List[int]:
+        """
+        mode:
+          - "discover": sync season 1..max_seasons_from_start
+          - "airing": sync latest N seasons (latest_n)
+        """
+        season_numbers = []
+        for s in (full_tv.get("seasons") or []):
+            sn = safe_int(s.get("season_number"))
+            if sn is None:
+                continue
+            if skip_specials and sn == 0:
+                continue
+            if sn > 0:
+                season_numbers.append(sn)
 
+        season_numbers = sorted(set(season_numbers))
+        if not season_numbers:
+            return []
+
+        if mode == "airing":
+            n = max(1, int(latest_n or 1))
+            return season_numbers[-n:]
+
+        # discover mode
+        m = int(max_seasons_from_start or 0)
+        if m <= 0:
+            return season_numbers
+        return [sn for sn in season_numbers if sn <= m]
+
+    @transaction.atomic
+    def _upsert_tv(
+        self,
+        tmdb: TMDbClient,
+        tv_id: int,
+        language: str,
+        overwrite: bool,
+        verbose: bool,
+        only_created: bool,
+        max_print: int,
+        sleep_s: float,
+        sync_eps: bool,
+        max_seasons: int,
+        skip_specials: bool,
+        stats: dict,
+        season_mode: str = "discover",          # "discover" or "airing"
+        latest_seasons_n: int = 1,              # used when season_mode == "airing"
+    ):
         full = tmdb.get(f"/tv/{tv_id}", params={"language": language, "append_to_response": "credits,videos,keywords"})
         self._maybe_sleep(sleep_s)
 
-        # external ids (optional)
         ext = {}
         try:
             ext = tmdb.get(f"/tv/{tv_id}/external_ids")
@@ -399,7 +511,6 @@ class Command(BaseCommand):
 
         first_air_date = (full.get("first_air_date") or "").strip()
         genre_str = ", ".join([g.get("name") for g in (full.get("genres") or []) if g.get("name")])
-
         links = tv_title_links(tv_id)
 
         row = {
@@ -442,7 +553,7 @@ class Command(BaseCommand):
             "spoken_languages": [l.get("name") for l in (full.get("spoken_languages") or []) if l.get("name")],
             "belongs_to_collection": None,
 
-            "director": "",  # TV director isn't stable like movies
+            "director": "",
             "cast": tmdb_cast_names(full, limit=10),
         }
 
@@ -458,7 +569,6 @@ class Command(BaseCommand):
             if changed:
                 obj.save()
 
-        # TV extras
         TVShowExtras.objects.update_or_create(
             title=obj,
             defaults={
@@ -470,7 +580,6 @@ class Command(BaseCommand):
             },
         )
 
-        # Actors
         self._sync_actors(obj, full)
 
         if created:
@@ -484,37 +593,39 @@ class Command(BaseCommand):
                 self._log(f"[{tag}] tv tmdb_id={tv_id} first_air={first_air_date or '????-??-??'} title={title_str}")
                 stats["tv"]["printed"] += 1
 
-        # Seasons / Episodes sync
         if not sync_eps:
             return
 
-        seasons_list = full.get("seasons") or []
-        seasons_synced = 0
+        season_numbers = self._pick_season_numbers(
+            full_tv=full,
+            skip_specials=skip_specials,
+            mode=season_mode,
+            max_seasons_from_start=max_seasons,
+            latest_n=latest_seasons_n,
+        )
 
-        for s in seasons_list:
-            snum = safe_int(s.get("season_number"))
-            if snum is None:
-                continue
-            if skip_specials and snum == 0:
-                continue
-            if snum <= 0:
-                continue
-            if snum > max_seasons:
-                continue
+        seasons_synced = 0
+        for snum in season_numbers:
+            # find the season dict (for metadata defaults) if present
+            season_dict = None
+            for s in (full.get("seasons") or []):
+                if safe_int(s.get("season_number")) == snum:
+                    season_dict = s
+                    break
+            season_dict = season_dict or {}
 
             season_obj, _ = Season.objects.update_or_create(
                 tv=obj,
                 season_number=snum,
                 defaults={
-                    "tmdb_id": safe_int(s.get("id")),
-                    "name": s.get("name") or "",
-                    "overview": s.get("overview") or "",
-                    "air_date": s.get("air_date") or "",
-                    "poster": s.get("poster_path") or "",
+                    "tmdb_id": safe_int(season_dict.get("id")),
+                    "name": season_dict.get("name") or "",
+                    "overview": season_dict.get("overview") or "",
+                    "air_date": season_dict.get("air_date") or "",
+                    "poster": season_dict.get("poster_path") or "",
                 },
             )
 
-            # season full for episodes
             try:
                 sfull = tmdb.get(f"/tv/{tv_id}/season/{snum}", params={"language": language})
             except Exception:
@@ -528,8 +639,6 @@ class Command(BaseCommand):
                     continue
 
                 links = episode_links(tv_id, snum, enum)
-
-                # Episode model fields include episode_link4/5/6 :contentReference[oaicite:6]{index=6}
                 ep_defaults = {
                     "tmdb_id": safe_int(e.get("id")),
                     "name": e.get("name") or "",
@@ -555,7 +664,6 @@ class Command(BaseCommand):
                     defaults=ep_defaults,
                 )
 
-                # fill-only-if-empty (unless overwrite)
                 if not ep_created:
                     ep_changed = False
                     for f, v in ep_defaults.items():
@@ -571,6 +679,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         pages = int(opts["pages"])
         min_votes = int(opts["min_votes"])
+        min_rating = float(opts["min_rating"])
         language = str(opts["language"])
         overwrite = bool(opts["overwrite"])
         verbose = bool(opts["verbose_adds"])
@@ -582,12 +691,24 @@ class Command(BaseCommand):
         check_dups = bool(opts["check_dups"])
         max_print = int(opts["max_print"])
 
+        tv_use_airing_sources = bool(opts["tv_use_airing_sources"])
+        tv_airing_pages = int(opts["tv_airing_pages"])
+        tv_min_votes_airing = int(opts["tv_min_votes_airing"])
+        tv_min_rating_airing = float(opts["tv_min_rating_airing"])
+        tv_sync_latest_seasons = int(opts["tv_sync_latest_seasons"])
+
+        force_tv_id = int(opts["tv_id"] or 0)
+        force_movie_id = int(opts["movie_id"] or 0)
+
         tmdb = TMDbClient()
 
         self._log("====================================================")
         self._log("[sync_tmdb_monthly] starting…")
-        self._log(f"pages={pages} min_votes={min_votes} language={language} overwrite={overwrite}")
+        self._log(f"pages={pages} min_votes={min_votes} min_rating={min_rating} language={language} overwrite={overwrite}")
         self._log(f"tv_sync_episodes={sync_eps} tv_max_seasons={max_seasons} skip_specials={skip_specials}")
+        self._log(f"tv_use_airing_sources={tv_use_airing_sources} tv_airing_pages={tv_airing_pages} "
+                  f"tv_min_votes_airing={tv_min_votes_airing} tv_min_rating_airing={tv_min_rating_airing} "
+                  f"tv_sync_latest_seasons={tv_sync_latest_seasons}")
         self._log(f"sleep={sleep_s}s")
         self._log("====================================================")
 
@@ -596,24 +717,64 @@ class Command(BaseCommand):
             "tv": {"created": 0, "updated": 0, "printed": 0, "seasons_synced": 0},
         }
 
-        # Discover params
         today = today_ymd()
 
+        # --- One-off forced sync shortcuts ---
+        if force_movie_id:
+            self._log(f"[force] movie tmdb_id={force_movie_id}")
+            self._upsert_movie(
+                tmdb=tmdb,
+                tmdb_id=force_movie_id,
+                language=language,
+                overwrite=overwrite,
+                verbose=True,
+                only_created=False,
+                max_print=max_print,
+                sleep_s=sleep_s,
+                stats=stats,
+            )
+            self._log("DONE.")
+            return
+
+        if force_tv_id:
+            self._log(f"[force] tv tmdb_id={force_tv_id}")
+            self._upsert_tv(
+                tmdb=tmdb,
+                tv_id=force_tv_id,
+                language=language,
+                overwrite=overwrite,
+                verbose=True,
+                only_created=False,
+                max_print=max_print,
+                sleep_s=sleep_s,
+                sync_eps=sync_eps,
+                max_seasons=max_seasons,
+                skip_specials=skip_specials,
+                stats=stats,
+                season_mode="airing" if sync_eps else "discover",
+                latest_seasons_n=max(1, tv_sync_latest_seasons),
+            )
+            self._log("DONE.")
+            return
+
         # ----------------
-        # Movies
+        # Movies (discover)
         # ----------------
         self._log("[movies] discover…")
         for page in range(1, pages + 1):
-            data = tmdb.get("/discover/movie", params={
+            params = {
                 "language": language,
                 "sort_by": "popularity.desc",
                 "include_adult": "false",
                 "include_video": "false",
                 "page": page,
                 "vote_count.gte": min_votes,
-                "release_date.lte": today,  # only released (or at least dated) <= today
-            })
+                "release_date.lte": today,
+            }
+            if min_rating and min_rating > 0:
+                params["vote_average.gte"] = min_rating
 
+            data = tmdb.get("/discover/movie", params=params)
             results = data.get("results") or []
             self._log(f"[movies] page={page} results={len(results)}")
 
@@ -637,18 +798,92 @@ class Command(BaseCommand):
                     self._log(f"[movies] ERROR tmdb_id={mid}: {ex}")
 
         # ----------------
-        # TV
+        # TV (airing/on_the_air/trending first)
+        # ----------------
+        if tv_use_airing_sources:
+            self._log("[tv] airing/on_the_air/trending…")
+            airing_ids: List[int] = []
+            try:
+                airing_ids += self._collect_tv_ids_from_list(
+                    tmdb=tmdb,
+                    path="/tv/airing_today",
+                    pages=tv_airing_pages,
+                    language=language,
+                    min_votes=tv_min_votes_airing,
+                    min_rating=tv_min_rating_airing,
+                    sleep_s=sleep_s,
+                )
+            except Exception as ex:
+                self._log(f"[tv] airing_today ERROR: {ex}")
+
+            try:
+                airing_ids += self._collect_tv_ids_from_list(
+                    tmdb=tmdb,
+                    path="/tv/on_the_air",
+                    pages=tv_airing_pages,
+                    language=language,
+                    min_votes=tv_min_votes_airing,
+                    min_rating=tv_min_rating_airing,
+                    sleep_s=sleep_s,
+                )
+            except Exception as ex:
+                self._log(f"[tv] on_the_air ERROR: {ex}")
+
+            try:
+                airing_ids += self._collect_tv_ids_from_list(
+                    tmdb=tmdb,
+                    path="/trending/tv/week",
+                    pages=tv_airing_pages,
+                    language=language,
+                    min_votes=tv_min_votes_airing,
+                    min_rating=tv_min_rating_airing,
+                    sleep_s=sleep_s,
+                    is_trending=True,
+                )
+            except Exception as ex:
+                self._log(f"[tv] trending/week ERROR: {ex}")
+
+            # unique preserving order
+            airing_ids = list(dict.fromkeys(airing_ids))
+            self._log(f"[tv] airing candidates={len(airing_ids)}")
+
+            for tid in airing_ids:
+                try:
+                    self._upsert_tv(
+                        tmdb=tmdb,
+                        tv_id=tid,
+                        language=language,
+                        overwrite=overwrite,
+                        verbose=verbose,
+                        only_created=only_created,
+                        max_print=max_print,
+                        sleep_s=sleep_s,
+                        sync_eps=sync_eps,
+                        max_seasons=max_seasons,  # still used for discover mode; airing mode uses latest seasons
+                        skip_specials=skip_specials,
+                        stats=stats,
+                        season_mode="airing",
+                        latest_seasons_n=max(1, tv_sync_latest_seasons),
+                    )
+                except Exception as ex:
+                    self._log(f"[tv] airing ERROR tmdb_id={tid}: {ex}")
+
+        # ----------------
+        # TV (discover, catalogue fill)
         # ----------------
         self._log("[tv] discover…")
         for page in range(1, pages + 1):
-            data = tmdb.get("/discover/tv", params={
+            params = {
                 "language": language,
                 "sort_by": "popularity.desc",
                 "page": page,
                 "vote_count.gte": min_votes,
                 "first_air_date.lte": today,
-            })
+            }
+            if min_rating and min_rating > 0:
+                params["vote_average.gte"] = min_rating
 
+            data = tmdb.get("/discover/tv", params=params)
             results = data.get("results") or []
             self._log(f"[tv] page={page} results={len(results)}")
 
@@ -670,6 +905,8 @@ class Command(BaseCommand):
                         max_seasons=max_seasons,
                         skip_specials=skip_specials,
                         stats=stats,
+                        season_mode="discover",
+                        latest_seasons_n=1,
                     )
                 except Exception as ex:
                     self._log(f"[tv] ERROR tmdb_id={tid}: {ex}")
@@ -685,85 +922,188 @@ class Command(BaseCommand):
 
         self._log("DONE.")
 
+
+
+
 """
 ====================================================
-SYNC_TMDB_MONTHLY — COMMENT UTILISER (NOUVELLES SORTIES)
+SYNC_TMDB_MONTHLY — HOW TO RUN (CHEAT SHEET)
 ====================================================
 
-Ce script sert à:
-- chercher sur TMDb des films + séries "connus" (filtrés par popularité via discover)
-- qui ont une date de sortie <= aujourd'hui (donc déjà sortis)
-- et les ajouter dans ta DB si ils n’existent pas encore (sinon il complète les champs vides)
-- optionnel: ajouter aussi Seasons/Episodes pour les séries
+This command is a Django management command:
 
-IMPORTANT
-- Pour voir uniquement CE QUI A ÉTÉ AJOUTÉ (nouveaux titres), utilise:
+    python manage.py sync_tmdb_monthly [options...]
+
+It does 2 things:
+1) Movies: uses TMDb /discover/movie (released <= today) and upserts into Title(type="movie")
+2) TV: improved sync
+   - (A) "Airing sources" pass (default ON): /tv/airing_today + /tv/on_the_air + /trending/tv/week
+         * great for NEW / currently hot series
+         * syncs the LATEST seasons (default 1 season) so episode sync is relevant
+   - (B) "Discover TV" pass: /discover/tv (first_air_date <= today) like your original script
+         * good for general catalogue fill
+         * by default syncs seasons 1..tv_max_seasons (default 2)
+
+LOGS / OUTPUT
+- [CREATE] => new Title created (what you want when building catalogue)
+- [UPDATE] => existing Title got some missing fields filled (or overwrite=True)
+- [SKIP]   => existing Title and no changes
+
+----------------------------------------------------
+✅ MAIN RECOMMENDED RUN (Balanced)
+- Finds new popular movies + tv
+- TV uses airing/trending to catch new releases
+- Prints only created Titles
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
   --verbose-adds --only-created
 
-EXEMPLES (les plus utiles)
+----------------------------------------------------
+✅ NEW POPULAR TV FOCUS (best for “what’s hot now”)
+- Same as above but makes airing/trending less strict so new shows pass
+- Keeps catalogue discover strict-ish
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
+  --tv-airing-pages 5 \
+  --tv-min-votes-airing 100 \
+  --tv-min-rating-airing 6.5 \
+  --tv-sync-latest-seasons 1 \
+  --verbose-adds --only-created
 
-1) NOUVELLES SORTIES (Films + Séries) — recommandé
-   - Ajoute uniquement les nouveaux Titles (movie/tv) manquants dans ta DB
-   - Affiche uniquement les créations ([CREATE])
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --verbose-adds --only-created
+----------------------------------------------------
+✅ STRICT MODE (fewer titles, very mainstream)
+- Warning: this can MISS brand-new shows because vote_count is slow to grow
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 2000 \
+  --verbose-adds --only-created
 
-2) NOUVELLES SORTIES + épisodes (TV)
-   - Ajoute les nouveaux Titles TV + récupère saisons/épisodes (limité aux saisons 1..2)
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --tv-sync-episodes --tv-max-seasons 2 --verbose-adds --only-created
+----------------------------------------------------
+✅ WIDE MODE (more titles, more chances to find missing stuff)
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 20 \
+  --min-votes 500 \
+  --verbose-adds --only-created
 
-3) NOUVELLES SORTIES + check doublons à la fin
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --verbose-adds --only-created --check-dups
+----------------------------------------------------
+✅ ALSO SYNC EPISODES FOR TV
+TV episode syncing is ON by default, but this shows the explicit flags.
+- Discover TV: sync season 1..2 (tv_max_seasons)
+- Airing/trending: sync latest season(s) (tv_sync_latest_seasons)
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
+  --tv-sync-episodes \
+  --tv-max-seasons 2 \
+  --tv-sync-latest-seasons 1 \
+  --verbose-adds --only-created
 
-4) Ajuster ce qui est considéré "connu"
-- Plus strict (moins de titres, plus populaires):
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
-- Plus large (plus de titres, moins strict):
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 500 --verbose-adds --only-created
+----------------------------------------------------
+✅ DISABLE AIRING/TRENDING TV (old behavior)
+If you want TV to behave exactly like before (only /discover/tv):
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --no-tv-use-airing-sources \
+  --pages 10 \
+  --min-votes 800 \
+  --tv-sync-episodes \
+  --tv-max-seasons 2 \
+  --verbose-adds --only-created
 
-5) Si tu te fais rate-limit (TMDb 429), ralentis un peu:
-python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --sleep 0.35 --verbose-adds --only-created
+----------------------------------------------------
+✅ SKIP SPECIALS (season 0)
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
+  --skip-specials \
+  --verbose-adds --only-created
 
-COMMENT LIRE LES LOGS
-- [CREATE] ...  => un nouveau titre a été ajouté (c’est ce que tu veux pour "nouvelles sorties")
-- [UPDATE] ...  => un titre existait déjà; le script a complété des champs vides (ou overwrite si activé)
-- [SKIP]   ...  => le titre existait déjà et rien n’a changé
+----------------------------------------------------
+✅ IF YOU GET TMDb RATE LIMIT (429)
+Slow down between TMDb calls.
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
+  --sleep 0.35 \
+  --verbose-adds --only-created
 
-OPTIONS IMPORTANTES
-- --pages N        : combien de pages TMDb à scanner (plus grand = plus de chances de trouver des nouveautés)
-- --min-votes X    : filtre anti-"films obscurs" (vote_count minimum)
-- --tv-sync-episodes / --tv-max-seasons : pour remplir Season/Episode
-- --overwrite      : DANGEREUX (remplace aussi les champs déjà remplis). Par défaut le script remplit seulement les champs vides.
+----------------------------------------------------
+✅ CHECK FOR DUPLICATES AT THE END
+Looks for duplicate (type, tmdb_id) groups in Title table.
+----------------------------------------------------
+python manage.py sync_tmdb_monthly \
+  --pages 10 \
+  --min-votes 800 \
+  --check-dups \
+  --verbose-adds --only-created
+
+----------------------------------------------------
+✅ FORCE ADD / FORCE RESYNC A SPECIFIC TITLE
+This bypasses discover/airing lists. Useful when a show is missing.
+- Force a TV show by TMDb ID:
+----------------------------------------------------
+python manage.py sync_tmdb_monthly --tv-id 12345 --verbose-adds
+
+----------------------------------------------------
+- Force a movie by TMDb ID:
+----------------------------------------------------
+python manage.py sync_tmdb_monthly --movie-id 98765 --verbose-adds
+
+----------------------------------------------------
+PARAMETER EXPLANATIONS (Quick)
+----------------------------------------------------
+--pages N
+  How many pages (20 results/page) to scan for /discover (movies + tv).
+
+--min-votes X
+  vote_count.gte for /discover (filters obscure titles).
+
+--min-rating R
+  vote_average.gte for /discover (optional; default 0 = off).
+
+--tv-use-airing-sources / --no-tv-use-airing-sources
+  Enable/disable TV "airing_today/on_the_air/trending" pass (default ON).
+
+--tv-airing-pages N
+  Pages to scan for airing_today/on_the_air/trending.
+
+--tv-min-votes-airing X
+  Minimum vote_count for airing/trending candidates.
+
+--tv-min-rating-airing R
+  Minimum vote_average for airing/trending candidates.
+
+--tv-sync-latest-seasons N
+  For airing/trending shows, sync the latest N seasons (default 1).
+  (This makes episode sync relevant for currently-airing shows.)
+
+--tv-max-seasons N
+  For discover TV only: sync seasons 1..N.
+
+--tv-sync-episodes / --no-tv-sync-episodes
+  Enable/disable season/episode syncing (default ON).
+
+--overwrite
+  Overwrites existing non-empty fields (DANGEROUS).
+  Default behavior fills only missing/empty fields.
+
+--verbose-adds
+  Prints CREATE/UPDATE/SKIP lines (up to --max-print per type).
+
+--only-created
+  When verbose, print only [CREATE] lines.
+
+--max-print
+  Max lines printed per type.
+
 ====================================================
-"""
-# ✅ COMMANDE PRINCIPALE — CHERCHER + AJOUTER LES NOUVEAUTÉS
-# (Films + Séries déjà sortis (<= aujourd’hui) + "connus" via min-votes)
-# Affiche UNIQUEMENT ce qui a été ajouté ([CREATE])
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --verbose-adds --only-created
-#
-# ------------------------------------------------------------
-# NOUVEAUTÉS + épisodes (TV)
-# (Ajoute les séries + sync Seasons/Episodes, limité aux saisons 1..2)
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --tv-sync-episodes --tv-max-seasons 2 --verbose-adds --only-created
-#
-# ------------------------------------------------------------
-# NOUVEAUTÉS + vérification doublons à la fin
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --verbose-adds --only-created --check-dups
-#
-# ------------------------------------------------------------
-# Plus strict (encore moins "obscur", donc moins de titres)
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
-#
-# ------------------------------------------------------------
-# Plus large (plus de titres / plus de chances de trouver des nouveautés)
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 20 --min-votes 500 --verbose-adds --only-created
-#
-# ------------------------------------------------------------
-# Si tu te fais rate-limit TMDb (429), ralentis un peu
-# ------------------------------------------------------------
-# python manage.py sync_tmdb_monthly --pages 10 --min-votes 800 --sleep 0.35 --verbose-adds --only-created
-#
+"""        

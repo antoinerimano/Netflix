@@ -33,10 +33,11 @@ const tmdbProfileUrl = (profilePath, size = "w185") => {
 
 const getCastObjects = (cast) => {
   if (!Array.isArray(cast)) return [];
-  // garde seulement les objets avec name (ou string -> convert)
   return cast
     .map((x) => (typeof x === "string" ? { name: x } : x))
-    .filter((x) => x && (x.name || x.english_name));
+    .filter((x) => x && (x.name || x.english_name))
+    // Sort by global appearances (how many titles this actor is in) — most popular first
+    .sort((a, b) => (b.appearances ?? 0) - (a.appearances ?? 0));
 };
 
 

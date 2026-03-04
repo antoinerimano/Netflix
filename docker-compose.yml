@@ -11,6 +11,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3306:3306"    
 
   backend:
     build:
