@@ -21,4 +21,9 @@ docker exec -it taurus-db-1 mysql -u root -p
 
 docker compose logs backend
 
+docker compose run --rm certbot renew (in nginx folder)
+docker compose exec nginx nginx -s reload
 
+
+docker compose ps
+docker compose up --build -d nginx
