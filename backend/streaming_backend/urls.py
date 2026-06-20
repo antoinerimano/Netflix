@@ -4,6 +4,7 @@ from django.urls import path, include
 from rest_framework_nested import routers
 from users import views
 from users.views import (
+    ActorListView,
     LogoutView,
     request_password_reset,
     confirm_password_reset,
@@ -57,5 +58,6 @@ urlpatterns = [
     path('api/users/<uuid:id>/request-email-change/', views.UserViewSet.as_view({'post': 'request_email_change'}), name='request-email-change'),
 
     path("api/", include("reco.urls")),
+    path('api/actors/', ActorListView.as_view(), name='actors-list'),
 
 ]

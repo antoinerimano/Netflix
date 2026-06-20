@@ -192,6 +192,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if not check_password(password, user.password):
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+        user.last_login = timezone.now()
+        user.save(update_fields=["last_login"])    
+
         # Blacklist existing refresh tokens
         for t in OutstandingToken.objects.filter(user=user):
             BlacklistedToken.objects.get_or_create(token=t)
@@ -726,3 +729,26 @@ def titles_by_actor(request):
     )
 
     return Response({"results": TitleListSerializer(qs, many=True).data})
+
+
+class ActorListView(APIView):
+    """
+    GET /api/actors/
+    Returns paginated list of unique actors (by tmdb_id).
+    Public read access.
+    """
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get(self, request):
+        tmdb_ids = (
+            Actor.objects
+            .filter(tmdb_id__isnull=False)
+            .values_list('tmdb_id', flat=True)
+            .distinct()
+            .order_by('tmdb_id')
+        )
+        paginator = PageNumberPagination()
+        paginator.page_size = int(request.query_params.get("page_size", 200))
+        page = paginator.paginate_queryset(list(tmdb_ids), request)
+        data = [{"tmdb_id": tid} for tid in page]
+        return paginator.get_paginated_response(data)    

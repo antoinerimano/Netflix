@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import './Navbar.css';
 import { useNavigate } from 'react-router-dom';
-import { searchTitles } from '../api/titlesApi'; // ⬅️ add fetchTVShows
+import { searchTitles } from '../api/titlesApi';
 import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
 
+const SITE_URL = 'https://tauruss.top/';
 
 const Navbar = () => {
   const [profiles, setProfiles] = useState([]);
@@ -16,6 +17,7 @@ const Navbar = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]); // [{id,title,poster,description,kind:'movie'|'tv'}]
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [shareStatus, setShareStatus] = useState(''); // '', 'copied', 'shared'
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -23,7 +25,6 @@ const Navbar = () => {
 
   const userId = localStorage.getItem('userId');
   const isStaff = localStorage.getItem('isStaff') === '1'; // ADMIN
-
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -71,7 +72,6 @@ const Navbar = () => {
     loadProfilesAndPhoto();
   }, [userId]);
 
-
   // Debounced cross-type search (Movies + TV)
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -102,7 +102,6 @@ const Navbar = () => {
     return () => clearTimeout(t);
   }, [query]);
 
-
   // Close results when clicking outside the search box/results
   useEffect(() => {
     function handleClickOutside(e) {
@@ -126,7 +125,6 @@ const Navbar = () => {
     window.location.reload();
   };
 
-
   const handleInputChange = (e) => setQuery(e.target.value);
 
   const handleResultClick = (item, index) => {
@@ -144,12 +142,32 @@ const Navbar = () => {
     setQuery('');
   };
 
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Taurus',
+          text: 'Check out Taurus',
+          url: SITE_URL,
+        });
+        setShareStatus('shared');
+      } else {
+        await navigator.clipboard.writeText(SITE_URL);
+        setShareStatus('copied');
+      }
+    } catch (err) {
+      // user cancelled the share sheet — ignore quietly
+      if (err.name !== 'AbortError') console.error(err);
+      return;
+    }
+    setTimeout(() => setShareStatus(''), 2000);
+  };
 
   const handleNavigateHome = () => navigate('/');
   const handleNavigateAccount = () =>
     userId ? navigate(`/account/${userId}`) : navigate('/login');
   const handleNavigateMovies = () => navigate('/movies');
-  const handleNavigateTV = () => navigate('/tv'); // <-- route to your TV index page
+  const handleNavigateTV = () => navigate('/tv');
   const handleNavigateList = () => navigate('/list');
   const handleLogin = () => navigate('/login');
   const toggleProfileDropdown = () => setIsProfileDropdownOpen((v) => !v);
@@ -167,7 +185,6 @@ const Navbar = () => {
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
         ) : (
-          // Desktop: inline SVG (garde ton code SVG complet ici)
           <svg
             version="1.2"
             xmlns="http://www.w3.org/2000/svg"
@@ -182,13 +199,12 @@ const Navbar = () => {
         )}
       </div>
 
-
       <button className="menu-toggle" onClick={toggleMenu}>☰</button>
 
       <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
         <li onClick={handleNavigateHome}>Home</li>
         <li onClick={handleNavigateMovies}>Movies</li>
-        <li onClick={handleNavigateTV}>TV Shows</li> {/* ⬅️ NEW */}
+        <li onClick={handleNavigateTV}>TV Shows</li>
         <li onClick={handleNavigateList}>My List</li>
         {isStaff && (
           <>
@@ -197,6 +213,29 @@ const Navbar = () => {
           </>
         )}
       </ul>
+
+      {/* SHARE */}
+      <button
+        className="share-button"
+        onClick={handleShare}
+        title="Share tauruss.top (Ctrl+D to bookmark)"
+        aria-label="Share site"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+             stroke="currentColor" strokeWidth="2"
+             strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        {shareStatus && (
+          <span className="share-feedback">
+            {shareStatus === 'copied' ? 'Link copied!' : 'Shared!'}
+          </span>
+        )}
+      </button>
 
       {/* SEARCH */}
       <div className="search-profile" ref={searchRef}>
@@ -210,7 +249,7 @@ const Navbar = () => {
         {results.length > 0 && (
           <div
             className="search-results"
-            onMouseDown={(e) => e.preventDefault()} // keep focus until click handled
+            onMouseDown={(e) => e.preventDefault()}
           >
             <ul>
               {results.map((item, idx) => (
@@ -260,8 +299,7 @@ const Navbar = () => {
                 profiles.map((profile) => (
                   <div
                     key={profile.id}
-                    className={`profile-option ${selectedProfile && selectedProfile.id === profile.id ? 'selected' : ''
-                      }`}
+                    className={`profile-option ${selectedProfile && selectedProfile.id === profile.id ? 'selected' : ''}`}
                     onClick={() => handleProfileChange(profile.id)}
                   >
                     <img

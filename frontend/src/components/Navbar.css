@@ -255,6 +255,48 @@ fill: #ffffff;
   opacity: 0.9;
 }
 
+.share-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.share-button:hover {
+  background-color: rgba(229, 9, 20, 0.15);
+  color: #e50914;
+}
+
+.share-feedback {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #e50914;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeInDown 0.2s ease;
+  z-index: 3000001;
+}
+
+
+@media (max-width: 768px) {
+  .share-button { margin-right: 4px; padding: 6px; }
+  .share-button svg { width: 18px; height: 18px; }
+}
+
 @media (min-width:2500px) and (min-height: 1500px) {
 
   .search-profile input {

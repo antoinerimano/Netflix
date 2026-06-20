@@ -1,3 +1,25 @@
-# https://www.robotstxt.org/robotstxt.html
+# robots.txt for tauruss.top
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Auth & account pages (no SEO value, often have tokens)
+Disallow: /login
+Disallow: /register
+Disallow: /create-profile
+Disallow: /choose-subscription
+Disallow: /reset-password/
+Disallow: /confirm-email-change
+
+# User-specific pages
+Disallow: /account/
+Disallow: /list
+
+# Gated streaming content
+Disallow: /watch/
+
+# Admin
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://tauruss.top/sitemap.xml

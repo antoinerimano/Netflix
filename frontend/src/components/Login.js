@@ -83,7 +83,7 @@ const Login = () => {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-        <p className="signup-prompt">New to Taurus? <a href="/register">Sign up now</a>.</p>
+        <p className="signup-prompt">New to Tauruss? <a href="/register">Sign up now</a>.</p>
       </div>
     </div>
   );

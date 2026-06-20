@@ -27,3 +27,12 @@ docker compose exec nginx nginx -s reload
 
 docker compose ps
 docker compose up --build -d nginx
+
+
+docker compose logs --tail=100 backend
+
+-------------to run in  mysql -------------------
+
+SHOW BINARY LOGS;
+
+PURGE BINARY LOGS TO 'binlog.000180';

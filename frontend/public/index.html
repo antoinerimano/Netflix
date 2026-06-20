@@ -2,32 +2,88 @@
 <html lang="en">
 
 <head>
+  <!-- ===== Core ===== -->
   <meta charset="utf-8" />
-  <link rel="icon" href="%PUBLIC_URL%/taurus.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#000000" />
-  <meta name="description" content="Web site created using create-react-app" />
 
-  <link rel="icon" href="%PUBLIC_URL%/logo/favicon-512x512.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png" />
-  <title>Taurus</title>
+  <!-- ===== Primary SEO ===== -->
+  <title>Tauruss – Stream Movies & TV Shows Online in HD</title>
+  <meta name="description" content="Tauruss lets you stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere — on any device." />
+  <meta name="author" content="Tauruss" />
+  <link rel="canonical" href="https://tauruss.top/" />
+
+  <!-- ===== Crawler hints ===== -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow" />
+
+  <!-- ===== Open Graph (Facebook, LinkedIn, iMessage previews) ===== -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Tauruss" />
+  <meta property="og:title" content="Tauruss – Stream Movies & TV Shows Online in HD" />
+  <meta property="og:description" content="Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere." />
+  <meta property="og:url" content="https://tauruss.top/" />
+  <meta property="og:image" content="https://tauruss.top/logo/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Tauruss streaming platform" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- ===== Twitter / X ===== -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tauruss – Stream Movies & TV Shows Online in HD" />
+  <meta name="twitter:description" content="Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere." />
+  <meta name="twitter:image" content="https://tauruss.top/logo/og-image.jpg" />
+  <meta name="twitter:image:alt" content="Tauruss streaming platform" />
+
+  <!-- ===== Favicons / App Icons ===== -->
+  <link rel="shortcut icon" href="https://tauruss.top/logo/favicon.ico" />
+  <link rel="icon" type="image/x-icon" href="https://tauruss.top/logo/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="https://tauruss.top/logo/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="https://tauruss.top/logo/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="https://tauruss.top/logo/favicon-48x48.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="https://tauruss.top/logo/favicon-64x64.png" />
+  <link rel="icon" type="image/png" sizes="128x128" href="https://tauruss.top/logo/favicon-128x128.png" />
+  <link rel="icon" type="image/png" sizes="256x256" href="https://tauruss.top/logo/favicon-256x256.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://tauruss.top/logo/favicon-180x180.png" />
+  <link rel="manifest" href="https://tauruss.top/manifest.json" />
+
+  <!-- ===== Structured Data (JSON-LD) ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Tauruss",
+    "url": "https://tauruss.top/",
+    "description": "Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://tauruss.top/search?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Tauruss",
+    "url": "https://tauruss.top/",
+    "logo": "https://tauruss.top/logo/favicon-512x512.png"
+  }
+  </script>
 </head>
 
 <body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <noscript>
+    <h1>Tauruss – Stream Movies & TV Shows Online</h1>
+    <p>Tauruss is a streaming platform offering thousands of movies and TV shows in HD. Please enable JavaScript to use Tauruss.</p>
+  </noscript>
   <div id="root"></div>
-  <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
 </body>
 
 </html>
