@@ -8,13 +8,15 @@ docker compose exec backend python /app/add_trailer_to_cdn.py
 docker compose down
 docker compose up -d --build
 
+docker compose up -d --build frontend
+
 docker compose up -d backend
 
 docker compose restart backend
 
 
 
-ssh -L 3307:172.18.0.2:3306 root@5.181.1.90
+ssh -L 3307:172.18.0.2:3306 root@131.123.41.90
 
 docker exec -it taurus-db-1 mysql -u root -p
 
