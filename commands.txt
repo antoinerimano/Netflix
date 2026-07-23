@@ -38,3 +38,12 @@ docker compose logs --tail=100 backend
 SHOW BINARY LOGS;
 
 PURGE BINARY LOGS TO 'binlog.000180';
+
+------------------------------------------------------------
+
+dev vs prod :
+
+in each .env file
+
+in frontend change api base to "" in prod and "http://127.0.0.1:8000/" in dev
+in backend change DB_HOST to "db" in prod and "localhost" in dev

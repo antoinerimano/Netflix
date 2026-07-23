@@ -185,7 +185,7 @@ export default function WatchPage() {
   }, [title, isTV, titleId, seasonNumber, episodeNumber]);
 
 
-      // ✅ Back always returns to the details page for this title
+  // ✅ Back always returns to the details page for this title
   const goBack = useCallback(() => {
     // if your details pages are separated by type
     if (isTV) {
@@ -404,8 +404,10 @@ export default function WatchPage() {
         className="watchpage__iframe"
         src={resolvedUrl}
         title="Player"
-        allow="autoplay; fullscreen; picture-in-picture"
+        allow="autoplay; fullscreen *; picture-in-picture; encrypted-media"
         allowFullScreen
+        webkitallowfullscreen="true"
+        mozallowfullscreen="true"
         loading="lazy"
         onLoad={() => {
           setSourceLoading(false);
