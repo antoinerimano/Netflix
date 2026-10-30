@@ -322,6 +322,11 @@ class Provider(models.Model):
         max_length=20, blank=True, default="",
         help_text="Query parameter to start at a time in seconds (resume), e.g. startAt or t. Empty: not supported.",
     )
+    sends_events = models.BooleanField(
+        default=False,
+        help_text="The player reports playback to the page (postMessage). Lets the site tell a source "
+                  "that plays from one that doesn't, and offer the next source when it stays silent.",
+    )
     enabled = models.BooleanField(default=True)
     priority = models.PositiveSmallIntegerField(default=100, help_text="Lower shows first.")
     auto_switch = models.BooleanField(

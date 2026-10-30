@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     LogImpressionView, LogActionView, RecoHomeView, WatchProgressView,
-    MyListView, MyListItemView, MyListImportView, TitleRatingView,
+    MyListView, MyListItemView, MyListImportView, TitleRatingView, PlaybackView,
 )
 
 urlpatterns = [
@@ -13,4 +13,5 @@ urlpatterns = [
     path("my-list/import/", MyListImportView.as_view()),
     path("my-list/<int:title_id>/", MyListItemView.as_view()),
     path("ratings/<int:title_id>/", TitleRatingView.as_view()),
+    path("playback/", PlaybackView.as_view()),
 ]

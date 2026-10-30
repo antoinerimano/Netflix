@@ -701,18 +701,32 @@ class TVShowExtrasViewSet(viewsets.ModelViewSet):
         return qs.order_by("title_id")
 
 
+UNKNOWN_SUCCESS_RATE = 0.5  # providers without enough data rank like an average one
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def provider_list(request):
     """
     GET /api/providers/
     Enabled stream providers; the client builds links as domain + path template
-    ({tmdb_id} {imdb_id} {season} {episode}). Providers that are down come last.
+    ({tmdb_id} {imdb_id} {season} {episode}). Order: down last, then success rate (smart playback),
+    then admin priority.
     """
-    providers = Provider.objects.filter(enabled=True).values(
-        "key", "label", "domain", "movie_path", "episode_path", "start_param", "status"
-    )
-    data = sorted(providers, key=lambda p: p["status"] == Provider.DOWN)
+    from reco.views import provider_success_rates
+
+    rates = provider_success_rates()
+    providers = list(Provider.objects.filter(enabled=True).values(
+        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority"
+    ))
+    for p in providers:
+        p["success_rate"] = rates.get(p["key"])  # None until enough plays were recorded
+    # down last, then the ones that play most often for everyone, then the admin priority
+    data = sorted(providers, key=lambda p: (
+        p["status"] == Provider.DOWN,
+        -(p["success_rate"] if p["success_rate"] is not None else UNKNOWN_SUCCESS_RATE),
+        p.pop("priority"),
+    ))
     response = Response(data)
     response["Cache-Control"] = "public, max-age=60"
     return response

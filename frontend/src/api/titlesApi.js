@@ -127,7 +127,7 @@ export function buildProviderLinks(providers, values, kind = 'movie') {
       if (values.start > 0 && p.start_param) {
         url += `${url.includes('?') ? '&' : '?'}${encodeURIComponent(p.start_param)}=${Math.floor(values.start)}`;
       }
-      return { key: p.key, label: p.label, url, down: p.status === 'down' };
+      return { key: p.key, label: p.label, url, down: p.status === 'down', sendsEvents: !!p.sends_events };
     })
     .filter(Boolean);
 }

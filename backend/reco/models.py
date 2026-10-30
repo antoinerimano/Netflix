@@ -174,3 +174,23 @@ class TitleRating(models.Model):
         indexes = [
             models.Index(fields=["profile", "value", "-updated_at"]),
         ]
+
+
+class PlaybackOutcome(models.Model):
+    """
+    Did a source play for this profile/title? worked = the player reported playback or the
+    viewer stayed on it; not worked = left it quickly without playback, or it never loaded.
+    Feeds "open the source that worked last" and the providers' success rates.
+    """
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="playback_outcomes")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    provider_key = models.CharField(max_length=40)
+    worked = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["profile", "title", "-created_at"]),
+            models.Index(fields=["profile", "worked", "-created_at"]),
+            models.Index(fields=["created_at", "provider_key"]),
+        ]

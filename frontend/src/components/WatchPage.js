@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
-import { saveWatchProgress } from "../api/recoApi";
+import { saveWatchProgress, reportPlayback, fetchPreferredSource } from "../api/recoApi";
 
 // sources saved by older versions used the DB column names
 const LEGACY_SOURCE_KEYS = {
@@ -31,8 +31,15 @@ function isDirectVideo(url) {
 }
 
 // --- NEW: read season/episode from query ---
+// Smart playback timings
+const SOURCE_LOAD_TIMEOUT_MS = 15000; // page never loaded: switch to the next source by itself
+const SOURCE_SILENT_TIMEOUT_MS = 20000; // loaded, but a player that reports playback stayed silent: offer the next one
+const SOURCE_STAYED_MS = 120000; // stayed this long on a source: it works
+const SOURCE_QUICK_LEAVE_MS = 60000; // switched away sooner, without playback: it didn't work
+
 // Normalize the players' postMessage events (formats from their docs) to
-// { position?, duration?, ended?, flush?, season?, episode? } (seconds), or null.
+// { position?, duration?, playing?, ended?, flush?, season?, episode? } (seconds), or null.
+// playing = proof the source actually plays (smart playback).
 function readPlayerEvent(raw) {
   let data = raw;
   if (typeof data === "string") {
@@ -63,6 +70,7 @@ function readPlayerEvent(raw) {
     return {
       position: num(d.player_progress),
       duration: num(d.player_duration),
+      playing: status === "playing" || Number(d.player_progress) > 0,
       ended: status === "completed",
       flush: status === "paused" || status === "seeked",
       season: num(d.player_info?.season) || undefined,
@@ -74,8 +82,10 @@ function readPlayerEvent(raw) {
   if (data.type.startsWith("cinesrc:")) {
     const kind = data.type.slice("cinesrc:".length);
     if (kind === "timeupdate" || kind === "seeked") {
-      return { position: num(data.currentTime), duration: num(data.duration), flush: kind === "seeked" };
+      const position = num(data.currentTime);
+      return { position, duration: num(data.duration), playing: position > 0, flush: kind === "seeked" };
     }
+    if (kind === "play") return { playing: true };
     if (kind === "pause") return { flush: true };
     if (kind === "ended") return { ended: true };
     if (kind === "nextepisode") return { season: num(data.season), episode: num(data.episode) };
@@ -83,6 +93,7 @@ function readPlayerEvent(raw) {
   }
 
   // VidCore: only play / pause / ended, no position
+  if (data.type === "vidcore:play") return { playing: true };
   if (data.type === "vidcore:ended") return { ended: true };
   return null;
 }
@@ -131,6 +142,13 @@ export default function WatchPage() {
 
   const userPickedRef = useRef(false);
   const hasPrefsRef = useRef(false);
+  const savedKeyRef = useRef(null); // source saved in this browser for this title
+  // smart playback
+  const attemptRef = useRef(null); // current source: { key, startedAt, playing, reported, report(worked) }
+  const iframeLoadedRef = useRef(false);
+  const autoFailedRef = useRef(new Set()); // sources that failed by themselves on this page
+  const [banner, setBanner] = useState(null); // { text, nextKey?, nextLabel? }
+  const [serverPref, setServerPref] = useState(undefined); // undefined = loading, null = unavailable
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // ✅ Default selection is NOT custom anymore (we auto-pick first provider)
@@ -283,8 +301,7 @@ export default function WatchPage() {
       const prefs = JSON.parse(raw);
 
       hasPrefsRef.current = !!prefs?.selectedKey;
-
-      if (prefs?.selectedKey) setSelectedKey(LEGACY_SOURCE_KEYS[prefs.selectedKey] || prefs.selectedKey);
+      savedKeyRef.current = prefs?.selectedKey ? LEGACY_SOURCE_KEYS[prefs.selectedKey] || prefs.selectedKey : null;
       if (typeof prefs?.customUrl === "string") setCustomUrl(prefs.customUrl);
       if (typeof prefs?.panelOpen === "boolean") setPanelOpen(prefs.panelOpen);
       if (prefs?.theme === "dark" || prefs?.theme === "light") setTheme(prefs.theme);
@@ -295,29 +312,50 @@ export default function WatchPage() {
     }
   }, [activeProfileId, titleId]);
 
+  // Smart playback: which source worked last (this title on any device, else this profile)
   useEffect(() => {
-    // wait until we know if prefs exist
-    if (!prefsLoaded) return;
+    let alive = true;
+    setServerPref(undefined);
+    const pid = localStorage.getItem("activeProfileId");
+    fetchPreferredSource({ profileId: pid, titleId })
+      .then((pref) => alive && setServerPref(pref))
+      .catch(() => alive && setServerPref(null));
+    return () => {
+      alive = false;
+    };
+  }, [titleId]);
 
-    // a saved/picked source that no longer exists (provider removed or disabled) falls back below
+  // Starting source. Until the viewer picks one: custom link they saved > source that worked for this
+  // title > the one they used here last > source that worked for this profile > best ranked provider.
+  useEffect(() => {
+    if (!prefsLoaded || serverPref === undefined) return; // wait for local prefs + server memory
+
     const stillExists = selectedKey === "custom" || providers.some((p) => p.key === selectedKey);
     const waitingForProviders = !title || (providerDefs.length === 0 && !providersError);
+    if (waitingForProviders) return;
 
-    // if user already picked something manually, never override
-    if (userPickedRef.current && (stillExists || waitingForProviders)) return;
+    // the viewer (or an automatic fallback) already chose: keep it while it exists
+    if (userPickedRef.current && stillExists) return;
 
-    // if prefs exist, never override
-    if (hasPrefsRef.current && (stillExists || waitingForProviders)) return;
-
-    // if providers exist, ALWAYS start on first provider (even if we temporarily fell back to custom)
-    if (providers.length > 0) {
-      if (selectedKey !== providers[0].key) setSelectedKey(providers[0].key);
+    if (hasPrefsRef.current && savedKeyRef.current === "custom") {
+      if (selectedKey !== "custom") setSelectedKey("custom");
       return;
     }
 
-    // no providers -> fallback to custom
-    if (!waitingForProviders && !stillExists) setSelectedKey("custom");
-  }, [prefsLoaded, title, providers, providerDefs, selectedKey, providersError]);
+    const available = new Set(providers.map((p) => p.key));
+    const pick = [
+      serverPref?.title,
+      hasPrefsRef.current ? savedKeyRef.current : null,
+      serverPref?.profile,
+      providers[0]?.key,
+    ].find((key) => key && available.has(key));
+
+    if (pick) {
+      if (selectedKey !== pick) setSelectedKey(pick);
+    } else if (selectedKey !== "custom") {
+      setSelectedKey("custom"); // no provider can play this title
+    }
+  }, [prefsLoaded, serverPref, title, providers, providerDefs, selectedKey, providersError]);
 
   // Save prefs
   useEffect(() => {
@@ -429,6 +467,88 @@ export default function WatchPage() {
     return isDirectVideo(resolvedUrl) ? "direct" : "iframe";
   }, [resolvedUrl]);
 
+  // Smart playback: did the current source play? Reported to the server (it opens the source that
+  // worked next time, and ranks providers); falls back when a source never loads.
+  useEffect(() => {
+    autoFailedRef.current = new Set(); // new title / episode: every source gets a fresh chance
+  }, [titleId, seasonNumber, episodeNumber]);
+
+  useEffect(() => {
+    iframeLoadedRef.current = false;
+    const p = providers.find((x) => x.key === selectedKey);
+    if (!p || sourceType !== "iframe" || !title?.id) {
+      attemptRef.current = null;
+      return;
+    }
+    const pid = localStorage.getItem("activeProfileId");
+    const attempt = { key: p.key, startedAt: Date.now(), playing: false, reported: false };
+    attempt.report = (worked) => {
+      if (attempt.reported || !pid) return;
+      attempt.reported = true;
+      reportPlayback({ profileId: pid, titleId: title.id, provider: p.key, worked }).catch(() => {});
+    };
+    attemptRef.current = attempt;
+    const nextSource = () =>
+      providers.find((x) => x.key !== p.key && !x.down && !autoFailedRef.current.has(x.key));
+
+    const onMessage = (e) => {
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return;
+      if (readPlayerEvent(e.data)?.playing && !attempt.playing) {
+        attempt.playing = true;
+        setBanner(null);
+        attempt.report(true);
+      }
+    };
+    window.addEventListener("message", onMessage);
+
+    const timers = [
+      // the page never loaded: move on by itself
+      setTimeout(() => {
+        if (iframeLoadedRef.current || attempt.playing) return;
+        const next = nextSource();
+        if (!next) return;
+        attempt.report(false);
+        autoFailedRef.current.add(p.key);
+        userPickedRef.current = true;
+        setBanner({ text: `${p.label} didn't load, switched to ${next.label}.` });
+        setSelectedKey(next.key);
+      }, SOURCE_LOAD_TIMEOUT_MS),
+      // loaded but silent: only for players that report playback, offer the next source
+      p.sendsEvents &&
+        setTimeout(() => {
+          if (attempt.playing) return;
+          const next = nextSource();
+          if (next) setBanner({ text: `Not playing on ${p.label}?`, nextKey: next.key, nextLabel: next.label });
+        }, SOURCE_SILENT_TIMEOUT_MS),
+      // still on it after a while: it works (the only signal for players that report nothing)
+      setTimeout(() => {
+        if (document.visibilityState === "visible") attempt.report(true);
+      }, SOURCE_STAYED_MS),
+    ].filter(Boolean);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener("message", onMessage);
+    };
+  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers]);
+
+  // "switched to X" notices go away by themselves; "Not playing?" offers stay until used
+  useEffect(() => {
+    if (!banner || banner.nextKey) return;
+    const t = setTimeout(() => setBanner(null), 8000);
+    return () => clearTimeout(t);
+  }, [banner]);
+
+  // Every source change made by the viewer goes through here
+  const switchSource = useCallback((key) => {
+    const a = attemptRef.current;
+    // left a source quickly without it ever playing: it didn't work
+    if (a && a.key !== key && !a.playing && Date.now() - a.startedAt < SOURCE_QUICK_LEAVE_MS) a.report(false);
+    userPickedRef.current = true;
+    setBanner(null);
+    setSelectedKey(key);
+  }, []);
+
   // Watch progress from the player's own events (Videasy, CineSrc, VidCore "ended"):
   // saved every 15 s and on pause / seek / end, so "Continue watching" can resume and show a bar.
   useEffect(() => {
@@ -537,6 +657,7 @@ export default function WatchPage() {
         mozallowfullscreen="true"
         loading="lazy"
         onLoad={() => {
+          iframeLoadedRef.current = true;
           setSourceLoading(false);
           setHint("");
         }}
@@ -639,7 +760,17 @@ export default function WatchPage() {
             >
               {PlayerNode}
 
-              {hint && !hoverPlayer ? (
+              {banner ? (
+                <div className="watchpage__softHint">
+                  <div className="watchpage__softHintDot" />
+                  <div className="watchpage__softHintText">{banner.text}</div>
+                  {banner.nextKey ? (
+                    <button className="watchpage__softHintBtn" onClick={() => switchSource(banner.nextKey)}>
+                      Try {banner.nextLabel} →
+                    </button>
+                  ) : null}
+                </div>
+              ) : hint && !hoverPlayer ? (
                 <div className="watchpage__softHint">
                   <div className="watchpage__softHintDot" />
                   <div className="watchpage__softHintText">{hint}</div>
@@ -673,8 +804,7 @@ export default function WatchPage() {
                     className={`watchpage__chip ${selectedKey === p.key ? "is-active" : ""}`}
 
                     onClick={() => {
-                      userPickedRef.current = true;   // ✅ prevent auto-reset to first provider
-                      setSelectedKey(p.key);
+                      switchSource(p.key); // also stops the auto-reset to the first provider
                     }}
                   >
                     {p.label}
@@ -688,8 +818,7 @@ export default function WatchPage() {
                 <button
                   className={`watchpage__chip ${selectedKey === "custom" ? "is-active" : ""}`}
                   onClick={() => {
-                    userPickedRef.current = true;   // ✅ prevent auto-reset
-                    setSelectedKey("custom");
+                    switchSource("custom");
                   }}
                 >
                   Custom link

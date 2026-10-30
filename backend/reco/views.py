@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import (
-    Title, Profile, TVShowExtras, Episode,
+    Title, Profile, TVShowExtras, Episode, Provider,
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
 )
 from users.serializers import TitleHomeSerializer
@@ -27,7 +27,7 @@ from users.maturity import allowed_titles_q, profile_max_level
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
-    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating
+    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating, PlaybackOutcome
 )
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
@@ -1290,3 +1290,69 @@ class TitleRatingView(APIView):
                 session_id=str(request.data.get("session_id") or "")[:64], provider="thumb",
             )
         return Response({"rating": rating})
+
+
+# ============================================================
+# SMART PLAYBACK
+# ============================================================
+
+PLAYBACK_STATS_DAYS = 7
+PLAYBACK_MIN_SAMPLES = 20   # below this, a provider has no success rate (keeps the admin priority)
+PLAYBACK_STATS_TTL = 600    # 10 min
+
+
+def provider_success_rates():
+    """{provider_key: share of plays that worked} over the last days, all profiles together."""
+    ck = "reco:provider_success:v1"
+    rates = cache.get(ck)
+    if rates is not None:
+        return rates
+    since = timezone.now() - timedelta(days=PLAYBACK_STATS_DAYS)
+    rows = (
+        PlaybackOutcome.objects.filter(created_at__gte=since)
+        .values("provider_key")
+        .annotate(n=Count("id"), ok=Count("id", filter=Q(worked=True)))
+    )
+    rates = {r["provider_key"]: r["ok"] / r["n"] for r in rows if r["n"] >= PLAYBACK_MIN_SAMPLES}
+    cache.set(ck, rates, PLAYBACK_STATS_TTL)
+    return rates
+
+
+def _last_working_source(outcomes):
+    """outcomes newest first [(provider_key, worked)]: the newest source that worked and
+    hasn't failed since."""
+    failed_since = set()
+    for key, worked in outcomes:
+        if not worked:
+            failed_since.add(key)
+        elif key not in failed_since:
+            return key
+    return None
+
+
+class PlaybackView(APIView):
+    """
+    POST /api/playback/  {profile_id, title_id, provider, worked}        did this source play?
+    GET  /api/playback/?profileId=..&titleId=..
+         -> {"title": key | null, "profile": key | null}  source to open first: the one that last
+            worked for this title, else the one that last worked for this profile
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        profile = get_object_or_404(Profile, id=request.data.get("profile_id"), user=request.user)
+        title = get_object_or_404(Title.objects.only("id"), id=request.data.get("title_id"))
+        key = str(request.data.get("provider") or "")
+        if not Provider.objects.filter(key=key).exists():
+            return Response({"detail": "unknown provider"}, status=400)
+        PlaybackOutcome.objects.create(profile=profile, title=title, provider_key=key, worked=bool(request.data.get("worked")))
+        return Response({"ok": True})
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        enabled = set(Provider.objects.filter(enabled=True).values_list("key", flat=True))
+        base = PlaybackOutcome.objects.filter(profile=profile, provider_key__in=enabled).order_by("-created_at")
+        title_id = request.query_params.get("titleId")
+        for_title = _last_working_source(base.filter(title_id=title_id).values_list("provider_key", "worked")[:50]) if title_id else None
+        for_profile = _last_working_source(base.values_list("provider_key", "worked")[:200])
+        return Response({"title": for_title, "profile": for_profile})

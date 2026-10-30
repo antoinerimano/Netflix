@@ -55,3 +55,17 @@ export async function markNotInterested({ profileId, titleId, surface = "" }) {
     provider: surface ? `surface:${surface}` : "",
   });
 }
+
+// ---------- smart playback ----------
+// Did this source play? worked = playback reported / viewer stayed; false = left it quickly or it never loaded.
+export async function reportPlayback({ profileId, titleId, provider, worked }) {
+  if (!profileId || !titleId || !provider) return;
+  await api.post("/playback/", { profile_id: Number(profileId), title_id: Number(titleId), provider, worked });
+}
+
+// { title, profile }: provider key that last worked for this title / for this profile (or null)
+export async function fetchPreferredSource({ profileId, titleId }) {
+  if (!profileId) return { title: null, profile: null };
+  const res = await api.get("/playback/", { params: { profileId, titleId } });
+  return res.data || { title: null, profile: null };
+}
