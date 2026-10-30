@@ -239,8 +239,15 @@ const Row = ({ title, movies }) => {
 
   // "Continue watching" items carry `resume`: go straight back to the player
   const getResumePath = (t) => {
-    const { season, episode } = t?.resume || {};
-    return season && episode ? `/watch/${t.id}?season=${season}&episode=${episode}` : `/watch/${t.id}`;
+    const { season, episode, position } = t?.resume || {};
+    const params = new URLSearchParams();
+    if (season && episode) {
+      params.set('season', season);
+      params.set('episode', episode);
+    }
+    if (position) params.set('t', position); // players that support it start there
+    const qs = params.toString();
+    return `/watch/${t.id}${qs ? `?${qs}` : ''}`;
   };
 
   const removeFromContinueWatching = (e, t) => {
@@ -377,7 +384,7 @@ const Row = ({ title, movies }) => {
             const minutesString = String(movie.duration).replace(' min', '');
             const minutes = parseInt(minutesString, 10) || 0;
             const durationInSeconds = minutes * 60;
-            progressPercent = (movie.progress / durationInSeconds) * 100;
+            progressPercent = Math.min(100, (movie.progress / durationInSeconds) * 100);
           }
 
           const canRenderVideo = loadedTrailerKeys.has(key) && !!trailerSrc;

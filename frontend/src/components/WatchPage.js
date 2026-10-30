@@ -31,6 +31,62 @@ function isDirectVideo(url) {
 }
 
 // --- NEW: read season/episode from query ---
+// Normalize the players' postMessage events (formats from their docs) to
+// { position?, duration?, ended?, flush?, season?, episode? } (seconds), or null.
+function readPlayerEvent(raw) {
+  let data = raw;
+  if (typeof data === "string") {
+    if (data.startsWith("vidcore:")) data = { type: data };
+    else {
+      try {
+        data = JSON.parse(data);
+      } catch {
+        return null;
+      }
+    }
+  }
+  if (!data || typeof data !== "object" || typeof data.type !== "string") return null;
+  const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
+
+  // Videasy: { type: "PLAYER_EVENT", data: { player_status, player_progress, player_duration, player_info } }
+  if (data.type === "PLAYER_EVENT") {
+    let d = data.data;
+    if (typeof d === "string") {
+      try {
+        d = JSON.parse(d);
+      } catch {
+        return null;
+      }
+    }
+    if (!d) return null;
+    const status = String(d.player_status || "");
+    return {
+      position: num(d.player_progress),
+      duration: num(d.player_duration),
+      ended: status === "completed",
+      flush: status === "paused" || status === "seeked",
+      season: num(d.player_info?.season) || undefined,
+      episode: num(d.player_info?.episode) || undefined,
+    };
+  }
+
+  // CineSrc: { type: "cinesrc:timeupdate", currentTime, duration }, cinesrc:ended, cinesrc:nextepisode ...
+  if (data.type.startsWith("cinesrc:")) {
+    const kind = data.type.slice("cinesrc:".length);
+    if (kind === "timeupdate" || kind === "seeked") {
+      return { position: num(data.currentTime), duration: num(data.duration), flush: kind === "seeked" };
+    }
+    if (kind === "pause") return { flush: true };
+    if (kind === "ended") return { ended: true };
+    if (kind === "nextepisode") return { season: num(data.season), episode: num(data.episode) };
+    return null;
+  }
+
+  // VidCore: only play / pause / ended, no position
+  if (data.type === "vidcore:ended") return { ended: true };
+  return null;
+}
+
 function readPositiveInt(search, key, fallback) {
   const v = new URLSearchParams(search).get(key);
   const n = Number(v);
@@ -59,6 +115,8 @@ export default function WatchPage() {
   // --- NEW: keep season/episode in state (from URL) ---
   const seasonFromUrl = useMemo(() => readPositiveInt(location.search, "season", 1), [location.search]);
   const episodeFromUrl = useMemo(() => readPositiveInt(location.search, "episode", 1), [location.search]);
+  // resume point in seconds (?t=), from "Continue watching"
+  const startFromUrl = useMemo(() => readPositiveInt(location.search, "t", 0), [location.search]);
   const [seasonNumber, setSeasonNumber] = useState(seasonFromUrl);
   const [episodeNumber, setEpisodeNumber] = useState(episodeFromUrl);
 
@@ -199,12 +257,16 @@ export default function WatchPage() {
     if (isTV) {
       return buildProviderLinks(
         providerDefs,
-        { tmdb_id: title.tmdb_id, season: seasonNumber, episode: episodeNumber },
+        { tmdb_id: title.tmdb_id, season: seasonNumber, episode: episodeNumber, start: startFromUrl },
         "episode"
       );
     }
-    return buildProviderLinks(providerDefs, { tmdb_id: title.tmdb_id, imdb_id: title.imdb_code }, "movie");
-  }, [title, isTV, providerDefs, seasonNumber, episodeNumber]);
+    return buildProviderLinks(
+      providerDefs,
+      { tmdb_id: title.tmdb_id, imdb_id: title.imdb_code, start: startFromUrl },
+      "movie"
+    );
+  }, [title, isTV, providerDefs, seasonNumber, episodeNumber, startFromUrl]);
 
   // Load prefs
   useEffect(() => {
@@ -366,6 +428,63 @@ export default function WatchPage() {
     if (!resolvedUrl) return "none";
     return isDirectVideo(resolvedUrl) ? "direct" : "iframe";
   }, [resolvedUrl]);
+
+  // Watch progress from the player's own events (Videasy, CineSrc, VidCore "ended"):
+  // saved every 15 s and on pause / seek / end, so "Continue watching" can resume and show a bar.
+  useEffect(() => {
+    if (!title?.id || sourceType !== "iframe") return;
+    const pid = localStorage.getItem("activeProfileId");
+    if (!pid) return;
+
+    let current = { season: isTV ? seasonNumber : null, episode: isTV ? episodeNumber : null };
+    let last = {}; // { position, duration } latest known, seconds
+    let lastSavedAt = 0;
+    let ended = false;
+
+    const save = (extra = {}) =>
+      saveWatchProgress({
+        profileId: pid,
+        titleId: title.id,
+        ...current,
+        position: last.position != null ? Math.floor(last.position) : null,
+        duration: last.duration ? Math.floor(last.duration) : null,
+        ...extra,
+      }).catch(() => {});
+
+    const onMessage = (e) => {
+      // only the player this page loaded (not other frames / pages)
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return;
+      const ev = readPlayerEvent(e.data);
+      if (!ev) return;
+
+      // the player moved to another episode by itself (auto-next / its own episode list)
+      if (isTV && ev.season && ev.episode && (ev.season !== current.season || ev.episode !== current.episode)) {
+        current = { season: ev.season, episode: ev.episode };
+        last = {};
+        ended = false;
+      }
+      if (ended) return;
+      if (Number.isFinite(ev.position)) last.position = ev.position;
+      if (Number.isFinite(ev.duration) && ev.duration > 0) last.duration = ev.duration;
+
+      if (ev.ended) {
+        ended = true;
+        save({ finished: true });
+        return;
+      }
+      const now = Date.now();
+      if (last.position != null && (ev.flush || now - lastSavedAt > 15000)) {
+        lastSavedAt = now;
+        save();
+      }
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      if (!ended && last.position != null) save(); // leaving the page / changing source
+    };
+  }, [title?.id, sourceType, resolvedUrl, isTV, seasonNumber, episodeNumber]);
 
   const PlayerNode = useMemo(() => {
     if (!resolvedUrl) {

@@ -710,7 +710,7 @@ def provider_list(request):
     ({tmdb_id} {imdb_id} {season} {episode}). Providers that are down come last.
     """
     providers = Provider.objects.filter(enabled=True).values(
-        "key", "label", "domain", "movie_path", "episode_path", "status"
+        "key", "label", "domain", "movie_path", "episode_path", "start_param", "status"
     )
     data = sorted(providers, key=lambda p: p["status"] == Provider.DOWN)
     response = Response(data)

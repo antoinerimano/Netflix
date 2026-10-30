@@ -137,6 +137,7 @@ NEW_EPISODES_SIZE = 30
 # "Continue watching" row: live per profile, first row of the home page
 CONTINUE_WATCHING_DAYS = 60
 CONTINUE_WATCHING_SIZE = 20
+WATCH_FINISHED_RATIO = 0.92  # past this share of the duration, a movie / episode counts as watched
 IMPRESSION_EXCLUDE_LIMIT = 4000
 
 
@@ -970,16 +971,22 @@ def _continue_watching_row(profile):
         WatchProgress.objects
         .filter(profile=profile, hidden=False, updated_at__gte=since)
         .order_by("-updated_at")
-        .values_list("title_id", "season_number", "episode_number")[:CONTINUE_WATCHING_SIZE]
+        .values_list("title_id", "season_number", "episode_number", "position_seconds", "duration_seconds")[:CONTINUE_WATCHING_SIZE]
     )
     titles = {t.id: t for t in Title.objects.filter(id__in=[p[0] for p in progress]).only(*DISPLAY_ONLY_FIELDS)}
     items = []
-    for title_id, season, episode in progress:
+    for title_id, season, episode, position, duration in progress:
         t = titles.get(title_id)
         if t is None:
             continue
-        item = TitleHomeSerializer(t).data
-        items.append({**item, "resume": {"season": season, "episode": episode} if season else {}})
+        item = dict(TitleHomeSerializer(t).data)
+        resume = {"season": season, "episode": episode} if season else {}
+        if position:
+            resume["position"] = position
+            if duration:  # Row draws its progress bar from these two
+                item["progress"] = position
+                item["duration"] = f"{max(1, round(duration / 60))} min"
+        items.append({**item, "resume": resume})
     return {"row_type": "continue_watching", "title": "Continue watching", "items": items}
 
 
@@ -1119,6 +1126,19 @@ class LogActionView(APIView):
 # CONTINUE WATCHING
 # ============================================================
 
+def _next_aired_episode(title, season, episode):
+    """(season, episode) after this one that has aired, or None."""
+    return (
+        Episode.objects
+        .filter(season__tv=title)
+        .filter(Q(air_date__isnull=True) | Q(air_date__lte=timezone.localdate()))
+        .filter(Q(season__season_number=season, episode_number__gt=episode) | Q(season__season_number__gt=season))
+        .order_by("season__season_number", "episode_number")
+        .values_list("season__season_number", "episode_number")
+        .first()
+    )
+
+
 class WatchProgressView(APIView):
     """
     POST   /api/watch-progress/  {profile_id, title_id, season?, episode?}  watch page opened
@@ -1134,16 +1154,36 @@ class WatchProgressView(APIView):
         profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
         title = get_object_or_404(Title.objects.only("id", "type"), id=data["title_id"])
         is_tv = title.type == "tv"
-        WatchProgress.objects.update_or_create(
-            profile=profile,
-            title=title,
-            defaults={
-                "season_number": data.get("season") if is_tv else None,
-                "episode_number": data.get("episode") if is_tv else None,
-                "hidden": False,
-            },
+        season = data.get("season") if is_tv else None
+        episode = data.get("episode") if is_tv else None
+        position, duration = data.get("position"), data.get("duration")
+
+        wp, _ = WatchProgress.objects.get_or_create(
+            profile=profile, title=title, defaults={"season_number": season, "episode_number": episode}
         )
-        return Response({"ok": True})
+        if (wp.season_number, wp.episode_number) != (season, episode):
+            # another episode: its own position
+            wp.season_number, wp.episode_number = season, episode
+            wp.position_seconds = wp.duration_seconds = None
+        if position is not None:
+            wp.position_seconds = position
+        if duration:
+            wp.duration_seconds = duration
+        wp.hidden = False
+
+        finished = data.get("finished") or bool(
+            wp.position_seconds and wp.duration_seconds
+            and wp.position_seconds >= wp.duration_seconds * WATCH_FINISHED_RATIO
+        )
+        if finished:
+            nxt = _next_aired_episode(title, season, episode) if is_tv and season is not None else None
+            if nxt:
+                wp.season_number, wp.episode_number = nxt  # the row now offers the next episode
+            else:
+                wp.hidden = True  # movie done / show caught up: leaves "Continue watching"
+            wp.position_seconds = wp.duration_seconds = None
+        wp.save()
+        return Response({"ok": True, "finished": finished})
 
     def delete(self, request):
         profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)

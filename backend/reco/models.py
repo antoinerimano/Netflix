@@ -128,7 +128,10 @@ class WatchProgress(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     season_number = models.PositiveIntegerField(null=True, blank=True)
     episode_number = models.PositiveIntegerField(null=True, blank=True)
-    hidden = models.BooleanField(default=False)  # removed from the row by the user
+    # where playback is, when the player reports it (videasy / cinesrc); null = unknown
+    position_seconds = models.PositiveIntegerField(null=True, blank=True)
+    duration_seconds = models.PositiveIntegerField(null=True, blank=True)
+    hidden = models.BooleanField(default=False)  # removed from the row by the user, or finished
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

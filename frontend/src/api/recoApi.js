@@ -9,13 +9,19 @@ export async function fetchHomeRecoRows(profileId) {
 
 // ---------- continue watching ----------
 // Called by the watch page: remembers the last movie / episode opened for this profile.
-export async function saveWatchProgress({ profileId, titleId, season = null, episode = null }) {
+// position / duration (seconds) and finished come from the player's events when it sends them.
+export async function saveWatchProgress({
+  profileId, titleId, season = null, episode = null, position = null, duration = null, finished = false,
+}) {
   if (!profileId || !titleId) return;
   await api.post("/watch-progress/", {
     profile_id: Number(profileId),
     title_id: Number(titleId),
     season,
     episode,
+    position,
+    duration,
+    finished,
   });
 }
 

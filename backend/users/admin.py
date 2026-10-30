@@ -59,7 +59,7 @@ class ProviderAdmin(admin.ModelAdmin):
         (None, {"fields": ("key", "label", "enabled", "priority")}),
         ("Domain", {"fields": ("domain", "backup_domains", "auto_switch")}),
         ("Link templates", {
-            "fields": ("movie_path", "episode_path", "example_links"),
+            "fields": ("movie_path", "episode_path", "start_param", "example_links"),
             "description": "Placeholders: {tmdb_id} {imdb_id} {season} {episode}. "
                            "Link = domain + path. Leave a path empty if the provider has no movies / no TV.",
         }),

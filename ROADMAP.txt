@@ -8,7 +8,7 @@ Status: [ ] todo   [~] in progress   [x] done
         "Continue watching" row first on the home page (last movie / episode opened per show),
         click resumes at that episode, X to remove it from the row,
         "Next episode" button on the watch page.
-[ ] 1.1b Real watch progress
+[x] 1.1b Real watch progress
         Minutes watched from the players' postMessage events (videasy PLAYER_EVENT,
         cinesrc:*, vidcore:*): progress bar on cards, drop finished movies from the row.
 

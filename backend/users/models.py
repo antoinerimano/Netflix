@@ -318,6 +318,10 @@ class Provider(models.Model):
     episode_path = models.CharField(
         max_length=500, blank=True, default="", help_text="e.g. /tv/{tmdb_id}/{season}/{episode}"
     )
+    start_param = models.CharField(
+        max_length=20, blank=True, default="",
+        help_text="Query parameter to start at a time in seconds (resume), e.g. startAt or t. Empty: not supported.",
+    )
     enabled = models.BooleanField(default=True)
     priority = models.PositiveSmallIntegerField(default=100, help_text="Lower shows first.")
     auto_switch = models.BooleanField(

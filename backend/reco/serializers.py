@@ -31,3 +31,7 @@ class WatchProgressInSerializer(serializers.Serializer):
     title_id = serializers.IntegerField()
     season = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     episode = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    # reported by the player (seconds); finished = the player said "ended"
+    position = serializers.IntegerField(required=False, allow_null=True, min_value=0, max_value=86400)
+    duration = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=86400)
+    finished = serializers.BooleanField(required=False, default=False)

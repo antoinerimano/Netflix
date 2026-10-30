@@ -108,6 +108,7 @@ export function fetchProviders() {
 /**
  * Build the playable links for a movie ({ tmdb_id, imdb_id }) or an episode
  * ({ tmdb_id, season, episode }). Providers missing a needed value are skipped.
+ * Optional values.start (seconds): resume point, for providers with a start_param.
  */
 export function buildProviderLinks(providers, values, kind = 'movie') {
   return (providers || [])
@@ -121,7 +122,12 @@ export function buildProviderLinks(providers, values, kind = 'movie') {
         return encodeURIComponent(String(v ?? ''));
       });
       if (missing) return null;
-      return { key: p.key, label: p.label, url: p.domain + filled, down: p.status === 'down' };
+      let url = p.domain + filled;
+      // resume: start at values.start seconds, for providers that support it (start_param)
+      if (values.start > 0 && p.start_param) {
+        url += `${url.includes('?') ? '&' : '?'}${encodeURIComponent(p.start_param)}=${Math.floor(values.start)}`;
+      }
+      return { key: p.key, label: p.label, url, down: p.status === 'down' };
     })
     .filter(Boolean);
 }
