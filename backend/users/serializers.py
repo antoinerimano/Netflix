@@ -24,22 +24,30 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        # never expose the password hash or let clients grant themselves privileges
+        exclude = ['password', 'groups', 'user_permissions']
+        read_only_fields = [
+            'is_staff', 'is_superuser', 'is_active', 'last_login',
+            'stripe_customer_id', 'created_at', 'updated_at',
+        ]
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = '__all__'
+        read_only_fields = ['user']
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+        read_only_fields = ['user']
 
 class PaymentHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentHistory
         fields = '__all__'
+        read_only_fields = ['user']
 
 class EpisodeSerializer(serializers.ModelSerializer):
     class Meta:

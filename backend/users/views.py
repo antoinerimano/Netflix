@@ -97,6 +97,17 @@ class IsSelfOrAdmin(BasePermission):
         return obj == request.user
 
 
+class IsOwnerOrAdmin(BasePermission):
+    """For /api/users/<user_id>/... nested routes: only that user (or staff)."""
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated):
+            return False
+        if user.is_staff:
+            return True
+        return str(view.kwargs.get('user_id')) == str(user.id)
+
+
 # ------------------ Users ------------------
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -104,6 +115,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     lookup_field = 'id'
     permission_classes = [IsAuthenticated, IsSelfOrAdmin]
+
+    def get_queryset(self):
+        # non-staff users can only see / act on their own account
+        qs = User.objects.order_by("created_at")
+        if not self.request.user.is_staff:
+            qs = qs.filter(id=self.request.user.id)
+        return qs
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='register')
     def register(self, request):
@@ -118,10 +136,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if User.objects.filter(email=email).exists():
             return Response({'error': 'This email is already registered'}, status=status.HTTP_400_BAD_REQUEST)
 
-        data['password'] = make_password(password)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = serializer.save(password=make_password(password))
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
@@ -289,6 +306,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
+    permission_classes = [IsOwnerOrAdmin]
     queryset = Subscription.objects.all()
 
     def get_queryset(self):
@@ -338,9 +356,14 @@ logger = logging.getLogger(__name__)
 
 class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
+    permission_classes = [IsOwnerOrAdmin]
 
     def get_queryset(self):
         return Profile.objects.filter(user__id=self.kwargs.get('user_id'))
+
+    def perform_create(self, serializer):
+        # owner comes from the URL, not from the request body
+        serializer.save(user_id=self.kwargs.get('user_id'))
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
@@ -358,16 +381,20 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return response
 
 
-class PaymentHistoryViewSet(viewsets.ModelViewSet):
+class PaymentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PaymentHistorySerializer
+    permission_classes = [IsOwnerOrAdmin]
 
     def get_queryset(self):
-        return PaymentHistory.objects.filter(user__id=self.kwargs.get('user_id'))
+        return PaymentHistory.objects.filter(user__id=self.kwargs.get('user_id')).order_by("-date")
 
 
 # ------------------ Auth utils ------------------
 
 class LogoutView(APIView):
+    # only needs the refresh token; must work even if the access token expired
+    permission_classes = [AllowAny]
+
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
@@ -666,6 +693,7 @@ class SeasonViewSet(viewsets.ModelViewSet):
 
 class EpisodeViewSet(viewsets.ModelViewSet):
     serializer_class = EpisodeSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         qs = Episode.objects.select_related('season', 'season__tv')
