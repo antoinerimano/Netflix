@@ -1,8 +1,13 @@
 docker compose exec backend python manage.py train_ranker
 docker compose exec backend python manage.py build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2
 docker compose exec backend python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
-docker compose exec backend python manage.py clean_db --dedupe --backfill-links --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
+docker compose exec backend python manage.py clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
 docker compose exec backend python /app/add_trailer_to_cdn.py
+docker compose exec backend python manage.py check_providers   (health-check stream providers, auto-switch dead/moved domains)
+
+crontab -e  (on the server):
+*/15 * * * * /opt/taurus/scripts/cron_check_providers.sh >> /var/log/taurus_providers.log 2>&1
+0 */3 * * * /opt/taurus/scripts/cron_sync_episodes.sh >> /var/log/taurus_episodes.log 2>&1
 
 
 docker compose down

@@ -60,5 +60,6 @@ urlpatterns = [
 
     path("api/", include("reco.urls")),
     path('api/actors/', ActorListView.as_view(), name='actors-list'),
+    path('api/providers/', views.provider_list, name='provider-list'),
 
 ]

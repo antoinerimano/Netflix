@@ -88,6 +88,44 @@ export const fetchTVShowsByFirstAirYear = async (year) => _filterTVByFirstAirYea
 export const fetchTVShowsByDirector = async (director) => _filterByDirector(await fetchTVShows(), director);
 export const fetchTVShowsByActor = async (actor) => _filterByActor(await fetchTVShows(), actor);
 
+// ---------- stream providers ----------
+// [{ key, label, domain, movie_path, episode_path, status }], providers that are down come last.
+// Links are domain + path, with {tmdb_id} {imdb_id} {season} {episode} filled in (see buildProviderLinks).
+let providersPromise = null;
+
+export function fetchProviders() {
+  if (!providersPromise) {
+    providersPromise = API.get('/providers/')
+      .then((res) => (Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        providersPromise = null; // retry on next call
+        throw err;
+      });
+  }
+  return providersPromise;
+}
+
+/**
+ * Build the playable links for a movie ({ tmdb_id, imdb_id }) or an episode
+ * ({ tmdb_id, season, episode }). Providers missing a needed value are skipped.
+ */
+export function buildProviderLinks(providers, values, kind = 'movie') {
+  return (providers || [])
+    .map((p) => {
+      const path = kind === 'episode' ? p.episode_path : p.movie_path;
+      if (!path) return null;
+      let missing = false;
+      const filled = path.replace(/\{(\w+)\}/g, (_, name) => {
+        const v = values[name];
+        if (v === undefined || v === null || v === '') missing = true;
+        return encodeURIComponent(String(v ?? ''));
+      });
+      if (missing) return null;
+      return { key: p.key, label: p.label, url: p.domain + filled, down: p.status === 'down' };
+    })
+    .filter(Boolean);
+}
+
 // ---------- seasons / episodes ----------
 // NOTE: these unwrap lists to handle DRF pagination automatically
 

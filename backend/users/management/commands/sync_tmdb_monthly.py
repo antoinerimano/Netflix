@@ -15,25 +15,7 @@ from django.db.models import Count
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 
 
-# =========================
-# Provider URL templates
-# =========================
-TEMPLATES: Dict[str, str] = {
-    # Titles (movies)
-    "movie_link4": "https://vidfast.pro/movie/{tmdb_id}",
-    "movie_link5": "https://player.vidplus.to/embed/movie/{tmdb_id}?autoplay=false&poster=true&title=true&watchparty=false&chromecast=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "movie_link6": "https://111movies.com/movie/{tmdb_id}",
-
-    # Titles (tv -> S1E1)
-    "tv_link4": "https://vidfast.pro/tv/{tmdb_id}/1/1",
-    "tv_link5": "https://player.vidplus.to/embed/tv/{tmdb_id}/1/1?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "tv_link6": "https://111movies.com/tv/{tmdb_id}/1/1",
-
-    # Episodes (tv)
-    "episode_link4": "https://vidfast.pro/tv/{tmdb_id}/{season}/{episode}",
-    "episode_link5": "https://player.vidplus.to/embed/tv/{tmdb_id}/{season}/{episode}?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "episode_link6": "https://111movies.com/tv/{tmdb_id}/{season}/{episode}",
-}
+# Stream links are not stored anymore: they are built from users.Provider templates.
 
 
 def today_ymd() -> str:
@@ -58,6 +40,13 @@ def safe_float(x, default=None):
         return default
 
 
+def parse_ymd_date(s: Optional[str]) -> Optional[datetime.date]:
+    try:
+        return datetime.date.fromisoformat((s or "").strip())
+    except ValueError:
+        return None
+
+
 def parse_year_from_ymd(s: str) -> Optional[int]:
     s = (s or "").strip()
     if len(s) >= 4 and s[:4].isdigit():
@@ -70,15 +59,6 @@ def img_url(path: Optional[str], size: str = "original") -> str:
         return ""
     p = str(path).lstrip("/")
     return f"https://image.tmdb.org/t/p/{size}/{p}"
-
-
-def fmt(template: str, tmdb_id: int, season: Optional[int] = None, episode: Optional[int] = None) -> str:
-    if not template or not tmdb_id:
-        return ""
-    try:
-        return template.format(tmdb_id=tmdb_id, season=season, episode=episode)
-    except Exception:
-        return ""
 
 
 def norm(s: str) -> str:
@@ -145,45 +125,6 @@ def tmdb_movie_keywords(full: dict) -> List[str]:
 
 def tmdb_tv_keywords(full: dict) -> List[str]:
     return [k.get("name") for k in ((full.get("keywords") or {}).get("results") or []) if k.get("name")]
-
-
-def movie_title_links(tmdb_id: int, imdb_code: Optional[str] = None) -> Dict[str, str]:
-    movie_link3 = f"https://vidsrc.sbs/embed/movie/{tmdb_id}" if tmdb_id else ""
-
-    return {
-        "video_url":   f"https://www.vidking.net/embed/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link2": f"https://player.videasy.net/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link3": movie_link3,
-        "movie_link4": fmt(TEMPLATES["movie_link4"], tmdb_id=tmdb_id),
-        "movie_link5": fmt(TEMPLATES["movie_link5"], tmdb_id=tmdb_id),
-        "movie_link6": fmt(TEMPLATES["movie_link6"], tmdb_id=tmdb_id),
-    }
-
-
-def tv_title_links(tv_tmdb_id: int, imdb_code: Optional[str] = None) -> Dict[str, str]:
-    movie_link3 = f"https://vidsrc.sbs/embed/tv/{tv_tmdb_id}/1/1/" if tv_tmdb_id else ""
-
-    return {
-        "video_url":   f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
-        "movie_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
-        "movie_link3": movie_link3,
-        "movie_link4": fmt(TEMPLATES["tv_link4"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-        "movie_link5": fmt(TEMPLATES["tv_link5"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-        "movie_link6": fmt(TEMPLATES["tv_link6"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-    }
-
-
-def episode_links(tv_tmdb_id: int, season: int, episode: int, imdb_code: Optional[str] = None) -> Dict[str, str]:
-    episode_link3 = f"https://vidsrc.sbs/embed/tv/{tv_tmdb_id}/{season}/{episode}/" if tv_tmdb_id else ""
-
-    return {
-        "video_url":     f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link3": episode_link3,
-        "episode_link4": fmt(TEMPLATES["episode_link4"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-        "episode_link5": fmt(TEMPLATES["episode_link5"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-        "episode_link6": fmt(TEMPLATES["episode_link6"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-    }
 
 
 class TMDbClient:
@@ -371,7 +312,6 @@ class Command(BaseCommand):
         release_date = (full.get("release_date") or "").strip()
         release_year = parse_year_from_ymd(release_date)
 
-        links = movie_title_links(tmdb_id, imdb_code)
         genre_str = ", ".join([g.get("name") for g in (full.get("genres") or []) if g.get("name")])
 
         row = {
@@ -398,12 +338,6 @@ class Command(BaseCommand):
             "poster": img_url(full.get("poster_path"), "original"),
             "landscape_image": img_url(full.get("backdrop_path"), "original"),
 
-            "video_url": links["video_url"],
-            "movie_link2": links["movie_link2"],
-            "movie_link3": links["movie_link3"],
-            "movie_link4": links["movie_link4"],
-            "movie_link5": links["movie_link5"],
-            "movie_link6": links["movie_link6"],
 
             "trailer_url": tmdb_trailer_url(full),
 
@@ -518,7 +452,6 @@ class Command(BaseCommand):
 
         first_air_date = (full.get("first_air_date") or "").strip()
         genre_str = ", ".join([g.get("name") for g in (full.get("genres") or []) if g.get("name")])
-        links = tv_title_links(tv_id, imdb_code)
 
         row = {
             "type": "tv",
@@ -542,12 +475,6 @@ class Command(BaseCommand):
             "poster": img_url(full.get("poster_path"), "original"),
             "landscape_image": img_url(full.get("backdrop_path"), "original"),
 
-            "video_url": links["video_url"],
-            "movie_link2": links["movie_link2"],
-            "movie_link3": links["movie_link3"],
-            "movie_link4": links["movie_link4"],
-            "movie_link5": links["movie_link5"],
-            "movie_link6": links["movie_link6"],
 
             "trailer_url": tmdb_trailer_url(full),
 
@@ -645,24 +572,17 @@ class Command(BaseCommand):
                 if enum <= 0:
                     continue
 
-                links = episode_links(tv_id, snum, enum, imdb_code)
                 ep_defaults = {
                     "tmdb_id": safe_int(e.get("id")),
                     "name": e.get("name") or "",
                     "overview": e.get("overview") or "",
-                    "air_date": e.get("air_date") or "",
+                    "air_date": parse_ymd_date(e.get("air_date")),
                     "still_path": e.get("still_path") or "",
                     "vote_average": safe_float(e.get("vote_average")),
                     "vote_count": safe_int(e.get("vote_count")),
                     "runtime": safe_int(e.get("runtime")),
 
                     "imdb_code": None,
-                    "video_url": links["video_url"],
-                    "episode_link2": links["episode_link2"],
-                    "episode_link3": links["episode_link3"],
-                    "episode_link4": links["episode_link4"],
-                    "episode_link5": links["episode_link5"],
-                    "episode_link6": links["episode_link6"],
                 }
 
                 ep_obj, ep_created = Episode.objects.get_or_create(

@@ -2,7 +2,17 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./WatchPage.css";
 
-import { fetchTitleById, fetchMovieById, fetchEpisodesBySeasonNumber } from "../api/titlesApi";
+import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
+
+// sources saved by older versions used the DB column names
+const LEGACY_SOURCE_KEYS = {
+  video_url: "vidking",
+  movie_link2: "videasy", episode_link2: "videasy",
+  movie_link3: "vidsrc", episode_link3: "vidsrc",
+  movie_link4: "vidfast", episode_link4: "vidfast",
+  movie_link5: "vidplus", episode_link5: "vidplus",
+  movie_link6: "111movies", episode_link6: "111movies",
+};
 
 function storageKey(profileId, titleId) {
   return `watchprefs_${profileId || "anon"}_${titleId}`;
@@ -24,36 +34,6 @@ function readPositiveInt(search, key, fallback) {
   const v = new URLSearchParams(search).get(key);
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-
-// --- Existing (movies / fallback) ---
-function getProvidersFromTitle(t) {
-  const links = [
-    { key: "video_url", label: "Vidking", url: t?.video_url },
-    { key: "movie_link2", label: "Videasy", url: t?.movie_link2 },
-    { key: "movie_link3", label: "Vidsrc", url: t?.movie_link3 },
-    { key: "movie_link4", label: "VidFast", url: t?.movie_link4 },
-    { key: "movie_link5", label: "VidPlus", url: t?.movie_link5 },
-    { key: "movie_link6", label: "111movies", url: t?.movie_link6 },
-  ];
-  return links.filter((p) => typeof p.url === "string" && p.url.trim().length > 5);
-}
-
-// --- NEW: providers from an EPISODE (TV) ---
-function getProvidersFromEpisode(ep) {
-  if (!ep) return [];
-
-  const links = [
-    { key: "video_url", label: "Vidking", url: ep.video_url },
-    { key: "episode_link2", label: "Videasy", url: ep.episode_link2 },
-    { key: "episode_link3", label: "Vidsrc", url: ep.episode_link3 },
-    { key: "episode_link4", label: "VidFast", url: ep.episode_link4 },
-    { key: "episode_link5", label: "VidPlus", url: ep.episode_link5 },
-    { key: "episode_link6", label: "111movies", url: ep.episode_link6 },
-  ];
-
-  // Filtre pour n'afficher que les liens qui ne sont pas vides
-  return links.filter((p) => typeof p.url === "string" && p.url.trim().length > 5);
 }
 
 function clampText(s, max = 180) {
@@ -86,9 +66,9 @@ export default function WatchPage() {
     setEpisodeNumber(episodeFromUrl);
   }, [seasonFromUrl, episodeFromUrl]);
 
-  // --- NEW: the episode we want to play (TV only) ---
-  const [activeEpisode, setActiveEpisode] = useState(null);
-  const [episodeLoadError, setEpisodeLoadError] = useState("");
+  // stream providers (domain + path templates), shared by every title
+  const [providerDefs, setProviderDefs] = useState([]);
+  const [providersError, setProvidersError] = useState("");
 
   const userPickedRef = useRef(false);
   const hasPrefsRef = useRef(false);
@@ -148,41 +128,16 @@ export default function WatchPage() {
     return t === "tv" || t === "tvshow" || t === "show";
   }, [title]);
 
-  // --- NEW: load the exact episode when TV + season/episode present ---
+  // Load stream providers
   useEffect(() => {
     let alive = true;
-
-    (async () => {
-      setEpisodeLoadError("");
-      setActiveEpisode(null);
-
-      if (!title || !isTV) return;
-
-      try {
-        const eps = await fetchEpisodesBySeasonNumber(titleId, seasonNumber);
-        if (!alive) return;
-
-        const list = Array.isArray(eps) ? eps : [];
-        const found =
-          list.find((e) => Number(e?.episode_number) === Number(episodeNumber)) ||
-          null;
-
-        setActiveEpisode(found);
-
-        if (!found) {
-          setEpisodeLoadError(`Episode not found (S${seasonNumber}E${episodeNumber}).`);
-        }
-      } catch (e) {
-        if (!alive) return;
-        setEpisodeLoadError("Failed to load episode links.");
-        setActiveEpisode(null);
-      }
-    })();
-
+    fetchProviders()
+      .then((list) => alive && setProviderDefs(list))
+      .catch(() => alive && setProvidersError("Failed to load sources."));
     return () => {
       alive = false;
     };
-  }, [title, isTV, titleId, seasonNumber, episodeNumber]);
+  }, []);
 
 
   // ✅ Back always returns to the details page for this title
@@ -195,11 +150,18 @@ export default function WatchPage() {
     }
   }, [navigate, isTV, titleId]);
 
-  // --- CHANGED: providers come from episode (TV) or from title (movie) ---
+  // Links: provider domain + path template, filled with this movie / episode
   const providers = useMemo(() => {
-    if (isTV) return getProvidersFromEpisode(activeEpisode);
-    return getProvidersFromTitle(title);
-  }, [title, isTV, activeEpisode]);
+    if (!title) return [];
+    if (isTV) {
+      return buildProviderLinks(
+        providerDefs,
+        { tmdb_id: title.tmdb_id, season: seasonNumber, episode: episodeNumber },
+        "episode"
+      );
+    }
+    return buildProviderLinks(providerDefs, { tmdb_id: title.tmdb_id, imdb_id: title.imdb_code }, "movie");
+  }, [title, isTV, providerDefs, seasonNumber, episodeNumber]);
 
   // Load prefs
   useEffect(() => {
@@ -217,7 +179,7 @@ export default function WatchPage() {
 
       hasPrefsRef.current = !!prefs?.selectedKey;
 
-      if (prefs?.selectedKey) setSelectedKey(prefs.selectedKey);
+      if (prefs?.selectedKey) setSelectedKey(LEGACY_SOURCE_KEYS[prefs.selectedKey] || prefs.selectedKey);
       if (typeof prefs?.customUrl === "string") setCustomUrl(prefs.customUrl);
       if (typeof prefs?.panelOpen === "boolean") setPanelOpen(prefs.panelOpen);
       if (prefs?.theme === "dark" || prefs?.theme === "light") setTheme(prefs.theme);
@@ -232,11 +194,15 @@ export default function WatchPage() {
     // wait until we know if prefs exist
     if (!prefsLoaded) return;
 
+    // a saved/picked source that no longer exists (provider removed or disabled) falls back below
+    const stillExists = selectedKey === "custom" || providers.some((p) => p.key === selectedKey);
+    const waitingForProviders = !title || (providerDefs.length === 0 && !providersError);
+
     // if user already picked something manually, never override
-    if (userPickedRef.current) return;
+    if (userPickedRef.current && (stillExists || waitingForProviders)) return;
 
     // if prefs exist, never override
-    if (hasPrefsRef.current) return;
+    if (hasPrefsRef.current && (stillExists || waitingForProviders)) return;
 
     // if providers exist, ALWAYS start on first provider (even if we temporarily fell back to custom)
     if (providers.length > 0) {
@@ -245,8 +211,8 @@ export default function WatchPage() {
     }
 
     // no providers -> fallback to custom
-    if (!selectedKey) setSelectedKey("custom");
-  }, [prefsLoaded, providers, selectedKey]);
+    if (!waitingForProviders && !stillExists) setSelectedKey("custom");
+  }, [prefsLoaded, title, providers, providerDefs, selectedKey, providersError]);
 
   // Save prefs
   useEffect(() => {
@@ -371,10 +337,9 @@ export default function WatchPage() {
                 Custom · <span className="watchpage__kbd">P</span> Panel · <span className="watchpage__kbd">D</span> Theme
               </div>
             </div>
-            {/* NEW: small debug hint for TV */}
-            {isTV && episodeLoadError ? (
+            {providersError ? (
               <div style={{ marginTop: 10, opacity: 0.8, fontSize: 13 }}>
-                {episodeLoadError}
+                {providersError}
               </div>
             ) : null}
           </div>
@@ -415,7 +380,7 @@ export default function WatchPage() {
         }}
       />
     );
-  }, [resolvedUrl, sourceType, isTV, episodeLoadError]);
+  }, [resolvedUrl, sourceType, providersError]);
 
   if (loading) {
     return (
@@ -541,7 +506,9 @@ export default function WatchPage() {
                     }}
                   >
                     {p.label}
-                    <span className="watchpage__chipBadge">HD</span>
+                    <span className="watchpage__chipBadge" title={p.down ? "Our last check could not reach this source" : undefined}>
+                      {p.down ? "Offline?" : "HD"}
+                    </span>
                   </button>
                 ))}
 

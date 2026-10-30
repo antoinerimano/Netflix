@@ -87,30 +87,9 @@ def tmdb_episode_external_ids(tv_id: int, season_number: int, episode_number: in
 
 # ========= Link builders =========
 
-def movie_title_links(tmdb_id: Optional[int], imdb_code: Optional[str]) -> Dict[str, str]:
-    return {
-        "video_url":   f"https://www.vidking.net/embed/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link2": f"https://player.videasy.net/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link3": f"https://vidsrc.xyz/embed/movie/{imdb_code}" if imdb_code else "",
-    }
-
-def tv_title_links(tmdb_id: int) -> Dict[str, str]:
-    """ Title-level default links (S1E1 with selector=true), all using TMDB id. """
-    return {
-        "video_url":   f"https://www.vidking.net/embed/tv/{tmdb_id}/1/1?episodeSelector=true",
-        "movie_link2": f"https://player.videasy.net/tv/{tmdb_id}/1/1?episodeSelector=true",
-        "movie_link3": f"https://vidsrc.xyz/embed/tv/{tmdb_id}/1-1",
-    }
-
-def episode_links(tv_tmdb_id: int, season: int, episode: int) -> Dict[str, str]:
-    """ Build episode links. """
-    return {
-        "video_url":     f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link3": f"https://vidsrc.xyz/embed/tv/{tv_tmdb_id}/{season}-{episode}",
-    }
-
 # ========= DB helpers =========
+
+# Stream links are not stored anymore: they are built from users.Provider templates.
 
 def movie_exists_tmdb(tmdb_id: int) -> bool:
     return Title.objects.filter(type="movie", tmdb_id=tmdb_id).exists()
@@ -122,7 +101,6 @@ def tv_exists_tmdb(tv_id: int) -> bool:
 
 def upsert_movie_from_tmdb(imdb_code: Optional[str], tmdb: Dict[str, Any], overwrite: bool = False) -> str:
     tmdb_id = tmdb.get("id")
-    links = movie_title_links(tmdb_id, imdb_code)
 
     row = {
         "type": "movie",
@@ -143,9 +121,6 @@ def upsert_movie_from_tmdb(imdb_code: Optional[str], tmdb: Dict[str, Any], overw
         "popularity": tmdb.get("popularity"),
         "poster": _tmdb_img_url(tmdb.get("poster_path")),
         "landscape_image": _tmdb_img_url(tmdb.get("backdrop_path")),
-        "video_url": links["video_url"],
-        "movie_link2": links["movie_link2"],
-        "movie_link3": links["movie_link3"],
         "trailer_url": tmdb_trailer_url(tmdb),
         "genre": ", ".join([g["name"] for g in tmdb.get("genres", []) if g.get("name")]),
         "keywords": [k.get("name") for k in (tmdb.get("keywords") or {}).get("keywords", []) if k.get("name")],
@@ -183,7 +158,6 @@ def upsert_movie_from_tmdb(imdb_code: Optional[str], tmdb: Dict[str, Any], overw
 
 def upsert_tv_from_tmdb(tv: Dict[str, Any], overwrite: bool = False, with_episode_imdb: bool = False, verbose: bool = False) -> str:
     tv_id = tv.get("id")
-    title_links = tv_title_links(tv_id)
 
     base_row = {
         "type": "tv",
@@ -201,9 +175,6 @@ def upsert_tv_from_tmdb(tv: Dict[str, Any], overwrite: bool = False, with_episod
         "popularity": tv.get("popularity"),
         "poster": _tmdb_img_url(tv.get("poster_path")),
         "landscape_image": _tmdb_img_url(tv.get("backdrop_path")),
-        "video_url": title_links["video_url"],
-        "movie_link2": title_links["movie_link2"],
-        "movie_link3": title_links["movie_link3"],
         "trailer_url": tmdb_trailer_url(tv),
         "genre": ", ".join([g["name"] for g in tv.get("genres", []) if g.get("name")]),
         "keywords": [k.get("name") for k in (tv.get("keywords") or {}).get("results", []) if k.get("name")],
@@ -280,7 +251,6 @@ def upsert_tv_from_tmdb(tv: Dict[str, Any], overwrite: bool = False, with_episod
                     ext = {}
                 ep_imdb = ext.get("imdb_id") or None
 
-            links = episode_links(tv_id, snum, enum)
 
             Episode.objects.update_or_create(
                 season=season_obj,
@@ -289,15 +259,12 @@ def upsert_tv_from_tmdb(tv: Dict[str, Any], overwrite: bool = False, with_episod
                     "tmdb_id": e.get("id"),
                     "name": e.get("name") or "",
                     "overview": e.get("overview") or "",
-                    "air_date": e.get("air_date") or "",
+                    "air_date": e.get("air_date") or None,
                     "still_path": e.get("still_path") or "",
                     "vote_average": e.get("vote_average"),
                     "vote_count": e.get("vote_count"),
                     "runtime": e.get("runtime"),
                     "imdb_code": ep_imdb,
-                    "video_url": links["video_url"],
-                    "episode_link2": links["episode_link2"],
-                    "episode_link3": links["episode_link3"],
                 },
             )
 

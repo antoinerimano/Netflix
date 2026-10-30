@@ -55,7 +55,7 @@ class EpisodeSerializer(serializers.ModelSerializer):
         fields = (
             "id", "tmdb_id", "episode_number", "name", "overview",
             "air_date", "still_path", "vote_average", "vote_count", "runtime",
-            "imdb_code", "video_url", "episode_link2", "episode_link3", "episode_link4", "episode_link5", "episode_link6"
+            "imdb_code",
         )
 
 

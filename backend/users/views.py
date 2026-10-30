@@ -31,7 +31,7 @@ from django.utils.html import strip_tags
 
 from .models import (
     Actor, User, Subscription, Profile, PaymentHistory,
-    Title, Season, Episode, TVShowExtras
+    Title, Season, Episode, TVShowExtras, Provider
 )
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .serializers import (
@@ -680,6 +680,23 @@ class TVShowExtrasViewSet(viewsets.ModelViewSet):
         if title_id:
             qs = qs.filter(title_id=title_id)
         return qs.order_by("title_id")
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def provider_list(request):
+    """
+    GET /api/providers/
+    Enabled stream providers; the client builds links as domain + path template
+    ({tmdb_id} {imdb_id} {season} {episode}). Providers that are down come last.
+    """
+    providers = Provider.objects.filter(enabled=True).values(
+        "key", "label", "domain", "movie_path", "episode_path", "status"
+    )
+    data = sorted(providers, key=lambda p: p["status"] == Provider.DOWN)
+    response = Response(data)
+    response["Cache-Control"] = "public, max-age=60"
+    return response
 
 
 @api_view(["GET"])

@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import (
-    Title, Profile, TVShowExtras,
+    Title, Profile, TVShowExtras, Episode,
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
 )
 from users.serializers import TitleHomeSerializer
@@ -61,6 +61,11 @@ GENRE_TOP_TTL = 30 * 60     # 30 min cache des top genres par profil
 GENRE_IDS_TTL = 6 * 3600    # 6h cache ids par genre (comme heavy)
 
 IMPRESSION_EXCLUDE_DAYS = 7
+
+# "New episodes" row: global (same for everyone), added to every home payload at request time
+NEW_EPISODES_TTL = 600       # 10 min
+NEW_EPISODES_DAYS = 10
+NEW_EPISODES_SIZE = 30
 IMPRESSION_EXCLUDE_LIMIT = 4000
 
 
@@ -812,6 +817,50 @@ def upsert_seed_snapshot(profile, hours=6):
 # ============================================================
 
 # dans reco/views.py (RecoHomeView.get)
+def _new_episodes_row():
+    """Shows with an episode aired in the last NEW_EPISODES_DAYS days, most popular first."""
+    ck = "reco:new_episodes:v1"
+    row = cache.get(ck)
+    if row is not None:
+        return row
+
+    today = timezone.localdate()
+    latest = {}  # tv_id -> (air_date, season, episode) of its newest aired episode
+    eps = (
+        Episode.objects
+        .filter(air_date__lte=today, air_date__gte=today - timedelta(days=NEW_EPISODES_DAYS))
+        .order_by("-air_date", "-season__season_number", "-episode_number")
+        .values_list("season__tv_id", "season__season_number", "episode_number", "air_date")
+    )
+    for tv_id, season, episode, air_date in eps:
+        latest.setdefault(tv_id, (air_date, season, episode))
+
+    titles = (
+        Title.objects.filter(id__in=list(latest))
+        .only(*DISPLAY_ONLY_FIELDS, "popularity")
+        .order_by("-popularity")[:NEW_EPISODES_SIZE]
+    )
+    items = []
+    for item in TitleHomeSerializer(titles, many=True).data:
+        air_date, season, episode = latest[item["id"]]
+        items.append({
+            **item,
+            "latest_episode": {"season": season, "episode": episode, "air_date": air_date.isoformat()},
+        })
+
+    row = {"row_type": "new_episodes", "title": "New episodes", "items": items}
+    cache.set(ck, row, NEW_EPISODES_TTL)
+    return row
+
+
+def _with_new_episodes(payload):
+    rows = list(payload.get("rows") or [])
+    new_eps = _new_episodes_row()
+    if new_eps["items"]:
+        rows.insert(min(1, len(rows)), new_eps)  # right after the first personal row
+    return {**payload, "rows": rows}
+
+
 class RecoHomeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -828,7 +877,7 @@ class RecoHomeView(APIView):
             .first()
         )
         if snap and snap.payload and snap.payload.get("rows") is not None:
-            payload = snap.payload
+            payload = _with_new_episodes(snap.payload)
             payload.setdefault("mode", "snapshot")
             return Response(payload)
 
@@ -841,12 +890,12 @@ class RecoHomeView(APIView):
             .first()
         )
         if seed and seed.payload and seed.payload.get("rows") is not None:
-            payload = seed.payload
+            payload = _with_new_episodes(seed.payload)
             payload.setdefault("mode", "seed_snapshot")
             return Response(payload)
 
         # 3) ultime fallback (ne devrait plus arriver)
-        return Response({"mode": "no_snapshot_yet", "rows": []})
+        return Response(_with_new_episodes({"mode": "no_snapshot_yet", "rows": []}))
 
 
 # ============================================================

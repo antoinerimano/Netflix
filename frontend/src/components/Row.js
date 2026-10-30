@@ -433,7 +433,11 @@ const Row = ({ title, movies }) => {
               <div className="movie-info">
                 <p className="title-line" title={movie?.title}>
                   {movie?.title}
-                  {movie?.type && (
+                  {movie?.latest_episode ? (
+                    <span className="media-type-badge">
+                      {`New · S${movie.latest_episode.season} E${movie.latest_episode.episode}`}
+                    </span>
+                  ) : movie?.type && (
                     <span className="media-type-badge">
                       {String(movie.type).toLowerCase() === 'tv' ? 'TV Show' : 'Movie'}
                     </span>

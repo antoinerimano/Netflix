@@ -13,25 +13,7 @@ from django.db.models import Count, Min, Q
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 
 
-# =========================
-# Provider URL templates
-# =========================
-TEMPLATES: Dict[str, str] = {
-    # Titles (movies)
-    "movie_link4": "https://vidfast.pro/movie/{tmdb_id}",
-    "movie_link5": "https://player.vidplus.to/embed/movie/{tmdb_id}?autoplay=false&poster=true&title=true&watchparty=false&chromecast=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "movie_link6": "https://111movies.com/movie/{tmdb_id}",
-
-    # Title (tv -> S1E1)
-    "tv_link4": "https://vidfast.pro/tv/{tmdb_id}/1/1",
-    "tv_link5": "https://player.vidplus.to/embed/tv/{tmdb_id}/1/1?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "tv_link6": "https://111movies.com/tv/{tmdb_id}/1/1",
-
-    # Episodes (tv)
-    "episode_link4": "https://vidfast.pro/tv/{tmdb_id}/{season}/{episode}",
-    "episode_link5": "https://player.vidplus.to/embed/tv/{tmdb_id}/{season}/{episode}?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5",
-    "episode_link6": "https://111movies.com/tv/{tmdb_id}/{season}/{episode}",
-}
+# Stream links are not stored anymore: they are built from users.Provider templates.
 
 
 # =========================
@@ -68,16 +50,14 @@ def img_url(path: Optional[str], size: str = "original") -> str:
     p = str(path).lstrip("/")
     return f"https://image.tmdb.org/t/p/{size}/{p}"
 
-def fmt(template: str, tmdb_id: int, season: Optional[int] = None, episode: Optional[int] = None) -> str:
-    if not template or not tmdb_id:
-        return ""
-    try:
-        return template.format(tmdb_id=tmdb_id, season=season, episode=episode)
-    except Exception:
-        return ""
-
 def is_empty(v) -> bool:
     return v in (None, "", [])
+
+def parse_ymd_date(s: Optional[str]) -> Optional[datetime.date]:
+    try:
+        return datetime.date.fromisoformat((s or "").strip())
+    except ValueError:
+        return None
 
 def fill_field(obj, field: str, new_val, overwrite: bool) -> bool:
     curr = getattr(obj, field, None)
@@ -151,37 +131,6 @@ def tmdb_tv_keywords(full: dict) -> List[str]:
     return [k.get("name") for k in ((full.get("keywords") or {}).get("results") or []) if k.get("name")]
 
 
-def movie_title_links(tmdb_id: int, imdb_code: Optional[str]) -> Dict[str, str]:
-    return {
-        "video_url":   f"https://www.vidking.net/embed/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link2": f"https://player.videasy.net/movie/{tmdb_id}" if tmdb_id else "",
-        "movie_link3": f"https://vidsrc.xyz/embed/movie/{imdb_code}" if imdb_code else "",
-        "movie_link4": fmt(TEMPLATES["movie_link4"], tmdb_id=tmdb_id),
-        "movie_link5": fmt(TEMPLATES["movie_link5"], tmdb_id=tmdb_id),
-        "movie_link6": fmt(TEMPLATES["movie_link6"], tmdb_id=tmdb_id),
-    }
-
-def tv_title_links(tv_tmdb_id: int) -> Dict[str, str]:
-    return {
-        "video_url":   f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
-        "movie_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/1/1?episodeSelector=true",
-        "movie_link3": f"https://vidsrc.xyz/embed/tv/{tv_tmdb_id}/1-1",
-        "movie_link4": fmt(TEMPLATES["tv_link4"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-        "movie_link5": fmt(TEMPLATES["tv_link5"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-        "movie_link6": fmt(TEMPLATES["tv_link6"], tmdb_id=tv_tmdb_id, season=1, episode=1),
-    }
-
-def episode_links(tv_tmdb_id: int, season: int, episode: int) -> Dict[str, str]:
-    return {
-        "video_url":     f"https://www.vidking.net/embed/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link2": f"https://player.videasy.net/tv/{tv_tmdb_id}/{season}/{episode}",
-        "episode_link3": f"https://vidsrc.xyz/embed/tv/{tv_tmdb_id}/{season}-{episode}",
-        "episode_link4": fmt(TEMPLATES["episode_link4"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-        "episode_link5": fmt(TEMPLATES["episode_link5"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-        "episode_link6": fmt(TEMPLATES["episode_link6"], tmdb_id=tv_tmdb_id, season=season, episode=episode),
-    }
-
-
 class Command(BaseCommand):
     help = "Clean DB with logs: dedupe titles, backfill provider links, backfill TMDb popular fields, and optionally create TV extras/seasons/episodes."
 
@@ -192,7 +141,7 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=0, help="Limit titles processed in TMDb backfill (0=all).")
 
         parser.add_argument("--dedupe", action="store_true", help="Remove duplicates on (type,tmdb_id).")
-        parser.add_argument("--backfill-links", action="store_true", help="Fill link4/5/6 for titles and episodes (no TMDb).")
+        parser.add_argument("--backfill-links", action="store_true", help="Deprecated, no-op: links come from Provider templates.")
         parser.add_argument("--backfill-tmdb", action="store_true", help="Fetch TMDb and fill popular metadata fields.")
 
         parser.add_argument("--tv-sync-episodes", action="store_true", help="Ensure TVShowExtras + Seasons + Episodes exist/fill (uses TMDb).")
@@ -263,94 +212,6 @@ class Command(BaseCommand):
         return stats
 
     # -------------------------
-    # BACKFILL LINKS (NO TMDB)
-    # -------------------------
-    def backfill_links(self, dry_run: bool, overwrite: bool, verbose: bool,
-                       log_changes: bool, log_skips: bool, progress_every: int, max_log: int) -> Dict[str, int]:
-        stats = {"titles_scanned": 0, "titles_changed": 0, "episodes_scanned": 0, "episodes_changed": 0}
-        printed = 0
-
-        def log_change(msg: str):
-            nonlocal printed
-            if printed < max_log:
-                self.log(msg)
-                printed += 1
-
-        self.log("[backfill-links] titles...")
-
-        title_qs = Title.objects.filter(type__in=["movie", "tv"]).exclude(Q(tmdb_id__isnull=True) | Q(tmdb_id=0)).order_by("id")
-        buf: List[Title] = []
-        for i, t in enumerate(title_qs.iterator(chunk_size=2000), start=1):
-            stats["titles_scanned"] += 1
-            changed = False
-
-            if t.type == "movie":
-                links = movie_title_links(int(t.tmdb_id), t.imdb_code)
-            else:
-                links = tv_title_links(int(t.tmdb_id))
-
-            for f in ("video_url", "movie_link2", "movie_link3", "movie_link4", "movie_link5", "movie_link6"):
-                if hasattr(t, f) and fill_field(t, f, links.get(f, ""), overwrite=overwrite):
-                    changed = True
-
-            if changed:
-                stats["titles_changed"] += 1
-                buf.append(t)
-                if (log_changes or verbose) and printed < max_log:
-                    log_change(f"[backfill-links][TITLE][UPDATE] id={t.id} type={t.type} tmdb={t.tmdb_id} title={t.title}")
-            else:
-                if log_skips and printed < max_log:
-                    log_change(f"[backfill-links][TITLE][SKIP] id={t.id} type={t.type} tmdb={t.tmdb_id} title={t.title}")
-
-            if progress_every and (i % progress_every == 0):
-                self.log(f"[backfill-links] progress titles scanned={stats['titles_scanned']} changed={stats['titles_changed']}")
-
-        if buf and not dry_run:
-            Title.objects.bulk_update(
-                buf,
-                fields=[f for f in ("video_url", "movie_link2", "movie_link3", "movie_link4", "movie_link5", "movie_link6") if hasattr(Title, f)]
-            )
-
-        self.log("[backfill-links] episodes...")
-
-        eps = Episode.objects.select_related("season", "season__tv").order_by("id")
-        ep_buf: List[Episode] = []
-        for j, ep in enumerate(eps.iterator(chunk_size=2000), start=1):
-            stats["episodes_scanned"] += 1
-            tv = getattr(ep.season, "tv", None) if getattr(ep, "season", None) else None
-            if not tv or not tv.tmdb_id:
-                continue
-
-            links = episode_links(int(tv.tmdb_id), int(ep.season.season_number), int(ep.episode_number))
-
-            changed = False
-            for f in ("video_url", "episode_link2", "episode_link3", "episode_link4", "episode_link5", "episode_link6"):
-                if hasattr(ep, f) and fill_field(ep, f, links.get(f, ""), overwrite=overwrite):
-                    changed = True
-
-            if changed:
-                stats["episodes_changed"] += 1
-                ep_buf.append(ep)
-                if (log_changes or verbose) and printed < max_log:
-                    log_change(f"[backfill-links][EP][UPDATE] ep_id={ep.id} tv_tmdb={tv.tmdb_id} S{ep.season.season_number}E{ep.episode_number} name={ep.name}")
-            else:
-                if log_skips and printed < max_log:
-                    log_change(f"[backfill-links][EP][SKIP] ep_id={ep.id} tv_tmdb={tv.tmdb_id} S{ep.season.season_number}E{ep.episode_number} name={ep.name}")
-
-            if progress_every and (j % progress_every == 0):
-                self.log(f"[backfill-links] progress episodes scanned={stats['episodes_scanned']} changed={stats['episodes_changed']}")
-
-        if ep_buf and not dry_run:
-            Episode.objects.bulk_update(
-                ep_buf,
-                fields=[f for f in ("video_url", "episode_link2", "episode_link3", "episode_link4", "episode_link5", "episode_link6") if hasattr(Episode, f)]
-            )
-
-        self.log(f"[backfill-links] DONE titles_scanned={stats['titles_scanned']} titles_changed={stats['titles_changed']} "
-                 f"episodes_scanned={stats['episodes_scanned']} episodes_changed={stats['episodes_changed']}")
-        return stats
-
-    # -------------------------
     # BACKFILL TMDB
     # -------------------------
     def backfill_tmdb(self, tmdb: TMDbClient, dry_run: bool, overwrite: bool, sleep_s: float,
@@ -398,7 +259,6 @@ class Command(BaseCommand):
                     self.maybe_sleep(sleep_s)
 
                     imdb_code = (ext.get("imdb_id") or t.imdb_code or None)
-                    links = movie_title_links(int(t.tmdb_id), imdb_code)
 
                     row = {
                         "imdb_code": imdb_code,
@@ -426,18 +286,10 @@ class Command(BaseCommand):
                         "belongs_to_collection": full.get("belongs_to_collection"),
                         "director": tmdb_director(full),
                         "cast": tmdb_cast_names(full, limit=10),
-                        # links
-                        "video_url": links.get("video_url", ""),
-                        "movie_link2": links.get("movie_link2", ""),
-                        "movie_link3": links.get("movie_link3", ""),
-                        "movie_link4": links.get("movie_link4", ""),
-                        "movie_link5": links.get("movie_link5", ""),
-                        "movie_link6": links.get("movie_link6", ""),
                     }
                 else:
                     full = tmdb.get(f"/tv/{int(t.tmdb_id)}", params={"append_to_response": "credits,videos,keywords"})
                     self.maybe_sleep(sleep_s)
-                    links = tv_title_links(int(t.tmdb_id))
 
                     row = {
                         "title": (full.get("name") or full.get("original_name") or "").strip(),
@@ -461,13 +313,6 @@ class Command(BaseCommand):
                         "belongs_to_collection": None,
                         "director": "",
                         "cast": tmdb_cast_names(full, limit=10),
-                        # links
-                        "video_url": links.get("video_url", ""),
-                        "movie_link2": links.get("movie_link2", ""),
-                        "movie_link3": links.get("movie_link3", ""),
-                        "movie_link4": links.get("movie_link4", ""),
-                        "movie_link5": links.get("movie_link5", ""),
-                        "movie_link6": links.get("movie_link6", ""),
                     }
 
                 for f, v in row.items():
@@ -530,24 +375,17 @@ class Command(BaseCommand):
                                 enum = safe_int(e.get("episode_number"), 0) or 0
                                 if enum <= 0:
                                     continue
-                                links = episode_links(int(t.tmdb_id), int(snum), int(enum))
 
                                 defaults = {
                                     "tmdb_id": safe_int(e.get("id")),
                                     "name": e.get("name") or "",
                                     "overview": e.get("overview") or "",
-                                    "air_date": e.get("air_date") or "",
+                                    "air_date": parse_ymd_date(e.get("air_date")),
                                     "still_path": e.get("still_path") or "",
                                     "vote_average": safe_float(e.get("vote_average")),
                                     "vote_count": safe_int(e.get("vote_count")),
                                     "runtime": safe_int(e.get("runtime")),
                                     "imdb_code": None,
-                                    "video_url": links["video_url"],
-                                    "episode_link2": links["episode_link2"],
-                                    "episode_link3": links["episode_link3"],
-                                    "episode_link4": links["episode_link4"],
-                                    "episode_link5": links["episode_link5"],
-                                    "episode_link6": links["episode_link6"],
                                 }
 
                                 ep_obj, created = Episode.objects.get_or_create(
@@ -682,23 +520,16 @@ class Command(BaseCommand):
 
                     for e in eps:
                         enum = safe_int(e.get("episode_number"), 0) or 0
-                        links = episode_links(int(t.tmdb_id), snum, enum)
                         defaults_e = {
                             "tmdb_id": safe_int(e.get("id")),
                             "name": e.get("name") or "",
                             "overview": e.get("overview") or "",
-                            "air_date": e.get("air_date") or "",
+                            "air_date": parse_ymd_date(e.get("air_date")),
                             "still_path": e.get("still_path") or "",
                             "vote_average": e.get("vote_average"),
                             "vote_count": e.get("vote_count"),
                             "runtime": e.get("runtime"),
                             "imdb_code": None,
-                            "video_url": links["video_url"],
-                            "episode_link2": links["episode_link2"],
-                            "episode_link3": links["episode_link3"],
-                            "episode_link4": links["episode_link4"],
-                            "episode_link5": links["episode_link5"],
-                            "episode_link6": links["episode_link6"],
                         }
 
                         if dry_run:
@@ -798,16 +629,8 @@ class Command(BaseCommand):
             self.dedupe_titles(dry_run=dry_run, verbose=verbose, max_log=max_log)
 
         if do_backfill_links:
-            self._step("STEP 2/3 - BACKFILL LINKS (NO TMDB)")
-            self.backfill_links(
-                dry_run=dry_run,
-                overwrite=overwrite,
-                verbose=verbose,
-                log_changes=log_changes,
-                log_skips=log_skips,
-                progress_every=progress_every,
-                max_log=max_log,
-            )
+            self._step("STEP 2/3 - BACKFILL LINKS")
+            self.log("Nothing to do: stream links are built from Provider templates (Django admin > Providers).")
 
         if do_backfill_tmdb:
             self._step("STEP 3/3 - BACKFILL TMDB (POPULAR FIELDS)")

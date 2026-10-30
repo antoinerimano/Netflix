@@ -113,15 +113,7 @@ class Title(models.Model):
     poster = models.URLField(blank=True, default="")
     landscape_image = models.URLField(blank=True, default="")
 
-    # playback
-    video_url = models.URLField(blank=True, default="")
-    movie_link2 = models.URLField(blank=True, default="")
-    movie_link3 = models.URLField(blank=True, default="")
-
-    movie_link4 = models.TextField(blank=True, default="")  # vidfast
-    movie_link5 = models.TextField(blank=True, default="")  # vidplus
-    movie_link6 = models.TextField(blank=True, default="")  # 111movies
-
+    # playback: stream links are built from Provider templates, not stored here
     trailer_url = models.URLField(blank=True, default="")
     trailer_clip_url = models.URLField(blank=True, default="")
 
@@ -191,21 +183,13 @@ class Episode(models.Model):
     episode_number = models.IntegerField()
     name = models.CharField(max_length=300, blank=True, default="")
     overview = models.TextField(blank=True, default="")
-    air_date = models.CharField(max_length=10, blank=True, default="")
+    air_date = models.DateField(null=True, blank=True, db_index=True)
     still_path = models.CharField(max_length=300, blank=True, default="")
     vote_average = models.FloatField(null=True, blank=True)
     vote_count = models.IntegerField(null=True, blank=True)
     runtime = models.IntegerField(null=True, blank=True)
 
-    # external + embeds (3 links)
     imdb_code = models.CharField(max_length=20, blank=True, null=True)
-    video_url = models.URLField(blank=True, default="")        # vidking
-    episode_link2 = models.URLField(blank=True, default="")    # videasy
-    episode_link3 = models.URLField(blank=True, default="")    # vidsrc
-
-    episode_link4 = models.TextField(blank=True, default="")    # vidfast
-    episode_link5 = models.TextField(blank=True, default="")    # vidplus
-    episode_link6 = models.TextField(blank=True, default="")    #111movies
 
     class Meta:
         unique_together = [("season", "episode_number")]
@@ -307,3 +291,46 @@ class TitleNetwork(models.Model):
     def __str__(self):
         return f"{self.title_id} net {self.network_norm}"
 
+
+class Provider(models.Model):
+    """
+    A streaming provider. Links are built on the fly as domain + path template, so
+    changing a domain or adding a provider never touches Title/Episode rows.
+    Path placeholders: {tmdb_id} {imdb_id} {season} {episode}
+    """
+    UP, DOWN, UNKNOWN = "up", "down", "unknown"
+    STATUSES = [(UP, "Up"), (DOWN, "Down"), (UNKNOWN, "Unknown")]
+
+    key = models.SlugField(max_length=40, unique=True)
+    label = models.CharField(max_length=80)
+    domain = models.CharField(max_length=200, help_text="e.g. https://vidfast.pro")
+    backup_domains = models.TextField(
+        blank=True, default="",
+        help_text="One per line. Tried in order by the health check when the main domain is down.",
+    )
+    movie_path = models.CharField(max_length=500, blank=True, default="", help_text="e.g. /movie/{tmdb_id}")
+    episode_path = models.CharField(
+        max_length=500, blank=True, default="", help_text="e.g. /tv/{tmdb_id}/{season}/{episode}"
+    )
+    enabled = models.BooleanField(default=True)
+    priority = models.PositiveSmallIntegerField(default=100, help_text="Lower shows first.")
+    auto_switch = models.BooleanField(
+        default=True,
+        help_text="Let the health check move to a backup domain, or follow a redirect to a new domain.",
+    )
+
+    # filled by the health check (check_providers)
+    status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)
+    status_detail = models.CharField(max_length=300, blank=True, default="")
+    checked_at = models.DateTimeField(null=True, blank=True)
+    suggested_domain = models.CharField(max_length=200, blank=True, default="")
+    domain_changed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["priority", "id"]
+
+    def __str__(self):
+        return f"{self.label} ({self.domain})"
+
+    def backups(self):
+        return [d.strip().rstrip("/") for d in self.backup_domains.splitlines() if d.strip()]

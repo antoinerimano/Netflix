@@ -12,10 +12,10 @@ const initialForm = {
   rating: "",
   genre: "",
   cast: [],
-  video_url: "",
   trailer_clip_url: "",
-  movie_link2: "",
-  movie_link3: "",
+  // stream links are built from these ids (see Providers in the Django admin)
+  tmdb_id: "",
+  imdb_code: "",
   // movie-only
   director: "",
   runtime_minutes: "",
@@ -57,6 +57,12 @@ export default function AdminMovies() {
     if (!data.cast || !Array.isArray(data.cast) || !data.cast.length || !data.cast[0]) {
       e.cast = "Cast is required (comma separated)";
     }
+    if (!/^\d+$/.test(String(data.tmdb_id || "").trim())) {
+      e.tmdb_id = "TMDB id is required (a number): stream links are built from it";
+    }
+    if (data.imdb_code && !/^tt\d+$/.test(String(data.imdb_code).trim())) {
+      e.imdb_code = "IMDb id looks like tt0137523";
+    }
 
     // Movie-only validation
     if (mode === "movie") {
@@ -79,10 +85,7 @@ export default function AdminMovies() {
     // URL checks (validate when present)
     if (!isValidUrl(data.poster)) e.poster = "Poster URL is invalid";
     if (!isValidUrl(data.landscape_image)) e.landscape_image = "Landscape image URL is invalid";
-    if (!isValidUrl(data.video_url)) e.video_url = "Video URL is invalid";
     if (!isValidUrl(data.trailer_clip_url)) e.trailer_clip_url = "Trailer clip URL is invalid";
-    if (!isValidUrl(data.movie_link2)) e.movie_link2 = "Movie link 2 URL is invalid";
-    if (!isValidUrl(data.movie_link3)) e.movie_link3 = "Movie link 3 URL is invalid";
 
     return e;
   };
@@ -126,9 +129,8 @@ export default function AdminMovies() {
       director: data.director || "",
       runtime_minutes: data.runtime_minutes || "",
       trailer_clip_url: data.trailer_clip_url || "",
-      video_url: data.video_url || "",
-      movie_link2: data.movie_link2 || "",
-      movie_link3: data.movie_link3 || "",
+      tmdb_id: data.tmdb_id ?? "",
+      imdb_code: data.imdb_code || "",
     });
     setEditingId(id);
   };
@@ -149,7 +151,11 @@ export default function AdminMovies() {
     setErrors(v);
     if (Object.keys(v).length) return;
 
-    let submit = { ...form };
+    let submit = {
+      ...form,
+      tmdb_id: Number(String(form.tmdb_id).trim()),
+      imdb_code: String(form.imdb_code || "").trim() || null, // unique column: never send ""
+    };
 
     if (mode === "movie") {
       delete submit.first_air_date;
@@ -296,15 +302,15 @@ export default function AdminMovies() {
           {errors.landscape_image && <span className={styles.error}>{errors.landscape_image}</span>}
         </div>
 
-        {/* --- 4 link fields (both Movies & TV) --- */}
+        {/* --- ids used to build the stream links (both Movies & TV) --- */}
         <div className={styles["form-group"]}>
-          <input
-            name="video_url"
-            placeholder="Main Video URL"
-            value={form.video_url}
-            onChange={onChange}
-          />
-          {errors.video_url && <span className={styles.error}>{errors.video_url}</span>}
+          <input name="tmdb_id" placeholder="TMDB id (e.g. 550)" value={form.tmdb_id} onChange={onChange} />
+          {errors.tmdb_id && <span className={styles.error}>{errors.tmdb_id}</span>}
+        </div>
+
+        <div className={styles["form-group"]}>
+          <input name="imdb_code" placeholder="IMDb id (optional, e.g. tt0137523)" value={form.imdb_code} onChange={onChange} />
+          {errors.imdb_code && <span className={styles.error}>{errors.imdb_code}</span>}
         </div>
 
         <div className={styles["form-group"]}>
@@ -316,27 +322,6 @@ export default function AdminMovies() {
           />
           {errors.trailer_clip_url && <span className={styles.error}>{errors.trailer_clip_url}</span>}
         </div>
-
-        <div className={styles["form-group"]}>
-          <input
-            name="movie_link2"
-            placeholder="Movie Link 2 (optional)"
-            value={form.movie_link2}
-            onChange={onChange}
-          />
-          {errors.movie_link2 && <span className={styles.error}>{errors.movie_link2}</span>}
-        </div>
-
-        <div className={styles["form-group"]}>
-          <input
-            name="movie_link3"
-            placeholder="Movie Link 3 (optional)"
-            value={form.movie_link3}
-            onChange={onChange}
-          />
-          {errors.movie_link3 && <span className={styles.error}>{errors.movie_link3}</span>}
-        </div>
-        {/* --- end link fields --- */}
 
         <div className={styles["form-group"]}>
           <input
