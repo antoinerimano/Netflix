@@ -1,42 +1,30 @@
 from django.db import migrations, models
 
-# The 6 providers as they were stored on Title/Episode rows (checked against the DB).
-VIDPLUS_MOVIE_QS = (
-    "?autoplay=false&poster=true&title=true&watchparty=false&chromecast=true&servericon=true"
-    "&setting=true&pip=true&icons=netflix&primarycolor=FF6161&secondarycolor=000000"
-    "&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5"
-)
-VIDPLUS_TV_QS = (
-    "?autoplay=false&autonext=false&nextbutton=false&poster=true&title=true&watchparty=false"
-    "&chromecast=true&episodelist=true&servericon=true&setting=true&pip=true&icons=netflix"
-    "&primarycolor=FF6161&secondarycolor=000000&iconcolor=CB4848&font=Roboto&fontcolor=FFFFFF"
-    "&fontsize=20&opacity=0.5"
-)
-
+# Starting provider setup (as configured locally before the first prod deploy).
 PROVIDERS = [
-    # key, label, domain, movie_path, episode_path
-    ("vidking", "Vidking", "https://www.vidking.net",
-     "/embed/movie/{tmdb_id}", "/embed/tv/{tmdb_id}/{season}/{episode}"),
-    ("videasy", "Videasy", "https://player.videasy.net",
-     "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}"),
-    ("vidsrc", "Vidsrc", "https://vidsrc.xyz",
-     "/embed/movie/{imdb_id}", "/embed/tv/{tmdb_id}/{season}-{episode}"),
-    ("vidfast", "VidFast", "https://vidfast.pro",
-     "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}"),
-    ("vidplus", "VidPlus", "https://player.vidplus.to",
-     "/embed/movie/{tmdb_id}" + VIDPLUS_MOVIE_QS, "/embed/tv/{tmdb_id}/{season}/{episode}" + VIDPLUS_TV_QS),
-    ("111movies", "111movies", "https://111movies.com",
-     "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}"),
+    # key, label, domain, movie_path, episode_path, priority, backup_domains
+    ("videasy", "Videasy", "https://player.videasy.ws",
+     "/embed/movie/{tmdb_id}", "/embed/tv/{tmdb_id}/{season}/{episode}?autonext=1", 20, ""),
+    ("vidsrc", "Vidsrc", "https://vidsrc.mov",
+     "/embed/movie/{imdb_id}", "/embed/tv/{tmdb_id}/{season}-{episode}", 30, ""),
+    ("vidfast", "VidFast", "https://vidfast.vc",
+     "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}", 40, "https://vidfast.pro"),
+    ("111movies", "111movies", "https://111movies.net",
+     "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}", 60, ""),
+    ("cinesrc", "CineSrc", "https://cinesrc.st",
+     "/embed/movie/{tmdb_id}", "/embed/tv/{tmdb_id}?s={season}&e={episode}&autonext=true", 70, ""),
+    ("vidcore", "VidCore", "https://vidcore.org",
+     "/embed/movie/{tmdb_id}?autoplay=true", "/embed/tv/{tmdb_id}/{season}/{episode}?autoplay=true", 80, ""),
 ]
 
 
 def seed_providers(apps, schema_editor):
     Provider = apps.get_model("users", "Provider")
-    for priority, (key, label, domain, movie_path, episode_path) in enumerate(PROVIDERS, 1):
+    for key, label, domain, movie_path, episode_path, priority, backup_domains in PROVIDERS:
         Provider.objects.update_or_create(
             key=key,
-            defaults=dict(label=label, domain=domain, movie_path=movie_path,
-                          episode_path=episode_path, priority=priority * 10),
+            defaults=dict(label=label, domain=domain, movie_path=movie_path, episode_path=episode_path,
+                          priority=priority, backup_domains=backup_domains),
         )
 
 
