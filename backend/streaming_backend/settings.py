@@ -107,6 +107,13 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_PAGINATION_CLASS": "users.pagination.StandardResultsSetPagination",
+    # rate limits for login / register / password reset (see users/throttles.py)
+    "DEFAULT_THROTTLE_RATES": {
+        "auth": env("THROTTLE_AUTH_RATE", default="10/min"),
+        "password_reset": env("THROTTLE_PASSWORD_RESET_RATE", default="5/hour"),
+    },
+    # nginx sits in front: take the client IP from the last X-Forwarded-For hop
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=1),
 }
 
 SIMPLE_JWT = {

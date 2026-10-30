@@ -1,3 +1,5 @@
+from django.core import mail
+from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -6,6 +8,7 @@ from .models import User, Profile, Subscription, PaymentHistory
 
 class PermissionTests(TestCase):
     def setUp(self):
+        cache.clear()  # reset rate-limit counters between tests
         self.client = APIClient()
         self.alice = User.objects.create_user("alice@example.com", "Alice", "pw-alice-123!")
         self.bob = User.objects.create_user("bob@example.com", "Bob", "pw-bob-123!")
@@ -99,3 +102,59 @@ class PermissionTests(TestCase):
 
     def test_titles_public_read(self):
         self.assertEqual(self.client.get("/api/titles/").status_code, 200)
+
+
+class AuthHardeningTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+        self.alice = User.objects.create_user("alice@example.com", "Alice", "pw-alice-123!")
+
+    def _login(self, email, password):
+        return self.client.post("/api/users/login/", {"email": email, "password": password}, format="json")
+
+    def test_login_same_error_for_unknown_email_and_wrong_password(self):
+        unknown = self._login("nobody@example.com", "whatever")
+        wrong = self._login("alice@example.com", "wrong")
+        self.assertEqual(unknown.status_code, 400)
+        self.assertEqual(unknown.status_code, wrong.status_code)
+        self.assertEqual(unknown.data, wrong.data)
+
+    def test_inactive_user_cannot_login(self):
+        self.alice.is_active = False
+        self.alice.save()
+        self.assertEqual(self._login("alice@example.com", "pw-alice-123!").status_code, 400)
+
+    def test_password_reset_same_answer_for_unknown_email(self):
+        known = self.client.post("/api/password-reset/", {"email": "alice@example.com"}, format="json")
+        unknown = self.client.post("/api/password-reset/", {"email": "nobody@example.com"}, format="json")
+        self.assertEqual(known.status_code, 200)
+        self.assertEqual(known.data, unknown.data)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["alice@example.com"])
+
+    def test_password_reset_rejects_weak_password(self):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+        uid = urlsafe_base64_encode(force_bytes(self.alice.pk))
+        token = default_token_generator.make_token(self.alice)
+        res = self.client.post("/api/password-reset-confirm/",
+                               {"uid": uid, "token": token, "new_password": "123"}, format="json")
+        self.assertEqual(res.status_code, 400)
+        res = self.client.post("/api/password-reset-confirm/",
+                               {"uid": uid, "token": token, "new_password": "N3w-strong-pass!"}, format="json")
+        self.assertEqual(res.status_code, 200)
+        self.alice.refresh_from_db()
+        self.assertTrue(self.alice.check_password("N3w-strong-pass!"))
+
+    def test_login_is_rate_limited(self):
+        codes = [self._login("alice@example.com", "wrong").status_code for _ in range(11)]
+        self.assertEqual(codes[:10], [400] * 10)
+        self.assertEqual(codes[10], 429)
+
+    def test_password_reset_is_rate_limited(self):
+        codes = [self.client.post("/api/password-reset/", {"email": "x@example.com"}, format="json").status_code
+                 for _ in range(6)]
+        self.assertEqual(codes[:5], [200] * 5)
+        self.assertEqual(codes[5], 429)

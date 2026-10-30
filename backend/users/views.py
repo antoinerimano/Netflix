@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, action, throttle_classes
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
@@ -18,6 +18,8 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from datetime import timedelta
 from rest_framework.permissions import SAFE_METHODS, BasePermission, AllowAny, IsAuthenticated
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -33,6 +35,7 @@ from .models import (
     Actor, User, Subscription, Profile, PaymentHistory,
     Title, Season, Episode, TVShowExtras
 )
+from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .serializers import (
     UserSerializer, SubscriptionSerializer,
     ProfileSerializer, PaymentHistorySerializer, TitleSerializer,
@@ -70,6 +73,7 @@ class _AppTokenObtainPairSerializer(TokenObtainPairSerializer):
 # Export views under the exact names your urls.py expects
 class TokenObtainPairView(_BaseTokenObtainPairView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
     serializer_class = _AppTokenObtainPairSerializer
 
 class TokenRefreshView(_BaseTokenRefreshView):
@@ -123,7 +127,8 @@ class UserViewSet(viewsets.ModelViewSet):
             qs = qs.filter(id=self.request.user.id)
         return qs
 
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='register')
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny],
+            throttle_classes=[AuthRateThrottle], url_path='register')
     def register(self, request):
         data = request.data.copy()
         email = data.get('email')
@@ -196,17 +201,16 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='login')
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny],
+            throttle_classes=[AuthRateThrottle], url_path='login')
     def login(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        if not check_password(password, user.password):
+        # same answer for unknown email, wrong password or disabled account,
+        # so the endpoint can't be used to find out who has an account
+        user = User.objects.filter(email=email).first()
+        if not user or not user.is_active or not check_password(password, user.password):
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         user.last_login = timezone.now()
@@ -409,15 +413,20 @@ class LogoutView(APIView):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def request_password_reset(request):
     email = request.data.get('email')
     if not email:
         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    # always answer the same way so the endpoint doesn't reveal which emails exist
+    sent_response = Response(
+        {'message': 'If an account exists for this email, a reset link has been sent'},
+        status=status.HTTP_200_OK,
+    )
+    user = User.objects.filter(email=email, is_active=True).first()
+    if not user:
+        return sent_response
 
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -443,11 +452,12 @@ def request_password_reset(request):
         html_message=html_message,
         fail_silently=False,
     )
-    return Response({'message': 'Password reset link sent'}, status=status.HTTP_200_OK)
+    return sent_response
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def confirm_password_reset(request):
     uidb64 = request.data.get('uid')
     token = request.data.get('token')
@@ -464,6 +474,11 @@ def confirm_password_reset(request):
 
     if not default_token_generator.check_token(user, token):
         return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        validate_password(new_password, user)
+    except ValidationError as e:
+        return Response({'error': ' '.join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
     user.save()
