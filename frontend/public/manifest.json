@@ -1,40 +1,49 @@
 {
+  "id": "/",
   "short_name": "Tauruss",
   "name": "Tauruss – Stream Movies & TV Shows Online in HD",
   "description": "Stream thousands of movies and TV shows instantly in HD.",
   "icons": [
     {
-      "src": "https://tauruss.top/logo/favicon.ico",
+      "src": "/logo/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "https://tauruss.top/logo/favicon-192x192.png",
+      "src": "/logo/favicon-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "https://tauruss.top/logo/maskable-192x192.png",
+      "src": "/logo/maskable-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "maskable"
     },
     {
-      "src": "https://tauruss.top/logo/favicon-512x512.png",
+      "src": "/logo/favicon-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "https://tauruss.top/logo/maskable-512x512.png",
+      "src": "/logo/maskable-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     }
   ],
-  "start_url": "https://tauruss.top/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#000000",
+  "categories": ["entertainment"],
+  "shortcuts": [
+    { "name": "My List", "url": "/list", "icons": [{ "src": "/logo/favicon-192x192.png", "sizes": "192x192" }] },
+    { "name": "TV Shows", "url": "/tv", "icons": [{ "src": "/logo/favicon-192x192.png", "sizes": "192x192" }] },
+    { "name": "Movies", "url": "/movies", "icons": [{ "src": "/logo/favicon-192x192.png", "sizes": "192x192" }] }
+  ]
 }

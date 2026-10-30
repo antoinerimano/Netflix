@@ -6,6 +6,7 @@ import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
 import NotificationBell from './NotificationBell';
+import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 
 const SITE_URL = 'https://tauruss.top/';
@@ -20,6 +21,8 @@ const Navbar = () => {
   const [results, setResults] = useState([]); // [{id,title,poster,description,kind:'movie'|'tv'}]
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState(''); // '', 'copied', 'shared'
+  const [showIosInstall, setShowIosInstall] = useState(false);
+  const installApp = useInstallApp();
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -321,6 +324,21 @@ const Navbar = () => {
                 </div>
               )}
               <div className="dropdown-divider"></div>
+              {installApp.canInstall && (
+                <div className="profile-option" onClick={() => installApp.install()}>
+                  Install app
+                </div>
+              )}
+              {installApp.iosInstructions && (
+                <div className="profile-option" onClick={() => setShowIosInstall((v) => !v)}>
+                  Install app
+                </div>
+              )}
+              {showIosInstall && (
+                <div className="profile-option profile-option--hint">
+                  Tap the Share button in Safari, then "Add to Home Screen".
+                </div>
+              )}
               <div className="profile-option" onClick={handleNavigateAccount}>
                 Account Settings
               </div>

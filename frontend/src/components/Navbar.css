@@ -600,3 +600,12 @@ fill: #ffffff;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* "Install app" help on iPhone / iPad (no install prompt there) */
+.profile-option--hint {
+  cursor: default;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #aaa;
+  white-space: normal;
+}
