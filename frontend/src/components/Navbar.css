@@ -590,3 +590,13 @@ fill: #ffffff;
     transition: none !important;
   }
 }
+
+/* why a search result was found (actor, director, "like X", close match...) */
+.search-result-match {
+  margin: 2px 0 4px;
+  font-size: 12px;
+  color: #e50914;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

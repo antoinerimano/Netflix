@@ -38,7 +38,7 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 2.3 "Why this?" on recommendations
         Small explanation on cards: "Similar to X", "Popular in your language", ...
 
-[ ] 2.4 Better search
+[x] 2.4 Better search
         Search by actor, genre, year, keyword; typo tolerance; natural-language search
         ("90s crime shows like CSI") using the title embeddings we already have.
 

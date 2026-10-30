@@ -91,6 +91,7 @@ const Navbar = () => {
           poster: item.poster || item.landscape_image || '',
           description: item.description || item.overview || '',
           kind: item.type === 'tv' ? 'tv' : 'movie',
+          match: item.match || '', // why it was found: "With Bryan Cranston", "Close match", ...
         }));
 
         setResults(merged);
@@ -267,6 +268,7 @@ const Navbar = () => {
                         {item.kind === 'tv' ? 'TV' : 'Movie'}
                       </span>
                     </h3>
+                    {item.match && <p className="search-result-match">{item.match}</p>}
                     <p className="search-result-desc">{item.description}</p>
                   </div>
                 </li>

@@ -34,6 +34,7 @@ from .models import (
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .maturity import allowed_titles_q, request_profile
 from .emails import send_templated_email
+from .search import search_titles
 from .serializers import (
     UserSerializer, SubscriptionSerializer,
     ProfileSerializer, PaymentHistorySerializer, TitleSerializer,
@@ -581,6 +582,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     def search(self, request):
         """
         /api/titles/search/?q=bat&type=movie|tv|all&limit=15
+        Titles, actors, directors, keywords, typos and queries like "90s crime shows like CSI"
+        (users/search.py). Each result has "match": why it was found ("" for a plain title match).
         """
         q = (request.query_params.get("q") or "").strip()
         t = (request.query_params.get("type") or "all").strip()
@@ -594,19 +597,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         if not q:
             return Response([])
 
-        qs = Title.objects.filter(allowed_titles_q(request_profile(request)))
-
-        if t in ("movie", "tv"):
-            qs = qs.filter(type=t)
-
-        qs = qs.filter(
-            Q(title__istartswith=q) |
-            Q(original_title__istartswith=q)
-        ).order_by("-popularity", "-vote_average", "-id")[:limit]
-
-        # serializer liste léger (inclut trailer_url si tu l’as ajouté)
-        data = TitleListSerializer(qs, many=True, context=self.get_serializer_context()).data
-        return Response(data)
+        results = search_titles(q, profile=request_profile(request), kind=t, limit=limit)
+        titles = [title for title, _ in results]
+        data = TitleListSerializer(titles, many=True, context=self.get_serializer_context()).data
+        return Response([{**item, "match": reason} for item, (_, reason) in zip(data, results)])
     
 class SeasonViewSet(viewsets.ModelViewSet):
     serializer_class = SeasonSerializer
