@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Slider from 'react-slick';
 import { useNavigate } from 'react-router-dom';
 import './Row.css';
-import { logImpressions, logTitleClick } from '../api/analyticsApi';
+import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
+import { hideWatchProgress } from '../api/recoApi';
 
 const LOAD_ON_HOVER_MS = 1000;
 const STALL_HIDE_MS = 900;
@@ -63,6 +64,9 @@ const Row = ({ title, movies }) => {
   const sliderRef = useRef(null);
   const [showPrevArrow, setShowPrevArrow] = useState(false);
 
+  // titles removed from "Continue watching" during this visit
+  const [removedIds, setRemovedIds] = useState(() => new Set());
+
   // --- NEW: impression de-dupe (avoid spamming) ---
   const seenImpressionsRef = useRef(new Set());
   const displayedMovies = (() => {
@@ -70,7 +74,7 @@ const Row = ({ title, movies }) => {
     const seen = new Set();
     for (const t of (Array.isArray(movies) ? movies : [])) {
       const id = t?.id;
-      if (!id || seen.has(id)) continue;
+      if (!id || seen.has(id) || removedIds.has(id)) continue;
       seen.add(id);
       out.push(t);
     }
@@ -233,8 +237,27 @@ const Row = ({ title, movies }) => {
     return `/${isTv ? 'tv' : 'movies'}/${t?.id}`;
   };
 
+  // "Continue watching" items carry `resume`: go straight back to the player
+  const getResumePath = (t) => {
+    const { season, episode } = t?.resume || {};
+    return season && episode ? `/watch/${t.id}?season=${season}&episode=${episode}` : `/watch/${t.id}`;
+  };
+
+  const removeFromContinueWatching = (e, t) => {
+    e.stopPropagation();
+    const profileId = localStorage.getItem('activeProfileId');
+    setRemovedIds((prev) => new Set(prev).add(t.id));
+    hideWatchProgress({ profileId, titleId: t.id }).catch(() => {});
+  };
+
   // --- NEW: log internal click before navigate ---
   const handleCardClick = (t, index) => {
+    if (t?.id && t.resume) {
+      const url = getResumePath(t);
+      logOutboundClickBeacon({ title_id: t.id, surface: 'continue_watching', provider: 'watch_page', url });
+      navigate(url);
+      return;
+    }
     if (t?.id) {
       logTitleClick({
         title_id: t.id,
@@ -322,6 +345,8 @@ const Row = ({ title, movies }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]); // when the row title changes, treat it as a new surface
 
+  if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
+
   return (
     <div className="row">
       <h2>{title}</h2>
@@ -403,6 +428,33 @@ const Row = ({ title, movies }) => {
                 }}
               />
 
+              {movie?.resume && (
+                <button
+                  className="row-remove-btn"
+                  onClick={(e) => removeFromContinueWatching(e, movie)}
+                  aria-label="Remove from Continue watching"
+                  title="Remove from Continue watching"
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    zIndex: 3,
+                    width: 26,
+                    height: 26,
+                    borderRadius: 9999,
+                    border: 'none',
+                    background: 'rgba(0,0,0,0.55)',
+                    color: '#fff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+
               {canRenderVideo && isVisible && (
                 <button
                   className="row-unmute-btn"
@@ -433,7 +485,11 @@ const Row = ({ title, movies }) => {
               <div className="movie-info">
                 <p className="title-line" title={movie?.title}>
                   {movie?.title}
-                  {movie?.latest_episode ? (
+                  {movie?.resume ? (
+                    <span className="media-type-badge">
+                      {movie.resume.season ? `S${movie.resume.season} E${movie.resume.episode}` : 'Resume'}
+                    </span>
+                  ) : movie?.latest_episode ? (
                     <span className="media-type-badge">
                       {`New · S${movie.latest_episode.season} E${movie.latest_episode.episode}`}
                     </span>

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
+import { saveWatchProgress } from "../api/recoApi";
 
 // sources saved by older versions used the DB column names
 const LEGACY_SOURCE_KEYS = {
@@ -139,6 +140,48 @@ export default function WatchPage() {
     };
   }, []);
 
+
+  // Continue watching: remember what this profile opened (movie, or season/episode)
+  useEffect(() => {
+    if (!title?.id) return;
+    const pid = localStorage.getItem("activeProfileId");
+    if (!pid) return;
+    saveWatchProgress({
+      profileId: pid,
+      titleId: title.id,
+      season: isTV ? seasonNumber : null,
+      episode: isTV ? episodeNumber : null,
+    }).catch(() => {});
+  }, [title?.id, isTV, seasonNumber, episodeNumber]);
+
+  // Next aired episode: rest of this season, then the first episode of the next season
+  const nextEpisode = useMemo(() => {
+    if (!isTV || !Array.isArray(title?.seasons)) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const airedNumbers = (season) =>
+      (season?.episodes || [])
+        .filter((ep) => !ep.air_date || ep.air_date <= today)
+        .map((ep) => Number(ep.episode_number))
+        .sort((a, b) => a - b);
+
+    const seasons = [...title.seasons].sort((a, b) => a.season_number - b.season_number);
+    const current = seasons.find((s) => Number(s.season_number) === Number(seasonNumber));
+    const laterInSeason = airedNumbers(current).find((n) => n > episodeNumber);
+    if (laterInSeason) return { season: seasonNumber, episode: laterInSeason };
+
+    for (const s of seasons) {
+      if (s.season_number > seasonNumber) {
+        const first = airedNumbers(s)[0];
+        if (first) return { season: s.season_number, episode: first };
+      }
+    }
+    return null;
+  }, [isTV, title, seasonNumber, episodeNumber]);
+
+  const goToNextEpisode = useCallback(() => {
+    if (!nextEpisode) return;
+    navigate(`/watch/${titleId}?season=${nextEpisode.season}&episode=${nextEpisode.episode}`, { replace: true });
+  }, [navigate, titleId, nextEpisode]);
 
   // ✅ Back always returns to the details page for this title
   const goBack = useCallback(() => {
@@ -434,6 +477,16 @@ export default function WatchPage() {
           </div>
 
           <div className="watchpage__topActions">
+            {nextEpisode ? (
+              <button
+                className="watchpage__pillBtn"
+                onClick={goToNextEpisode}
+                title={`Season ${nextEpisode.season}, episode ${nextEpisode.episode}`}
+              >
+                Next episode ▶
+              </button>
+            ) : null}
+
             <button
               className="watchpage__pillBtn"
               onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}

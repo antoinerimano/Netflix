@@ -24,3 +24,10 @@ class ActionInSerializer(serializers.Serializer):
     provider = serializers.CharField(required=False, allow_blank=True, default="")
 
 
+
+
+class WatchProgressInSerializer(serializers.Serializer):
+    profile_id = serializers.IntegerField()
+    title_id = serializers.IntegerField()
+    season = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+    episode = serializers.IntegerField(required=False, allow_null=True, min_value=1)

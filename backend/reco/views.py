@@ -26,9 +26,9 @@ from users.serializers import TitleHomeSerializer
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
-    EditorialCollection, RecoModelArtifact
+    EditorialCollection, RecoModelArtifact, WatchProgress
 )
-from .serializers import ImpressionInSerializer, ActionInSerializer
+from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,10 @@ def _interest_actions(profile_id):
 NEW_EPISODES_TTL = 600       # 10 min
 NEW_EPISODES_DAYS = 10
 NEW_EPISODES_SIZE = 30
+
+# "Continue watching" row: live per profile, first row of the home page
+CONTINUE_WATCHING_DAYS = 60
+CONTINUE_WATCHING_SIZE = 20
 IMPRESSION_EXCLUDE_LIMIT = 4000
 
 
@@ -902,11 +906,35 @@ def _new_episodes_row():
     return row
 
 
-def _with_new_episodes(payload):
+def _continue_watching_row(profile):
+    """Last movies / episodes this profile opened on the watch page, newest first."""
+    since = timezone.now() - timedelta(days=CONTINUE_WATCHING_DAYS)
+    progress = list(
+        WatchProgress.objects
+        .filter(profile=profile, hidden=False, updated_at__gte=since)
+        .order_by("-updated_at")
+        .values_list("title_id", "season_number", "episode_number")[:CONTINUE_WATCHING_SIZE]
+    )
+    titles = {t.id: t for t in Title.objects.filter(id__in=[p[0] for p in progress]).only(*DISPLAY_ONLY_FIELDS)}
+    items = []
+    for title_id, season, episode in progress:
+        t = titles.get(title_id)
+        if t is None:
+            continue
+        item = TitleHomeSerializer(t).data
+        items.append({**item, "resume": {"season": season, "episode": episode} if season else {}})
+    return {"row_type": "continue_watching", "title": "Continue watching", "items": items}
+
+
+def _with_live_rows(payload, profile):
+    """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
     rows = list(payload.get("rows") or [])
     new_eps = _new_episodes_row()
     if new_eps["items"]:
         rows.insert(min(1, len(rows)), new_eps)  # right after the first personal row
+    cont = _continue_watching_row(profile)
+    if cont["items"]:
+        rows.insert(0, cont)
     return {**payload, "rows": rows}
 
 
@@ -926,7 +954,7 @@ class RecoHomeView(APIView):
             .first()
         )
         if snap and snap.payload and snap.payload.get("rows") is not None:
-            payload = _with_new_episodes(snap.payload)
+            payload = _with_live_rows(snap.payload, profile)
             payload.setdefault("mode", "snapshot")
             return Response(payload)
 
@@ -939,12 +967,12 @@ class RecoHomeView(APIView):
             .first()
         )
         if seed and seed.payload and seed.payload.get("rows") is not None:
-            payload = _with_new_episodes(seed.payload)
+            payload = _with_live_rows(seed.payload, profile)
             payload.setdefault("mode", "seed_snapshot")
             return Response(payload)
 
         # 3) ultime fallback (ne devrait plus arriver)
-        return Response(_with_new_episodes({"mode": "no_snapshot_yet", "rows": []}))
+        return Response(_with_live_rows({"mode": "no_snapshot_yet", "rows": []}, profile))
 
 
 # ============================================================
@@ -1000,4 +1028,40 @@ class LogActionView(APIView):
             session_id=data["session_id"],
             provider=data.get("provider", ""),
         )
+        return Response({"ok": True})
+
+
+# ============================================================
+# CONTINUE WATCHING
+# ============================================================
+
+class WatchProgressView(APIView):
+    """
+    POST   /api/watch-progress/  {profile_id, title_id, season?, episode?}  watch page opened
+    DELETE /api/watch-progress/?profileId=..&titleId=..                     remove from the row
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = WatchProgressInSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
+        title = get_object_or_404(Title.objects.only("id", "type"), id=data["title_id"])
+        is_tv = title.type == "tv"
+        WatchProgress.objects.update_or_create(
+            profile=profile,
+            title=title,
+            defaults={
+                "season_number": data.get("season") if is_tv else None,
+                "episode_number": data.get("episode") if is_tv else None,
+                "hidden": False,
+            },
+        )
+        return Response({"ok": True})
+
+    def delete(self, request):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        WatchProgress.objects.filter(profile=profile, title_id=request.query_params.get("titleId")).update(hidden=True)
         return Response({"ok": True})

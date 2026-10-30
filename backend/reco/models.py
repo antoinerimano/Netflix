@@ -118,3 +118,23 @@ class RecoHomeSnapshot(models.Model):
     def is_valid(self, now=None):
         now = now or timezone.now()
         return bool(self.payload) and self.expires_at and self.expires_at > now
+
+class WatchProgress(models.Model):
+    """
+    Last thing a profile opened on the watch page, per title: feeds "Continue watching".
+    TV: season/episode of the last episode opened. Movie: season/episode stay empty.
+    """
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="watch_progress")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    season_number = models.PositiveIntegerField(null=True, blank=True)
+    episode_number = models.PositiveIntegerField(null=True, blank=True)
+    hidden = models.BooleanField(default=False)  # removed from the row by the user
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["profile", "title"], name="uniq_watch_progress_profile_title"),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "hidden", "-updated_at"]),
+        ]

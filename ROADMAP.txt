@@ -1,0 +1,54 @@
+ROADMAP - new features, one step at a time
+==========================================
+Status: [ ] todo   [~] in progress   [x] done
+
+1. ESSENTIALS USERS EXPECT
+--------------------------
+[x] 1.1 Continue watching
+        "Continue watching" row first on the home page (last movie / episode opened per show),
+        click resumes at that episode, X to remove it from the row,
+        "Next episode" button on the watch page.
+[ ] 1.1b Real watch progress
+        Minutes watched from the players' postMessage events (videasy PLAYER_EVENT,
+        cinesrc:*, vidcore:*): progress bar on cards, drop finished movies from the row.
+
+[ ] 1.2 Kids profiles that really filter
+        Import TMDB certifications + "adult" flag in the sync scripts, apply the profile's
+        age_restriction to every home row, search, browse pages and the watch page.
+        Add a real "Kids" profile option.
+
+[ ] 1.3 My List saved on the server
+        Today it lives in the browser (localStorage): lost when changing device or clearing data.
+        Store it in the DB, sync across devices, better signal for recommendations.
+
+[ ] 1.4 Like / Dislike / Not interested buttons
+        The backend already accepts these actions; add the buttons (cards + detail page)
+        and use them: hide "not interested", lower similar titles after a dislike.
+
+2. FEATURES THAT STAND OUT
+--------------------------
+[ ] 2.1 Smart playback
+        Remember the source that worked last per title and start on it; if a source doesn't
+        load after a few seconds, offer the next one automatically.
+
+[ ] 2.2 New episode alerts
+        "Notify me" on a show -> email / browser notification when a new episode airs
+        (uses Episode.air_date + the 3-hourly episode sync).
+
+[ ] 2.3 "Why this?" on recommendations
+        Small explanation on cards: "Similar to X", "Popular in your language", ...
+
+[ ] 2.4 Better search
+        Search by actor, genre, year, keyword; typo tolerance; natural-language search
+        ("90s crime shows like CSI") using the title embeddings we already have.
+
+[ ] 2.5 Watch together
+        Synced playback + chat for friends (depends on the providers' player events).
+
+3. SPEED & QUALITY
+------------------
+[ ] 3.1 Faster home page builds (share candidate lists between profiles, rebuild more often)
+[ ] 3.2 Lighter images (w500 instead of original on cards, lazy loading)
+[ ] 3.3 Installable app (PWA) + TV / remote-friendly navigation
+[ ] 3.4 Admin dashboard: provider status history, failed snapshot builds, sync results,
+        most used sources
