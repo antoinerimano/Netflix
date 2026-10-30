@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Count
 
+from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 
 # Stream links are not stored anymore: they are built from users.Provider templates.
@@ -216,7 +217,7 @@ class Command(BaseCommand):
         # full tv + credits/videos/keywords
         full = tmdb.get(
             f"/tv/{tv_id}",
-            params={"language": language, "append_to_response": "credits,videos,keywords"},
+            params={"language": language, "append_to_response": "credits,videos,keywords,content_ratings"},
         )
         self._maybe_sleep(sleep_s)
 
@@ -258,6 +259,7 @@ class Command(BaseCommand):
 
             "poster": img_url(full.get("poster_path"), "original"),
             "landscape_image": img_url(full.get("backdrop_path"), "original"),
+            **rating_fields("tv", full),
 
             "trailer_url": tmdb_trailer_url(full),
 

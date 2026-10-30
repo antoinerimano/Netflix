@@ -22,6 +22,7 @@ from users.models import (
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
 )
 from users.serializers import TitleHomeSerializer
+from users.maturity import allowed_titles_q, profile_max_level
 
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
@@ -726,7 +727,7 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
 
     title_by_id = {}
     if all_cand_ids:
-        qs = Title.objects.filter(id__in=all_cand_ids).only(*RANK_FIELDS)
+        qs = Title.objects.filter(id__in=all_cand_ids).filter(allowed_titles_q(profile)).only(*RANK_FIELDS)
         title_by_id = {t.id: t for t in qs}
     t0 = _log_step("fetch_titles", t0, fetched=len(title_by_id)) if do_logs else t0
 
@@ -802,7 +803,7 @@ def build_seed_home_payload(profile):
         lambda: _released_titles().order_by("-popularity", "-vote_average")
             .values_list("id", flat=True)[:1200]
     )
-    rows_plan.append(("popular", "Popular right now", list(popular_ids)[:30]))
+    rows_plan.append(("popular", "Popular right now", list(popular_ids)))
 
     # 2) Top rated
     top_ids = _cached_ids(
@@ -811,11 +812,11 @@ def build_seed_home_payload(profile):
             .order_by("-vote_average", "-vote_count")
             .values_list("id", flat=True)[:1200]
     )
-    rows_plan.append(("top_rated", "Top rated", list(top_ids)[:30]))
+    rows_plan.append(("top_rated", "Top rated", list(top_ids)))
 
     # 3) Trending
     trend_ids = list(_cached_trending_ids(hours=72))[:1200]
-    rows_plan.append(("trending", "Trending", trend_ids[:30]))
+    rows_plan.append(("trending", "Trending", trend_ids))
 
     # 4) Language row (si dispo)
     lang = getattr(profile, "language_preference", "") or ""
@@ -826,7 +827,14 @@ def build_seed_home_payload(profile):
                 .order_by("-popularity", "-vote_average")
                 .values_list("id", flat=True)[:1200]
         )
-        rows_plan.insert(1, ("in_lang", f"In {lang.upper()}", list(in_lang_ids)[:30]))
+        rows_plan.insert(1, ("in_lang", f"In {lang.upper()}", list(in_lang_ids)))
+
+    # age limit of the profile, then 30 per row
+    if profile_max_level(profile) is not None:
+        all_ids = {i for _, __, ids in rows_plan for i in ids}
+        allowed = set(Title.objects.filter(id__in=all_ids).filter(allowed_titles_q(profile)).values_list("id", flat=True))
+        rows_plan = [(rt, t, [i for i in ids if i in allowed]) for rt, t, ids in rows_plan]
+    rows_plan = [(rt, t, ids[:30]) for rt, t, ids in rows_plan]
 
     # Fetch display fields en 1 query
     picked = []
@@ -926,6 +934,20 @@ def _continue_watching_row(profile):
     return {"row_type": "continue_watching", "title": "Continue watching", "items": items}
 
 
+def _apply_age_limit(payload, profile):
+    """Drop titles above the profile's age limit from every row (snapshots may predate the limit)."""
+    if profile_max_level(profile) is None:
+        return payload
+    ids = {item["id"] for row in payload.get("rows") or [] for item in row.get("items") or []}
+    allowed = set(Title.objects.filter(id__in=ids).filter(allowed_titles_q(profile)).values_list("id", flat=True))
+    rows = []
+    for row in payload.get("rows") or []:
+        items = [item for item in row.get("items") or [] if item["id"] in allowed]
+        if items:
+            rows.append({**row, "items": items})
+    return {**payload, "rows": rows}
+
+
 def _with_live_rows(payload, profile):
     """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
     rows = list(payload.get("rows") or [])
@@ -935,7 +957,7 @@ def _with_live_rows(payload, profile):
     cont = _continue_watching_row(profile)
     if cont["items"]:
         rows.insert(0, cont)
-    return {**payload, "rows": rows}
+    return _apply_age_limit({**payload, "rows": rows}, profile)
 
 
 class RecoHomeView(APIView):

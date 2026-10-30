@@ -55,7 +55,8 @@ class Subscription(models.Model):
 class Profile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    age_restriction = models.CharField(max_length=10)
+    age_restriction = models.CharField(max_length=10, default="NC-17")  # G/PG/PG-13/R/NC-17 (= no limit)
+    is_kids = models.BooleanField(default=False)  # Kids profile: capped at PG (users/maturity.py)
     avatar_url = models.CharField(max_length=255, blank=True, null=True)
     language_preference = models.CharField(max_length=10)
 
@@ -112,6 +113,11 @@ class Title(models.Model):
     # artwork
     poster = models.URLField(blank=True, default="")
     landscape_image = models.URLField(blank=True, default="")
+
+    # age rating from TMDB (users/maturity.py): e.g. "PG-13", "TV-MA", "GB 15"; "" = unrated
+    certification = models.CharField(max_length=16, blank=True, default="")
+    maturity = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)  # 0=G .. 4=NC-17
+    rating_synced_at = models.DateTimeField(null=True, blank=True)  # when we last asked TMDB
 
     # playback: stream links are built from Provider templates, not stored here
     trailer_url = models.URLField(blank=True, default="")

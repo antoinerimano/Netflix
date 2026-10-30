@@ -3,6 +3,7 @@ from datetime import timedelta
 import os
 
 import environ
+from corsheaders.defaults import default_headers as default_cors_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -138,6 +139,8 @@ CORS_ALLOWED_ORIGINS = env.list(
 )
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
+# X-Profile-Id: active profile, used to apply its age limit (users/maturity.py)
+CORS_ALLOW_HEADERS = (*default_cors_headers, "x-profile-id")
 
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",

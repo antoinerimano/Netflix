@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createProfile } from '../api/userApi'; // Import your API functions
 import './CreateProfile.css'; // Import the CSS file
+import ProfileAgeFields from './ProfileAgeFields';
 
 const CreateProfile = () => {
     const [error, setError] = useState(null);
@@ -11,7 +12,8 @@ const CreateProfile = () => {
     const userId = localStorage.getItem('userId');
     const [newProfile, setNewProfile] = useState({
         name: '',
-        age_restriction: 'G',
+        age_restriction: 'NC-17',
+        is_kids: false,
         language_preference: 'en',
         avatar_url: null,
         user: userId
@@ -54,20 +56,12 @@ const CreateProfile = () => {
                         className="profile-input"
                     />
                 </label>
-                <label className="profile-label">
-                    Age Restriction
-                    <select
-                        value={newProfile.age_restriction}
-                        onChange={(e) => setNewProfile({ ...newProfile, age_restriction: e.target.value })}
-                        className="profile-select"
-                    >
-                        <option value="G">G</option>
-                        <option value="PG">PG</option>
-                        <option value="PG-13">PG-13</option>
-                        <option value="R">R</option>
-                        <option value="NC-17">NC-17</option>
-                    </select>
-                </label>
+                <ProfileAgeFields
+                    profile={newProfile}
+                    onChange={(patch) => setNewProfile({ ...newProfile, ...patch })}
+                    labelClassName="profile-label"
+                    selectClassName="profile-select"
+                />
                 <label className="profile-label">
                     Language
                     <select

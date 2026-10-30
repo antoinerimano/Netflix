@@ -29,6 +29,12 @@ http.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // active profile: the backend applies its age limit (Kids profile) to every title it returns
+  const profileId = localStorage.getItem("activeProfileId");
+  if (profileId) {
+    config.headers["X-Profile-Id"] = profileId;
+  }
+
   return config;
 });
 

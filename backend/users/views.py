@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 import re
 from django.db.models import Q
 from django.db import models
@@ -34,6 +35,7 @@ from .models import (
     Title, Season, Episode, TVShowExtras, Provider
 )
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
+from .maturity import allowed_titles_q, request_profile
 from .serializers import (
     UserSerializer, SubscriptionSerializer,
     ProfileSerializer, PaymentHistorySerializer, TitleSerializer,
@@ -367,6 +369,18 @@ class ProfileViewSet(viewsets.ModelViewSet):
         # owner comes from the URL, not from the request body
         serializer.save(user_id=self.kwargs.get('user_id'))
 
+    def perform_update(self, serializer):
+        before = (serializer.instance.is_kids, serializer.instance.age_restriction)
+        profile = serializer.save()
+        if (profile.is_kids, profile.age_restriction) != before:
+            # age limit changed: the home page built for the old limit would be mostly filtered out,
+            # so give it a starter page built for the new one until the snapshot cron runs
+            try:
+                from reco.views import upsert_seed_snapshot
+                upsert_seed_snapshot(profile, hours=24)
+            except Exception:
+                logger.exception("[seed] rebuild after age limit change failed for profile_id=%s", profile.id)
+
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
 
@@ -497,6 +511,9 @@ class TitleViewSet(viewsets.ModelViewSet):
             # load them up front instead of one query per deferred field / season
             qs = Title.objects.select_related("tv_extras").prefetch_related("seasons__episodes", "actors")
 
+        # age rating of the active profile (Kids profile / age limit)
+        qs = qs.filter(allowed_titles_q(request_profile(self.request)))
+
         params = self.request.query_params
 
         # type=movie|tv
@@ -570,6 +587,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     @method_decorator(cache_page(60*60))
+    @method_decorator(vary_on_headers("X-Profile-Id"))  # kids and adults get different answers
     def seasons(self, request, pk=None):
         title = self.get_object()
         qs = title.seasons.all().order_by("season_number")
@@ -595,6 +613,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     @method_decorator(cache_page(60*60))
+    @method_decorator(vary_on_headers("X-Profile-Id"))  # kids and adults get different answers
     def search(self, request):
         """
         /api/titles/search/?q=bat&type=movie|tv|all&limit=15
@@ -611,7 +630,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         if not q:
             return Response([])
 
-        qs = Title.objects.all()
+        qs = Title.objects.filter(allowed_titles_q(request_profile(request)))
 
         if t in ("movie", "tv"):
             qs = qs.filter(type=t)
@@ -727,6 +746,7 @@ def titles_by_actor(request):
     qs = (
         Title.objects
         .filter(id__in=title_ids)
+        .filter(allowed_titles_q(request_profile(request)))
         .order_by("-popularity", "-vote_average", "-id")
     )
 

@@ -12,6 +12,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Count
 
+from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 
 
@@ -293,7 +294,7 @@ class Command(BaseCommand):
         sleep_s: float,
         stats: dict,
     ):
-        full = tmdb.get(f"/movie/{tmdb_id}", params={"language": language, "append_to_response": "credits,videos,keywords"})
+        full = tmdb.get(f"/movie/{tmdb_id}", params={"language": language, "append_to_response": "credits,videos,keywords,release_dates"})
         self._maybe_sleep(sleep_s)
 
         ext = {}
@@ -337,6 +338,7 @@ class Command(BaseCommand):
 
             "poster": img_url(full.get("poster_path"), "original"),
             "landscape_image": img_url(full.get("backdrop_path"), "original"),
+            **rating_fields("movie", full),
 
 
             "trailer_url": tmdb_trailer_url(full),
@@ -434,7 +436,7 @@ class Command(BaseCommand):
         season_mode: str = "discover",          # "discover" or "airing"
         latest_seasons_n: int = 1,              # used when season_mode == "airing"
     ):
-        full = tmdb.get(f"/tv/{tv_id}", params={"language": language, "append_to_response": "credits,videos,keywords"})
+        full = tmdb.get(f"/tv/{tv_id}", params={"language": language, "append_to_response": "credits,videos,keywords,content_ratings"})
         self._maybe_sleep(sleep_s)
 
         ext = {}
@@ -474,6 +476,7 @@ class Command(BaseCommand):
 
             "poster": img_url(full.get("poster_path"), "original"),
             "landscape_image": img_url(full.get("backdrop_path"), "original"),
+            **rating_fields("tv", full),
 
 
             "trailer_url": tmdb_trailer_url(full),

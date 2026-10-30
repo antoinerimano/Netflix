@@ -12,10 +12,13 @@ Status: [ ] todo   [~] in progress   [x] done
         Minutes watched from the players' postMessage events (videasy PLAYER_EVENT,
         cinesrc:*, vidcore:*): progress bar on cards, drop finished movies from the row.
 
-[ ] 1.2 Kids profiles that really filter
+[~] 1.2 Kids profiles that really filter
         Import TMDB certifications + "adult" flag in the sync scripts, apply the profile's
         age_restriction to every home row, search, browse pages and the watch page.
         Add a real "Kids" profile option.
+[ ] 1.2b Profile lock (PIN)
+        A kid can open Account Management and switch their profile off "Kids":
+        PIN to edit profiles / to open an adult profile.
 
 [ ] 1.3 My List saved on the server
         Today it lives in the browser (localStorage): lost when changing device or clearing data.

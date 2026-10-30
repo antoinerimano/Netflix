@@ -10,6 +10,7 @@ import {
 } from '../api/userApi';
 
 import Navbar from './Navbar';
+import ProfileAgeFields, { describeAgeLimit } from './ProfileAgeFields';
 import './AccountManagement.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import ConfirmationModal from './ConfirmationModal';
@@ -37,7 +38,8 @@ const AccountManagement = () => {
 
   const [newProfile, setNewProfile] = useState({
     name: '',
-    age_restriction: 'G',
+    age_restriction: 'NC-17',
+    is_kids: false,
     language_preference: 'en',
     avatar_url: null,
     user: userId,
@@ -163,7 +165,8 @@ const AccountManagement = () => {
       setAddingNewProfile(false);
       setNewProfile({
         name: '',
-        age_restriction: 'G',
+        age_restriction: 'NC-17',
+        is_kids: false,
         language_preference: 'en',
         avatar_url: null,
         user: userId,
@@ -333,26 +336,15 @@ const AccountManagement = () => {
                         />
                       </label>
 
-                      <label>
-                        Age Restriction:
-                        <select
-                          value={profile.age_restriction || 'G'}
-                          onChange={(e) =>
-                            setUserData((prev) => ({
-                              ...prev,
-                              profiles: prev.profiles.map((p) =>
-                                p.id === profile.id ? { ...p, age_restriction: e.target.value } : p
-                              ),
-                            }))
-                          }
-                        >
-                          <option value="G">G</option>
-                          <option value="PG">PG</option>
-                          <option value="PG-13">PG-13</option>
-                          <option value="R">R</option>
-                          <option value="NC-17">NC-17</option>
-                        </select>
-                      </label>
+                      <ProfileAgeFields
+                        profile={profile}
+                        onChange={(patch) =>
+                          setUserData((prev) => ({
+                            ...prev,
+                            profiles: prev.profiles.map((p) => (p.id === profile.id ? { ...p, ...patch } : p)),
+                          }))
+                        }
+                      />
 
                       <label>
                         Language:
@@ -413,7 +405,7 @@ const AccountManagement = () => {
                       />
                       <div className="profile-details">
                         <p><strong>Name:</strong> {profile.name}</p>
-                        <p><strong>Age Restriction:</strong> {profile.age_restriction}</p>
+                        <p><strong>Age Restriction:</strong> {describeAgeLimit(profile)}</p>
                         <p><strong>Language:</strong> {profile.language_preference}</p>
 
                         <button
@@ -450,19 +442,10 @@ const AccountManagement = () => {
                   />
                 </label>
 
-                <label>
-                  Age Restriction:
-                  <select
-                    value={newProfile.age_restriction}
-                    onChange={(e) => setNewProfile({ ...newProfile, age_restriction: e.target.value })}
-                  >
-                    <option value="G">G</option>
-                    <option value="PG">PG</option>
-                    <option value="PG-13">PG-13</option>
-                    <option value="R">R</option>
-                    <option value="NC-17">NC-17</option>
-                  </select>
-                </label>
+                <ProfileAgeFields
+                  profile={newProfile}
+                  onChange={(patch) => setNewProfile({ ...newProfile, ...patch })}
+                />
 
                 <label>
                   Language:
