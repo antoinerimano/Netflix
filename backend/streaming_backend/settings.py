@@ -178,7 +178,9 @@ USE_I18N = True
 USE_TZ = True
 
 # ---- Static ----
-STATIC_URL = "static/"
+# "/static/" is already used by the React build, so Django's files live elsewhere
+STATIC_URL = env("STATIC_URL", default="django-static/")
+STATIC_ROOT = env("STATIC_ROOT", default=str(BASE_DIR / "staticfiles"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

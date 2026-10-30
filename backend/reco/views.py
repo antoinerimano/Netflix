@@ -862,6 +862,14 @@ class LogImpressionView(APIView):
 
         items = serializer.validated_data["items"]
 
+        # only log for the caller's own profiles (no writing into someone else's history)
+        own_profile_ids = set(
+            Profile.objects
+            .filter(user=request.user, id__in={item["profile_id"] for item in items})
+            .values_list("id", flat=True)
+        )
+        items = [item for item in items if item["profile_id"] in own_profile_ids]
+
         to_create = [
             TitleImpression(
                 profile_id=item["profile_id"],
@@ -886,6 +894,7 @@ class LogActionView(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
+        get_object_or_404(Profile, id=data["profile_id"], user=request.user)
         TitleAction.objects.create(
             profile_id=data["profile_id"],
             title_id=data["title_id"],

@@ -169,3 +169,27 @@ class AuthHardeningTests(TestCase):
                  for _ in range(6)]
         self.assertEqual(codes[:5], [200] * 5)
         self.assertEqual(codes[5], 429)
+
+
+class QueryCountTests(TestCase):
+    """Guard against N+1 regressions on the main browse endpoints."""
+    def setUp(self):
+        from .models import Title, Season, Episode, Actor
+        self.show = Title.objects.create(type="tv", title="Show")
+        for n in range(1, 4):
+            season = Season.objects.create(tv=self.show, season_number=n)
+            for e in range(1, 4):
+                Episode.objects.create(season=season, episode_number=e)
+        for i in range(5):
+            Actor.objects.create(title=self.show, name=f"A{i}", name_norm=f"a{i}", tmdb_id=i)
+        for i in range(49):
+            Title.objects.create(type="movie", title=f"M{i}")
+        self.client = APIClient()
+
+    def test_title_list_constant_queries(self):
+        with self.assertNumQueries(2):  # count + page
+            self.assertEqual(self.client.get("/api/titles/").status_code, 200)
+
+    def test_title_detail_constant_queries(self):
+        with self.assertNumQueries(5):  # title+extras, seasons, episodes, actors, appearance counts
+            self.assertEqual(self.client.get(f"/api/titles/{self.show.id}/").status_code, 200)

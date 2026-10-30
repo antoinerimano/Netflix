@@ -1,5 +1,5 @@
 // src/api/analyticsApi.js
-import axios from "axios";
+import http from "./http";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -38,18 +38,8 @@ export const PROVIDERS = {
 };
 
 
-const API = axios.create({
-  baseURL: `${API_BASE}/api`,
-  timeout: 20000,
-});
-
-// --- JWT header auto (comme ton titlesApi.js) ---
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access"); // adapte si ton token a un autre nom
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  config.headers["Content-Type"] = "application/json";
-  return config;
-});
+// shared client: adds the JWT header and refreshes it when it expires
+const API = http;
 
 // --- session id ---
 const SESSION_KEY = "reco_session_id";

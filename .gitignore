@@ -15,3 +15,6 @@ __pycache__/
 node_modules/
 dist/
 build/
+
+# django collectstatic output
+backend/staticfiles/

@@ -11,7 +11,7 @@ class ImpressionItemSerializer(serializers.Serializer):
     country = serializers.CharField(required=False, allow_blank=True, default="")
 
 class ImpressionInSerializer(serializers.Serializer):
-    items = ImpressionItemSerializer(many=True)
+    items = ImpressionItemSerializer(many=True, max_length=500)
 
 
 class ActionInSerializer(serializers.Serializer):

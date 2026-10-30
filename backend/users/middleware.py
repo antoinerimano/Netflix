@@ -13,7 +13,7 @@ ADMIN_ALLOWLIST = (
     f"{ADMIN_PREFIX}password_reset/",
     f"{ADMIN_PREFIX}js/",             # some admin JS paths
     f"{ADMIN_PREFIX}autocomplete/",   # admin autocomplete
-    "/static/",                       # admin CSS/JS/images (served here)
+    "/" + settings.STATIC_URL.strip("/") + "/",  # admin CSS/JS/images
     "/favicon.ico",
 )
 

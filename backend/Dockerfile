@@ -17,4 +17,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # copy projet
 COPY . /app
 
-CMD ["gunicorn", "streaming_backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+# admin CSS/JS go to the static_vol volume, served by nginx at /django-static/
+ENV STATIC_ROOT=/vol/static
+
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && exec gunicorn streaming_backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"]

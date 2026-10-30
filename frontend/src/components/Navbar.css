@@ -17,7 +17,8 @@
   flex: 1;
 }
 
-.logo svg{
+.logo svg,
+.logo .logo-svg{
 height: auto;
 max-width: 10vw;
 margin: 2%;

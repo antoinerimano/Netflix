@@ -1,13 +1,9 @@
 // src/api/titlesApi.js
-import axios from 'axios';
+import http from './http';
 
 // ---------- base axios ----------
-const API = axios.create({ baseURL: process.env.REACT_APP_API_BASE + '/api', timeout: 20000 });
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// shared client: adds the JWT header and refreshes it when it expires
+const API = http;
 
 // Normalize DRF list vs non-paginated responses
 const unwrapList = (data) => {

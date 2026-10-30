@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes, action, thro
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 import re
@@ -488,15 +489,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        qs = Title.objects.only(
-            "id",
-            "type",
-            "title",
-            "poster",
-            "release_year",
-            "vote_average",
-            "popularity"
-        )
+        if self.action == "list":
+            # load exactly what the list serializer outputs (a missing field = 1 query per row)
+            qs = Title.objects.only(*TitleListSerializer.Meta.fields)
+        else:
+            # detail serializer outputs every field + seasons/episodes/actors:
+            # load them up front instead of one query per deferred field / season
+            qs = Title.objects.select_related("tv_extras").prefetch_related("seasons__episodes", "actors")
 
         params = self.request.query_params
 
