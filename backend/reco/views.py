@@ -191,10 +191,15 @@ def _parse_date(s):
 
 
 def _freshness_days(title):
+    # memoized on the object for the day: title objects are shared across profiles (_rank_titles)
+    today = timezone.now().date()
+    cached = getattr(title, "_freshness", None)
+    if cached and cached[0] == today:
+        return cached[1]
     d = _parse_date(getattr(title, "release_date", "")) or _parse_date(getattr(title, "first_air_date", ""))
-    if not d:
-        return 9999
-    return (timezone.now().date() - d).days
+    days = (today - d).days if d else 9999
+    title._freshness = (today, days)
+    return days
 
 
 def _norm(s):
@@ -281,15 +286,6 @@ def _get_latest_ranker(name="lgbm_ranker_v1"):
     schema = art.feature_schema or {}
     cache.set(ck, (model, schema), RANKER_CACHE_TTL)
     return model, schema
-
-
-def _cosine(a, b):
-    if a is None or b is None:
-        return 0.0
-    na, nb = np.linalg.norm(a), np.linalg.norm(b)
-    if na == 0 or nb == 0:
-        return 0.0
-    return float(np.dot(a, b) / (na * nb))
 
 
 def _build_profile_vector(profile_id, limit=30):
@@ -382,90 +378,117 @@ def _title_cache_key(tid: int) -> str:
 # RANK + PICK
 # ============================================================
 
-def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
-                      exclude_ids, emb_cache, title_by_id, logger=None, penalized_ids=frozenset()):
-    if not cand_ids:
-        return [], set()
+# Shared by every profile built in this process (build_home_snapshots builds them one after
+# the other): global candidate lists (genres, hidden gems, new...) are the same for everyone.
+EMB_CACHE_MAX = 60000          # title embeddings kept in memory (~1.5 KB each)
+RANK_TITLES_TTL = 3600         # title fields used for ranking (popularity changes daily)
+_emb_cache = {}                # title id -> float32 vector, or None (no embedding)
+_rank_titles = {"at": 0.0, "by_id": {}}
 
-    _t0 = time.perf_counter()
 
-    uniq_ids = []
-    seen_local = set()
-    for tid in cand_ids:
-        if tid in exclude_ids or tid in seen_local:
-            continue
-        if tid not in title_by_id:
-            continue
-        if _freshness_days(title_by_id[tid]) < 0:
-            continue  # not released yet: nothing to watch
-        seen_local.add(tid)
-        uniq_ids.append(tid)
+def _embeddings(ids):
+    missing = [tid for tid in ids if tid not in _emb_cache]
+    if missing:
+        if len(_emb_cache) + len(missing) > EMB_CACHE_MAX:
+            _emb_cache.clear()
+            missing = list(ids)
+        for tid in missing:
+            _emb_cache[tid] = None
+        _bulk_fill_embeddings(_emb_cache, missing)
+    return _emb_cache
 
-    if len(uniq_ids) < 4:
-        return [], set()
 
-    _t1 = time.perf_counter()
-    _bulk_fill_embeddings(emb_cache, uniq_ids)
-    _t2 = time.perf_counter()
+def _rank_titles_for(profile, ids):
+    """{id: Title (RANK_FIELDS)} the profile may see. Cached across profiles without an age limit."""
+    if profile_max_level(profile) is not None:
+        qs = Title.objects.filter(id__in=ids).filter(allowed_titles_q(profile)).only(*RANK_FIELDS)
+        return {t.id: t for t in qs}
+    now = time.monotonic()
+    if now - _rank_titles["at"] > RANK_TITLES_TTL:
+        _rank_titles.update(at=now, by_id={})
+    by_id = _rank_titles["by_id"]
+    missing = [tid for tid in ids if tid not in by_id]
+    for i in range(0, len(missing), 5000):
+        chunk = missing[i:i + 5000]
+        for t in Title.objects.filter(id__in=chunk).only(*RANK_FIELDS):
+            by_id[t.id] = t
+        for tid in chunk:
+            by_id.setdefault(tid, None)  # gone from the DB
+    return {tid: by_id[tid] for tid in ids if by_id.get(tid) is not None}
+
+
+def _score_candidates(profile, prof_vec, rank_model, ids, title_by_id, penalized_ids=frozenset()):
+    """
+    {title id: score} for every candidate, once per profile: the score doesn't depend on the row
+    (position / row_hash are constants), so rows only pick their best unused titles from it.
+    """
+    ids = [tid for tid in ids if tid in title_by_id and _freshness_days(title_by_id[tid]) >= 0]
+    if not ids:
+        return {}
+    embs = _embeddings(ids)
+
+    # cosine(profile, title) for all candidates in one matrix product
+    cos = np.zeros(len(ids), dtype=np.float32)
+    if prof_vec is not None:
+        pv = np.asarray(prof_vec, dtype=np.float32)
+        pn = float(np.linalg.norm(pv))
+        rows = [k for k, tid in enumerate(ids) if embs.get(tid) is not None and len(embs[tid]) == len(pv)]
+        if rows and pn > 0:
+            m = np.stack([embs[ids[k]] for k in rows]).astype(np.float32, copy=False)
+            norms = np.linalg.norm(m, axis=1)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                c = (m @ pv) / (norms * pn)
+            cos[rows] = np.where(np.isfinite(c), c, 0.0)
 
     lang = getattr(profile, "language_preference", "") or ""
-
-    X = []
-    for pos, tid in enumerate(uniq_ids):
+    X = np.zeros((len(ids), 11), dtype=np.float32)
+    for k, tid in enumerate(ids):
         t = title_by_id[tid]
-
-        vec = emb_cache.get(tid)
-        cosine = _cosine(prof_vec, vec) if prof_vec is not None else 0.0
-        pop = float(getattr(t, "popularity", 0.0) or 0.0)
-        va = float(getattr(t, "vote_average", 0.0) or 0.0)
-        vc = float(getattr(t, "vote_count", 0.0) or 0.0)
-        log_vc = math.log1p(vc)
-        fresh = _freshness_days(t)
-        lang_match = 1.0 if (lang and getattr(t, "original_language", "") == lang) else 0.0
-        is_movie = 1.0 if str(getattr(t, "type", "")).lower() == "movie" else 0.0
-        is_tv = 1.0 if str(getattr(t, "type", "")).lower() == "tv" else 0.0
-
+        kind = str(getattr(t, "type", "")).lower()
         # same columns, same order as train_ranker.FEATURES. position = 0: score every candidate
         # as if shown first (training position is the on-screen slot, unknown before ranking).
-        X.append([cosine, pop, va, log_vc, float(fresh), lang_match, 1.0, is_movie, is_tv, 0.0, 0.0])
-
-    _t3 = time.perf_counter()
+        X[k] = [
+            cos[k],
+            float(t.popularity or 0.0),
+            float(t.vote_average or 0.0),
+            math.log1p(float(t.vote_count or 0.0)),
+            float(_freshness_days(t)),
+            1.0 if (lang and t.original_language == lang) else 0.0,
+            1.0,  # age_ok
+            1.0 if kind == "movie" else 0.0,
+            1.0 if kind == "tv" else 0.0,
+            0.0,  # position
+            0.0,  # row_hash
+        ]
 
     scores = None
     if rank_model is not None:
         try:
             # probability of a click-through, not the 0/1 class
-            scores = rank_model.predict_proba(np.array(X, dtype=np.float32))[:, 1]
+            scores = rank_model.predict_proba(X)[:, 1]
         except Exception:
             logger.exception("[reco-home] ranker failed, using heuristic scores")
-            scores = None
-
-    _t4 = time.perf_counter()
-
     if scores is None:
-        scores = []
-        for feat in X:
-            cosine, pop, va, log_vc, fresh, lang_match, age_ok, is_movie, is_tv, pos, rh = feat
-            s = (0.55 * cosine) + (0.25 * (va / 10.0)) + (0.20 * (pop / 100.0))
-            s += 0.05 * lang_match
-            s -= 0.00002 * fresh
-            scores.append(s)
+        scores = (0.55 * X[:, 0]) + (0.25 * (X[:, 2] / 10.0)) + (0.20 * (X[:, 1] / 100.0))
+        scores += 0.05 * X[:, 5]
+        scores -= 0.00002 * X[:, 4]
 
-    # titles similar to something the profile disliked go down the row
-    scores = [s - DISLIKE_PENALTY if tid in penalized_ids else s for tid, s in zip(uniq_ids, scores)]
-    ranked = sorted(zip(uniq_ids, scores), key=lambda x: x[1], reverse=True)
-    picked_ids = [tid for tid, _ in ranked[:k]]
-    picked_set = set(picked_ids)
+    # titles similar to something the profile disliked go down every row
+    return {
+        tid: float(score) - (DISLIKE_PENALTY if tid in penalized_ids else 0.0)
+        for tid, score in zip(ids, scores)
+    }
 
-    _t5 = time.perf_counter()
-    if logger:
-        logger.info(
-            f"[reco-home] rank_row row_type={row_type} cand={len(cand_ids)} uniq={len(uniq_ids)} "
-            f"emb_fill={_ms(_t2-_t1):.1f}ms feat={_ms(_t3-_t2):.1f}ms score={_ms(_t4-_t3):.1f}ms "
-            f"sort_pick={_ms(_t5-_t4):.1f}ms total={_ms(_t5-_t0):.1f}ms picked={len(picked_ids)}"
-        )
 
-    return picked_ids, picked_set
+def _pick_ids(cand_ids, k, exclude_ids, scores):
+    """Best k scored candidates of a row that aren't excluded (seen / already in a row above)."""
+    if not cand_ids:
+        return [], set()
+    uniq = list(dict.fromkeys(tid for tid in cand_ids if tid in scores and tid not in exclude_ids))
+    if len(uniq) < 4:
+        return [], set()
+    picked = sorted(uniq, key=scores.__getitem__, reverse=True)[:k]  # stable: ties keep row order
+    return picked, set(picked)
 
 
 # views.py
@@ -846,32 +869,19 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
     all_cand_ids = list(dict.fromkeys(all_cand_ids))
     t0 = _log_step("collect_candidates", t0, unique=len(all_cand_ids)) if do_logs else t0
 
-    title_by_id = {}
-    if all_cand_ids:
-        qs = Title.objects.filter(id__in=all_cand_ids).filter(allowed_titles_q(profile)).only(*RANK_FIELDS)
-        title_by_id = {t.id: t for t in qs}
+    title_by_id = _rank_titles_for(profile, all_cand_ids) if all_cand_ids else {}
     t0 = _log_step("fetch_titles", t0, fetched=len(title_by_id)) if do_logs else t0
+
+    scores = _score_candidates(profile, prof_vec, rank_model, all_cand_ids, title_by_id, penalized_ids)
+    t0 = _log_step("score_candidates", t0, scored=len(scores)) if do_logs else t0
 
     rows_plan = []
     picked_total = []
-    emb_cache = {}
 
     for row_type, row_title, cand_ids, k in planned_rows:
         _row_t0 = time.perf_counter()
 
-        picked_ids_list, picked_set = _rank_and_pick_ids(
-            profile=profile,
-            prof_vec=prof_vec,
-            rank_model=rank_model,
-            row_type=row_type,
-            cand_ids=cand_ids,
-            k=k,
-            exclude_ids=exclude,
-            emb_cache=emb_cache,
-            title_by_id=title_by_id,
-            logger=logger if do_logs else None,
-            penalized_ids=penalized_ids,
-        )
+        picked_ids_list, picked_set = _pick_ids(cand_ids, k, exclude, scores)
 
         if do_logs:
             _row_dt = time.perf_counter() - _row_t0
