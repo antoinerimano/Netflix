@@ -42,13 +42,21 @@ export const PROVIDERS = {
 const API = http;
 
 // --- session id ---
+// A visit: a new id after 30 min without activity. The ranker counts a Play as a success
+// for an impression only within the same session, so it must not last forever.
 const SESSION_KEY = "reco_session_id";
+const SESSION_SEEN_KEY = "reco_session_seen_at";
+const SESSION_IDLE_MS = 30 * 60 * 1000;
+
 export function getRecoSessionId() {
+  const now = Date.now();
   let sid = localStorage.getItem(SESSION_KEY);
-  if (!sid) {
-    sid = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  const lastSeen = Number(localStorage.getItem(SESSION_SEEN_KEY) || 0);
+  if (!sid || now - lastSeen > SESSION_IDLE_MS) {
+    sid = `${now}_${Math.random().toString(16).slice(2)}`;
     localStorage.setItem(SESSION_KEY, sid);
   }
+  localStorage.setItem(SESSION_SEEN_KEY, String(now));
   return sid;
 }
 
@@ -76,7 +84,8 @@ export async function logImpressions({ items, surface, row_type, device = "", co
     profile_id,
     session_id,
     title_id: Number(it.title_id ?? it.id),
-    row_type: String(it.row_type ?? row_type ?? surface ?? ""),
+    // which row it was shown in (Row sends row_title); column is 64 chars max
+    row_type: String(it.row_type ?? it.row_title ?? row_type ?? surface ?? "").slice(0, 64),
     position: Number.isFinite(Number(it.position)) ? Number(it.position) : 0,
     device,
     country,

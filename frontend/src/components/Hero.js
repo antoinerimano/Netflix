@@ -347,7 +347,7 @@ const Hero = ({ hero }) => {
           {movie?.id ? (
             <a
               className="hero-button info-button"
-              href={`/movies/${movie.id}`}
+              href={`/${String(movie.type || '').toLowerCase() === 'tv' ? 'tv' : 'movies'}/${movie.id}`}
               onClick={() => {
                 logTitleClick({
                   title_id: movie.id,

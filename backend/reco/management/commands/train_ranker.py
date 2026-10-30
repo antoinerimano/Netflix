@@ -49,7 +49,9 @@ def _freshness_days(t: Title) -> float:
     return float((timezone.now().date() - d).days)
 
 def _row_hash(row_type: str) -> float:
-    return float(abs(hash(row_type)) % 1000) / 1000.0
+    # Python's hash() of a str changes every process, so it can't be reproduced when serving,
+    # and impressions are all logged as "home_row" anyway. Kept as a constant column.
+    return 0.0
 
 def _profile_vec(profile_id: int, emb_map: dict, limit=30):
     strong = ["outbound", "add_to_list", "like", "click"]
@@ -57,6 +59,7 @@ def _profile_vec(profile_id: int, emb_map: dict, limit=30):
 
     acts = (TitleAction.objects
             .filter(profile_id=profile_id, action__in=strong)
+            .exclude(action="add_to_list", provider__startswith="remove")  # removed from My List
             .order_by("-created_at")
             .values_list("title_id", "action")[:limit])
 

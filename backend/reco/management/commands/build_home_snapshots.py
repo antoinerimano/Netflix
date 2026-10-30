@@ -69,15 +69,8 @@ class Command(BaseCommand):
                 ok += 1
 
             except Exception as e:
-                RecoHomeSnapshot.objects.update_or_create(
-                    profile_id=p.id,
-                    defaults={
-                        "algo_version": "home_v1",
-                        "payload": {},
-                        "expires_at": now + timedelta(minutes=10),
-                        "last_error": str(e),
-                    }
-                )
+                # keep the last good home page (one snapshot row per profile): only record the error
+                RecoHomeSnapshot.objects.filter(profile_id=p.id).update(last_error=str(e)[:2000])
                 self.stderr.write(f"ERR profile={p.id}: {e}")
                 err += 1
 

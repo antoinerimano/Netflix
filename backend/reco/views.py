@@ -7,7 +7,7 @@ import time
 import logging
 import numpy as np
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
@@ -61,6 +61,24 @@ GENRE_TOP_TTL = 30 * 60     # 30 min cache des top genres par profil
 GENRE_IDS_TTL = 6 * 3600    # 6h cache ids par genre (comme heavy)
 
 IMPRESSION_EXCLUDE_DAYS = 7
+CLICK_EXCLUDE_DAYS = 14  # opened but not played: can come back after this
+
+# "Top rated" needs enough votes, otherwise it fills with 10/10 titles rated by 5 people
+TOP_RATED_MIN_VOTES = 1000
+
+# actions that say "I like this", with weights (keep in sync with train_ranker._profile_vec).
+# outbound = pressed Play (the only "watched" signal), click = opened the detail page.
+PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
+
+
+def _interest_actions(profile_id):
+    """Positive actions of a profile. Removing from My List is logged as add_to_list
+    with provider "remove|...", so it must not count as interest."""
+    return (
+        TitleAction.objects
+        .filter(profile_id=profile_id, action__in=list(PROFILE_ACTION_WEIGHTS))
+        .exclude(action="add_to_list", provider__startswith="remove")
+    )
 
 # "New episodes" row: global (same for everyone), added to every home payload at request time
 NEW_EPISODES_TTL = 600       # 10 min
@@ -219,19 +237,19 @@ def _cosine(a, b):
     return float(np.dot(a, b) / (na * nb))
 
 
-def _build_profile_vector(profile_id, limit=80):
-    ids = list(
-        TitleAction.objects
-        .filter(profile_id=profile_id)
+def _build_profile_vector(profile_id, limit=30):
+    # same recipe as train_ranker._profile_vec (the ranker's cosine feature must mean the same thing)
+    acts = list(
+        _interest_actions(profile_id)
         .order_by("-created_at")
-        .values_list("title_id", flat=True)[:limit]
+        .values_list("title_id", "action")[:limit]
     )
-    if not ids:
+    if not acts:
         return None
 
     embs = (
         TitleEmbedding.objects
-        .filter(title_id__in=ids, model_name=MODEL_NAME)
+        .filter(title_id__in={tid for tid, _ in acts}, model_name=MODEL_NAME)
         .values_list("title_id", "dim", "vector_blob")
     )
     by_id = {}
@@ -239,10 +257,17 @@ def _build_profile_vector(profile_id, limit=80):
         if blob:
             by_id[tid] = np.frombuffer(blob, dtype=np.float32, count=int(dim) if dim else -1)
 
-    vecs = [by_id.get(tid) for tid in ids if by_id.get(tid) is not None]
+    vecs, wsum = [], 0.0
+    for tid, action in acts:
+        v = by_id.get(tid)
+        if v is None:
+            continue
+        w = PROFILE_ACTION_WEIGHTS[action]
+        vecs.append(v.astype(np.float32) * w)
+        wsum += w
     if not vecs:
         return None
-    return np.mean(np.stack(vecs).astype(np.float32, copy=False), axis=0)
+    return np.sum(vecs, axis=0) / wsum
 
 
 def _bulk_fill_embeddings(emb_cache: dict, title_ids: list[int], model_name=MODEL_NAME):
@@ -286,7 +311,7 @@ def _cached_trending_ids(hours=72):
         TitleAction.objects
         .filter(action="outbound", created_at__gte=since)
         .values("title_id")
-        .annotate(c=Count("id"))
+        .annotate(c=Count("profile", distinct=True))  # people, not plays (a binge = 1)
         .order_by("-c")
         .values_list("title_id", flat=True)[:1200]
     )
@@ -320,6 +345,8 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
             continue
         if tid not in title_by_id:
             continue
+        if _freshness_days(title_by_id[tid]) < 0:
+            continue  # not released yet: nothing to watch
         seen_local.add(tid)
         uniq_ids.append(tid)
 
@@ -331,7 +358,6 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
     _t2 = time.perf_counter()
 
     lang = getattr(profile, "language_preference", "") or ""
-    row_hash = float(hash(row_type) % 997)
 
     X = []
     for pos, tid in enumerate(uniq_ids):
@@ -348,15 +374,19 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
         is_movie = 1.0 if str(getattr(t, "type", "")).lower() == "movie" else 0.0
         is_tv = 1.0 if str(getattr(t, "type", "")).lower() == "tv" else 0.0
 
-        X.append([cosine, pop, va, log_vc, float(fresh), lang_match, is_movie, is_tv, float(pos), row_hash])
+        # same columns, same order as train_ranker.FEATURES. position = 0: score every candidate
+        # as if shown first (training position is the on-screen slot, unknown before ranking).
+        X.append([cosine, pop, va, log_vc, float(fresh), lang_match, 1.0, is_movie, is_tv, 0.0, 0.0])
 
     _t3 = time.perf_counter()
 
     scores = None
     if rank_model is not None:
         try:
-            scores = rank_model.predict(np.array(X, dtype=np.float32))
+            # probability of a click-through, not the 0/1 class
+            scores = rank_model.predict_proba(np.array(X, dtype=np.float32))[:, 1]
         except Exception:
+            logger.exception("[reco-home] ranker failed, using heuristic scores")
             scores = None
 
     _t4 = time.perf_counter()
@@ -364,7 +394,7 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
     if scores is None:
         scores = []
         for feat in X:
-            cosine, pop, va, log_vc, fresh, lang_match, is_movie, is_tv, pos, rh = feat
+            cosine, pop, va, log_vc, fresh, lang_match, age_ok, is_movie, is_tv, pos, rh = feat
             s = (0.55 * cosine) + (0.25 * (va / 10.0)) + (0.20 * (pop / 100.0))
             s += 0.05 * lang_match
             s -= 0.00002 * fresh
@@ -406,20 +436,23 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
     prof_vec = _build_profile_vector(profile.id)
     t0 = _log_step("build_profile_vector", t0, has_vec=bool(prof_vec is not None)) if do_logs else t0
 
-    # 1) recent actions
+    # 1) recent positive actions (seeds for "For you", genre/actor/studio rows; not dislikes)
     recent_action_ids = list(
-        TitleAction.objects
-        .filter(profile_id=profile.id)
+        _interest_actions(profile.id)
         .order_by("-created_at")
         .values_list("title_id", flat=True)[:200]
     )
-    recent_action_ids = [tid for tid in recent_action_ids if tid]
+    # one entry per title, newest first (opening + playing the same show = 1 seed, not 2)
+    recent_action_ids = list(dict.fromkeys(tid for tid in recent_action_ids if tid))
     t0 = _log_step("recent_actions", t0, n=len(recent_action_ids)) if do_logs else t0
 
-    # 2) seen ids (actions + impressions recentes)
+    # 2) seen ids: watched / listed / rejected for good, only opened recently, shown recently
+    click_since = timezone.now() - timedelta(days=CLICK_EXCLUDE_DAYS)
     seen_ids = set(
         TitleAction.objects
         .filter(profile_id=profile.id)
+        .filter(~Q(action="click") | Q(created_at__gte=click_since))
+        .order_by("-created_at")
         .values_list("title_id", flat=True)[:4000]
     )
     action_seen_count = len(seen_ids)
@@ -461,7 +494,8 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
 
         top_ids = _cached_ids(
             "top_rated",
-            lambda: Title.objects.order_by("-vote_average", "-vote_count").values_list("id", flat=True)[:1200]
+            lambda: Title.objects.filter(vote_count__gte=TOP_RATED_MIN_VOTES)
+            .order_by("-vote_average", "-vote_count").values_list("id", flat=True)[:1200]
         )
         planned_rows.append(("top_rated", "Top rated", list(top_ids), 30))
 
@@ -512,9 +546,17 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
         planned_rows.append(("for_you", "For you", sim_ids, 30))
         _plan_mark("for_you_similars", seeds=len(seed_ids), sim=len(sim_ids), planned=len(planned_rows))
 
+        # "Because you watched X": only titles the profile pressed Play on (outbound),
+        # not titles it just opened (click) or added to its list
+        watched_ids = list(
+            TitleAction.objects
+            .filter(profile_id=profile.id, action="outbound")
+            .order_by("-created_at")
+            .values_list("title_id", flat=True)[:50]
+        )
         seed2 = []
         seen_seed = set()
-        for tid in recent_action_ids:
+        for tid in watched_ids:
             if tid in seen_seed:
                 continue
             seen_seed.add(tid)
@@ -741,13 +783,19 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
 
 
 
+def _released_titles():
+    """Titles that are already out (no release / first-air date in the future)."""
+    today = timezone.localdate().isoformat()  # dates are stored as 'YYYY-MM-DD' strings
+    return Title.objects.exclude(release_date__gt=today).exclude(first_air_date__gt=today)
+
+
 def build_seed_home_payload(profile):
     rows_plan = []
 
     # 1) Popular
     popular_ids = _cached_ids(
         "popular_seed",
-        lambda: Title.objects.order_by("-popularity", "-vote_average")
+        lambda: _released_titles().order_by("-popularity", "-vote_average")
             .values_list("id", flat=True)[:1200]
     )
     rows_plan.append(("popular", "Popular right now", list(popular_ids)[:30]))
@@ -755,7 +803,8 @@ def build_seed_home_payload(profile):
     # 2) Top rated
     top_ids = _cached_ids(
         "top_seed",
-        lambda: Title.objects.order_by("-vote_average", "-vote_count")
+        lambda: _released_titles().filter(vote_count__gte=TOP_RATED_MIN_VOTES)
+            .order_by("-vote_average", "-vote_count")
             .values_list("id", flat=True)[:1200]
     )
     rows_plan.append(("top_rated", "Top rated", list(top_ids)[:30]))
@@ -769,7 +818,7 @@ def build_seed_home_payload(profile):
     if lang:
         in_lang_ids = _cached_ids(
             f"in_lang_seed:{lang}",
-            lambda: Title.objects.filter(original_language=lang)
+            lambda: _released_titles().filter(original_language=lang)
                 .order_by("-popularity", "-vote_average")
                 .values_list("id", flat=True)[:1200]
         )
