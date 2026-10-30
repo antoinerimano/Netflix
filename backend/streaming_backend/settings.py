@@ -147,7 +147,10 @@ CSRF_TRUSTED_ORIGINS = env.list(
     default=["http://localhost:3000"],
 )
 
-FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
+# Base of the links in emails (password reset, email change, new episodes): ONE address.
+# If a list was pasted here (like CORS_ALLOWED_ORIGINS), the first one is used: the whole
+# list in front of a link made every email link unusable.
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000").split(",")[0].strip().rstrip("/")
 
 # ---- Email ----
 EMAIL_BACKEND = env(

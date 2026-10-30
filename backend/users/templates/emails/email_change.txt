@@ -1,0 +1,13 @@
+{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
+Hello{% if user.name %} {{ user.name }}{% endif %},
+
+We received a request to change your account email to {{ new_email }}.
+Open this link to confirm:
+
+{{ confirm_url }}
+
+If you didn't ask for this, you can ignore this email: nothing will change.
+
+--
+This email was sent by {{ company_name }}. For help, contact {{ support_email }}.
+{% endautoescape %}

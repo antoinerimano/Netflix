@@ -20,15 +20,12 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission, AllowAny, I
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.utils import timezone
 from urllib.parse import quote
 
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 
 from .models import (
     Actor, User, Subscription, Profile, PaymentHistory,
@@ -36,6 +33,7 @@ from .models import (
 )
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .maturity import allowed_titles_q, request_profile
+from .emails import send_templated_email
 from .serializers import (
     UserSerializer, SubscriptionSerializer,
     ProfileSerializer, PaymentHistorySerializer, TitleSerializer,
@@ -254,26 +252,11 @@ class UserViewSet(viewsets.ModelViewSet):
         token = quote(raw_token, safe="")
         confirm_url = f"{settings.FRONTEND_URL}/confirm-email-change/{user.id}/{token}"
 
-          # Render HTML and plain text
-        context = {
-            "user": user,
-            "new_email": new_email,
-            "confirm_url": confirm_url,
-            "support_email": settings.SUPPORT_EMAIL,
-            "company_name": "Taurus",  # <- customize
-        }
-        subject = "Confirm your new email address"
-
-        html_message = render_to_string("emails/email_change.html", context)
-        plain_message = strip_tags(html_message)
-
-        send_mail(
-            subject,
-            plain_message,
-            settings.DEFAULT_FROM_EMAIL,
+        send_templated_email(
+            "Confirm your new email address",
+            "email_change",
+            {"user": user, "new_email": new_email, "confirm_url": confirm_url},
             [new_email],
-            html_message=html_message,
-            fail_silently=False,
         )
 
         return Response({"message": "Confirmation email sent"}, status=status.HTTP_200_OK)
@@ -444,26 +427,7 @@ def request_password_reset(request):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
-    # Build context for template
-    context = {
-        "user": user,
-        "reset_link": reset_link,
-        "support_email": settings.SUPPORT_EMAIL,
-        "company_name": "Taurus",  # change to your branding
-    }
-
-    subject = "Reset your password"
-    html_message = render_to_string("emails/password_reset.html", context)
-    plain_message = strip_tags(html_message)
-
-    send_mail(
-        subject,
-        plain_message,
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        html_message=html_message,
-        fail_silently=False,
-    )
+    send_templated_email("Reset your password", "password_reset", {"user": user, "reset_link": reset_link}, [email])
     return sent_response
 
 

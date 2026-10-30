@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>{% block subject %}{{ company_name }}{% endblock %}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4;">
+  {# tables + inline styles: what Gmail / Outlook / phone apps render the same way #}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:560px; background-color:#ffffff; border-radius:8px;">
+          <tr>
+            <td style="padding:28px 28px 8px 28px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; color:#222222;">
+              <h1 style="margin:0 0 16px 0; font-size:22px; line-height:28px; color:#e50914;">{% block heading %}{% endblock %}</h1>
+              <p style="margin:0 0 16px 0;">Hello{% if user.name %} {{ user.name }}{% endif %},</p>
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 28px 28px; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:#777777; border-top:1px solid #eeeeee;">
+              {% block footer_note %}{% endblock %}
+              This email was sent by {{ company_name }}. For help, contact
+              <a href="mailto:{{ support_email }}" style="color:#777777;">{{ support_email }}</a>.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
