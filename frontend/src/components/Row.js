@@ -4,7 +4,7 @@ import Slider from 'react-slick';
 import { useNavigate } from 'react-router-dom';
 import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
-import { hideWatchProgress } from '../api/recoApi';
+import { hideWatchProgress, markNotInterested } from '../api/recoApi';
 
 const LOAD_ON_HOVER_MS = 1000;
 const STALL_HIDE_MS = 900;
@@ -250,6 +250,14 @@ const Row = ({ title, movies }) => {
     hideWatchProgress({ profileId, titleId: t.id }).catch(() => {});
   };
 
+  // "Not interested": gone from this row now, never recommended again to this profile
+  const handleNotInterested = (e, t) => {
+    e.stopPropagation();
+    const profileId = localStorage.getItem('activeProfileId');
+    setRemovedIds((prev) => new Set(prev).add(t.id));
+    markNotInterested({ profileId, titleId: t.id, surface: 'home_row' }).catch(() => {});
+  };
+
   // --- NEW: log internal click before navigate ---
   const handleCardClick = (t, index) => {
     if (t?.id && t.resume) {
@@ -428,12 +436,11 @@ const Row = ({ title, movies }) => {
                 }}
               />
 
-              {movie?.resume && (
-                <button
-                  className="row-remove-btn"
-                  onClick={(e) => removeFromContinueWatching(e, movie)}
-                  aria-label="Remove from Continue watching"
-                  title="Remove from Continue watching"
+              <button
+                  className={`row-remove-btn${movie?.resume ? ' row-remove-btn--resume' : ''}`}
+                  onClick={(e) => (movie?.resume ? removeFromContinueWatching(e, movie) : handleNotInterested(e, movie))}
+                  aria-label={movie?.resume ? 'Remove from Continue watching' : 'Not interested'}
+                  title={movie?.resume ? 'Remove from Continue watching' : 'Not interested: never show this again'}
                   style={{
                     position: 'absolute',
                     top: 8,
@@ -451,9 +458,8 @@ const Row = ({ title, movies }) => {
                     cursor: 'pointer',
                   }}
                 >
-                  ✕
+                  {movie?.resume ? '✕' : '⊘'}
                 </button>
-              )}
 
               {canRenderVideo && isVisible && (
                 <button

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { fetchMovieById } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
+import RatingButtons from './RatingButtons';
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -258,6 +259,7 @@ const MovieDetail = () => {
             <button className="movie-detail-add-button" onClick={handleToggleList}>
               {isInList ? 'Remove from My List' : 'Add to My List'}
             </button>
+            <RatingButtons titleId={movie.id} buttonClassName="movie-detail-add-button" />
           </div>
         </div>
       </div>

@@ -311,3 +311,22 @@
   }
 }
 
+
+/* ⊘ Not interested / ✕ remove from Continue watching: only on hover, so cards stay clean */
+.movie-card .row-remove-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+.movie-card:hover .row-remove-btn,
+.movie-card .row-remove-btn:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* touch screens have no hover: keep only the Continue watching ✕, hide ⊘ */
+@media (hover: none) {
+  .movie-card .row-remove-btn--resume {
+    opacity: 0.85;
+    pointer-events: auto;
+  }
+}

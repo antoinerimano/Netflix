@@ -21,7 +21,7 @@ Status: [ ] todo   [~] in progress   [x] done
         Today it lives in the browser (localStorage): lost when changing device or clearing data.
         Store it in the DB, sync across devices, better signal for recommendations.
 
-[ ] 1.4 Like / Dislike / Not interested buttons
+[x] 1.4 Like / Dislike / Not interested buttons
         The backend already accepts these actions; add the buttons (cards + detail page)
         and use them: hide "not interested", lower similar titles after a dislike.
 

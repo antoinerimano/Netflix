@@ -27,7 +27,7 @@ from users.maturity import allowed_titles_q, profile_max_level
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
-    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem
+    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating
 )
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
@@ -71,15 +71,63 @@ TOP_RATED_MIN_VOTES = 1000
 # outbound = pressed Play (the only "watched" signal), click = opened the detail page.
 PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
 
+# Dislike: titles most similar to a disliked one are pushed down by this much in every row
+DISLIKE_NEIGHBORS = 30
+DISLIKE_PENALTY = 0.25
+
 
 def _interest_actions(profile_id):
     """Positive actions of a profile. Removing from My List is logged as add_to_list
-    with provider "remove|...", so it must not count as interest."""
+    with provider "remove|...", so it must not count as interest. Likes come from
+    TitleRating (current thumb), not from the action log: an undone like must not count."""
     return (
         TitleAction.objects
-        .filter(profile_id=profile_id, action__in=list(PROFILE_ACTION_WEIGHTS))
+        .filter(profile_id=profile_id, action__in=[a for a in PROFILE_ACTION_WEIGHTS if a != "like"])
         .exclude(action="add_to_list", provider__startswith="remove")
     )
+
+
+def _interest_events(profile_id, limit):
+    """[(title_id, kind)] newest first: positive actions + current likes, minus disliked titles."""
+    ratings = list(
+        TitleRating.objects.filter(profile_id=profile_id)
+        .order_by("-updated_at")
+        .values_list("title_id", "value", "updated_at")[:limit]
+    )
+    disliked = {tid for tid, value, _ in ratings if value == TitleRating.DISLIKE}
+    events = [(when, tid, "like") for tid, value, when in ratings if value == TitleRating.LIKE]
+    events += [
+        (when, tid, action)
+        for tid, action, when in _interest_actions(profile_id)
+        .order_by("-created_at")
+        .values_list("title_id", "action", "created_at")[:limit]
+        if tid not in disliked
+    ]
+    events.sort(key=lambda e: e[0], reverse=True)
+    return [(tid, kind) for _, tid, kind in events[:limit]]
+
+
+def _rejected_ids(profile_id):
+    """Titles the profile said no to: current dislikes + "not interested" (permanent)."""
+    disliked = TitleRating.objects.filter(profile_id=profile_id, value=TitleRating.DISLIKE).values_list("title_id", flat=True)
+    not_interested = TitleAction.objects.filter(profile_id=profile_id, action="not_interested").values_list("title_id", flat=True)
+    return set(disliked) | set(not_interested)
+
+
+def _disliked_neighbors(profile_id, per_title=DISLIKE_NEIGHBORS):
+    """Titles most similar to the ones the profile disliked: pushed down in every row."""
+    disliked = list(
+        TitleRating.objects.filter(profile_id=profile_id, value=TitleRating.DISLIKE).values_list("title_id", flat=True)[:50]
+    )
+    if not disliked:
+        return set()
+    neighbors = set()
+    for tid in disliked:
+        neighbors.update(
+            TitleSimilar.objects.filter(title_id=tid, model_name=MODEL_NAME)
+            .order_by("-score").values_list("similar_id", flat=True)[:per_title]
+        )
+    return neighbors
 
 # "New episodes" row: global (same for everyone), added to every home payload at request time
 NEW_EPISODES_TTL = 600       # 10 min
@@ -244,11 +292,7 @@ def _cosine(a, b):
 
 def _build_profile_vector(profile_id, limit=30):
     # same recipe as train_ranker._profile_vec (the ranker's cosine feature must mean the same thing)
-    acts = list(
-        _interest_actions(profile_id)
-        .order_by("-created_at")
-        .values_list("title_id", "action")[:limit]
-    )
+    acts = _interest_events(profile_id, limit)
     if not acts:
         return None
 
@@ -337,7 +381,7 @@ def _title_cache_key(tid: int) -> str:
 # ============================================================
 
 def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
-                      exclude_ids, emb_cache, title_by_id, logger=None):
+                      exclude_ids, emb_cache, title_by_id, logger=None, penalized_ids=frozenset()):
     if not cand_ids:
         return [], set()
 
@@ -405,6 +449,8 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
             s -= 0.00002 * fresh
             scores.append(s)
 
+    # titles similar to something the profile disliked go down the row
+    scores = [s - DISLIKE_PENALTY if tid in penalized_ids else s for tid, s in zip(uniq_ids, scores)]
     ranked = sorted(zip(uniq_ids, scores), key=lambda x: x[1], reverse=True)
     picked_ids = [tid for tid, _ in ranked[:k]]
     picked_set = set(picked_ids)
@@ -441,25 +487,27 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
     prof_vec = _build_profile_vector(profile.id)
     t0 = _log_step("build_profile_vector", t0, has_vec=bool(prof_vec is not None)) if do_logs else t0
 
-    # 1) recent positive actions (seeds for "For you", genre/actor/studio rows; not dislikes)
-    recent_action_ids = list(
-        _interest_actions(profile.id)
-        .order_by("-created_at")
-        .values_list("title_id", flat=True)[:200]
-    )
+    # 1) recent positive actions + likes (seeds for "For you", genre/actor/studio rows; not dislikes)
+    recent_action_ids = [tid for tid, _ in _interest_events(profile.id, 200)]
     # one entry per title, newest first (opening + playing the same show = 1 seed, not 2)
     recent_action_ids = list(dict.fromkeys(tid for tid in recent_action_ids if tid))
     t0 = _log_step("recent_actions", t0, n=len(recent_action_ids)) if do_logs else t0
 
-    # 2) seen ids: watched / listed / rejected for good, only opened recently, shown recently
+    # 2) seen ids: watched / listed / rejected for good, only opened recently, shown recently.
+    # Thumbs count by their current value (TitleRating), not by the log: an undone dislike can come back.
     click_since = timezone.now() - timedelta(days=CLICK_EXCLUDE_DAYS)
     seen_ids = set(
         TitleAction.objects
         .filter(profile_id=profile.id)
+        .exclude(action__in=["like", "dislike"])
         .filter(~Q(action="click") | Q(created_at__gte=click_since))
         .order_by("-created_at")
         .values_list("title_id", flat=True)[:4000]
     )
+    seen_ids.update(TitleRating.objects.filter(profile_id=profile.id).values_list("title_id", flat=True))
+    rejected_ids = _rejected_ids(profile.id)
+    seen_ids.update(rejected_ids)
+    penalized_ids = _disliked_neighbors(profile.id)
     action_seen_count = len(seen_ids)
     imp_since = timezone.now() - timedelta(days=IMPRESSION_EXCLUDE_DAYS)
     impression_ids = list(
@@ -562,7 +610,7 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
         seed2 = []
         seen_seed = set()
         for tid in watched_ids:
-            if tid in seen_seed:
+            if tid in seen_seed or tid in rejected_ids:  # watched it, then thumbed it down
                 continue
             seen_seed.add(tid)
             seed2.append(tid)
@@ -749,6 +797,7 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
             emb_cache=emb_cache,
             title_by_id=title_by_id,
             logger=logger if do_logs else None,
+            penalized_ids=penalized_ids,
         )
 
         if do_logs:
@@ -948,6 +997,19 @@ def _apply_age_limit(payload, profile):
     return {**payload, "rows": rows}
 
 
+def _drop_rejected(payload, profile):
+    """Remove disliked / "not interested" titles: the snapshot may predate the click."""
+    rejected = _rejected_ids(profile.id)
+    if not rejected:
+        return payload
+    rows = []
+    for row in payload.get("rows") or []:
+        items = [item for item in row.get("items") or [] if item["id"] not in rejected]
+        if items:
+            rows.append({**row, "items": items})
+    return {**payload, "rows": rows}
+
+
 def _with_live_rows(payload, profile):
     """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
     rows = list(payload.get("rows") or [])
@@ -957,7 +1019,7 @@ def _with_live_rows(payload, profile):
     cont = _continue_watching_row(profile)
     if cont["items"]:
         rows.insert(0, cont)
-    return _apply_age_limit({**payload, "rows": rows}, profile)
+    return _apply_age_limit(_drop_rejected({**payload, "rows": rows}, profile), profile)
 
 
 class RecoHomeView(APIView):
@@ -1149,3 +1211,42 @@ class MyListImportView(APIView):
                 _, created = MyListItem.objects.get_or_create(profile=profile, title_id=tid)
                 added += created
         return Response({"imported": added})
+
+
+# ============================================================
+# LIKE / DISLIKE
+# ============================================================
+
+RATING_VALUES = {"like": TitleRating.LIKE, "dislike": TitleRating.DISLIKE}
+RATING_NAMES = {v: k for k, v in RATING_VALUES.items()}
+
+
+class TitleRatingView(APIView):
+    """
+    GET /api/ratings/<title_id>/?profileId=..                 -> {"rating": "like" | "dislike" | null}
+    PUT /api/ratings/<title_id>/?profileId=..  {"rating": .., "session_id": ..}   set (null clears it)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, title_id):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        value = TitleRating.objects.filter(profile=profile, title_id=title_id).values_list("value", flat=True).first()
+        return Response({"rating": RATING_NAMES.get(value)})
+
+    def put(self, request, title_id):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        title = get_object_or_404(Title.objects.only("id"), id=title_id)
+        rating = request.data.get("rating")
+        if rating is not None and rating not in RATING_VALUES:
+            return Response({"detail": "rating must be like, dislike or null"}, status=400)
+
+        if rating is None:
+            TitleRating.objects.filter(profile=profile, title=title).delete()
+        else:
+            TitleRating.objects.update_or_create(profile=profile, title=title, defaults={"value": RATING_VALUES[rating]})
+            # history for analytics / ranker training (recommendations read the current value above)
+            TitleAction.objects.create(
+                profile=profile, title=title, action=rating,
+                session_id=str(request.data.get("session_id") or "")[:64], provider="thumb",
+            )
+        return Response({"rating": rating})

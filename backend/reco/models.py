@@ -153,3 +153,21 @@ class MyListItem(models.Model):
         indexes = [
             models.Index(fields=["profile", "-added_at"]),
         ]
+
+
+class TitleRating(models.Model):
+    """A profile's current thumb on a title (TitleAction keeps the history of clicks)."""
+    LIKE, DISLIKE = 1, -1
+
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="ratings")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    value = models.SmallIntegerField(choices=[(LIKE, "like"), (DISLIKE, "dislike")])
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["profile", "title"], name="uniq_rating_profile_title"),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "value", "-updated_at"]),
+        ]
