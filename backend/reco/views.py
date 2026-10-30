@@ -470,6 +470,76 @@ def _rank_and_pick_ids(profile, prof_vec, rank_model, row_type, cand_ids, k,
 
 # views.py
 
+# ============================================================
+# "WHY THIS?" (reason shown on a card)
+# ============================================================
+
+WHY_FIELDS = ["vote_average", "vote_count", "release_date", "first_air_date", "original_language"]
+LANG_NAMES = {
+    "en": "English", "fr": "French", "es": "Spanish", "de": "German", "it": "Italian", "pt": "Portuguese",
+    "ja": "Japanese", "ko": "Korean", "zh": "Chinese", "hi": "Hindi", "ru": "Russian", "tr": "Turkish",
+    "ar": "Arabic", "nl": "Dutch", "sv": "Swedish", "da": "Danish", "no": "Norwegian", "pl": "Polish",
+}
+
+
+def _lang_name(code):
+    return LANG_NAMES.get(code, (code or "").upper())
+
+
+def _short_count(n):
+    n = int(n or 0)
+    if n >= 1000:
+        return f"{n / 1000:.1f}k".replace(".0k", "k") if n < 10000 else f"{round(n / 1000)}k"
+    return str(n)
+
+
+def _explain(row_type, t, similar_to=None):
+    """Card reason, only where the row title doesn't already say it ("" = none)."""
+    kind = row_type.split(":")[0]
+    if kind == "for_you" and similar_to:
+        name, liked = similar_to
+        return f"Similar to {name}" + (", which you liked" if liked else "")
+    if kind == "top_rated" and t.vote_average and t.vote_count:
+        return f"Rated {t.vote_average:.1f}/10 by {_short_count(t.vote_count)} people"
+    if kind == "hidden_gems" and t.vote_average:
+        return f"Rated {t.vote_average:.1f}/10, but few people know it"
+    if kind == "tv_hits":
+        return "Popular right now"
+    if kind in ("new_movies", "fresh_for_you"):
+        d = _parse_date(t.release_date) or _parse_date(t.first_air_date)
+        return f"New: out {d.strftime('%b %Y')}" if d else ""
+    return ""
+
+
+def _for_you_reasons(profile_id, seed_ids, picked_ids):
+    """{picked title id: (name of the seed it is most similar to, seed was liked)}"""
+    if not seed_ids or not picked_ids:
+        return {}
+    best = {}
+    for sim_id, seed_id, score in (
+        TitleSimilar.objects
+        .filter(title_id__in=seed_ids, similar_id__in=picked_ids, model_name=MODEL_NAME)
+        .values_list("similar_id", "title_id", "score")
+    ):
+        if sim_id not in best or score > best[sim_id][1]:
+            best[sim_id] = (seed_id, score)
+    names = dict(Title.objects.filter(id__in={seed for seed, _ in best.values()}).values_list("id", "title"))
+    liked = set(
+        TitleRating.objects.filter(profile_id=profile_id, value=TitleRating.LIKE, title_id__in=seed_ids)
+        .values_list("title_id", flat=True)
+    )
+    return {sim: (names[seed], seed in liked) for sim, (seed, _) in best.items() if seed in names}
+
+
+def _row_items(row_type, objs, similar_to=None):
+    """Serialized cards of a row, each with its "why" when there is one."""
+    items = []
+    for t, data in zip(objs, TitleHomeSerializer(objs, many=True).data):
+        why = _explain(row_type, t, (similar_to or {}).get(t.id))
+        items.append({**data, "why": why} if why else dict(data))
+    return items
+
+
 def build_home_payload_exact(profile, user_id=None, do_logs=True):
     """
     EXACT copy of RecoHomeView.get() compute path, but:
@@ -585,11 +655,12 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
                     .values_list("id", flat=True)[:1200]
                 )
             )
-            planned_rows.append(("in_lang", f"In {lang.upper()}", list(in_lang_ids), 30))
+            planned_rows.append(("in_lang", f"In {_lang_name(lang)}", list(in_lang_ids), 30))
 
     _plan_mark("cold_start", planned=len(planned_rows))
 
     # ---- normal reco (identique)
+    seed_ids = []
     if recent_action_ids:
         seed_ids = recent_action_ids[:6]
         sim_ids = list(
@@ -758,7 +829,7 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
             .order_by("-popularity", "-vote_average")
             .values_list("id", flat=True)[:1200]
         )
-        planned_rows.append(("lang_trending", f"Trending in {lang.upper()}", lang_trend_ids, 30))
+        planned_rows.append(("lang_trending", f"Trending in {_lang_name(lang)}", lang_trend_ids, 30))
         _plan_mark("lang_trending", n=len(lang_trend_ids), planned=len(planned_rows))
 
     planned_rows.append(("trending", "Trending", list(trend_ids), 30))
@@ -817,16 +888,17 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
     picked_total = list(dict.fromkeys(picked_total))
     display_by_id = {}
     if picked_total:
-        dqs = Title.objects.filter(id__in=picked_total).only(*DISPLAY_ONLY_FIELDS)
+        dqs = Title.objects.filter(id__in=picked_total).only(*DISPLAY_ONLY_FIELDS, *WHY_FIELDS)
         display_by_id = {t.id: t for t in dqs}
 
     rows = []
     for row_type, row_title, ids in rows_plan:
         objs = [display_by_id[i] for i in ids if i in display_by_id]
+        similar_to = _for_you_reasons(profile.id, seed_ids, ids) if row_type == "for_you" else None
         rows.append({
             "row_type": row_type,
             "title": row_title,
-            "items": TitleHomeSerializer(objs, many=True).data,
+            "items": _row_items(row_type, objs, similar_to),
         })
 
     payload = {"rows": rows}
@@ -878,7 +950,7 @@ def build_seed_home_payload(profile):
                 .order_by("-popularity", "-vote_average")
                 .values_list("id", flat=True)[:1200]
         )
-        rows_plan.insert(1, ("in_lang", f"In {lang.upper()}", list(in_lang_ids)))
+        rows_plan.insert(1, ("in_lang", f"In {_lang_name(lang)}", list(in_lang_ids)))
 
     # age limit of the profile, then 30 per row
     if profile_max_level(profile) is not None:
@@ -895,7 +967,7 @@ def build_seed_home_payload(profile):
 
     display_by_id = {}
     if picked:
-        qs = Title.objects.filter(id__in=picked).only(*DISPLAY_ONLY_FIELDS)
+        qs = Title.objects.filter(id__in=picked).only(*DISPLAY_ONLY_FIELDS, *WHY_FIELDS)
         display_by_id = {t.id: t for t in qs}
 
     rows = []
@@ -904,7 +976,7 @@ def build_seed_home_payload(profile):
         rows.append({
             "row_type": row_type,
             "title": title,
-            "items": TitleHomeSerializer(objs, many=True).data,
+            "items": _row_items(row_type, objs),
         })
 
     return {"rows": rows}

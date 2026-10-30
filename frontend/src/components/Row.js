@@ -520,6 +520,9 @@ const Row = ({ title, movies }) => {
                   </div>
                 )}
 
+                {/* "Why this?": reason computed with the recommendations */}
+                {movie?.why && <p className="why-line">{movie.why}</p>}
+
                 {hasProgress && (
                   <div className="progress-bar-container">
                     <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />

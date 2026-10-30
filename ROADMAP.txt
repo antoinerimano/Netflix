@@ -12,7 +12,7 @@ Status: [ ] todo   [~] in progress   [x] done
         Minutes watched from the players' postMessage events (videasy PLAYER_EVENT,
         cinesrc:*, vidcore:*): progress bar on cards, drop finished movies from the row.
 
-[~] 1.2 Kids profiles that really filter
+[x] 1.2 Kids profiles that really filter
         Import TMDB certifications + "adult" flag in the sync scripts, apply the profile's
         age_restriction to every home row, search, browse pages and the watch page.
         Add a real "Kids" profile option.
@@ -35,7 +35,7 @@ Status: [ ] todo   [~] in progress   [x] done
         "Notify me" on a show -> email / browser notification when a new episode airs
         (uses Episode.air_date + the 3-hourly episode sync).
 
-[ ] 2.3 "Why this?" on recommendations
+[x] 2.3 "Why this?" on recommendations
         Small explanation on cards: "Similar to X", "Popular in your language", ...
 
 [ ] 2.4 Better search
