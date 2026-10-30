@@ -5,20 +5,6 @@ docker compose exec backend python manage.py clean_db --dedupe --backfill-tmdb -
 docker compose exec backend python /app/add_trailer_to_cdn.py
 docker compose exec backend python manage.py check_providers   (health-check stream providers, auto-switch dead/moved domains)
 
------------ stream providers: local -> prod -----------
-LOCAL (after changing providers in the admin):
-cd backend && python manage.py providers export && cd ..
-git add backend/providers.json && git commit -m "Update stream providers" && git push origin main
-
-SERVER:
-cd /opt/taurus && git pull
-docker compose up -d --build backend frontend
-docker compose exec backend python manage.py migrate
-docker compose exec backend python manage.py providers import --dry-run   (check what will change)
-docker compose exec backend python manage.py providers import
-docker compose exec backend python manage.py check_providers
-------------------------------------------------------
-
 crontab -e  (on the server):
 */15 * * * * /opt/taurus/scripts/cron_check_providers.sh >> /var/log/taurus_providers.log 2>&1
 0 */3 * * * /opt/taurus/scripts/cron_sync_episodes.sh >> /var/log/taurus_episodes.log 2>&1
