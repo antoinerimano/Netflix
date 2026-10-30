@@ -2,13 +2,11 @@ from rest_framework.decorators import api_view, permission_classes, action, thro
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 import re
 from django.db.models import Q
 from django.db import models
-from django.db.models import Q
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
@@ -27,7 +25,6 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.utils import timezone
 from urllib.parse import quote
 
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
@@ -45,7 +42,6 @@ from .serializers import (
 signer = TimestampSigner()
 
 
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import (
     TokenObtainPairView as _BaseTokenObtainPairView,
     TokenRefreshView as _BaseTokenRefreshView,
@@ -185,14 +181,15 @@ class UserViewSet(viewsets.ModelViewSet):
         # Optionally log a local (fake) payment for Premium
         if plan_type == 'Premium':
             from uuid import uuid4
+            # amount/currency are fixed server-side: never trust the client for billing data
             PaymentHistory.objects.create(
                 id=str(uuid4()),
                 user=user,
                 date=timezone.now(),
-                amount=request.data.get('amount', 9.99),
-                currency=request.data.get('currency', 'USD'),
+                amount=settings.PREMIUM_PRICE,
+                currency=settings.PREMIUM_CURRENCY,
                 plan_type='Premium',
-                transaction_id=request.data.get('transaction_id', f'LOCAL-{uuid4()}'),
+                transaction_id=f'LOCAL-{uuid4()}',
                 status='Succeeded'
             )
 
@@ -259,7 +256,7 @@ class UserViewSet(viewsets.ModelViewSet):
             "user": user,
             "new_email": new_email,
             "confirm_url": confirm_url,
-            "support_email": "support@yourdomain.com",
+            "support_email": settings.SUPPORT_EMAIL,
             "company_name": "Taurus",  # <- customize
         }
         subject = "Confirm your new email address"
@@ -436,7 +433,7 @@ def request_password_reset(request):
     context = {
         "user": user,
         "reset_link": reset_link,
-        "support_email": "support@yourdomain.com",
+        "support_email": settings.SUPPORT_EMAIL,
         "company_name": "Taurus",  # change to your branding
     }
 
@@ -486,60 +483,6 @@ def confirm_password_reset(request):
 
 
 # ------------------ Movies/TV content ------------------
-
-class MovieList(APIView):
-    serializer_class = TitleSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-    def get(self, request):
-        qs = Title.objects.filter(type="movie").only(
-            "id","type","title","poster","landscape_image",
-            "release_year","vote_average","popularity"
-        ).order_by("-popularity","-vote_average","-id")
-
-        paginator = PageNumberPagination()
-        paginator.page_size = int(request.query_params.get("page_size", 40))
-        page = paginator.paginate_queryset(qs, request)
-        return paginator.get_paginated_response(TitleListSerializer(page, many=True).data)
-
-    def post(self, request):
-        data = request.data.copy()
-        data["type"] = "movie"
-        ser = TitleSerializer(data=data)
-        ser.is_valid(raise_exception=True)
-        ser.save()
-        return Response(ser.data, status=status.HTTP_201_CREATED)
-
-
-class MovieDetail(APIView):
-    serializer_class = TitleSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-    def get(self, request, pk):
-        try:
-            movie = Title.objects.get(pk=pk, type="movie")
-        except Title.DoesNotExist:
-            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
-        return Response(TitleSerializer(movie).data)
-
-    def put(self, request, pk):
-        try:
-            movie = Title.objects.get(pk=pk, type="movie")
-        except Title.DoesNotExist:
-            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
-        ser = TitleSerializer(movie, data=request.data)
-        ser.is_valid(raise_exception=True)
-        ser.save()
-        return Response(ser.data)
-
-    def delete(self, request, pk):
-        try:
-            movie = Title.objects.get(pk=pk, type="movie")
-        except Title.DoesNotExist:
-            return Response({"error": "Movie not found"}, status=status.HTTP_404_NOT_FOUND)
-        movie.delete()
-        return Response({"message": "Movie deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
 
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]

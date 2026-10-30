@@ -1,4 +1,5 @@
 # streaming_backend/urls.py
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_nested import routers
@@ -37,7 +38,7 @@ seasons_router = routers.NestedSimpleRouter(titles_router, r'seasons', lookup='s
 seasons_router.register(r'episodes', views.EpisodeViewSet, basename='season-episodes')
 
 urlpatterns = [
-    path('super-admin-7b0e/', admin.site.urls),
+    path(settings.ADMINADMIN_URL, admin.site.urls),
 
     # ✅ Use the imported views directly (not views.TokenObtainPairView)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

@@ -157,6 +157,11 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER or "webmaster@localhost")
+SUPPORT_EMAIL = env("SUPPORT_EMAIL", default=DEFAULT_FROM_EMAIL)
+
+# ---- Billing (local, no payment provider yet) ----
+PREMIUM_PRICE = env("PREMIUM_PRICE", default="9.99")
+PREMIUM_CURRENCY = env("PREMIUM_CURRENCY", default="USD")
 
 # ---- Password validation ----
 AUTH_PASSWORD_VALIDATORS = [

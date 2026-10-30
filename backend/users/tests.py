@@ -96,6 +96,17 @@ class PermissionTests(TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertFalse(Subscription.objects.filter(user=self.bob).exists())
 
+    def test_subscribe_ignores_client_billing_fields(self):
+        self.client.force_authenticate(self.alice)
+        res = self.client.post(f"/api/users/{self.alice.id}/subscribe/", {
+            "plan_type": "Premium", "amount": "0.01", "currency": "XXX", "transaction_id": "fake",
+        }, format="json")
+        self.assertEqual(res.status_code, 201)
+        payment = PaymentHistory.objects.get(user=self.alice)
+        self.assertEqual(str(payment.amount), "9.99")
+        self.assertEqual(payment.currency, "USD")
+        self.assertNotEqual(payment.transaction_id, "fake")
+
     def test_logout_without_access_token(self):
         res = self.client.post("/api/logout/", {"refresh": "garbage"}, format="json")
         self.assertEqual(res.status_code, 400)  # reaches the view, not 401

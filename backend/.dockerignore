@@ -1,0 +1,8 @@
+# secrets come from docker-compose env_file, never bake them into the image
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.pyc
+*.log

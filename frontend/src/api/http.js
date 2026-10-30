@@ -44,9 +44,44 @@ function isJwtInvalidOrExpired(error) {
   return detail.includes("token") && (detail.includes("invalid") || detail.includes("expired"));
 }
 
+// one refresh at a time, shared by every request that hit a 401 meanwhile
+let refreshPromise = null;
+
+function refreshAccessToken() {
+  if (!refreshPromise) {
+    const refresh = localStorage.getItem("refresh");
+    refreshPromise = (refresh
+      ? axios.post(`${API_BASE}/api/token/refresh/`, { refresh })
+      : Promise.reject(new Error("no refresh token"))
+    )
+      .then(({ data }) => {
+        localStorage.setItem("access", data.access);
+        // ROTATE_REFRESH_TOKENS is on: the old refresh token is now blacklisted
+        if (data.refresh) localStorage.setItem("refresh", data.refresh);
+        return data.access;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
 http.interceptors.response.use(
   (res) => res,
-  (error) => {
+  async (error) => {
+    const original = error?.config;
+    if (isJwtInvalidOrExpired(error) && original && !original._retried) {
+      original._retried = true;
+      try {
+        const access = await refreshAccessToken();
+        original.headers.Authorization = `Bearer ${access}`;
+        return http(original);
+      } catch {
+        // refresh token expired or revoked: fall through to logout
+      }
+    }
+
     if (isJwtInvalidOrExpired(error)) {
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");

@@ -1,8 +1,9 @@
 # users/middleware.py
+from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 
-ADMIN_PREFIX = "/super-admin-7b0e/"  # keep trailing slash
+ADMIN_PREFIX = "/" + settings.ADMINADMIN_URL.strip("/") + "/"  # same path as in urls.py
 
 # Allow these unauthenticated endpoints so you can sign in + load assets
 ADMIN_ALLOWLIST = (
