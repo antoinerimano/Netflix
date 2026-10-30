@@ -69,3 +69,29 @@ export async function fetchPreferredSource({ profileId, titleId }) {
   const res = await api.get("/playback/", { params: { profileId, titleId } });
   return res.data || { title: null, profile: null };
 }
+
+// ---------- new episode alerts ----------
+export async function fetchFollow({ profileId, titleId }) {
+  if (!profileId || !titleId) return false;
+  const res = await api.get(`/follows/${titleId}/`, { params: { profileId } });
+  return !!res.data?.following;
+}
+
+export async function setFollow({ profileId, titleId, following }) {
+  if (!profileId || !titleId) return;
+  const url = `/follows/${titleId}/`;
+  if (following) await api.put(url, null, { params: { profileId } });
+  else await api.delete(url, { params: { profileId } });
+}
+
+// { unread, items: [{ id, title_id, show, image, season, episode, air_date, read }] }
+export async function fetchNotifications(profileId) {
+  if (!profileId) return { unread: 0, items: [] };
+  const res = await api.get("/notifications/", { params: { profileId } });
+  return res.data || { unread: 0, items: [] };
+}
+
+export async function markNotificationsRead(profileId) {
+  if (!profileId) return;
+  await api.post("/notifications/read/", null, { params: { profileId } });
+}

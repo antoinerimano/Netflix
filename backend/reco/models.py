@@ -194,3 +194,38 @@ class PlaybackOutcome(models.Model):
             models.Index(fields=["profile", "worked", "-created_at"]),
             models.Index(fields=["created_at", "provider_key"]),
         ]
+
+
+class ShowFollow(models.Model):
+    """A profile asked to be told when this show gets a new episode ("Notify me")."""
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="follows")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["profile", "title"], name="uniq_follow_profile_title"),
+        ]
+
+
+class Notification(models.Model):
+    """New episode of a followed show, for one profile (bell in the navbar + email)."""
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="notifications")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    season_number = models.PositiveIntegerField()
+    episode_number = models.PositiveIntegerField()
+    air_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    emailed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "title", "season_number", "episode_number"], name="uniq_notification_episode"
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "-created_at"]),
+            models.Index(fields=["emailed_at"]),
+        ]

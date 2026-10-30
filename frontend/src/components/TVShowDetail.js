@@ -9,6 +9,7 @@ import {
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
+import FollowButton from './FollowButton';
 import './TVShowDetail.css';
 import Navbar from './Navbar';
 
@@ -274,6 +275,7 @@ export default function TVShowDetail() {
             {isInList ? 'Remove from My List' : 'Add to My List'}
           </button>
           <RatingButtons titleId={title.id} buttonClassName="tvd-add-button" />
+          <FollowButton titleId={title.id} buttonClassName="tvd-add-button" />
         </div>
       </section>
 

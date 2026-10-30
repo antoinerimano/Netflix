@@ -5,6 +5,7 @@ import { searchTitles } from '../api/titlesApi';
 import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
+import NotificationBell from './NotificationBell';
 
 const SITE_URL = 'https://tauruss.top/';
 
@@ -274,6 +275,9 @@ const Navbar = () => {
           </div>
         )}
       </div>
+
+      {/* NEW EPISODES */}
+      {isAuthenticated && <NotificationBell />}
 
       {/* PROFILE */}
       {isAuthenticated ? (

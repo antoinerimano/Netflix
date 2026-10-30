@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     LogImpressionView, LogActionView, RecoHomeView, WatchProgressView,
     MyListView, MyListItemView, MyListImportView, TitleRatingView, PlaybackView,
+    ShowFollowView, NotificationListView,
 )
 
 urlpatterns = [
@@ -14,4 +15,7 @@ urlpatterns = [
     path("my-list/<int:title_id>/", MyListItemView.as_view()),
     path("ratings/<int:title_id>/", TitleRatingView.as_view()),
     path("playback/", PlaybackView.as_view()),
+    path("follows/<int:title_id>/", ShowFollowView.as_view()),
+    path("notifications/", NotificationListView.as_view()),
+    path("notifications/read/", NotificationListView.as_view()),
 ]

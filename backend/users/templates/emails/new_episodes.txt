@@ -1,0 +1,13 @@
+{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
+Hello{% if user.name %} {{ user.name }}{% endif %},
+
+Shows you follow on {{ company_name }} have new episodes:
+{% for ep in episodes %}
+- {{ ep.show }}, season {{ ep.season }} episode {{ ep.episode }}
+  {{ ep.link }}
+{% endfor %}
+You get this email because you clicked "Notify me" on these shows. Click it again on a show's page to stop.
+
+--
+This email was sent by {{ company_name }}. For help, contact {{ support_email }}.
+{% endautoescape %}

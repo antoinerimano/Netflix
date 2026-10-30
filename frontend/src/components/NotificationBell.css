@@ -1,0 +1,121 @@
+/* Navbar bell: same look as the share button and profile dropdown */
+.notif {
+  position: relative;
+  margin-right: 8px;
+}
+
+.notif__button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.notif__button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.notif__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #e50914;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.notif__panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  background-color: #141414;
+  border: 1px solid #333;
+  border-radius: 5px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 30000000;
+}
+
+.notif__empty {
+  padding: 16px;
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notif__item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #222;
+  color: #ddd;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notif__item:hover {
+  background-color: #222;
+}
+
+.notif__item--new {
+  color: #fff;
+  box-shadow: inset 3px 0 0 #e50914;
+}
+
+.notif__item img,
+.notif__thumb {
+  width: 96px;
+  height: 54px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #222;
+}
+
+.notif__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.notif__text strong {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .notif {
+    margin-right: 4px;
+  }
+  .notif__panel {
+    position: fixed;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+}

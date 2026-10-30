@@ -8,4 +8,8 @@ echo "[CRON] sync_tmdb_daily_episodes START $(date)"
 docker compose exec -T backend \
   python manage.py sync_tmdb_daily_episodes --pages 5 --latest-seasons 2
 
+# tell profiles following a show about its new episodes (bell + email)
+docker compose exec -T backend \
+  python manage.py notify_new_episodes
+
 echo "[CRON] sync_tmdb_daily_episodes END $(date)"

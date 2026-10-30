@@ -27,7 +27,8 @@ from users.maturity import allowed_titles_q, profile_max_level
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
-    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating, PlaybackOutcome
+    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating, PlaybackOutcome,
+    ShowFollow, Notification,
 )
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
@@ -1356,3 +1357,60 @@ class PlaybackView(APIView):
         for_title = _last_working_source(base.filter(title_id=title_id).values_list("provider_key", "worked")[:50]) if title_id else None
         for_profile = _last_working_source(base.values_list("provider_key", "worked")[:200])
         return Response({"title": for_title, "profile": for_profile})
+
+
+# ============================================================
+# NEW EPISODE ALERTS
+# ============================================================
+
+class ShowFollowView(APIView):
+    """GET / PUT / DELETE /api/follows/<title_id>/?profileId=..  "Notify me" on a show"""
+    permission_classes = [IsAuthenticated]
+
+    def _profile(self, request):
+        return get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+
+    def get(self, request, title_id):
+        following = ShowFollow.objects.filter(profile=self._profile(request), title_id=title_id).exists()
+        return Response({"following": following})
+
+    def put(self, request, title_id):
+        profile = self._profile(request)
+        title = get_object_or_404(Title.objects.only("id"), id=title_id, type="tv")
+        ShowFollow.objects.get_or_create(profile=profile, title=title)
+        return Response({"following": True})
+
+    def delete(self, request, title_id):
+        ShowFollow.objects.filter(profile=self._profile(request), title_id=title_id).delete()
+        return Response({"following": False})
+
+
+class NotificationListView(APIView):
+    """
+    GET  /api/notifications/?profileId=..       -> {"unread": n, "items": [...]} newest first
+    POST /api/notifications/read/?profileId=..  mark them all read
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        qs = Notification.objects.filter(profile=profile).filter(allowed_titles_q(profile, prefix="title__"))
+        items = [
+            {
+                "id": n.id,
+                "title_id": n.title_id,
+                "show": n.title.title,
+                "image": n.title.landscape_image or n.title.poster,
+                "season": n.season_number,
+                "episode": n.episode_number,
+                "air_date": n.air_date.isoformat(),
+                "read": n.read_at is not None,
+            }
+            for n in qs.select_related("title").order_by("-created_at")[:30]
+        ]
+        return Response({"unread": qs.filter(read_at__isnull=True).count(), "items": items})
+
+    def post(self, request):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        Notification.objects.filter(profile=profile, read_at__isnull=True).update(read_at=timezone.now())
+        return Response({"unread": 0})
