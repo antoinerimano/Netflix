@@ -12,6 +12,7 @@ import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
 import './TVShowDetail.css';
 import Navbar from './Navbar';
+import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
 
 
 const getActiveProfileId = () => localStorage.getItem('activeProfileId');
@@ -37,7 +38,7 @@ const getCastObjects = (cast) => {
 // Still image from TMDb
 const getStillUrl = (still_path) =>
   still_path
-    ? `https://image.tmdb.org/t/p/w1280/${String(still_path).replace(/^\//, '')}`
+    ? `https://image.tmdb.org/t/p/w780/${String(still_path).replace(/^\//, '')}` // cards are ~260-400px wide
     : '';
 
 export default function TVShowDetail() {
@@ -189,13 +190,19 @@ export default function TVShowDetail() {
 
       {/* HERO */}
       <section className="tvd-hero">
-        <div className="tvd-hero__backdrop" style={{ backgroundImage: `url(${title.landscape_image || ''})` }} />
+        <div className="tvd-hero__backdrop" style={{ backgroundImage: tmdbBackground(title.landscape_image, IMG.backdropHero) }} />
         <div className="tvd-hero__overlay" />
       </section>
 
       {/* MAIN INFO */}
       <section className="tvd-content">
-        <img className="tvd-content__poster" src={title.poster} alt={title.title} />
+        <img
+          className="tvd-content__poster"
+          src={tmdbImage(title.poster, IMG.posterLarge)}
+          srcSet={tmdbSrcSet(title.poster, [342, 500, 780])}
+          sizes="(max-width: 768px) 60vw, 20vw"
+          alt={title.title}
+        />
         <div className="tvd-content__info">
           <h1 className="tvd-title">{title.title}</h1>
           <div className="tvd-meta">

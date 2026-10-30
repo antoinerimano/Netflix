@@ -8,6 +8,7 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import './MovieDetail.css';
 import Navbar from './Navbar';
+import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
 
 /* --- Helpers --- */
 function formatMinutes(mins) {
@@ -150,13 +151,19 @@ const MovieDetail = () => {
         <div className="movie-detail-background">
           <div
             className="movie-detail-backdrop"
-            style={{ backgroundImage: `url(${movie.landscape_image || movie.poster})` }}
+            style={{ backgroundImage: tmdbBackground(movie.landscape_image || movie.poster, IMG.backdropHero) }}
           />
           <div className="movie-detail-overlay"></div>
         </div>
 
         <div className="movie-detail-content">
-          <img className="movie-detail-poster" src={movie.poster} alt={movie.title} />
+          <img
+            className="movie-detail-poster"
+            src={tmdbImage(movie.poster, IMG.posterLarge)}
+            srcSet={tmdbSrcSet(movie.poster, [342, 500, 780])}
+            sizes="(max-width: 768px) 60vw, 20vw"
+            alt={movie.title}
+          />
           <div className="movie-detail-info">
             <h1 className="movie-detail-title">
               {movie.title}{' '}

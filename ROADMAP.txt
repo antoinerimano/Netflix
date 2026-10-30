@@ -48,7 +48,7 @@ Status: [ ] todo   [~] in progress   [x] done
 3. SPEED & QUALITY
 ------------------
 [x] 3.1 Faster home page builds (share candidate lists between profiles, rebuild more often)
-[ ] 3.2 Lighter images (w500 instead of original on cards, lazy loading)
+[x] 3.2 Lighter images (w500 instead of original on cards, lazy loading)
 [ ] 3.3 Installable app (PWA) + TV / remote-friendly navigation
 [ ] 3.4 Admin dashboard: provider status history, failed snapshot builds, sync results,
         most used sources

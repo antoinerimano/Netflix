@@ -3,16 +3,13 @@ import React from 'react';
 import './Movies.css';
 import { useNavigate } from 'react-router-dom';
 import { logTitleClick } from '../api/analyticsApi';
+import { tmdbImage, tmdbSrcSet, IMG } from '../utils/tmdbImage';
 
 
 const MovieCard = ({ movie, onRemove, onClick, analytics }) => {
   const navigate = useNavigate();
 
 
-  const tmdbSized = (url, size = "w342") => {
-    if (!url) return url;
-    return url.replace("/original/", `/${size}/`);
-  };
 
 
 
@@ -41,7 +38,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics }) => {
 
   return (
     <div className="ps-store-movie-card" onClick={handleRootClick}>
-      <img src={tmdbSized(movie.poster, "w342")} alt={movie.title} className="ps-store-movie-poster" loading="lazy"
+      <img src={tmdbImage(movie.poster, IMG.poster)} srcSet={tmdbSrcSet(movie.poster, [185, 342, 500])} sizes="(max-width: 600px) 45vw, 200px" alt={movie.title} className="ps-store-movie-poster" loading="lazy"
         decoding="async" />
       <div className="ps-store-movie-info">
         <h3 className="ps-store-movie-title">{movie.title}</h3>

@@ -6,6 +6,7 @@ import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
 import NotificationBell from './NotificationBell';
+import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 
 const SITE_URL = 'https://tauruss.top/';
 
@@ -257,9 +258,12 @@ const Navbar = () => {
                   onClick={() => handleResultClick(item, idx)}
                 >
                   <img
-                    src={item.poster}
+                    src={tmdbImage(item.poster, "w92")}
+                    srcSet={tmdbSrcSet(item.poster, [92, 185, 342])}
+                    sizes="(min-width: 2500px) 300px, 60px"
                     alt={item.title}
                     className="search-result-image"
+                    loading="lazy"
                   />
                   <div className="search-result-info">
                     <h3>

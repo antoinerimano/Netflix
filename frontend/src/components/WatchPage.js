@@ -4,6 +4,7 @@ import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource } from "../api/recoApi";
+import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from "../utils/tmdbImage";
 
 // sources saved by older versions used the DB column names
 const LEGACY_SOURCE_KEYS = {
@@ -697,7 +698,7 @@ export default function WatchPage() {
 
   return (
     <div className={`watchpage ${theme === "light" ? "theme-light" : "theme-dark"} ${panelOpen ? "" : "panel-closed"}`}>
-      <div className="watchpage__bg" style={{ backgroundImage: backdrop ? `url(${backdrop})` : undefined }} />
+      <div className="watchpage__bg" style={{ backgroundImage: tmdbBackground(backdrop, IMG.blurredBackground) }} />
       <div className="watchpage__overlay" />
       <div className="watchpage__noise" />
 
@@ -745,7 +746,15 @@ export default function WatchPage() {
           <div className={`watchpage__stage ${isPulsing ? "is-pulsing" : ""}`}>
             <div className="watchpage__stageHeader">
               <div className="watchpage__stageLeft">
-                {poster ? <img className="watchpage__posterMini" src={poster} alt={title.title} /> : null}
+                {poster ? (
+                  <img
+                    className="watchpage__posterMini"
+                    src={tmdbImage(poster, "w154")}
+                    srcSet={tmdbSrcSet(poster, [92, 154, 342])}
+                    sizes="52px"
+                    alt={title.title}
+                  />
+                ) : null}
                 <div className="watchpage__stageText">
                   <div className="watchpage__stageTitle">{title.title}</div>
                   <div className="watchpage__stageDesc">{clampText(title.tagline || title.description, 160)}</div>

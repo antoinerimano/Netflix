@@ -5,14 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
+import { tmdbImage, IMG } from '../utils/tmdbImage';
 
 const LOAD_ON_HOVER_MS = 1000;
 const STALL_HIDE_MS = 900;
 
-const tmdbSized = (url, size = "w1000") => {
-  if (!url) return url;
-  return url.replace("/original/", `/${size}/`);
-};
 
 
 const NextArrow = ({ className, style, onClick }) => (
@@ -409,7 +406,7 @@ const Row = ({ title, movies }) => {
                   loop
                   playsInline
                   preload="none"
-                  poster={posterSrc}
+                  poster={tmdbImage(posterSrc, IMG.backdropCard)}
                   onLoadedMetadata={() => onLoadedMetadata(key)}
                   onPlaying={() => onPlaying(key)}
                   onWaiting={() => onWaiting(key)}
@@ -430,7 +427,7 @@ const Row = ({ title, movies }) => {
               )}
 
               <img
-                src={tmdbSized(posterSrc, "w780")}
+                src={tmdbImage(posterSrc, IMG.backdropCard)}
                 alt={movie?.title}
                 loading="lazy"
                 decoding="async"

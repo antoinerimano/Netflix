@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import { fetchTVShowsPage, fetchGenres } from '../api/titlesApi';
 import './TVShows.css';
 import { logTitleClick } from '../api/analyticsApi';
+import { tmdbImage, IMG } from '../utils/tmdbImage';
 
 
 const toRating = (t) => {
@@ -17,10 +18,6 @@ const formatRating = (t) => {
   return Number.isFinite(r) ? r.toFixed(1) : '—';
 };
 
-const tmdbSized = (url, size = "w342") => {
-  if (!url) return url;
-  return url.replace("/original/", `/${size}/`);
-};
 
 const PAGE_SIZE = 50;
 
@@ -309,7 +306,7 @@ export default function TVShows() {
             });
           }}>
             <img
-              src={tmdbSized(show.poster, "w342")}
+              src={tmdbImage(show.poster, IMG.poster)}
               alt={show.title}
               loading="lazy"
               decoding="async"

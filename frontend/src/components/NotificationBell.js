@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchNotifications, markNotificationsRead } from "../api/recoApi";
 import "./NotificationBell.css";
+import { tmdbImage } from "../utils/tmdbImage";
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -87,7 +88,7 @@ export default function NotificationBell() {
                 className={`notif__item${n.read ? "" : " notif__item--new"}`}
                 onClick={() => openEpisode(n)}
               >
-                {n.image ? <img src={n.image.replace("/original/", "/w300/")} alt="" /> : <span className="notif__thumb" />}
+                {n.image ? <img src={tmdbImage(n.image, "w300")} alt="" loading="lazy" /> : <span className="notif__thumb" />}
                 <span className="notif__text">
                   <strong>{n.show}</strong>
                   <span>New episode: S{n.season} E{n.episode}</span>
