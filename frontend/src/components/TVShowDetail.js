@@ -7,17 +7,12 @@ import {
   fetchEpisodesBySeasonNumber,
 } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
+import { fetchMyList, setInMyList } from '../api/myListApi';
 import './TVShowDetail.css';
 import Navbar from './Navbar';
 
 
-// ✅ My List helpers
 const getActiveProfileId = () => localStorage.getItem('activeProfileId');
-const loadList = (pid) => (pid ? JSON.parse(localStorage.getItem(`userList_${pid}`) || '[]') : []);
-const saveList = (pid, list) => {
-  if (!pid) return;
-  localStorage.setItem(`userList_${pid}`, JSON.stringify(list));
-};
 
 const toYear = (s) => (s ? String(s).slice(0, 4) : '');
 const FALLBACK_ACTOR_IMG = "/actor-default.png";
@@ -57,21 +52,13 @@ export default function TVShowDetail() {
   const [episodes, setEpisodes] = useState([]);
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [activeProfileId, setActiveProfileId] = useState(() => localStorage.getItem('activeProfileId'));
-  const [list, setList] = useState(() => {
-    const pid = localStorage.getItem('activeProfileId');
-    return pid ? JSON.parse(localStorage.getItem(`userList_${pid}`) || '[]') : [];
-  });
   const [isInList, setIsInList] = useState(false);
   const castObjs = useMemo(() => getCastObjects(title?.actors), [title]);
   const navigate = useNavigate();
 
 
   useEffect(() => {
-    const onChange = () => {
-      const pid = getActiveProfileId();
-      setActiveProfileId(pid);
-      setList(loadList(pid));
-    };
+    const onChange = () => setActiveProfileId(getActiveProfileId());
     window.addEventListener('activeProfileChanged', onChange);
     return () => window.removeEventListener('activeProfileChanged', onChange);
   }, []);
@@ -134,23 +121,20 @@ export default function TVShowDetail() {
     return () => { cancelled = true; };
   }, [tvId, activeSeasonNumber, loadEpisodes]);
 
-  // Sync isInList when title changes
+  // My List (saved on the server, per profile)
   useEffect(() => {
-    if (!title) return;
-    const inList = list.some((it) => it?.id === title.id);
-    setIsInList(inList);
-  }, [title, list]);
-
-  // Persist list
-  useEffect(() => {
-    saveList(activeProfileId, list);
-  }, [list, activeProfileId]);
+    if (!title?.id || !activeProfileId) return;
+    let alive = true;
+    fetchMyList(activeProfileId)
+      .then((items) => alive && setIsInList(items.some((it) => it.id === title.id)))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [title?.id, activeProfileId]);
 
   const handleToggleList = useCallback(() => {
-    if (!title) return;
-
-    const pid = localStorage.getItem('activeProfileId');
-    if (!pid) return;
+    if (!title || !activeProfileId) return;
 
     const nextIsAdd = !isInList;
 
@@ -161,13 +145,9 @@ export default function TVShowDetail() {
       provider: nextIsAdd ? 'add' : 'remove',
     });
 
-    setList((prev) => {
-      const exists = prev.some((it) => it?.id === title.id);
-      const next = exists ? prev.filter((it) => it?.id !== title.id) : [...prev, { ...title }];
-      localStorage.setItem(`userList_${pid}`, JSON.stringify(next));
-      return next;
-    });
-  }, [title, isInList]);
+    setIsInList(nextIsAdd); // instant feedback, undone if the server refuses
+    setInMyList(activeProfileId, title.id, nextIsAdd).catch(() => setIsInList(!nextIsAdd));
+  }, [title, isInList, activeProfileId]);
 
   if (loading) {
     return (

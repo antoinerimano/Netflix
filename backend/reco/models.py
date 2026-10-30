@@ -138,3 +138,18 @@ class WatchProgress(models.Model):
         indexes = [
             models.Index(fields=["profile", "hidden", "-updated_at"]),
         ]
+
+
+class MyListItem(models.Model):
+    """A title in a profile's "My List"."""
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="my_list")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["profile", "title"], name="uniq_my_list_profile_title"),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "-added_at"]),
+        ]

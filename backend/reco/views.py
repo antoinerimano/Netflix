@@ -27,7 +27,7 @@ from users.maturity import allowed_titles_q, profile_max_level
 from .models import (
     RecoHomeSnapshot, TitleEmbedding, TitleSimilar,
     TitleImpression, TitleAction,
-    EditorialCollection, RecoModelArtifact, WatchProgress
+    EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem
 )
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
@@ -1087,3 +1087,65 @@ class WatchProgressView(APIView):
         profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
         WatchProgress.objects.filter(profile=profile, title_id=request.query_params.get("titleId")).update(hidden=True)
         return Response({"ok": True})
+
+
+# ============================================================
+# MY LIST
+# ============================================================
+
+MY_LIST_FIELDS = ("id", "type", "title", "poster", "landscape_image", "description",
+                  "release_date", "first_air_date", "rating", "genre")
+MY_LIST_IMPORT_MAX = 500
+
+
+class MyListView(APIView):
+    """GET /api/my-list/?profileId=..  -> the profile's list, newest first (age limit applied)"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        items = (
+            MyListItem.objects
+            .filter(profile=profile)
+            .filter(allowed_titles_q(profile, prefix="title__"))
+            .select_related("title")
+            .order_by("-added_at")
+        )
+        return Response([{f: getattr(item.title, f) for f in MY_LIST_FIELDS} for item in items])
+
+
+class MyListItemView(APIView):
+    """PUT / DELETE /api/my-list/<title_id>/?profileId=..  add or remove one title"""
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, title_id):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        title = get_object_or_404(Title.objects.only("id"), id=title_id)
+        MyListItem.objects.get_or_create(profile=profile, title=title)
+        return Response({"in_list": True})
+
+    def delete(self, request, title_id):
+        profile = get_object_or_404(Profile, id=request.query_params.get("profileId"), user=request.user)
+        MyListItem.objects.filter(profile=profile, title_id=title_id).delete()
+        return Response({"in_list": False})
+
+
+class MyListImportView(APIView):
+    """
+    POST /api/my-list/import/ {profile_id, title_ids}
+    One-time move of the list the browser used to keep (localStorage). Oldest first,
+    so they keep their order; titles already in the list are left as they are.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        profile = get_object_or_404(Profile, id=request.data.get("profile_id"), user=request.user)
+        raw_ids = request.data.get("title_ids") or []
+        ids = [int(i) for i in raw_ids if str(i).isdigit()][:MY_LIST_IMPORT_MAX]
+        existing = set(Title.objects.filter(id__in=ids).values_list("id", flat=True))
+        added = 0
+        for tid in dict.fromkeys(ids):  # keeps order, drops duplicates
+            if tid in existing:
+                _, created = MyListItem.objects.get_or_create(profile=profile, title_id=tid)
+                added += created
+        return Response({"imported": added})

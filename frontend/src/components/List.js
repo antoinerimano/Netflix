@@ -1,11 +1,12 @@
 // List.jsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Movies.css';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import MovieCard from './MovieCard';
 import './List.css';
-import { logTitleClick } from '../api/analyticsApi';
+import { logTitleClick, logActionBeacon } from '../api/analyticsApi';
+import { fetchMyList, setInMyList } from '../api/myListApi';
 
 const List = () => {
   const navigate = useNavigate();
@@ -14,8 +15,8 @@ const List = () => {
     localStorage.getItem('activeProfileId')
   );
   const [list, setList] = useState([]);
-
-  const hydrated = useRef(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const onChange = () => setActiveProfileId(localStorage.getItem('activeProfileId'));
@@ -23,28 +24,24 @@ const List = () => {
     return () => window.removeEventListener('activeProfileChanged', onChange);
   }, []);
 
-  // load when profile changes
+  // load when profile changes (saved on the server, newest first)
   useEffect(() => {
-    hydrated.current = false;
-
+    let alive = true;
+    setError('');
     if (!activeProfileId) {
       setList([]);
+      setLoading(false);
       return;
     }
-    const raw = localStorage.getItem(`userList_${activeProfileId}`);
-    setList(raw ? JSON.parse(raw) : []);
-
-    Promise.resolve().then(() => {
-      hydrated.current = true;
-    });
+    setLoading(true);
+    fetchMyList(activeProfileId)
+      .then((items) => alive && setList(items))
+      .catch(() => alive && setError('Could not load your list.'))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
   }, [activeProfileId]);
-
-  // save only after initial load
-  useEffect(() => {
-    if (!activeProfileId) return;
-    if (!hydrated.current) return;
-    localStorage.setItem(`userList_${activeProfileId}`, JSON.stringify(list));
-  }, [list, activeProfileId]);
 
   const getDetailPath = (item) => {
     const isTv =
@@ -65,13 +62,22 @@ const List = () => {
     navigate(getDetailPath(item));
   };
 
-  const handleRemove = (itemId) => setList((prev) => prev.filter((i) => i.id !== itemId));
+  const handleRemove = (itemId) => {
+    const before = list;
+    setList((prev) => prev.filter((i) => i.id !== itemId));
+    logActionBeacon({ title_id: itemId, action: 'add_to_list', surface: 'my_list', provider: 'remove' });
+    setInMyList(activeProfileId, itemId, false).catch(() => setList(before)); // put it back if it failed
+  };
 
   return (
     <div>
       <Navbar />
       <div className="ps-store-movie-grid">
-        {list.length > 0 ? (
+        {loading ? (
+          <p>Loading…</p>
+        ) : error ? (
+          <p>{error}</p>
+        ) : list.length > 0 ? (
           list.map((item, idx) => (
             <MovieCard
               key={item.id}

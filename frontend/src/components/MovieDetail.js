@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { fetchMovieById } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
+import { fetchMyList, setInMyList } from '../api/myListApi';
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -85,10 +86,6 @@ const MovieDetail = () => {
 
 
   const activeProfileId = localStorage.getItem('activeProfileId');
-  const [list, setList] = useState(() => {
-    const storedList = localStorage.getItem(`userList_${activeProfileId}`);
-    return storedList ? JSON.parse(storedList) : [];
-  });
   const [isInList, setIsInList] = useState(false);
 
   useEffect(() => {
@@ -96,16 +93,27 @@ const MovieDetail = () => {
       .then((data) => {
         setMovie(data);
         setLoading(false);
-        setIsInList(list.some((item) => item.id === data.id));
       })
       .catch((err) => {
         console.error('Failed to fetch movie:', err);
         setLoading(false);
       });
-  }, [movieId, list]);
+  }, [movieId]);
+
+  // My List (saved on the server, per profile)
+  useEffect(() => {
+    if (!movie?.id || !activeProfileId) return;
+    let alive = true;
+    fetchMyList(activeProfileId)
+      .then((items) => alive && setIsInList(items.some((i) => i.id === movie.id)))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [movie?.id, activeProfileId]);
 
   const handleToggleList = () => {
-    if (!movie) return;
+    if (!movie || !activeProfileId) return;
 
     const nextIsAdd = !isInList;
 
@@ -116,20 +124,8 @@ const MovieDetail = () => {
       provider: nextIsAdd ? 'add' : 'remove',
     });
 
-    const pid = localStorage.getItem('activeProfileId');
-    if (!pid) return;
-
-    const raw = localStorage.getItem(`userList_${pid}`);
-    const current = raw ? JSON.parse(raw) : [];
-
-    const exists = current.some((i) => i?.id === movie.id);
-    const updated = exists ? current.filter((i) => i?.id !== movie.id) : [...current, movie];
-
-    localStorage.setItem(`userList_${pid}`, JSON.stringify(updated));
-    setList(updated);
-    setIsInList(!exists);
-
-    window.dispatchEvent(new Event('activeProfileChanged'));
+    setIsInList(nextIsAdd); // instant feedback, undone if the server refuses
+    setInMyList(activeProfileId, movie.id, nextIsAdd).catch(() => setIsInList(!nextIsAdd));
   };
 
   const countryList = useMemo(() => getNames(movie?.production_countries), [movie]);
