@@ -52,3 +52,47 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 3.3 Installable app (PWA) + TV / remote-friendly navigation
 [x] 3.4 Admin dashboard: provider status history, failed snapshot builds, sync results,
         most used sources
+
+4. MODERN UI, TV REMOTE & MOBILE
+--------------------------------
+[x] 4.1 TV remote / keyboard fixes
+        Escape = Back everywhere (menus, full screen, text fields, then previous page);
+        focus taken back from the player when full screen ends; player tile (OK = full
+        screen + remote handed to the player, keys hint); keyboard mode hides hover effects
+        and the pointer; rows that scroll sideways follow the focus; dialogs keep the focus.
+[x] 4.2 Design system (src/design, /design-system in development)
+        Tokens (colors, Inter type scale, spacing, radii, shadows, motion, TV scale), base
+        styles, Button / Chip / Badge / Rating / Skeleton / Spinner / EmptyState / Modal /
+        menu, one SVG icon set (no emoji), readable error messages.
+[x] 4.3 Home redesign
+        Full-bleed hero (artwork fading into the page, trailer after 3 s, never black),
+        rows with 6-2 cards + peek, titles under cards, progress always visible, page-shaped
+        skeleton.
+[x] 4.4 Responsive navigation
+        Sticky navbar (transparent -> blurred), phones / tablets: slim top bar + bottom tab
+        bar, full-width search; checked at 320 / 390 / 768 / 1440 (no horizontal scroll).
+[x] 4.5 One detail page for movies and shows
+        Cinematic hero (poster on phones), Watch + icon actions, More / Less description,
+        episodes with season chips (compact list on phones), cast row, details.
+[x] 4.6 Footer, DMCA notice in a real dialog, "Page not found" page.
+[x] 4.7 Title options sheet (hold OK / menu key, right click, long press, "...")
+        Play / Resume, More info, My List, like / dislike, remove / not interested.
+[x] 4.8 Movies / TV Shows browse pages
+        Search, genre chips, sort (popular / top rated / newest / A-Z), filters sheet,
+        filter pills, poster grid with infinite scroll, Back restores filters + scroll.
+        Backend: sort param, show years from first_air_date (186 -> 9,067 for 2020+).
+[x] 4.9 Player-first watch page
+        Slim top bar (Back, title, S/E, Next episode, Full screen), player sized to the
+        screen, sources as one chip row under it; dashboard bits removed (theme, panel,
+        tip, shortcut legend).
+[ ] 4.10 "More like this" on detail pages (TitleSimilar already in the DB: needs an API)
+[ ] 4.11 Actor page: name, photo, bio, known-for rows (today: "Actor" + a grid)
+[ ] 4.12 Profiles: "Who's watching?" screen, switch without reloading, create / edit
+         profile in the design system
+[ ] 4.13 Account page redesign (one primary action, profiles as avatars)
+[ ] 4.14 Notifications panel (header, icons, mark all read, empty state)
+[ ] 4.15 Search results page (grid + "see all", recent / trending before typing)
+[ ] 4.16 Skeletons instead of spinners on the remaining pages (account, actor)
+[ ] 4.17 Page transitions (fade between pages, shared hero image)
+[ ] 4.18 Watch page on phones: description / episodes under the sources
+[ ] 4.19 Logo: lighter version (dark red on near-black is hard to read, mostly on TV)
