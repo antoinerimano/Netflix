@@ -296,3 +296,119 @@
     padding: var(--space-5) var(--space-4);
   }
 }
+
+/* ================= Picture grid: create / edit your own ================= */
+.profile-form__avatar--create {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px dashed var(--color-border-strong);
+  color: var(--color-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: var(--weight-semibold);
+}
+.profile-form__avatar--create svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.profile-form__avatar--create:hover {
+  border-color: var(--color-text);
+  color: var(--color-text);
+}
+.profile-form__avatar-edit {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.profile-form__avatar-edit svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* ================= Avatar builder ================= */
+.avatar-builder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.avatar-builder__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.avatar-builder__preview {
+  width: 9rem;
+  height: 9rem;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 0 1px var(--color-border);
+}
+.avatar-builder__preview svg {
+  display: block;
+}
+.avatar-builder__tabs {
+  justify-content: flex-start;
+}
+.avatar-builder__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+  gap: var(--space-3);
+}
+.avatar-builder__options.is-colors {
+  grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+}
+.avatar-builder__option {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast);
+}
+.avatar-builder__option svg {
+  display: block;
+}
+.avatar-builder__option:hover {
+  transform: translateY(-2px);
+}
+.avatar-builder__option.is-selected {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
+}
+.is-colors .avatar-builder__option {
+  border-radius: 50%;
+  overflow: visible;
+  background: transparent;
+}
+.avatar-builder__swatch {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+@media (max-width: 600px) {
+  .avatar-builder__preview {
+    width: 7rem;
+    height: 7rem;
+  }
+  .avatar-builder__options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .avatar-builder__options.is-colors {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

@@ -304,6 +304,60 @@
 .tvd-ep > .tvd-ep-card {
   align-self: stretch;
 }
+/* Synopsis over the image: appears after resting on an episode (hover 0.7 s, remote focus 1 s),
+   disappears at once when leaving it. Replaces the play button while shown (the card still plays). */
+.tvd-ep-card__overview {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-4);
+  background: linear-gradient(to top, rgba(8, 8, 10, 0.94) 0%, rgba(8, 8, 10, 0.82) 60%, rgba(8, 8, 10, 0.55) 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-standard);
+}
+.tvd-ep-card__overview p {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+@media (hover: hover) {
+  .tvd-ep-card:hover .tvd-ep-card__overview {
+    opacity: 1;
+    transition-delay: 700ms;
+  }
+}
+.tvd-ep-card:focus-visible .tvd-ep-card__overview {
+  opacity: 1;
+  transition-delay: 1000ms;
+}
+/* a mouse or remote shows the synopsis on the image: the toggle is for touch screens */
+@media (hover: hover) {
+  .tvd-ep .tvd-ep__toggle,
+  .tvd-ep .tvd-ep__synopsis {
+    display: none;
+  }
+}
+/* phones: thumbnails are small, the toggle shows the text below */
+@media (max-width: 600px) {
+  .tvd-ep-card__overview {
+    display: none;
+  }
+  .tvd-ep .tvd-ep__toggle {
+    display: inline-flex;
+  }
+  .tvd-ep .tvd-ep__synopsis {
+    display: block;
+  }
+}
+
 /* "Synopsis" toggle: the full text only when wanted */
 .tvd-ep__toggle {
   display: inline-flex;

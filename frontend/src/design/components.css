@@ -591,6 +591,12 @@
 .ui-avatar--initial {
   overflow: hidden;
 }
+.ui-avatar--art {
+  overflow: hidden;
+}
+.ui-avatar--art svg {
+  display: block;
+}
 .ui-avatar--initial svg {
   display: block;
   font-family: var(--font-sans);

@@ -310,6 +310,13 @@ export default function TVShowDetail() {
                           </span>
                         </div>
                         {ep.runtime ? <span className="tvd-ep-card__runtime">{ep.runtime}m</span> : null}
+                        {/* mouse / remote: the full synopsis over the image after resting on
+                            the episode a moment (touch screens: the "Synopsis" toggle below) */}
+                        {ep.overview ? (
+                          <div className="tvd-ep-card__overview" aria-hidden="true">
+                            <p>{ep.overview}</p>
+                          </div>
+                        ) : null}
                       </div>
                       <div className="tvd-ep-card__title">
                         {ep.episode_number}. {ep.name || `Episode ${ep.episode_number}`}

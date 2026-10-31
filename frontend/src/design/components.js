@@ -5,6 +5,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
 import { AlertIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
+import { AvatarArt, isBuiltAvatar, parseAvatar } from "./avatarArt";
 
 const cx = (...parts) => parts.filter(Boolean).join(" ");
 
@@ -263,6 +264,14 @@ export function Avatar({ src, name = "", size = "2.5rem", className, radius }) {
   const isColor = typeof src === "string" && src.startsWith("color:");
   const color = isColor ? src.slice(6) : "#3a3a44";
   const style = { width: size, height: size, borderRadius: radius };
+  if (isBuiltAvatar(src)) {
+    // made with the avatar builder (design/avatarArt.js)
+    return (
+      <span className={cx("ui-avatar ui-avatar--art", className)} style={style} aria-hidden="true">
+        <AvatarArt spec={parseAvatar(src)} />
+      </span>
+    );
+  }
   if (src && !isColor && !failed) {
     return <img className={cx("ui-avatar", className)} style={style} src={src} alt="" onError={() => setFailed(true)} />;
   }

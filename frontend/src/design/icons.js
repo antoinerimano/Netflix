@@ -173,3 +173,19 @@ export const LinkIcon = (p) => (
     <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />
   </Icon>
 );
+export const DiceIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
+    <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
+  </Icon>
+);
+export const WandIcon = (p) => (
+  <Icon {...p}>
+    <path d="m4 20 12-12M14 6l4 4" />
+    <path d="M18 2v3M16.5 3.5h3M21 8v2M20 9h2M9 3v2M8 4h2" />
+  </Icon>
+);

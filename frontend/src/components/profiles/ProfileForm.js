@@ -4,6 +4,9 @@
 // Backend rules for the age limit: users/maturity.py (a Kids profile never goes above PG).
 import React, { useState } from 'react';
 import { Avatar, Button, Chip, Field, Switch } from '../../design';
+import AvatarBuilder from './AvatarBuilder';
+import { isBuiltAvatar } from '../../design/avatarArt';
+import { WandIcon } from '../../design/icons';
 import './profiles.css';
 
 export const AVATARS = [
@@ -51,6 +54,8 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const builtAvatar = isBuiltAvatar(values.avatar_url) ? values.avatar_url : '';
 
   const set = (patch) => setValues((v) => ({ ...v, ...patch }));
   const limits = values.is_kids ? AGE_LIMITS.filter((a) => KIDS_LIMITS.includes(a.value)) : AGE_LIMITS;
@@ -95,8 +100,36 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
         />
       </Field>
 
-      <Field label="Picture">
+      <Field label="Picture" hint="Pick one, or create your own character.">
         <div className="profile-form__avatars" role="radiogroup" aria-label="Profile picture">
+          {/* your own avatar: create it, or edit the one you made */}
+          {builtAvatar ? (
+            <button
+              type="button"
+              role="radio"
+              aria-checked
+              aria-label="Your avatar: edit it"
+              title="Edit your avatar"
+              className="profile-form__avatar is-selected profile-form__avatar--own"
+              onClick={() => setBuilderOpen(true)}
+            >
+              <Avatar src={builtAvatar} name={values.name} size="100%" />
+              <span className="profile-form__avatar-edit" aria-hidden="true">
+                <WandIcon />
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="profile-form__avatar profile-form__avatar--create"
+              aria-label="Create your own avatar"
+              title="Create your own"
+              onClick={() => setBuilderOpen(true)}
+            >
+              <WandIcon />
+              <span>Create</span>
+            </button>
+          )}
           {AVATARS.map((a, i) => (
             <button
               key={a}
@@ -112,6 +145,18 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
           ))}
         </div>
       </Field>
+
+      <AvatarBuilder
+        open={builderOpen}
+        initial={builtAvatar}
+        onCancel={() => setBuilderOpen(false)}
+        onDone={(code) => {
+          set({ avatar_url: code });
+          setBuilderOpen(false);
+          // the "Create" tile became "your avatar": keep the focus there (TV remote / keyboard)
+          setTimeout(() => document.querySelector('.profile-form__avatar--own')?.focus({ preventScroll: true }), 60);
+        }}
+      />
 
       <Switch
         checked={!!values.is_kids}

@@ -89,6 +89,10 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 4.11 Actor page: photo, name, counts, movies / shows grids with the character (no bio stored)
 [x] 4.12 Profiles: "Who's watching?" (/profiles), manage / edit / delete in a sheet, switch without reloading,
          shared profile form (picture or colored initial, Kids switch, age chips), sign-up step fixed
+[x] 4.12b Avatar builder: everyone creates a unique character (hair / hats, colors, eyes, mouth,
+         extras, face, skin, top, background, pattern, "Surprise me"), saved as a short code in
+         avatar_url, drawn in SVG everywhere; episode synopsis on hover (0.7 s) / remote focus (1 s),
+         "Synopsis" toggle on touch screens
 [ ] 4.13 Account page redesign (one primary action, profiles as avatars)
 [ ] 4.14 Notifications panel (header, icons, mark all read, empty state)
 [ ] 4.15 Search results page (grid + "see all", recent / trending before typing)
