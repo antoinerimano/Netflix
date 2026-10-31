@@ -1,0 +1,45 @@
+/* src/components/TitleOptions.css */
+.title-options .ui-modal__body {
+  padding: var(--space-2) var(--space-3) var(--space-4);
+}
+.title-options__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.title-options__art {
+  flex: none;
+  width: 4.5rem;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--color-surface-2);
+}
+.title-options__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.title-options__name {
+  overflow: hidden;
+  font-size: var(--text-lg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.title-options__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+}
+.title-options__meta .ui-badge--rating {
+  font-size: var(--text-xs);
+}
+.title-options .ui-modal__header {
+  padding-left: var(--space-4);
+}

@@ -281,10 +281,10 @@ textarea:focus-visible {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.movie-card:focus-visible:has(.row-remove-btn)::before {
+.movie-card[data-options]:focus-visible::before {
   opacity: 0;
   animation: tv-hint-in 200ms ease 1.2s forwards;
-  content: "Hold OK · options";
+  content: "Hold OK for options";
   position: absolute;
   top: 8px;
   right: 8px;
@@ -299,12 +299,6 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
-/* card buttons (⊘ / ✕) once reached from their card (hold OK) */
-.row-remove-btn:focus-visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: scale(1.15);
-}
 
 /* ---------- Keyboard mode (html.tv-keys, set by spatialNavigation while the remote / arrows
    are used): a card under the resting mouse pointer must not look selected too ---------- */
@@ -327,7 +321,7 @@ html.tv-keys .tvd-ep-card:hover:not(:focus-visible) .tvd-ep-card__play {
   opacity: 0;
 }
 html.tv-keys .movie-card:hover:not(:focus-within) .movie-info,
-html.tv-keys .movie-card:hover:not(:focus-within) .row-remove-btn {
+html.tv-keys .movie-card:hover:not(:focus-within) .row-options-btn {
   opacity: 0;
 }
 html.tv-keys .movie-card:focus-visible img {

@@ -167,7 +167,17 @@ export function friendlyError(err, what = "this page") {
  * page behind doesn't scroll and the remote / Tab keys stay inside it; the focus goes back to
  * what opened it when it closes.
  */
-export function Modal({ open, onClose, title, children, footer, size = "md", className }) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "md",
+  className,
+  initialFocus = ".ui-modal__close", // selector inside the dialog focused when it opens
+  scrollable = true, // long text: the body itself can take the focus and scroll with the arrows
+}) {
   const cardRef = React.useRef(null);
   const openerRef = React.useRef(null);
   const titleId = React.useId();
@@ -178,7 +188,10 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     // focus the close button: Enter / OK closes, arrows move inside
-    const t = setTimeout(() => cardRef.current?.querySelector(".ui-modal__close")?.focus({ preventScroll: true }), 0);
+    const t = setTimeout(() => {
+      const card = cardRef.current;
+      (card?.querySelector(initialFocus) || card?.querySelector(".ui-modal__close"))?.focus({ preventScroll: true });
+    }, 0);
 
     const onKey = (e) => {
       if (e.key === "Tab") {
@@ -204,7 +217,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
       const opener = openerRef.current;
       if (opener && opener.isConnected) opener.focus({ preventScroll: true });
     };
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- initialFocus: only when opening
 
   if (!open) return null;
   const node = (
@@ -231,7 +244,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
           </button>
         </header>
         {/* tabIndex: the remote / keyboard can focus the text and scroll it with the arrows */}
-        <div className="ui-modal__body" tabIndex={0}>
+        <div className="ui-modal__body" tabIndex={scrollable ? 0 : undefined}>
           {children}
         </div>
         {footer ? <footer className="ui-modal__footer ui-actions">{footer}</footer> : null}

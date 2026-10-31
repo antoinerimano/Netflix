@@ -484,3 +484,73 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ---------- Menu (action list in a sheet / dialog) ---------- */
+.ui-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ui-menu__sep {
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--color-border-subtle);
+}
+.ui-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 3rem;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ui-menu-item:hover {
+  background: var(--color-surface-2);
+}
+.ui-menu-item:focus-visible {
+  background: var(--color-surface-2);
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+.ui-menu-item__icon {
+  display: inline-flex;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  color: var(--color-text-secondary);
+}
+.ui-menu-item__icon svg {
+  width: 100%;
+  height: 100%;
+}
+.ui-menu-item__label {
+  flex: 1;
+  min-width: 0;
+}
+.ui-menu-item__state {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--color-brand);
+}
+.ui-menu-item.is-primary .ui-menu-item__icon {
+  color: var(--color-brand);
+}
+.ui-menu-item.is-primary {
+  font-weight: var(--weight-semibold);
+}
+.ui-menu-item.is-danger,
+.ui-menu-item.is-danger .ui-menu-item__icon {
+  color: var(--color-danger);
+}

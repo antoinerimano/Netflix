@@ -41,10 +41,22 @@ export function isEditing(el) {
   return !!el && el === editing;
 }
 
-// Cards with their own buttons (⊘ not interested, ✕ remove): hold OK to reach them
-const CARD_WITH_ACTIONS = ".movie-card";
-const CARD_ACTION = ".row-remove-btn";
+// Cards with an options sheet (data-options): hold OK, or press the remote's menu key, to open it.
+// The card receives a "contextmenu" event, like a right click / long press, and opens its sheet.
+const CARD_WITH_ACTIONS = "[data-options]";
 const HOLD_MS = 550;
+const MENU_KEYS = new Set(["ContextMenu", "Menu", "Info", "ColorF3Blue"]);
+
+// OK still held after the sheet opened: its repeats must not press the sheet's first item (Play).
+// Some remotes repeat without e.repeat, so Enter is ignored until the key is released.
+let swallowEnter = false;
+
+function openOptions(card) {
+  const r = card.getBoundingClientRect();
+  card.dispatchEvent(
+    new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 })
+  );
+}
 let enterHold = null; // { el, timer, held }
 
 function isTyping(el) {
@@ -182,6 +194,7 @@ let enteringIframe = false;
 let lastRestore = 0;
 
 function onKeyUp(e) {
+  if (e.key === "Enter") swallowEnter = false;
   if (e.key !== "Enter" || !enterHold) return;
   const hold = enterHold;
   enterHold = null;
@@ -331,6 +344,10 @@ function onKeyDown(e) {
   if (DIRECTIONS[e.key] || e.key === "Enter" || BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)) {
     setKeyboardMode(true);
   }
+  if (e.key === "Enter" && swallowEnter) {
+    e.preventDefault();
+    return;
+  }
   if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
   let active = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
   if (!active && lastFocused?.isConnected && lastFocused.getBoundingClientRect().width > 0) active = lastFocused;
@@ -413,14 +430,15 @@ function onKeyDown(e) {
       active.click();
       return;
     }
-    if (!typing && active.matches(CARD_WITH_ACTIONS) && active.querySelector(CARD_ACTION)) {
-      // short press = open the card (on key up), long press = go to its ⊘ / ✕ button
+    if (!typing && active.matches(CARD_WITH_ACTIONS)) {
+      // short press = open the card (on key up), long press = its options sheet
       e.preventDefault();
       if (!enterHold || enterHold.el !== active) {
         const hold = { el: active, held: false };
         hold.timer = setTimeout(() => {
           hold.held = true;
-          active.querySelector(CARD_ACTION)?.focus({ preventScroll: true });
+          swallowEnter = true;
+          openOptions(active);
         }, HOLD_MS);
         enterHold = hold;
       }
@@ -433,14 +451,17 @@ function onKeyDown(e) {
     }
   }
 
-  // Back / Escape from a card's ⊘ / ✕ button: back to the card
-  const ownerCard = active?.matches(CARD_ACTION) ? active.closest(CARD_WITH_ACTIONS) : null;
+  // the remote's menu / info key on a card: its options
+  if (MENU_KEYS.has(e.key) && active?.matches(CARD_WITH_ACTIONS)) {
+    e.preventDefault();
+    openOptions(active);
+    return;
+  }
 
   if (BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)) {
     e.preventDefault();
     if (e.repeat) return; // a held key must not go back several pages
-    if (ownerCard) ownerCard.focus({ preventScroll: true });
-    else if (closePopup(active)) return;
+    if (closePopup(active)) return;
     else if (typing && active.matches("input:not([type='checkbox']):not([type='radio']), textarea")) {
       active.blur(); // leave the text field first (the arrows continue from it); Back again = back
     } else goBack();

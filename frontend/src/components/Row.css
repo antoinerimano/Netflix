@@ -245,30 +245,34 @@ html.tv-keys .row .row-arrow {
 .row-card-btn:hover {
   background: rgba(8, 8, 10, 0.9);
 }
-.row-remove-btn {
+.row-options-btn {
   left: var(--space-2);
 }
 .row-unmute-btn {
   right: var(--space-2);
 }
 
-/* ⊘ / ✕: only on hover (or reached with the remote: hold OK), so cards stay clean */
-.movie-card .row-remove-btn {
+/* "⋯" options: on hover so cards stay clean; always on touch screens (no hover). The remote
+   holds OK instead (the button is not in its focus order). */
+.movie-card .row-options-btn {
   opacity: 0;
   pointer-events: none;
 }
-.movie-card:hover .row-remove-btn,
-.movie-card:focus-within .row-remove-btn,
-.movie-card .row-remove-btn:focus-visible {
+.movie-card:hover .row-options-btn {
   opacity: 1;
   pointer-events: auto;
 }
-/* touch screens have no hover: keep the Continue watching ✕, not ⊘ */
 @media (hover: none) {
-  .movie-card .row-remove-btn--resume {
+  .movie-card .row-options-btn {
     opacity: 0.9;
     pointer-events: auto;
   }
+}
+/* long press opens the options: no text selection / iOS image menu on the card */
+.movie-card {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* ---------- Caption under the card ---------- */

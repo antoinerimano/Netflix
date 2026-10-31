@@ -154,3 +154,10 @@ export const ShareIcon = (p) => (
     <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
   </Icon>
 );
+export const MoreIcon = (p) => (
+  <Icon filled {...p}>
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="19" cy="12" r="2" />
+  </Icon>
+);

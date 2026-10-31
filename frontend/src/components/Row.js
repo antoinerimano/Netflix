@@ -6,7 +6,10 @@ import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
-import { ChevronRightIcon, CloseIcon, BanIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import { ChevronRightIcon, MoreIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import TitleOptions from './TitleOptions';
+
+const LONG_PRESS_MS = 500; // touch: press and hold a card for its options
 
 const LOAD_ON_HOVER_MS = 1000;
 const STALL_HIDE_MS = 900;
@@ -253,7 +256,7 @@ const Row = ({ title, movies }) => {
   };
 
   const removeFromContinueWatching = (e, t) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     const profileId = localStorage.getItem('activeProfileId');
     setRemovedIds((prev) => new Set(prev).add(t.id));
     hideWatchProgress({ profileId, titleId: t.id }).catch(() => {});
@@ -261,11 +264,36 @@ const Row = ({ title, movies }) => {
 
   // "Not interested": gone from this row now, never recommended again to this profile
   const handleNotInterested = (e, t) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     const profileId = localStorage.getItem('activeProfileId');
     setRemovedIds((prev) => new Set(prev).add(t.id));
     markNotInterested({ profileId, titleId: t.id, surface: 'home_row' }).catch(() => {});
   };
+
+  // ---- Options sheet (hold OK, menu key, right click, long press, "⋯") ----
+  const [options, setOptions] = useState(null); // { movie, index }
+  const openOptions = (movie, index) => setOptions({ movie, index });
+  const press = useRef({ timer: null, x: 0, y: 0, fired: false });
+  const touchHandlers = (movie, index) => ({
+    onPointerDown: (e) => {
+      if (e.pointerType !== 'touch') return;
+      const p = press.current;
+      clearTimeout(p.timer);
+      p.fired = false;
+      p.x = e.clientX;
+      p.y = e.clientY;
+      p.timer = setTimeout(() => {
+        p.fired = true;
+        openOptions(movie, index);
+      }, LONG_PRESS_MS);
+    },
+    onPointerMove: (e) => {
+      const p = press.current;
+      if (p.timer && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) clearTimeout(p.timer); // a swipe
+    },
+    onPointerUp: () => clearTimeout(press.current.timer),
+    onPointerCancel: () => clearTimeout(press.current.timer),
+  });
 
   // --- NEW: log internal click before navigate ---
   const handleCardClick = (t, index) => {
@@ -422,8 +450,21 @@ const Row = ({ title, movies }) => {
               tabIndex={0}
               role="button"
               aria-label={movie?.title}
+              data-options=""
               onFocus={() => ensureCardVisible(index)}
-              onClick={() => handleCardClick(movie, index)}
+              onClick={() => {
+                if (press.current.fired) {
+                  press.current.fired = false; // the long press opened the options
+                  return;
+                }
+                handleCardClick(movie, index);
+              }}
+              onContextMenu={(e) => {
+                // right click, Android long press, TV remote: hold OK / menu key
+                e.preventDefault();
+                openOptions(movie, index);
+              }}
+              {...touchHandlers(movie, index)}
               onMouseEnter={() => handleMouseEnter(key, !!trailerSrc)}
               onMouseLeave={() => handleMouseLeave(key)}
               style={{ position: 'relative' }}
@@ -482,13 +523,19 @@ const Row = ({ title, movies }) => {
                 }}
               />
 
+              {/* mouse / touch: options (the remote holds OK; not in its focus order) */}
               <button
-                  className={`row-remove-btn row-card-btn${movie?.resume ? ' row-remove-btn--resume' : ''}`}
-                  onClick={(e) => (movie?.resume ? removeFromContinueWatching(e, movie) : handleNotInterested(e, movie))}
-                  aria-label={movie?.resume ? 'Remove from Continue watching' : 'Not interested'}
-                  title={movie?.resume ? 'Remove from Continue watching' : 'Not interested: never show this again'}
+                  type="button"
+                  tabIndex={-1}
+                  className="row-options-btn row-card-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openOptions(movie, index);
+                  }}
+                  aria-label={`Options for ${movie?.title || 'this title'}`}
+                  title="Options"
                 >
-                  {movie?.resume ? <CloseIcon /> : <BanIcon />}
+                  <MoreIcon />
                 </button>
 
               {canRenderVideo && isVisible && (
@@ -546,6 +593,30 @@ const Row = ({ title, movies }) => {
           );
         })}
       </Slider>
+
+      <TitleOptions
+        open={!!options}
+        title={options?.movie}
+        surface="home_row"
+        onClose={() => setOptions(null)}
+        onPlay={() => {
+          const t = options.movie;
+          if (t.resume) {
+            handleCardClick(t, options.index); // straight back to the player
+            return;
+          }
+          const url = `/watch/${t.id}`;
+          logOutboundClickBeacon({ title_id: t.id, surface: 'home_row_options', provider: 'watch_page', url });
+          navigate(url);
+        }}
+        onInfo={() => {
+          const t = options.movie;
+          logTitleClick({ title_id: t.id, surface: 'home_row', position: options.index, row_title: title });
+          navigate(getDetailPath(t));
+        }}
+        onRemoveResume={options?.movie?.resume ? () => removeFromContinueWatching(null, options.movie) : undefined}
+        onNotInterested={options?.movie && !options.movie.resume ? () => handleNotInterested(null, options.movie) : undefined}
+      />
     </section>
   );
 };
