@@ -8,6 +8,9 @@ import { logTitleClick } from '../api/analyticsApi';
 import NotificationBell from './NotificationBell';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
+import {
+  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, SearchIcon, ShareIcon, CloseIcon, CheckIcon,
+} from '../design/icons';
 
 const SITE_URL = 'https://tauruss.top/';
 
@@ -19,7 +22,7 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]); // [{id,title,poster,description,kind:'movie'|'tv'}]
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false); // phones: full-width search over the bar
   const [shareStatus, setShareStatus] = useState(''); // '', 'copied', 'shared'
   const [showIosInstall, setShowIosInstall] = useState(false);
   const installApp = useInstallApp();
@@ -43,7 +46,7 @@ const Navbar = () => {
   const isStaff = localStorage.getItem('isStaff') === '1'; // ADMIN
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
+    const mq = window.matchMedia("(max-width: 900px)");
 
     const update = () => setIsMobile(mq.matches);
     update();
@@ -157,6 +160,7 @@ const Navbar = () => {
 
     setResults([]);
     setQuery('');
+    setSearchOpen(false);
   };
 
   const handleShare = async () => {
@@ -188,7 +192,15 @@ const Navbar = () => {
   const handleNavigateList = () => navigate('/list');
   const handleLogin = () => navigate('/login');
   const toggleProfileDropdown = () => setIsProfileDropdownOpen((v) => !v);
-  const toggleMenu = () => setIsMenuOpen((v) => !v);
+  const openSearch = () => {
+    setSearchOpen(true);
+    setTimeout(() => searchRef.current?.querySelector('input')?.focus(), 0);
+  };
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setQuery('');
+    setResults([]);
+  };
   const handleLogout = () => {
     logout();
     localStorage.removeItem('userId');
@@ -196,8 +208,16 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const links = [
+    { path: '/', label: 'Home', icon: <HomeIcon />, onClick: handleNavigateHome },
+    { path: '/movies', label: 'Movies', icon: <FilmIcon />, onClick: handleNavigateMovies },
+    { path: '/tv', label: 'TV Shows', icon: <TvIcon />, onClick: handleNavigateTV },
+    { path: '/list', label: 'My List', icon: <BookmarkIcon />, onClick: handleNavigateList },
+  ];
+
   return (
-    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}`}>
+    <>
+    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}${searchOpen ? ' navbar--searching' : ''}`}>
       <div className="logo" tabIndex={0} role="button" aria-label="Home" onClick={handleNavigateHome}>
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
@@ -212,161 +232,198 @@ const Navbar = () => {
         )}
       </div>
 
-      <button className="menu-toggle" onClick={toggleMenu}>☰</button>
-
-      <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-        <li tabIndex={0} role="button" aria-current={current('/')} onClick={handleNavigateHome}>Home</li>
-        <li tabIndex={0} role="button" aria-current={current('/movies')} onClick={handleNavigateMovies}>Movies</li>
-        <li tabIndex={0} role="button" aria-current={current('/tv')} onClick={handleNavigateTV}>TV Shows</li>
-        <li tabIndex={0} role="button" aria-current={current('/list')} onClick={handleNavigateList}>My List</li>
+      {/* desktop / TV: links in the bar (phones: the tab bar at the bottom) */}
+      <ul className="nav-links">
+        {links.map((l) => (
+          <li key={l.path} tabIndex={0} role="button" aria-current={current(l.path)} onClick={l.onClick}>
+            {l.label}
+          </li>
+        ))}
         {isStaff && (
           <>
-            <li tabIndex={0} role="button" onClick={() => navigate('/admin/users')}>Admin Users</li>
-            <li tabIndex={0} role="button" onClick={() => navigate('/admin/movies')}>Admin Movies</li>
+            <li tabIndex={0} role="button" aria-current={current('/admin/users')} onClick={() => navigate('/admin/users')}>Admin Users</li>
+            <li tabIndex={0} role="button" aria-current={current('/admin/movies')} onClick={() => navigate('/admin/movies')}>Admin Movies</li>
           </>
         )}
       </ul>
 
-      {/* SHARE */}
-      <button
-        className="share-button"
-        onClick={handleShare}
-        title="Share tauruss.top (Ctrl+D to bookmark)"
-        aria-label="Share site"
-      >
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
-             stroke="currentColor" strokeWidth="2"
-             strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-        {shareStatus && (
-          <span className="share-feedback">
-            {shareStatus === 'copied' ? 'Link copied!' : 'Shared!'}
-          </span>
-        )}
-      </button>
+      <div className="navbar__actions">
+        {/* SEARCH: a field on desktop, an icon opening a full-width field on phones */}
+        <button type="button" className="navbar__icon-btn navbar__search-toggle" aria-label="Search" onClick={openSearch}>
+          <SearchIcon />
+        </button>
+        <div className="search-profile" ref={searchRef}>
+          <SearchIcon className="search-profile__icon" aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search movies & TV"
+            aria-label="Search movies and TV shows"
+            value={query}
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && searchOpen && !query) closeSearch();
+            }}
+          />
+          {searchOpen ? (
+            <button type="button" className="navbar__icon-btn search-profile__close" aria-label="Close search" onClick={closeSearch}>
+              <CloseIcon />
+            </button>
+          ) : null}
 
-      {/* SEARCH */}
-      <div className="search-profile" ref={searchRef}>
-        <input
-          type="text"
-          placeholder="Search movies & TV"
-          value={query}
-          onChange={handleInputChange}
-        />
-
-        {results.length > 0 && (
-          <div
-            className="search-results"
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <ul>
-              {results.map((item, idx) => (
-                <li
-                  key={`${item.kind}-${item.id}`}
-                  className="search-result-item"
-                  tabIndex={0}
-                  role="button"
-                  onClick={() => handleResultClick(item, idx)}
-                >
-                  <img
-                    src={tmdbImage(item.poster, "w92")}
-                    srcSet={tmdbSrcSet(item.poster, [92, 185, 342])}
-                    sizes="(min-width: 2500px) 300px, 60px"
-                    alt={item.title}
-                    className="search-result-image"
-                    loading="lazy"
-                  />
-                  <div className="search-result-info">
-                    <h3>
-                      {item.title}{' '}
-                      <span className={`badge badge--${item.kind}`}>
-                        {item.kind === 'tv' ? 'TV' : 'Movie'}
-                      </span>
-                    </h3>
-                    {item.match && <p className="search-result-match">{item.match}</p>}
-                    <p className="search-result-desc">{item.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {/* NEW EPISODES */}
-      {isAuthenticated && <NotificationBell />}
-
-      {/* PROFILE */}
-      {isAuthenticated ? (
-        <div className="profile-container">
-          <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" onClick={toggleProfileDropdown}>
-            <img
-              src={profilePhoto || "default-profile.png"}
-              alt="Profile"
-              className="profile-avatar"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = "default-profile.png";
-              }}
-            />
-          </div>
-          {isProfileDropdownOpen && (
-            <div className="profile-dropdown">
-              {profiles.length > 0 ? (
-                profiles.map((profile) => (
-                  <div
-                    key={profile.id}
-                    className={`profile-option ${selectedProfile && selectedProfile.id === profile.id ? 'selected' : ''}`}
+          {results.length > 0 && (
+            <div
+              className="search-results"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <ul>
+                {results.map((item, idx) => (
+                  <li
+                    key={`${item.kind}-${item.id}`}
+                    className="search-result-item"
                     tabIndex={0}
                     role="button"
-                    onClick={() => handleProfileChange(profile.id)}
+                    onClick={() => handleResultClick(item, idx)}
                   >
                     <img
-                      src={profile.avatar_url || '/default-profile.png'}
-                      alt={profile.name}
+                      src={tmdbImage(item.poster, "w92")}
+                      srcSet={tmdbSrcSet(item.poster, [92, 185])}
+                      sizes="46px"
+                      alt=""
+                      className="search-result-image"
+                      loading="lazy"
                     />
-                    <span>{profile.name}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="profile-option">
-                  <span>No profiles found</span>
-                </div>
-              )}
-              <div className="dropdown-divider"></div>
-              {installApp.canInstall && (
-                <div className="profile-option" tabIndex={0} role="button" onClick={() => installApp.install()}>
-                  Install app
-                </div>
-              )}
-              {installApp.iosInstructions && (
-                <div className="profile-option" tabIndex={0} role="button" onClick={() => setShowIosInstall((v) => !v)}>
-                  Install app
-                </div>
-              )}
-              {showIosInstall && (
-                <div className="profile-option profile-option--hint">
-                  Tap the Share button in Safari, then "Add to Home Screen".
-                </div>
-              )}
-              <div className="profile-option" tabIndex={0} role="button" onClick={handleNavigateAccount}>
-                Account Settings
-              </div>
-              <div className="profile-option" tabIndex={0} role="button" onClick={handleLogout}>
-                Logout
-              </div>
+                    <div className="search-result-info">
+                      <h3>
+                        <span className="search-result-title">{item.title}</span>
+                        <span className={`badge badge--${item.kind}`}>
+                          {item.kind === 'tv' ? 'Series' : 'Film'}
+                        </span>
+                      </h3>
+                      {item.match && <p className="search-result-match">{item.match}</p>}
+                      <p className="search-result-desc">{item.description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
-      ) : (
-        <button className="login-button" onClick={handleLogin}>Login</button>
-      )}
+
+        {/* SHARE (phones: in the profile menu) */}
+        <button
+          type="button"
+          className="navbar__icon-btn share-button"
+          onClick={handleShare}
+          title="Share tauruss.top (Ctrl+D to bookmark)"
+          aria-label="Share site"
+        >
+          <ShareIcon />
+          {shareStatus && (
+            <span className="share-feedback">
+              {shareStatus === 'copied' ? 'Link copied!' : 'Shared!'}
+            </span>
+          )}
+        </button>
+
+        {/* NEW EPISODES */}
+        {isAuthenticated && <NotificationBell />}
+
+        {/* PROFILE */}
+        {isAuthenticated ? (
+          <div className="profile-container">
+            <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" aria-expanded={isProfileDropdownOpen} onClick={toggleProfileDropdown}>
+              <img
+                src={profilePhoto || "/default-profile.png"}
+                alt=""
+                className="profile-avatar"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/default-profile.png";
+                }}
+              />
+            </div>
+            {isProfileDropdownOpen && (
+              <div className="profile-dropdown" role="menu">
+                <div className="profile-dropdown__label">Profiles</div>
+                {profiles.length > 0 ? (
+                  profiles.map((profile) => {
+                    const isCurrent = selectedProfile && selectedProfile.id === profile.id;
+                    return (
+                      <div
+                        key={profile.id}
+                        className={`profile-option ${isCurrent ? 'selected' : ''}`}
+                        tabIndex={0}
+                        role="menuitemradio"
+                        aria-checked={!!isCurrent}
+                        onClick={() => handleProfileChange(profile.id)}
+                      >
+                        <img src={profile.avatar_url || '/default-profile.png'} alt="" />
+                        <span className="profile-option__name">{profile.name}</span>
+                        {isCurrent ? <CheckIcon className="profile-option__check" aria-hidden="true" /> : null}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="profile-option profile-option--hint">No profiles found</div>
+                )}
+                <div className="dropdown-divider"></div>
+                {isStaff && (
+                  <>
+                    <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={() => navigate('/admin/users')}>Admin users</div>
+                    <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={() => navigate('/admin/movies')}>Admin movies</div>
+                  </>
+                )}
+                <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={handleShare}>
+                  {shareStatus === 'copied' ? 'Link copied!' : 'Share Tauruss'}
+                </div>
+                {installApp.canInstall && (
+                  <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => installApp.install()}>
+                    Install app
+                  </div>
+                )}
+                {installApp.iosInstructions && (
+                  <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => setShowIosInstall((v) => !v)}>
+                    Install app
+                  </div>
+                )}
+                {showIosInstall && (
+                  <div className="profile-option profile-option--hint">
+                    Tap the Share button in Safari, then "Add to Home Screen".
+                  </div>
+                )}
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={handleNavigateAccount}>
+                  Account settings
+                </div>
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={handleLogout}>
+                  Sign out
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button className="login-button" onClick={handleLogin}>Sign in</button>
+        )}
+      </div>
     </nav>
+
+    {/* phones: app-style tab bar at the bottom (thumb reach), the top bar keeps search + profile */}
+    {isMobile && isAuthenticated ? (
+      <nav className="tabbar" aria-label="Main">
+        {links.map((l) => (
+          <button
+            key={l.path}
+            type="button"
+            className="tabbar__item"
+            aria-current={current(l.path)}
+            onClick={l.onClick}
+          >
+            {l.icon}
+            <span>{l.label}</span>
+          </button>
+        ))}
+      </nav>
+    ) : null}
+    </>
   );
 };
 

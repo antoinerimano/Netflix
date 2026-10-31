@@ -130,3 +130,27 @@ export const BanIcon = (p) => (
     <path d="m5.6 5.6 12.8 12.8" />
   </Icon>
 );
+export const HomeIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5Z" />
+  </Icon>
+);
+export const TvIcon = (p) => (
+  <Icon {...p}>
+    <rect x="2.5" y="5" width="19" height="13" rx="2" />
+    <path d="M8 21h8M8 2l4 3 4-3" />
+  </Icon>
+);
+export const BookmarkIcon = (p) => (
+  <Icon {...p}>
+    <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1Z" />
+  </Icon>
+);
+export const ShareIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+  </Icon>
+);

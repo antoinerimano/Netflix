@@ -139,19 +139,26 @@
   bottom: clamp(var(--space-12), 9vh, 7rem);
 }
 
-/* under the transparent navbar (desktop: its height is --nav-height) */
-@media (min-width: 769px) {
-  .hero {
-    margin-top: calc(-1 * var(--nav-height));
-  }
+/* under the transparent navbar */
+.hero {
+  margin-top: calc(-1 * var(--nav-height));
 }
 
 /* ---------- Small screens ---------- */
 @media (max-width: 768px) {
   .hero {
     height: auto;
-    min-height: 78vh;
-    padding-bottom: var(--space-8);
+    min-height: min(78vh, 44rem);
+    padding-bottom: var(--space-6);
+  }
+  .hero__image {
+    object-position: center 20%;
+  }
+  .hero__title {
+    font-size: clamp(2rem, 9vw, 2.75rem);
+  }
+  .hero__kicker {
+    font-size: var(--text-xs);
   }
   .hero__content {
     max-width: none;

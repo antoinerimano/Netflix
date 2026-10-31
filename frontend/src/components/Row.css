@@ -318,6 +318,15 @@ html.tv-keys .row .row-arrow {
   .row {
     margin-top: var(--space-6);
   }
+  .row-card__type {
+    display: none; /* small cards: the whole width for the title */
+  }
+  .row-card__caption {
+    height: 2.25rem;
+  }
+  .row .row-arrow {
+    bottom: calc(6px + 2.25rem);
+  }
   .row__title {
     font-size: var(--text-lg);
   }

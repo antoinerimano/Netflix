@@ -107,16 +107,27 @@ const Hero = ({ hero: title }) => {
     <section ref={rootRef} className={`hero${videoOn ? ' is-playing' : ''}`} aria-label={`Featured: ${title.title}`}>
       <div className="hero__media" aria-hidden="true">
         {art ? (
-          <img
-            className={`hero__image${art.wide ? '' : ' hero__image--poster'}${imageLoaded ? ' is-loaded' : ''}`}
-            src={tmdbImage(art.url, art.wide ? IMG.backdropHero : IMG.posterLarge)}
-            srcSet={art.wide ? tmdbSrcSet(art.url, [780, 1280]) : undefined}
-            sizes="100vw"
-            alt=""
-            fetchpriority="high"
-            decoding="async"
-            onLoad={() => setImageLoaded(true)}
-          />
+          <picture>
+            {/* phones (portrait): the poster fits the tall banner; a landscape image cropped to it
+                kept only a slice of the picture */}
+            {art.wide && title.poster ? (
+              <source
+                media="(max-width: 600px) and (orientation: portrait)"
+                srcSet={tmdbSrcSet(title.poster, [342, 500, 780]) || tmdbImage(title.poster, IMG.posterLarge)}
+                sizes="100vw"
+              />
+            ) : null}
+            <img
+              className={`hero__image${art.wide ? '' : ' hero__image--poster'}${imageLoaded ? ' is-loaded' : ''}`}
+              src={tmdbImage(art.url, art.wide ? IMG.backdropHero : IMG.posterLarge)}
+              srcSet={art.wide ? tmdbSrcSet(art.url, [780, 1280]) : undefined}
+              sizes="100vw"
+              alt=""
+              fetchpriority="high"
+              decoding="async"
+              onLoad={() => setImageLoaded(true)}
+            />
+          </picture>
         ) : null}
 
         {canPlayTrailer ? (

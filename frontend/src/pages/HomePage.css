@@ -6,6 +6,11 @@
   z-index: 2;
   margin-top: calc(-1 * clamp(var(--space-6), 5vh, var(--space-12)));
 }
+@media (max-width: 768px) {
+  .homepage .hero + .row {
+    margin-top: var(--space-2);
+  }
+}
 .homepage .row:last-of-type {
   margin-bottom: var(--space-12);
 }

@@ -85,7 +85,7 @@
   /* page side margin: grows with the screen, keeps TVs clear of overscan */
   --page-gutter: clamp(1rem, 4vw, 3.75rem);
   --page-max: 1600px;
-  --nav-height: 4rem;
+  --nav-height: 4rem; /* 3.5rem on phones / tablets, see below */
 
   /* ---------- Radii ---------- */
   --radius-xs: 4px;
@@ -123,6 +123,13 @@
   --focus-halo: rgba(255, 255, 255, 0.22);
   --focus-accent: var(--color-brand);
   --focus-speed: 160ms;
+}
+
+/* phones / tablets: slimmer top bar (the main links move to a bottom tab bar, Navbar.css) */
+@media (max-width: 900px) {
+  :root {
+    --nav-height: 3.5rem;
+  }
 }
 
 /* TV browsers (html.tv-device, set in design/index.js from the user agent): everything sized in

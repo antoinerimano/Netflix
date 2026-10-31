@@ -312,8 +312,9 @@ const Row = ({ title, movies }) => {
       { breakpoint: 1920, settings: { slidesToShow: 5.15, slidesToScroll: 1 } },
       { breakpoint: 1400, settings: { slidesToShow: 4.15, slidesToScroll: 1 } },
       { breakpoint: 1024, settings: { slidesToShow: 3.15, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 2.2, slidesToScroll: 1 } },
-      { breakpoint: 420, settings: { slidesToShow: 1.3, slidesToScroll: 1 } },
+      { breakpoint: 600, settings: { slidesToShow: 2.3, slidesToScroll: 1 } },
+      { breakpoint: 430, settings: { slidesToShow: 2.1, slidesToScroll: 1 } },
+      { breakpoint: 340, settings: { slidesToShow: 1.6, slidesToScroll: 1 } },
     ],
     afterChange: (current) => {
       const totalSlides = displayedMovies.length;
