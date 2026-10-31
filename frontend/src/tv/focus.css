@@ -73,6 +73,28 @@
 .movie-card:focus-visible img {
   transform: scale(1.06);
 }
+/* ---------- Poster cards (grids): the poster is framed and lifted, the title underlined ---------- */
+.poster-card:focus-visible {
+  box-shadow: none;
+}
+.poster-card:focus-visible .poster-card__art {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+.poster-card:focus-visible .poster-card__title {
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+html.tv-keys .poster-card:hover:not(:focus-visible) .poster-card__art {
+  transform: none;
+  box-shadow: var(--shadow-md);
+}
+html.tv-keys .poster-card:hover .poster-card__more {
+  opacity: 0;
+}
+
 /* ---------- Episode cards (show pages): the still is framed and lifted, the title underlined;
    the text under it gets no box ---------- */
 .tvd-ep-card:focus-visible {

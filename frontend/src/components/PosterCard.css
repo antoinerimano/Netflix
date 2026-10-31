@@ -1,0 +1,157 @@
+/* src/components/PosterCard.css - poster grid + card (Movies, TV Shows, My List, actor pages)
+   TV remote focus look: src/tv/focus.css */
+
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(7.5rem, 13vw, 11.5rem), 1fr));
+  gap: var(--space-6) var(--space-4);
+  padding: 0 var(--page-gutter);
+}
+@media (max-width: 600px) {
+  .poster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 posters a row on phones */
+    gap: var(--space-4) var(--space-2);
+  }
+}
+
+.poster-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.poster-card__art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--duration-normal) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard);
+}
+.poster-card__art img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.poster-card__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: radial-gradient(120% 80% at 20% 0%, rgba(229, 9, 20, 0.28), transparent 60%),
+    linear-gradient(160deg, var(--color-surface-2), var(--color-surface-1));
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  text-align: center;
+}
+@media (hover: hover) {
+  .poster-card:hover .poster-card__art {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  .poster-card:hover .poster-card__art img {
+    transform: scale(1.04);
+  }
+}
+
+/* "⋯" options (mouse: on hover; touch: always) */
+.poster-card__more {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: rgba(8, 8, 10, 0.65);
+  color: var(--color-text);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: opacity var(--duration-normal), background-color var(--duration-fast);
+}
+.poster-card__more svg {
+  width: 1rem;
+  height: 1rem;
+}
+.poster-card:hover .poster-card__more {
+  opacity: 1;
+  pointer-events: auto;
+}
+.poster-card__more:hover {
+  background: rgba(8, 8, 10, 0.9);
+}
+@media (hover: none) {
+  .poster-card__more {
+    opacity: 0.9;
+    pointer-events: auto;
+  }
+}
+
+.poster-card__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 2px;
+}
+.poster-card__title {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.poster-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.1em;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+.poster-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text-secondary);
+}
+.poster-card__rating svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  color: var(--color-rating);
+}
+
+@media (max-width: 600px) {
+  .poster-card__title {
+    font-size: var(--text-xs);
+  }
+  .poster-card__fallback {
+    font-size: var(--text-sm);
+  }
+}

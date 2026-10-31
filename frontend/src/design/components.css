@@ -1,6 +1,25 @@
 /* ===== Shared components (React: src/design/components.js) =====
    Class names start with ui- so they never collide with page styles. */
 
+/* ---------- Horizontal scroller (chips, small cards): one line that scrolls, no scrollbar ---------- */
+.ui-scroller {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 4px 2px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--space-4);
+  scrollbar-width: none;
+  list-style: none;
+}
+.ui-scroller::-webkit-scrollbar {
+  display: none;
+}
+.ui-scroller > * {
+  flex: none;
+}
+
 /* ---------- Button ----------
    primary   : the ONE main action of a screen (Play / Watch / Save) - brand red
    secondary : other actions - light surface (white on images, like streaming apps)
@@ -394,6 +413,8 @@
   border-bottom: 1px solid var(--color-border-subtle);
 }
 .ui-modal__title {
+  flex: 1;
+  min-width: 0; /* long titles end with "…" instead of being cut */
   margin: 0;
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);

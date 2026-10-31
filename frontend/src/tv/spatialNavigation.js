@@ -144,13 +144,13 @@ function nearest(from, dir, list) {
 // The page's main action, then its content, when nothing is focused yet
 const START_SELECTORS = [
   ".ui-btn--primary, .hero-button, .movie-detail-play-button, .tvd-play, .watchpage__playerWrap[tabindex='0']", // Play / Watch
-  ".movie-card, .ps-store-movie-card, .tvd-ep-card", // cards
+  ".movie-card, .poster-card, .tvd-ep-card", // cards
 ];
 
 // Groups remember their position: going down to the next row and back up returns to the card
 // you were on (like TV apps), and entering a group lands on its current item (season shown,
 // source playing, active profile) rather than whatever happens to be closest.
-const GROUPS = ".row, .tvd-seasons__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
+const GROUPS = ".row, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
 const CURRENT_IN_GROUP = ".is-active, .selected, [aria-pressed='true'], [aria-current='page']";
 const lastInGroup = new WeakMap();
 
@@ -283,8 +283,20 @@ function goBack() {
   else window.location.assign("/");
 }
 
+// A row that scrolls sideways (genre / season chips, cast): keep the focused item inside it
+function revealHorizontally(el) {
+  const row = el.parentElement?.closest(".ui-scroller, .detail-scroller, .detail-cast");
+  if (!row || row.scrollWidth <= row.clientWidth) return;
+  const r = el.getBoundingClientRect();
+  const box = row.getBoundingClientRect();
+  const margin = 32; // past the faded edges
+  if (r.left < box.left + margin) row.scrollBy({ left: r.left - box.left - margin, behavior: "smooth" });
+  else if (r.right > box.right - margin) row.scrollBy({ left: r.right - box.right + margin, behavior: "smooth" });
+}
+
 function focusElement(el) {
   el.focus({ preventScroll: true });
+  revealHorizontally(el);
   // scroll the page vertically only: scrolling horizontally would break the row sliders
   const r = el.getBoundingClientRect();
   const panel = el.closest(".search-results, .notif__panel, .profile-dropdown");

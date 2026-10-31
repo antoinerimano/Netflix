@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import MovieCard from "./MovieCard";
-import "./List.css";
+import "./PosterCard.css";
 import { fetchTitlesByActorTmdbId } from "../api/titlesApi";
 
 const ActorDetail = () => {
@@ -60,7 +60,7 @@ const ActorDetail = () => {
 
         <h2 style={{ margin: "12px 0" }}>Actor</h2>
 
-        <div className="ps-store-movie-grid">
+        <div className="poster-grid">
           {items.length ? (
             items.map((it, idx) => (
               <MovieCard

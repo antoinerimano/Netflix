@@ -1,10 +1,11 @@
 // List.jsx
 import React, { useEffect, useState } from 'react';
-import './Movies.css';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import MovieCard from './MovieCard';
-import './List.css';
+import Footer from './Footer';
+import './PosterCard.css';
+import './browse/browse.css';
 import { logTitleClick, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import { Button, EmptyState, Skeleton } from '../design';
@@ -72,8 +73,18 @@ const List = () => {
   };
 
   return (
-    <div>
+    <div className="browse">
       <Navbar />
+      {!loading && !error && list.length > 0 ? (
+        <header className="browse__head">
+          <div className="browse__titles">
+            <h1 className="browse__title">My List</h1>
+            <span className="browse__count">
+              {list.length} {list.length === 1 ? 'title' : 'titles'}
+            </span>
+          </div>
+        </header>
+      ) : null}
       {!loading && (error || list.length === 0) ? (
         error ? (
           <EmptyState
@@ -100,10 +111,13 @@ const List = () => {
           </EmptyState>
         )
       ) : (
-      <div className="ps-store-movie-grid">
+      <div className="poster-grid browse__body">
         {loading ? (
           Array.from({ length: 12 }, (_, i) => (
-            <Skeleton key={i} style={{ aspectRatio: '2 / 3' }} />
+            <div key={i} className="browse__skeleton">
+              <Skeleton style={{ aspectRatio: '2 / 3' }} />
+              <Skeleton variant="text" width="80%" />
+            </div>
           ))
         ) : (
           list.map((item, idx) => (
@@ -118,6 +132,7 @@ const List = () => {
         )}
       </div>
       )}
+      <Footer />
     </div>
   );
 };

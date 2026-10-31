@@ -522,24 +522,34 @@ class TitleViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
 
-        # yearMin/yearMax:
-        # - movie: release_year
-        # - tv: on utilise release_year aussi si tu l’as rempli, sinon tu peux filtrer via first_air_date (string)
-        year_min = params.get("yearMin")
-        if year_min not in (None, "", "null"):
+        # yearMin / yearMax: release_year; shows rarely have it (186 of 18,636 matched "2020 or
+        # later"), so for them fall back to first_air_date ("yyyy-mm-dd" strings compare in order)
+        def year_q(op, year):
+            q = Q(**{f"release_year__{op}": year})
+            bound = f"{year}-01-01" if op == "gte" else f"{year}-12-31"
+            return q | Q(release_year__isnull=True, **{f"first_air_date__{op}": bound}) & ~Q(first_air_date="")
+
+        for key, op in (("yearMin", "gte"), ("yearMax", "lte")):
+            value = params.get(key)
+            if value in (None, "", "null"):
+                continue
             try:
-                ymin = int(year_min)
-                qs = qs.filter(release_year__gte=ymin)
+                qs = qs.filter(year_q(op, int(value)))
             except ValueError:
                 pass
 
-        year_max = params.get("yearMax")
-        if year_max not in (None, "", "null"):
-            try:
-                ymax = int(year_max)
-                qs = qs.filter(release_year__lte=ymax)
-            except ValueError:
-                pass
+        # sort: popular (default) | rating | newest | title
+        sort = params.get("sort") or "popular"
+        if sort == "rating":
+            # enough votes for the average to mean something
+            return qs.filter(vote_count__gte=1000).order_by("-vote_average", "-popularity", "-id")
+        if sort == "newest":
+            today = timezone.now().date().isoformat()
+            if t == "tv":
+                return qs.exclude(first_air_date="").filter(first_air_date__lte=today).order_by("-first_air_date", "-id")
+            return qs.exclude(release_date="").filter(release_date__lte=today).order_by("-release_date", "-id")
+        if sort == "title":
+            return qs.exclude(title__regex=r"^\W*$").order_by("title", "id")  # no blank / symbol-only titles
 
         return qs.order_by("-popularity", "-vote_average", "-id")
 

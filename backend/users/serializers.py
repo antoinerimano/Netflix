@@ -136,7 +136,7 @@ class TitleListSerializer(serializers.ModelSerializer):
             "id", "type",
             "title",
             "poster", "landscape_image",
-            "release_date",
+            "release_date", "first_air_date",  # shows: the year on grid cards
             "genre", "rating",
             "director", "cast", "trailer_clip_url", "description"
         )

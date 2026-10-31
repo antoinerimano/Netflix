@@ -301,3 +301,25 @@ export const fetchTitlesByActorTmdbId = async (tmdbId) => {
   return unwrapList(res.data);
 };
 
+
+/**
+ * One page of movies or shows (Movies / TV Shows pages). Every filter works for both types.
+ * sort: popular (default) | rating | newest | title. Returns { items, count, next, previous }.
+ */
+export const fetchTitlesPage = async ({
+  type,
+  page = 1,
+  pageSize = 48,
+  sort = '',
+  query = '',
+  genre = '',
+  ratingMin = '',
+  yearMin = '',
+  yearMax = '',
+  director = '',
+  actor = '',
+} = {}) => {
+  const params = { type, page, page_size: pageSize, sort, query, genre, ratingMin, yearMin, yearMax, director, actor };
+  Object.keys(params).forEach((k) => (params[k] === '' || params[k] == null) && delete params[k]);
+  return listTitlesPage(params);
+};

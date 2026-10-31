@@ -37,7 +37,9 @@ function MenuItem({ icon, label, onClick, active, tone, autoFocus }) {
  * onPlay / onInfo: navigation done by the caller (it knows the analytics surface).
  * onRemoveResume / onNotInterested: optional, shown only when given.
  */
-export default function TitleOptions({ title, open, onClose, onPlay, onInfo, onRemoveResume, onNotInterested, surface = 'options' }) {
+export default function TitleOptions({
+  title, open, onClose, onPlay, onInfo, onRemoveResume, onNotInterested, onRemoveFromList, surface = 'options',
+}) {
   const profileId = localStorage.getItem('activeProfileId');
   const [inList, setInList] = useState(null); // null: not known yet
   const [rating, setRatingState] = useState(null);
@@ -113,17 +115,22 @@ export default function TitleOptions({ title, open, onClose, onPlay, onInfo, onR
         <MenuItem icon={<InfoIcon />} label={isTv ? 'Episodes & info' : 'More info'} onClick={then(onInfo)} />
         {profileId ? (
           <>
-            <MenuItem
-              icon={inList ? <CheckIcon /> : <PlusIcon />}
-              label={inList ? 'In My List' : 'Add to My List'}
-              active={!!inList}
-              onClick={toggleList}
-            />
+            {onRemoveFromList ? null : (
+              <MenuItem
+                icon={inList ? <CheckIcon /> : <PlusIcon />}
+                label={inList ? 'In My List' : 'Add to My List'}
+                active={!!inList}
+                onClick={toggleList}
+              />
+            )}
             <MenuItem icon={<ThumbUpIcon />} label="I like this" active={rating === 'like'} onClick={() => rate('like')} />
             <MenuItem icon={<ThumbDownIcon />} label="Not for me" active={rating === 'dislike'} onClick={() => rate('dislike')} />
           </>
         ) : null}
-        {onRemoveResume || onNotInterested ? <li className="ui-menu__sep" role="separator" /> : null}
+        {onRemoveResume || onNotInterested || onRemoveFromList ? <li className="ui-menu__sep" role="separator" /> : null}
+        {onRemoveFromList ? (
+          <MenuItem icon={<CloseIcon />} label="Remove from My List" onClick={then(onRemoveFromList)} />
+        ) : null}
         {onRemoveResume ? (
           <MenuItem icon={<CloseIcon />} label="Remove from Continue watching" onClick={then(onRemoveResume)} />
         ) : null}
