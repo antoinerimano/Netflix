@@ -147,6 +147,15 @@
   color: var(--color-rating);
 }
 
+.poster-card__note {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 600px) {
   .poster-card__title {
     font-size: var(--text-xs);

@@ -329,3 +329,12 @@ export const fetchSimilarTitles = async (titleId, limit = 18) => {
   const res = await API.get(`/titles/${encodeURIComponent(titleId)}/similar/`, { params: { limit } });
   return Array.isArray(res.data) ? res.data : [];
 };
+
+/** Actor page: { actor: { tmdb_id, name, profile_path }, results: [titles + character] } */
+export const fetchActor = async (tmdbId) => {
+  const res = await API.get('/actors/titles/', { params: { tmdb_id: tmdbId } });
+  return {
+    actor: res.data?.actor || null,
+    results: Array.isArray(res.data?.results) ? res.data.results : unwrapList(res.data),
+  };
+};

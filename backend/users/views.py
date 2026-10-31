@@ -744,13 +744,19 @@ def titles_by_actor(request):
     except (TypeError, ValueError):
         return Response({"detail": "tmdb_id must be an integer"}, status=400)
 
-    # titles linked to this actor (your schema is Actor(title_id, tmdb_id, ...))
-    title_ids = (
-        Actor.objects
-        .filter(tmdb_id=tmdb_id_int)
-        .values_list("title_id", flat=True)
-        .distinct()
+    # one Actor row per title the person is in (name, photo, character there)
+    rows = list(
+        Actor.objects.filter(tmdb_id=tmdb_id_int).values("title_id", "name", "profile_path", "character")
     )
+    title_ids = {r["title_id"] for r in rows}
+    roles = {r["title_id"]: r["character"] for r in rows if r["character"]}
+    # the actor page header: the most common spelling of the name, any photo
+    names = [r["name"] for r in rows if r["name"]]
+    person = {
+        "tmdb_id": tmdb_id_int,
+        "name": max(set(names), key=names.count) if names else "",
+        "profile_path": next((r["profile_path"] for r in rows if r["profile_path"]), None),
+    }
 
     # Fetch titles and return as list cards
     qs = (
@@ -760,7 +766,10 @@ def titles_by_actor(request):
         .order_by("-popularity", "-vote_average", "-id")
     )
 
-    return Response({"results": TitleListSerializer(qs, many=True).data})
+    results = TitleListSerializer(qs, many=True).data
+    for item in results:
+        item["character"] = roles.get(item["id"], "")
+    return Response({"actor": person, "results": results})
 
 
 class ActorListView(APIView):

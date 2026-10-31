@@ -86,7 +86,7 @@ Status: [ ] todo   [~] in progress   [x] done
         screen, sources as one chip row under it; dashboard bits removed (theme, panel,
         tip, shortcut legend).
 [x] 4.10 "More like this" on detail pages (GET /api/titles/<id>/similar/, TitleSimilar)
-[ ] 4.11 Actor page: name, photo, bio, known-for rows (today: "Actor" + a grid)
+[x] 4.11 Actor page: photo, name, counts, movies / shows grids with the character (no bio stored)
 [ ] 4.12 Profiles: "Who's watching?" screen, switch without reloading, create / edit
          profile in the design system
 [ ] 4.13 Account page redesign (one primary action, profiles as avatars)

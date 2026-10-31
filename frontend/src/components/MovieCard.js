@@ -14,7 +14,8 @@ import './PosterCard.css';
 const yearOf = (t) =>
   t?.release_year || String(t?.release_date || t?.first_air_date || '').match(/\d{4}/)?.[0] || '';
 
-const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false }) => {
+// note: an extra line under the title (actor page: the character played)
+const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note = '' }) => {
   const navigate = useNavigate();
   const { open, setOpen, cardProps, guardClick } = useCardOptions();
   const [artFailed, setArtFailed] = useState(false);
@@ -92,6 +93,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false }) =>
               </span>
             ) : null}
           </span>
+          {note ? <span className="poster-card__note">{note}</span> : null}
         </div>
       </div>
 
