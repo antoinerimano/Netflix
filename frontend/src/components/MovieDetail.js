@@ -1,20 +1,21 @@
+// src/components/MovieDetail.js
+// Movie page: shared detail template (components/detail): hero with Watch / My List / ratings,
+// then Trailer, Cast and Details sections.
 import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
-import { useParams, useNavigate } from "react-router-dom";
-
-
-import './MovieDetail.css';
 import Navbar from './Navbar';
-import { Button, EmptyState, Spinner, friendlyError } from '../design';
+import DetailHero, { splitGenres } from './detail/DetailHero';
+import CastRow, { castObjects } from './detail/CastRow';
+import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
-import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
 
 /* --- Helpers --- */
 function formatMinutes(mins) {
-  if (mins === null || mins === undefined) return '';
+  if (mins === null || mins === undefined || !Number(mins)) return '';
   const h = Math.floor(mins / 60);
   const m = Math.floor(mins % 60);
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -27,24 +28,15 @@ function getNames(list, key = 'name') {
   if (typeof list === 'object') return Object.values(list).filter(Boolean).map(String);
   return [];
 }
-
-const FALLBACK_ACTOR_IMG = "/actor-default.png";
-
-const tmdbProfileUrl = (profilePath, size = "w185") => {
-  if (!profilePath) return "";
-  const p = String(profilePath).startsWith("/") ? profilePath : `/${profilePath}`;
-  return `https://image.tmdb.org/t/p/${size}${p}`;
+const yearOf = (d) => String(d || '').match(/\d{4}/)?.[0] || '';
+export const languageName = (code) => {
+  if (!code) return '';
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code.toUpperCase();
+  } catch {
+    return code.toUpperCase();
+  }
 };
-
-const getCastObjects = (cast) => {
-  if (!Array.isArray(cast)) return [];
-  return cast
-    .map((x) => (typeof x === "string" ? { name: x } : x))
-    .filter((x) => x && (x.name || x.english_name))
-    // Sort by global appearances (how many titles this actor is in) — most popular first
-    .sort((a, b) => (b.appearances ?? 0) - (a.appearances ?? 0));
-};
-
 
 /* --- Trailer embed --- */
 function TrailerEmbed({ url }) {
@@ -79,33 +71,53 @@ function TrailerEmbed({ url }) {
   );
 }
 
+/** The page's shape while it loads */
+export function DetailSkeleton() {
+  return (
+    <div className="detail-hero" aria-busy="true" aria-label="Loading">
+      <div className="detail-hero__content">
+        <Skeleton width="4rem" height="1.4rem" />
+        <Skeleton width="min(30rem, 80%)" height="3.5rem" />
+        <Skeleton variant="text" width="14rem" />
+        <div className="ui-actions">
+          <Skeleton width="9rem" height="3.25rem" />
+          <Skeleton variant="circle" width="2.75rem" height="2.75rem" />
+          <Skeleton variant="circle" width="2.75rem" height="2.75rem" />
+        </div>
+        <Skeleton variant="text" width="min(36rem, 90%)" />
+        <Skeleton variant="text" width="min(30rem, 75%)" />
+      </div>
+    </div>
+  );
+}
+
 const MovieDetail = () => {
   const { movieId } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const castObjs = useMemo(() => getCastObjects(movie?.actors), [movie]);
-  const navigate = useNavigate();
-
-
+  const [loadError, setLoadError] = useState(null);
 
   const activeProfileId = localStorage.getItem('activeProfileId');
   const [isInList, setIsInList] = useState(false);
 
-  const [loadError, setLoadError] = useState(null);
+  const cast = useMemo(() => castObjects(movie?.actors, { byPopularity: true }), [movie]);
+  const countryList = useMemo(() => getNames(movie?.production_countries), [movie]);
 
   useEffect(() => {
+    let alive = true;
+    setLoading(true);
     setLoadError(null);
     fetchMovieById(parseInt(movieId, 10))
-      .then((data) => {
-        setMovie(data);
-        setLoading(false);
-      })
+      .then((data) => alive && setMovie(data))
       .catch((err) => {
         console.error('Failed to fetch movie:', err);
-        setLoadError(err);
-        setLoading(false);
-      });
+        if (alive) setLoadError(err);
+      })
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
   }, [movieId]);
 
   // My List (saved on the server, per profile)
@@ -122,33 +134,35 @@ const MovieDetail = () => {
 
   const handleToggleList = () => {
     if (!movie || !activeProfileId) return;
-
     const nextIsAdd = !isInList;
-
     logActionBeacon({
       title_id: movie.id,
       action: 'add_to_list',
       surface: 'movie_detail',
       provider: nextIsAdd ? 'add' : 'remove',
     });
-
     setIsInList(nextIsAdd); // instant feedback, undone if the server refuses
     setInMyList(activeProfileId, movie.id, nextIsAdd).catch(() => setIsInList(!nextIsAdd));
   };
 
-  const countryList = useMemo(() => getNames(movie?.production_countries), [movie]);
+  const watch = () => {
+    const watchUrl = `/watch/${movie.id}`;
+    logOutboundClickBeacon({ title_id: movie.id, surface: 'movie_detail', provider: 'watch_page', url: watchUrl });
+    window.location.href = watchUrl;
+  };
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <Spinner />
+      <div className="detail">
+        <Navbar />
+        <DetailSkeleton />
       </div>
     );
   }
 
   if (!movie) {
     return (
-      <div className="homepage">
+      <div className="detail">
         <Navbar />
         <EmptyState
           page
@@ -167,127 +181,92 @@ const MovieDetail = () => {
     );
   }
 
+  const year = yearOf(movie.release_date) || movie.release_year;
   const runtime = formatMinutes(movie.runtime_minutes);
+  const language = languageName(movie.original_language);
+  const genres = splitGenres(movie.genre);
+  const starring = cast.slice(0, 3).map((a) => a.name || a.english_name).join(', ');
 
   return (
-    <div className="homepage">
+    <div className="detail">
       <Navbar />
-      <div className="movie-detail-container">
-        <div className="movie-detail-background">
-          <div
-            className="movie-detail-backdrop"
-            style={{ backgroundImage: tmdbBackground(movie.landscape_image || movie.poster, IMG.backdropHero) }}
-          />
-          <div className="movie-detail-overlay"></div>
-        </div>
 
-        <div className="movie-detail-content">
-          <img
-            className="movie-detail-poster"
-            src={tmdbImage(movie.poster, IMG.posterLarge)}
-            srcSet={tmdbSrcSet(movie.poster, [342, 500, 780])}
-            sizes="(max-width: 768px) 60vw, 20vw"
-            alt={movie.title}
-          />
-          <div className="movie-detail-info">
-            <h1 className="movie-detail-title">
-              {movie.title}{' '}
-              {movie.release_date ? `(${new Date(movie.release_date).getFullYear()})` : ''}
-            </h1>
-            <p className="movie-detail-description">{movie.description}</p>
-            <div className="movie-detail-meta">
-              {runtime ? <span>⏱ {runtime}</span> : null}
-              {movie.rating ? <span>⭐ {Number(movie.rating).toFixed(1)}</span> : null}
-              {movie.original_language ? <span>Lang: {movie.original_language.toUpperCase()}</span> : null}
-              {movie.genre ? <span>Genre: {movie.genre}</span> : null}
-            </div>
+      <DetailHero
+        title={movie}
+        kind="movie"
+        meta={[year, runtime, language]}
+        credits={[
+          { label: 'Starring', value: starring },
+          { label: 'Director', value: movie.director },
+        ]}
+        actions={
+          <>
+            <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={watch}>
+              Watch
+            </Button>
+            <Button
+              variant="glass"
+              icon={isInList ? <CheckIcon /> : <PlusIcon />}
+              pressed={isInList}
+              label={isInList ? 'In My List' : 'Add to My List'}
+              onClick={handleToggleList}
+            />
+            <RatingButtons titleId={movie.id} />
+          </>
+        }
+      />
 
-            <p className="movie-detail-director">
-              <strong>Director:</strong> {movie.director}
-            </p>
+      <div className="detail-body">
+        {movie.trailer_url ? (
+          <section className="detail-section">
+            <SectionTitle>Trailer</SectionTitle>
+            <TrailerEmbed url={movie.trailer_url} />
+          </section>
+        ) : null}
 
+        <CastRow cast={cast} />
+
+        <section className="detail-section">
+          <SectionTitle>Details</SectionTitle>
+          <dl className="detail-facts">
+            {genres.length ? (
+              <div>
+                <dt>Genres</dt>
+                <dd>{genres.join(', ')}</dd>
+              </div>
+            ) : null}
+            {movie.release_date || year ? (
+              <div>
+                <dt>Released</dt>
+                <dd>{movie.release_date || year}</dd>
+              </div>
+            ) : null}
+            {runtime ? (
+              <div>
+                <dt>Runtime</dt>
+                <dd>{runtime}</dd>
+              </div>
+            ) : null}
+            {language ? (
+              <div>
+                <dt>Original language</dt>
+                <dd>{language}</dd>
+              </div>
+            ) : null}
+            {movie.director ? (
+              <div>
+                <dt>Director</dt>
+                <dd>{movie.director}</dd>
+              </div>
+            ) : null}
             {countryList.length ? (
-              <div className="movie-detail-locale">
-                <strong>Countries:</strong> {countryList.join(', ')}
+              <div>
+                <dt>Countries</dt>
+                <dd>{countryList.join(', ')}</dd>
               </div>
             ) : null}
-
-                        {castObjs.length ? (
-              <div className="movie-detail-cast">
-                <h3 className="section-title">Cast</h3>
-
-                <div className="movie-detail-cast-grid">
-                  {castObjs.slice(0, 8).map((a, idx) => {
-                    const name = a?.name || a?.english_name || "";
-                    const img = tmdbProfileUrl(a?.profile_path || a?.profile || a?.photo || "");
-                    return (
-                      <div
-                        className="movie-detail-cast-card"
-                        key={`${name}-${idx}`}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          if (!a?.tmdb_id) return;
-                          navigate(`/actor/${a.tmdb_id}`);
-                        }}
-                      >
-                        <div className="movie-detail-cast-photo">
-                          <img
-                            loading="lazy"
-                            src={img || FALLBACK_ACTOR_IMG}
-                            alt={name}
-                            onError={(e) => { e.currentTarget.src = FALLBACK_ACTOR_IMG; }}
-                          />
-                        </div>
-                        <div className="movie-detail-cast-name">{name}</div>
-                        {a?.character ? <div className="movie-detail-cast-role">{a.character}</div> : null}
-                      </div>
-
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-
-            {movie.trailer_url ? (
-              <div className="movie-detail-trailer">
-                <h3 className="section-title">Trailer</h3>
-                <TrailerEmbed url={movie.trailer_url} />
-              </div>
-            ) : null}
-
-            {/* actions: one primary (Watch), the rest as round icon buttons */}
-            <div className="ui-actions movie-detail-actions">
-              <Button
-                variant="primary"
-                size="lg"
-                icon={<PlayIcon />}
-                onClick={() => {
-                  const watchUrl = `/watch/${movie.id}`;
-
-                  logOutboundClickBeacon({
-                    title_id: movie.id,
-                    surface: 'movie_detail',
-                    provider: 'watch_page',
-                    url: watchUrl,
-                  });
-
-                  window.location.href = watchUrl;
-                }}
-              >
-                Watch
-              </Button>
-              <Button
-                variant="glass"
-                icon={isInList ? <CheckIcon /> : <PlusIcon />}
-                pressed={isInList}
-                label={isInList ? 'In My List' : 'Add to My List'}
-                onClick={handleToggleList}
-              />
-              <RatingButtons titleId={movie.id} />
-            </div>
-          </div>
-        </div>
+          </dl>
+        </section>
       </div>
     </div>
   );

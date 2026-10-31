@@ -1,6 +1,8 @@
 // src/components/TVShowDetail.js
+// Show page: shared detail template (components/detail): hero with Watch / My List / ratings /
+// new-episode alerts, then Episodes (season chips + episode cards), Cast and Details.
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   fetchTitleById,
   fetchSeasons,
@@ -10,38 +12,29 @@ import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
-import './TVShowDetail.css';
 import Navbar from './Navbar';
-import { Button, EmptyState, Spinner, friendlyError } from '../design';
+import DetailHero, { splitGenres } from './detail/DetailHero';
+import CastRow, { castObjects } from './detail/CastRow';
+import { DetailSkeleton, languageName } from './MovieDetail';
+import { Button, Chip, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
-import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
-
+import { tmdbImage, IMG } from '../utils/tmdbImage';
 
 const getActiveProfileId = () => localStorage.getItem('activeProfileId');
 
 const toYear = (s) => (s ? String(s).slice(0, 4) : '');
-const FALLBACK_ACTOR_IMG = "/actor-default.png";
 
-
-const tmdbProfileUrl = (profilePath, size = "w185") => {
-  if (!profilePath) return "";
-  const p = String(profilePath).startsWith("/") ? profilePath : `/${profilePath}`;
-  return `https://image.tmdb.org/t/p/${size}${p}`;
-};
-
-const getCastObjects = (cast) => {
-  if (!Array.isArray(cast)) return [];
-  return cast
-    .map((x) => (typeof x === "string" ? { name: x } : x))
-    .filter((x) => x && (x.name || x.english_name));
-};
-
-
-// Still image from TMDb
+// Still image from TMDb (cards are ~260-400px wide)
 const getStillUrl = (still_path) =>
-  still_path
-    ? `https://image.tmdb.org/t/p/w780/${String(still_path).replace(/^\//, '')}` // cards are ~260-400px wide
-    : '';
+  still_path ? `https://image.tmdb.org/t/p/w780/${String(still_path).replace(/^\//, '')}` : '';
+
+const formatAirDate = (d) => {
+  if (!d) return '';
+  const date = new Date(`${d}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? d
+    : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+};
 
 export default function TVShowDetail() {
   const { id } = useParams();
@@ -57,7 +50,7 @@ export default function TVShowDetail() {
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [activeProfileId, setActiveProfileId] = useState(() => localStorage.getItem('activeProfileId'));
   const [isInList, setIsInList] = useState(false);
-  const castObjs = useMemo(() => getCastObjects(title?.actors), [title]);
+  const cast = useMemo(() => castObjects(title?.actors), [title]);
   const navigate = useNavigate();
 
 
@@ -154,15 +147,16 @@ export default function TVShowDetail() {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <Spinner />
+      <div className="detail">
+        <Navbar />
+        <DetailSkeleton />
       </div>
     );
   }
 
   if (err || !title) {
     return (
-      <div className="tvd">
+      <div className="detail">
         <Navbar />
         <EmptyState
           page
@@ -182,104 +176,43 @@ export default function TVShowDetail() {
   }
 
   const year = toYear(title.first_air_date);
-  const vote = typeof title.vote_average === 'number' ? title.vote_average.toFixed(1) : (title.rating || '');
+  const seasonCount = seasons.length;
+  const language = languageName(title.original_language);
+  const genres = splitGenres(title.genre);
+  const starring = cast.slice(0, 3).map((a) => a.name || a.english_name).join(', ');
+  const artwork = title.landscape_image || title.poster || '';
 
-  // ✅ base watch page (your internal player page)
+  // internal player page; season / episode only when one is chosen
   const watchBaseUrl = `/watch/${title.id}`;
-
-  // ✅ helper to include season/episode only
   const buildWatchUrl = (seasonNumber, episodeNumber) => {
     if (seasonNumber == null || episodeNumber == null) return watchBaseUrl;
     return `${watchBaseUrl}?season=${encodeURIComponent(seasonNumber)}&episode=${encodeURIComponent(episodeNumber)}`;
   };
-
-  // Optional: keep the big watch button going to S1E1 OR to current season first ep
-  const defaultWatchUrl = watchBaseUrl;
+  const go = (url, surface, provider) => {
+    logOutboundClickBeacon({ title_id: title?.id, surface, provider, url });
+    window.location.href = url;
+  };
 
   return (
-    <div className="tvd">
+    <div className="detail">
       <Navbar />
 
-      {/* HERO */}
-      <section className="tvd-hero">
-        <div className="tvd-hero__backdrop" style={{ backgroundImage: tmdbBackground(title.landscape_image, IMG.backdropHero) }} />
-        <div className="tvd-hero__overlay" />
-      </section>
-
-      {/* MAIN INFO */}
-      <section className="tvd-content">
-        <img
-          className="tvd-content__poster"
-          src={tmdbImage(title.poster, IMG.posterLarge)}
-          srcSet={tmdbSrcSet(title.poster, [342, 500, 780])}
-          sizes="(max-width: 768px) 60vw, 20vw"
-          alt={title.title}
-        />
-        <div className="tvd-content__info">
-          <h1 className="tvd-title">{title.title}</h1>
-          <div className="tvd-meta">
-            {year && <span>{year}</span>}
-            {vote && <span>★ {vote}</span>}
-            {title.genre && <span>{title.genre}</span>}
-          </div>
-          {castObjs.length ? (
-            <section className="tvd-cast">
-              <h3 className="tvd-section-title">Cast</h3>
-
-              <div className="tvd-cast-grid">
-                {castObjs.slice(0, 18).map((a, idx) => {
-                  const name = a?.name || a?.english_name || "";
-                  const img = tmdbProfileUrl(a?.profile_path || a?.profile || a?.photo || "");
-                  return (
-                    <div
-                      className="movie-detail-cast-card"
-                      key={`${name}-${idx}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => {
-                        if (!a?.tmdb_id) return;
-                        navigate(`/actor/${a.tmdb_id}`);
-                      }}
-                    >
-                      <div className="movie-detail-cast-photo">
-                        <img
-                          loading="lazy"
-                          src={img || FALLBACK_ACTOR_IMG}
-                          alt={name}
-                          onError={(e) => { e.currentTarget.src = FALLBACK_ACTOR_IMG; }}
-                        />
-                      </div>
-                      <div className="movie-detail-cast-name">{name}</div>
-                      {a?.character ? <div className="movie-detail-cast-role">{a.character}</div> : null}
-                    </div>
-
-                  );
-                })}
-              </div>
-            </section>
-          ) : null}
-
-          <p className="tvd-description">{title.description}</p>
-
-          {/* actions: one primary (Watch), the rest as round icon buttons */}
-          <div className="ui-actions tvd-actions">
+      <DetailHero
+        title={title}
+        kind="tv"
+        meta={[
+          year,
+          seasonCount ? `${seasonCount} season${seasonCount > 1 ? 's' : ''}` : '',
+          language,
+        ]}
+        credits={[{ label: 'Starring', value: starring }]}
+        actions={
+          <>
             <Button
               variant="primary"
               size="lg"
               icon={<PlayIcon />}
-              href={defaultWatchUrl}
-              onClick={(e) => {
-                e.preventDefault();
-
-                logOutboundClickBeacon({
-                  title_id: title?.id,
-                  surface: 'tv_detail',
-                  provider: 'watch_page',
-                  url: defaultWatchUrl,
-                });
-
-                window.location.href = defaultWatchUrl;
-              }}
+              onClick={() => go(watchBaseUrl, 'tv_detail', 'watch_page')}
             >
               Watch
             </Button>
@@ -292,136 +225,124 @@ export default function TVShowDetail() {
             />
             <RatingButtons titleId={title.id} />
             <FollowButton titleId={title.id} />
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
-      {/* SEASONS */}
-      <section className="tvd-seasons">
-        <h3 className="tvd-section-title">Seasons</h3>
-        <div className="tvd-seasons__chips">
-          {/* seasons have no id in the API: compare by number (id === id was undefined === undefined,
-              so every chip looked active) */}
-          {seasons.map((s) => (
-            <button
-              key={s.season_number}
-              className={`tvd-chip ${activeSeasonNumber === s.season_number ? 'is-active' : ''}`}
-              aria-pressed={activeSeasonNumber === s.season_number}
-              onClick={() => setActiveSeasonNumber(s.season_number)}
-            >
-              S{s.season_number}
-            </button>
-          ))}
-          {specials.length > 0 && (
-            <button
-              key="specials"
-              className={`tvd-chip ${activeSeasonNumber === 0 ? 'is-active' : ''}`}
-              aria-pressed={activeSeasonNumber === 0}
-              onClick={() => setActiveSeasonNumber(0)}
-            >
-              Specials
-            </button>
-          )}
-        </div>
-      </section>
+      <div className="detail-body">
+        {/* EPISODES */}
+        {seasons.length || specials.length ? (
+          <section className="detail-section" aria-labelledby="detail-episodes-title">
+            <div className="detail-section__head">
+              <SectionTitle id="detail-episodes-title">Episodes</SectionTitle>
+              {/* seasons have no id in the API: compared by number */}
+              <div className="detail-scroller tvd-seasons__chips" role="group" aria-label="Season">
+                {seasons.map((s) => (
+                  <Chip
+                    key={s.season_number}
+                    selected={activeSeasonNumber === s.season_number}
+                    onClick={() => setActiveSeasonNumber(s.season_number)}
+                  >
+                    Season {s.season_number}
+                  </Chip>
+                ))}
+                {specials.length > 0 && (
+                  <Chip key="specials" selected={activeSeasonNumber === 0} onClick={() => setActiveSeasonNumber(0)}>
+                    Specials
+                  </Chip>
+                )}
+              </div>
+            </div>
 
-      {/* EPISODES */}
-      <section className="tvd-episodes" aria-labelledby="tvd-episodes-title">
-        <div className="tvd-episodes__header">
-          <h3
-            id="tvd-episodes-title"
-            className="tvd-section-title"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {activeSeasonNumber === 0 ? 'Specials' : `Season ${activeSeasonNumber}`} Episodes
-          </h3>
-        </div>
-
-        {episodesLoading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-          </div>
-        ) : (
-          <div
-            key={activeSeasonNumber}
-            className="tvd-episodes__grid tvd-episodes__grid--fadein"
-            data-season={activeSeasonNumber}
-          >
-            {episodes.map((ep) => {
-              const episodeWatchUrl = buildWatchUrl(activeSeasonNumber, ep.episode_number);
-
-              return (
-                <div
-                  key={ep.id}
-                  className="tvd-ep-card"
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Watch S${activeSeasonNumber} E${ep.episode_number}: ${ep.name || ''}`}
-                  onClick={(e) => {
-                    // the whole card plays the episode (Enter on a TV remote clicks the card)
-                    if (e.target.closest('a')) return; // the Watch link handles itself
-                    e.currentTarget.querySelector('.tvd-ep-card__play')?.click();
-                  }}
-                >
-                  <div
-                    className="tvd-ep-card__still"
-                    style={{ backgroundImage: `url(${getStillUrl(ep.still_path)})` }}
-                  />
-                  <div className="tvd-ep-card__season-badge">
-                    {activeSeasonNumber === 0 ? 'S0' : `S${activeSeasonNumber}`} · E{String(ep.episode_number).padStart(2, '0')}
+            {episodesLoading ? (
+              <div className="detail-episodes detail-episodes--loading" aria-busy="true">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <Skeleton />
+                    <Skeleton variant="text" width="70%" style={{ marginTop: 10 }} />
                   </div>
-
-                  <div className="tvd-ep-card__info">
-                    <div className="tvd-ep-card__title">
-                      E{ep.episode_number} · {ep.name}
-                    </div>
-                    <div className="tvd-ep-card__meta">
-                      {ep.runtime ? `${ep.runtime}m` : ep.air_date}
-                    </div>
-                  </div>
-
-                  <div className="tvd-ep-card__hover">
-                    <div className="tvd-ep-card__hover-body">
-                      {ep.overview && (
-                        <div className="tvd-ep-card__hover-desc">
-                          {ep.overview}
-                          <br />
+                ))}
+              </div>
+            ) : episodes.length === 0 ? (
+              <EmptyState title="No episodes yet">This season has no episodes available yet.</EmptyState>
+            ) : (
+              <div key={activeSeasonNumber} className="detail-episodes" data-season={activeSeasonNumber}>
+                {episodes.map((ep) => {
+                  const url = buildWatchUrl(activeSeasonNumber, ep.episode_number);
+                  const still = getStillUrl(ep.still_path);
+                  const meta = [ep.runtime ? `${ep.runtime} min` : '', formatAirDate(ep.air_date)]
+                    .filter(Boolean)
+                    .join(' · ');
+                  let stillBackground;
+                  if (still) stillBackground = `url(${still})`;
+                  else if (artwork) stillBackground = `url(${tmdbImage(artwork, IMG.backdropCard)})`;
+                  return (
+                    <div
+                      key={ep.id}
+                      className="tvd-ep-card"
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Watch season ${activeSeasonNumber} episode ${ep.episode_number}: ${ep.name || ''}`}
+                      onClick={() =>
+                        go(url, 'tv_episode', `watch_page_s${activeSeasonNumber}_e${ep.episode_number}`)
+                      }
+                    >
+                      <div
+                        className={`tvd-ep-card__still${still ? '' : ' tvd-ep-card__still--fallback'}`}
+                        style={{ backgroundImage: stillBackground }}
+                      >
+                        {!still ? <span className="tvd-ep-card__number">{ep.episode_number}</span> : null}
+                        <div className="tvd-ep-card__play" aria-hidden="true">
+                          <span>
+                            <PlayIcon />
+                          </span>
                         </div>
-                      )}
-
-                      {/* ✅ GARDE TES CLASSES: tvd-ep-card__play--1 */}
-                      <div className="tvd-ep-card__hover-actions">
-                        <a
-                          className="tvd-ep-card__play tvd-ep-card__play--1"
-                          href={episodeWatchUrl}
-                          onClick={(e) => {
-                            e.preventDefault();
-
-                            logOutboundClickBeacon({
-                              title_id: title?.id,
-                              surface: 'tv_episode',
-                              provider: `watch_page_s${activeSeasonNumber}_e${ep.episode_number}`,
-                              url: episodeWatchUrl,
-                            });
-
-                            window.location.href = episodeWatchUrl;
-                          }}
-                        >
-                          ▶ Watch
-                        </a>
+                        {ep.runtime ? <span className="tvd-ep-card__runtime">{ep.runtime}m</span> : null}
                       </div>
+                      <div className="tvd-ep-card__title">
+                        {ep.episode_number}. {ep.name || `Episode ${ep.episode_number}`}
+                      </div>
+                      {meta ? <div className="tvd-ep-card__meta">{meta}</div> : null}
+                      {ep.overview ? <p className="tvd-ep-card__desc">{ep.overview}</p> : null}
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        ) : null}
 
-      <div className="tvd-footer">
-        <Link to="/tv" className="tvd-btn-secondary">← Back to TV</Link>
+        <CastRow cast={cast} />
+
+        <section className="detail-section">
+          <SectionTitle>Details</SectionTitle>
+          <dl className="detail-facts">
+            {genres.length ? (
+              <div>
+                <dt>Genres</dt>
+                <dd>{genres.join(', ')}</dd>
+              </div>
+            ) : null}
+            {title.first_air_date ? (
+              <div>
+                <dt>First aired</dt>
+                <dd>{formatAirDate(title.first_air_date)}</dd>
+              </div>
+            ) : null}
+            {seasonCount ? (
+              <div>
+                <dt>Seasons</dt>
+                <dd>{seasonCount}</dd>
+              </div>
+            ) : null}
+            {language ? (
+              <div>
+                <dt>Original language</dt>
+                <dd>{language}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </section>
       </div>
     </div>
   );

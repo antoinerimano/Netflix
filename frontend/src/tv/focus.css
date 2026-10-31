@@ -46,8 +46,7 @@
 /* ---------- Cards: the hover look + a white frame drawn ABOVE the image ----------
    (a ring on the card itself is hidden by the image inside it) */
 .movie-card::after,
-.ps-store-movie-card::after,
-.tvd-ep-card::after {
+.ps-store-movie-card::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -62,13 +61,11 @@
   position: relative;
 }
 .movie-card:focus-visible::after,
-.ps-store-movie-card:focus-visible::after,
-.tvd-ep-card:focus-visible::after {
+.ps-store-movie-card:focus-visible::after {
   opacity: 1;
 }
 .movie-card:focus-visible,
-.ps-store-movie-card:focus-visible,
-.tvd-ep-card:focus-visible {
+.ps-store-movie-card:focus-visible {
   transform: scale(1.05);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
   z-index: 2;
@@ -76,6 +73,31 @@
 .movie-card:focus-visible img {
   transform: scale(1.06);
 }
+/* ---------- Episode cards (show pages): the still is framed and lifted, the title underlined;
+   the text under it gets no box ---------- */
+.tvd-ep-card:focus-visible {
+  box-shadow: none;
+}
+.tvd-ep-card__still {
+  transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease;
+}
+.tvd-ep-card:focus-visible .tvd-ep-card__still {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+@media (hover: hover) {
+  .tvd-ep-card:hover .tvd-ep-card__still {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+  }
+}
+.tvd-ep-card:focus-visible .tvd-ep-card__title {
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
 /* ---------- Actor cards (movie / show pages): the photo is framed and lifted, the name lights
    up; the card itself (photo + text) gets no box. Same look on mouse hover. ---------- */
 .movie-detail-cast-card {
@@ -292,11 +314,12 @@ html.tv-keys .movie-card:hover:not(:focus-visible) {
 html.tv-keys .movie-card:hover:not(:focus-visible) img,
 html.tv-keys .row .slick-slide img:hover,
 html.tv-keys .ps-store-movie-card:hover:not(:focus-visible),
-html.tv-keys .tvd-ep-card:hover:not(:focus-visible) {
+html.tv-keys .tvd-ep-card:hover:not(:focus-visible) .tvd-ep-card__still {
   transform: none;
+  box-shadow: var(--shadow-md);
 }
-html.tv-keys .tvd-ep-card:hover:not(:focus-within) .tvd-ep-card__hover {
-  display: none;
+html.tv-keys .tvd-ep-card:hover:not(:focus-visible) .tvd-ep-card__play {
+  opacity: 0;
 }
 html.tv-keys .movie-card:hover:not(:focus-within) .movie-info,
 html.tv-keys .movie-card:hover:not(:focus-within) .row-remove-btn {
@@ -310,7 +333,7 @@ html.tv-keys .movie-card:focus-visible img {
   :focus-visible,
   .movie-card:focus-visible,
   .ps-store-movie-card:focus-visible,
-  .tvd-ep-card:focus-visible {
+  .tvd-ep-card:focus-visible .tvd-ep-card__still {
     transform: none !important;
     transition: none !important;
   }
