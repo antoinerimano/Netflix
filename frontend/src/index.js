@@ -6,6 +6,10 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
 import './pwa/installPrompt'; // catch the install prompt as early as possible
+import { startSpatialNavigation } from './tv/spatialNavigation';
+import './tv/focus.css'; // one focus look for keyboard / TV remote
+
+startSpatialNavigation(); // TV remote / keyboard: arrows, Enter, Back
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

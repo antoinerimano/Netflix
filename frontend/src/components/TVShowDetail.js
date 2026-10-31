@@ -50,7 +50,6 @@ export default function TVShowDetail() {
   const [err, setErr] = useState('');
   const [seasons, setSeasonsState] = useState([]);
   const [specials, setSpecials] = useState([]);
-  const [activeSeasonId, setActiveSeasonId] = useState(null);
   const [activeSeasonNumber, setActiveSeasonNumber] = useState(null);
   const [episodes, setEpisodes] = useState([]);
   const [episodesLoading, setEpisodesLoading] = useState(true);
@@ -86,7 +85,6 @@ export default function TVShowDetail() {
 
         const first = normalList[0] || specialsList[0] || null;
         if (first) {
-          setActiveSeasonId(first.id);
           setActiveSeasonNumber(first.season_number);
         }
       })
@@ -290,20 +288,24 @@ export default function TVShowDetail() {
       <section className="tvd-seasons">
         <h3 className="tvd-section-title">Seasons</h3>
         <div className="tvd-seasons__chips">
+          {/* seasons have no id in the API: compare by number (id === id was undefined === undefined,
+              so every chip looked active) */}
           {seasons.map((s) => (
             <button
-              key={s.id}
-              className={`tvd-chip ${activeSeasonId === s.id ? 'is-active' : ''}`}
-              onClick={() => { setActiveSeasonId(s.id); setActiveSeasonNumber(s.season_number); }}
+              key={s.season_number}
+              className={`tvd-chip ${activeSeasonNumber === s.season_number ? 'is-active' : ''}`}
+              aria-pressed={activeSeasonNumber === s.season_number}
+              onClick={() => setActiveSeasonNumber(s.season_number)}
             >
               S{s.season_number}
             </button>
           ))}
           {specials.length > 0 && (
             <button
-              key={`specials-${specials[0].id}`}
-              className={`tvd-chip ${activeSeasonId === specials[0].id ? 'is-active' : ''}`}
-              onClick={() => { setActiveSeasonId(specials[0].id); setActiveSeasonNumber(0); }}
+              key="specials"
+              className={`tvd-chip ${activeSeasonNumber === 0 ? 'is-active' : ''}`}
+              aria-pressed={activeSeasonNumber === 0}
+              onClick={() => setActiveSeasonNumber(0)}
             >
               Specials
             </button>
@@ -338,7 +340,18 @@ export default function TVShowDetail() {
               const episodeWatchUrl = buildWatchUrl(activeSeasonNumber, ep.episode_number);
 
               return (
-                <div key={ep.id} className="tvd-ep-card" tabIndex={0}>
+                <div
+                  key={ep.id}
+                  className="tvd-ep-card"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Watch S${activeSeasonNumber} E${ep.episode_number}: ${ep.name || ''}`}
+                  onClick={(e) => {
+                    // the whole card plays the episode (Enter on a TV remote clicks the card)
+                    if (e.target.closest('a')) return; // the Watch link handles itself
+                    e.currentTarget.querySelector('.tvd-ep-card__play')?.click();
+                  }}
+                >
                   <div
                     className="tvd-ep-card__still"
                     style={{ backgroundImage: `url(${getStillUrl(ep.still_path)})` }}

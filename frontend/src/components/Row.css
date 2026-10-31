@@ -342,3 +342,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Keyboard / TV remote: a focused card shows its info like a hovered one (look: tv/focus.css) */
+.movie-card:focus-visible .movie-info {
+  opacity: 1;
+}
+.movie-card:focus-within .row-remove-btn {
+  opacity: 1;
+  pointer-events: auto;
+}

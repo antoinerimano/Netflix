@@ -1,0 +1,168 @@
+/* ===== Keyboard / TV remote focus (src/tv/spatialNavigation.js) =====
+   One look for the whole app. Only :focus-visible (keyboard / remote), never mouse clicks.
+   Rings are box-shadows, not outlines: on TV browsers (Tizen / webOS run old Chromium) outlines
+   don't follow rounded corners and look like boxes. */
+
+:root {
+  --focus-ring: #ffffff;
+  --focus-halo: rgba(255, 255, 255, 0.22);
+  --focus-accent: #e50914;
+  --focus-speed: 160ms;
+}
+
+/* Base: a crisp white ring + soft halo that follows the element's own border-radius */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+  transition: box-shadow var(--focus-speed) ease, transform var(--focus-speed) ease,
+    background-color var(--focus-speed) ease, color var(--focus-speed) ease;
+}
+
+/* ---------- Buttons, pills, chips: ring + a small lift ---------- */
+.hero-button:focus-visible,
+.watchpage__pillBtn:focus-visible,
+.watchpage__chip:focus-visible,
+.watchpage__btn:focus-visible,
+.watchpage__iconBtn:focus-visible,
+.watchpage__softHintBtn:focus-visible,
+.tvd-play:focus-visible,
+.tvd-add-button:focus-visible,
+.tvd-chip:focus-visible,
+.tvd-btn-secondary:focus-visible,
+.movie-detail-play-button:focus-visible,
+.movie-detail-add-button:focus-visible,
+.subscription-option:focus-visible,
+.login-button:focus-visible {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Cards: the hover look + a white frame drawn ABOVE the image ----------
+   (a ring on the card itself is hidden by the image inside it) */
+.movie-card::after,
+.ps-store-movie-card::after,
+.tvd-ep-card::after,
+.movie-detail-cast-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 3px var(--focus-ring);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity var(--focus-speed) ease;
+}
+.ps-store-movie-card,
+.movie-detail-cast-card {
+  position: relative;
+}
+.movie-card:focus-visible::after,
+.ps-store-movie-card:focus-visible::after,
+.tvd-ep-card:focus-visible::after,
+.movie-detail-cast-card:focus-visible::after {
+  opacity: 1;
+}
+.movie-card:focus-visible,
+.ps-store-movie-card:focus-visible,
+.tvd-ep-card:focus-visible {
+  transform: scale(1.05);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+  z-index: 2;
+}
+.movie-card:focus-visible img {
+  transform: scale(1.06);
+}
+.movie-detail-cast-card {
+  border-radius: 10px;
+}
+.movie-detail-cast-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: none;
+}
+/* room for the enlarged card inside the row slider (it clips what overflows) */
+.row .slick-list {
+  padding: 10px 0;
+}
+
+/* ---------- Navbar text links: no box, white text + red underline ---------- */
+.nav-links li:focus-visible {
+  box-shadow: none;
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 8px;
+}
+.logo:focus-visible {
+  box-shadow: none;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.55));
+}
+
+/* ---------- Round icons: circular ring ---------- */
+.profile-icon:focus-visible,
+.notif__button:focus-visible,
+.share-button:focus-visible {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+}
+
+/* ---------- Menus and lists: lighter row + white inset frame ----------
+   (red marks the *current* item, e.g. the active profile: focus must not look the same) */
+.profile-option:focus-visible,
+.search-result-item:focus-visible,
+.notif__item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+  background-color: #383838;
+  color: #ffffff;
+  border-radius: 4px;
+}
+
+/* ---------- Form fields ---------- */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+/* a number / range / select being adjusted with the remote (see spatialNavigation "edit mode") */
+.tv-editing,
+.tv-editing:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus-accent), 0 0 0 7px rgba(229, 9, 20, 0.25);
+}
+
+/* "Hold OK" hint on a focused card that has a ⊘ / ✕ button (spatialNavigation: long press) */
+.movie-card:focus-visible:has(.row-remove-btn)::before {
+  content: "Hold OK · options";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 11;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+/* card buttons (⊘ / ✕) once reached from their card (hold OK) */
+.row-remove-btn:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :focus-visible,
+  .movie-card:focus-visible,
+  .ps-store-movie-card:focus-visible,
+  .tvd-ep-card:focus-visible {
+    transform: none !important;
+    transition: none !important;
+  }
+}

@@ -472,6 +472,9 @@ fill: #ffffff;
 
   /* Results panel: widen & animate when input is focused */
   .search-profile .search-results {
+    /* grow leftwards: anchored at the left, the 40vw panel went past the right edge of the screen */
+    left: auto;
+    right: 0;
     /* start compact to match initial input */
     width: clamp(200px, 18vw, 360px);
     max-height: 50vh;
@@ -487,8 +490,9 @@ fill: #ffffff;
     transition: width 0.35s ease, opacity 0.2s ease, transform 0.2s ease;
   }
 
-  /* When input is focused, make results more visible and match 40vw width */
-  .search-profile:has(input:focus) .search-results {
+  /* While the search box or one of its results has focus (mouse, keyboard or TV remote: moving
+     to a result must not hide the list), make results visible and match 40vw width */
+  .search-profile:focus-within .search-results {
     width: 40vw;
     opacity: 1;
     transform: translateY(0);

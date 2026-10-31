@@ -4,6 +4,7 @@ import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource } from "../api/recoApi";
+import { enterPlayer } from "../tv/spatialNavigation";
 import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from "../utils/tmdbImage";
 
 // sources saved by older versions used the DB column names
@@ -168,6 +169,7 @@ export default function WatchPage() {
   const [hoverPlayer, setHoverPlayer] = useState(false);
 
   const iframeRef = useRef(null);
+  const playerWrapRef = useRef(null);
 
   const showHint = useCallback((msg) => setHint(msg), []);
 
@@ -269,6 +271,15 @@ export default function WatchPage() {
       navigate(`/movies/${titleId}`, { replace: true });
     }
   }, [navigate, isTV, titleId]);
+
+  // Full screen + hand the TV remote / keyboard to the player (OK = play / pause there)
+  const goFullscreen = useCallback(() => {
+    const wrap = playerWrapRef.current;
+    if (!wrap) return;
+    const request = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+    request?.call(wrap)?.catch?.(() => {});
+    enterPlayer(iframeRef.current);
+  }, []);
 
   // Links: provider domain + path template, filled with this movie / episode
   const providers = useMemo(() => {
@@ -432,6 +443,14 @@ export default function WatchPage() {
         return;
       }
 
+      // single-letter shortcuts, not while typing (a "p" in the custom link hid the panel)
+      if (e.target?.matches?.("input, textarea")) return;
+
+      if (k === "f") {
+        goFullscreen();
+        return;
+      }
+
       if (k === "p") {
         setPanelOpen((v) => !v);
         return;
@@ -452,7 +471,7 @@ export default function WatchPage() {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [goBack]);
+  }, [goBack, goFullscreen]);
 
   const backdrop = title?.landscape_image || title?.landscape_url || "";
   const poster = title?.poster || "";
@@ -718,6 +737,12 @@ export default function WatchPage() {
           </div>
 
           <div className="watchpage__topActions">
+            {sourceType !== "none" ? (
+              <button className="watchpage__pillBtn" onClick={goFullscreen} title="Full screen (F)">
+                ⛶ Full screen
+              </button>
+            ) : null}
+
             {nextEpisode ? (
               <button
                 className="watchpage__pillBtn"
@@ -763,6 +788,7 @@ export default function WatchPage() {
             </div>
 
             <div
+              ref={playerWrapRef}
               className="watchpage__playerWrap"
               onMouseEnter={() => setHoverPlayer(true)}
               onMouseLeave={() => setHoverPlayer(false)}

@@ -37,7 +37,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics }) => {
 
 
   return (
-    <div className="ps-store-movie-card" onClick={handleRootClick}>
+    <div className="ps-store-movie-card" tabIndex={0} role="button" aria-label={movie.title} onClick={handleRootClick}>
       <img src={tmdbImage(movie.poster, IMG.poster)} srcSet={tmdbSrcSet(movie.poster, [185, 342, 500])} sizes="(max-width: 600px) 45vw, 200px" alt={movie.title} className="ps-store-movie-poster" loading="lazy"
         decoding="async" />
       <div className="ps-store-movie-info">

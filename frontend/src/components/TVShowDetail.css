@@ -233,7 +233,12 @@
 }
 
 /* Slight lift on hover; card grows to fit hover body */
-.tvd-ep-card:hover {
+.tvd-ep-card {
+  cursor: pointer; /* the whole card plays the episode */
+}
+
+.tvd-ep-card:hover,
+.tvd-ep-card:focus-visible {
   transform: translateY(-2px);
   border-color: #262626;
   box-shadow: 0 14px 30px rgba(0,0,0,0.55);

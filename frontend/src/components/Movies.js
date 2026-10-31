@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import MovieCard from './MovieCard';
 import { fetchMoviesPage, fetchGenres } from '../api/titlesApi';
 import { useLocation, useNavigate } from "react-router-dom";
+import { isEditing } from '../tv/spatialNavigation';
 
 const PAGE_SIZE = 50;
 
@@ -36,6 +37,8 @@ const Movie = () => {
   };
 
   const handleYearMaxKeyDown = (e) => {
+    // TV remote: arrows move the focus until OK puts the field in edit mode
+    if (!isEditing(e.currentTarget)) return;
     if (e.key === "ArrowUp") {
       e.preventDefault();
       bumpYearMax(1);

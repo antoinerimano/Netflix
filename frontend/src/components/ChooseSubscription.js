@@ -61,6 +61,8 @@ const ChooseSubscription = () => {
         {/* Only Free plan remains */}
         <div
           className={`subscription-option ${selectedPlan === 'free' ? 'selected' : ''}`}
+          tabIndex={0}
+          role="button"
           onClick={handleChooseSubscription}
         >
           <h3>Free Plan</h3>

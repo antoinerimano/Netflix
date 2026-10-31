@@ -29,7 +29,10 @@ export default function ProtectedRoute({ children }) {
   // ✅ règles
   const hasToken = Boolean(token);
   const hasProfile = Boolean(pid); // enlève ça si tu veux juste token
-  const expired = hasToken ? isJwtExpired(token) : true;
+  // The access token lives ~3 h, the refresh token ~14 days: an expired access token is renewed
+  // by api/http.js on the first refused request, so only an expired refresh token means logged out.
+  const refresh = localStorage.getItem("refresh");
+  const expired = hasToken ? (refresh ? isJwtExpired(refresh) : isJwtExpired(token)) : true;
 
   if (!hasToken || expired || !hasProfile) {
 

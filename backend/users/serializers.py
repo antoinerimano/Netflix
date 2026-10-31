@@ -148,6 +148,7 @@ class TitleHomeSerializer(serializers.ModelSerializer):
             "id", "type",
             "title",
             "landscape_image",
+            "poster",  # card image when there is no landscape image (~10% of titles)
             "release_year",
             "rating",
             "description",

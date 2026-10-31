@@ -187,7 +187,7 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="logo" onClick={handleNavigateHome}>
+      <div className="logo" tabIndex={0} role="button" aria-label="Home" onClick={handleNavigateHome}>
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
         ) : (
@@ -204,14 +204,14 @@ const Navbar = () => {
       <button className="menu-toggle" onClick={toggleMenu}>☰</button>
 
       <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-        <li onClick={handleNavigateHome}>Home</li>
-        <li onClick={handleNavigateMovies}>Movies</li>
-        <li onClick={handleNavigateTV}>TV Shows</li>
-        <li onClick={handleNavigateList}>My List</li>
+        <li tabIndex={0} role="button" onClick={handleNavigateHome}>Home</li>
+        <li tabIndex={0} role="button" onClick={handleNavigateMovies}>Movies</li>
+        <li tabIndex={0} role="button" onClick={handleNavigateTV}>TV Shows</li>
+        <li tabIndex={0} role="button" onClick={handleNavigateList}>My List</li>
         {isStaff && (
           <>
-            <li onClick={() => navigate('/admin/users')}>Admin Users</li>
-            <li onClick={() => navigate('/admin/movies')}>Admin Movies</li>
+            <li tabIndex={0} role="button" onClick={() => navigate('/admin/users')}>Admin Users</li>
+            <li tabIndex={0} role="button" onClick={() => navigate('/admin/movies')}>Admin Movies</li>
           </>
         )}
       </ul>
@@ -258,6 +258,8 @@ const Navbar = () => {
                 <li
                   key={`${item.kind}-${item.id}`}
                   className="search-result-item"
+                  tabIndex={0}
+                  role="button"
                   onClick={() => handleResultClick(item, idx)}
                 >
                   <img
@@ -291,7 +293,7 @@ const Navbar = () => {
       {/* PROFILE */}
       {isAuthenticated ? (
         <div className="profile-container">
-          <div className="profile-icon" onClick={toggleProfileDropdown}>
+          <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" onClick={toggleProfileDropdown}>
             <img
               src={profilePhoto || "default-profile.png"}
               alt="Profile"
@@ -309,6 +311,8 @@ const Navbar = () => {
                   <div
                     key={profile.id}
                     className={`profile-option ${selectedProfile && selectedProfile.id === profile.id ? 'selected' : ''}`}
+                    tabIndex={0}
+                    role="button"
                     onClick={() => handleProfileChange(profile.id)}
                   >
                     <img
@@ -325,12 +329,12 @@ const Navbar = () => {
               )}
               <div className="dropdown-divider"></div>
               {installApp.canInstall && (
-                <div className="profile-option" onClick={() => installApp.install()}>
+                <div className="profile-option" tabIndex={0} role="button" onClick={() => installApp.install()}>
                   Install app
                 </div>
               )}
               {installApp.iosInstructions && (
-                <div className="profile-option" onClick={() => setShowIosInstall((v) => !v)}>
+                <div className="profile-option" tabIndex={0} role="button" onClick={() => setShowIosInstall((v) => !v)}>
                   Install app
                 </div>
               )}
@@ -339,10 +343,10 @@ const Navbar = () => {
                   Tap the Share button in Safari, then "Add to Home Screen".
                 </div>
               )}
-              <div className="profile-option" onClick={handleNavigateAccount}>
+              <div className="profile-option" tabIndex={0} role="button" onClick={handleNavigateAccount}>
                 Account Settings
               </div>
-              <div className="profile-option" onClick={handleLogout}>
+              <div className="profile-option" tabIndex={0} role="button" onClick={handleLogout}>
                 Logout
               </div>
             </div>

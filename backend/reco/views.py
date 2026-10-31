@@ -151,6 +151,7 @@ DISPLAY_ONLY_FIELDS = [
     "id", "type",
     "title",
     "landscape_image",
+    "poster",
     "release_year",
     "rating",
     "description",

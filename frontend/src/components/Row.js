@@ -59,6 +59,8 @@ const Row = ({ title, movies }) => {
   const stallTimers = useRef({});
 
   const sliderRef = useRef(null);
+  const rowRef = useRef(null);
+  const currentSlideRef = useRef(0);
   const [showPrevArrow, setShowPrevArrow] = useState(false);
 
   // titles removed from "Continue watching" during this visit
@@ -282,9 +284,20 @@ const Row = ({ title, movies }) => {
   };
   /** ---------------------------------------- */
 
+  // keyboard / TV remote: keep the focused card on screen (src/tv/spatialNavigation.js moves focus)
+  const ensureCardVisible = (index) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const show = getSlidesToShowFromSettings(settings);
+    const current = currentSlideRef.current;
+    if (index < current) slider.slickGoTo(index);
+    else if (index >= current + show) slider.slickGoTo(index - show + 1);
+  };
+
   const settings = {
     dots: false,
     infinite: false,
+    accessibility: false, // its own arrow-key handling would fight the TV navigation
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 1,
@@ -298,13 +311,16 @@ const Row = ({ title, movies }) => {
     afterChange: (current) => {
       const totalSlides = displayedMovies.length;
       const slidesToShow = getSlidesToShowFromSettings(settings);
+      currentSlideRef.current = current;
 
       setShowPrevArrow(current > 0);
 
       // --- NEW: log visible impressions on slide change ---
       logVisible(current, slidesToShow);
 
-      if (current >= totalSlides - slidesToShow) {
+      // wrap back to the start at the end, but not while a keyboard / remote user is in this row
+      const keyboardInRow = rowRef.current?.contains(document.activeElement);
+      if (current >= totalSlides - slidesToShow && !keyboardInRow) {
         setTimeout(() => {
           sliderRef.current?.slickGoTo(0);
         }, 500);
@@ -360,7 +376,7 @@ const Row = ({ title, movies }) => {
   if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
 
   return (
-    <div className="row">
+    <div className="row" ref={rowRef}>
       <h2>{title}</h2>
       <Slider ref={sliderRef} {...settings}>
         {displayedMovies.map((movie, index) => {
@@ -389,10 +405,16 @@ const Row = ({ title, movies }) => {
           const isMuted = isMutedMap[key] ?? true;
 
           return (
+            // react-slick overwrites tabIndex (-1) and style on each slide's root element:
+            // this wrapper takes it, so the card itself stays focusable (TV remote / keyboard)
+            <div key={key}>
             <div
-              key={key}
               data-id={key}
               className="movie-card"
+              tabIndex={0}
+              role="button"
+              aria-label={movie?.title}
+              onFocus={() => ensureCardVisible(index)}
               onClick={() => handleCardClick(movie, index)}
               onMouseEnter={() => handleMouseEnter(key, !!trailerSrc)}
               onMouseLeave={() => handleMouseLeave(key)}
@@ -530,6 +552,7 @@ const Row = ({ title, movies }) => {
                   {displayText}
                 </p>
               </div>
+            </div>
             </div>
           );
         })}
