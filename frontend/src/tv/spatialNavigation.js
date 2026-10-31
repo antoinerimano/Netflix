@@ -2,7 +2,8 @@
 // TV remote / keyboard navigation for the whole site, without touching each page:
 //   arrows  -> focus the nearest focusable element in that direction (by position on screen)
 //   Enter   -> activate it (div / li "buttons" get a click(), links and buttons work natively)
-//   Back    -> previous page (TV remote Back key: Tizen, webOS, Android TV)
+//   Back    -> previous page (TV remote Back key: Tizen, webOS, Android TV, and Escape on a
+//              keyboard): closes an open menu / leaves full screen first
 // Mouse users see no difference. Text fields keep left / right for the cursor. A video player
 // that takes the focus by itself gives it back (see onWindowBlur).
 
@@ -16,8 +17,8 @@ const FOCUSABLE = [
 ].join(","); // not iframes: once inside a cross-origin player, the arrows can't bring you back out
 
 const DIRECTIONS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
-// TV remotes' Back button. Escape only closes menus; Backspace is left alone (text editing).
-const BACK_KEYS = new Set(["GoBack", "BrowserBack"]);
+// TV remotes' Back button, and Escape (same meaning). Backspace is left alone (text editing).
+const BACK_KEYS = new Set(["GoBack", "BrowserBack", "Escape"]);
 const BACK_KEY_CODES = new Set([10009 /* Samsung Tizen */, 461 /* LG webOS */]);
 const NATIVE_ENTER = "a[href], button, input, select, textarea, summary";
 const TOP_MARGIN = 90; // keep focused elements below the navbar
@@ -65,8 +66,14 @@ function atTextEdge(el, dir) {
   return start === end && (dir === "left" ? start === 0 : end === length);
 }
 
+function fullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
 function candidates() {
-  return [...document.querySelectorAll(FOCUSABLE)].filter((el) => {
+  // in full screen only what is shown can be reached (the rest of the page is still laid out)
+  const root = fullscreenElement() || document;
+  return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
     if (el.closest(".slick-cloned, [inert]")) return false;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return false;
@@ -86,7 +93,8 @@ function nearest(from, dir, list) {
   let best = null;
   let bestScore = Infinity;
   for (const el of list) {
-    if (el === from || el.contains(from) || from.contains(el)) continue;
+    if (el === from || el.contains(from)) continue;
+    if (from.contains(el) && from.matches(CARD_WITH_ACTIONS)) continue; // card buttons: hold OK
     const b = el.getBoundingClientRect();
     const cb = center(b);
     const dx = cb.x - ca.x;
@@ -117,7 +125,7 @@ function nearest(from, dir, list) {
 
 // The page's main action, then its content, when nothing is focused yet
 const START_SELECTORS = [
-  ".hero-button, .movie-detail-play-button, .tvd-play", // Play / Watch
+  ".ui-btn--primary, .hero-button, .movie-detail-play-button, .tvd-play, .watchpage__playerWrap[tabindex='0']", // Play / Watch
   ".movie-card, .ps-store-movie-card, .tvd-ep-card", // cards
 ];
 
@@ -178,7 +186,8 @@ function onKeyUp(e) {
 function onWindowBlur() {
   setTimeout(() => {
     const el = document.activeElement;
-    if (el?.tagName !== "IFRAME" || pointerOverIframe || enteringIframe) return;
+    if (el?.tagName !== "IFRAME" || enteringIframe || inPlayer) return;
+    if (pointerOverIframe && !keyboardMode) return; // clicked into the player with the mouse
     if (Date.now() - lastRestore < 1000) return; // don't fight a player that keeps taking it
     lastRestore = Date.now();
     const back = lastFocused && lastFocused !== el && lastFocused.isConnected ? lastFocused : startingPoint(candidates());
@@ -186,15 +195,73 @@ function onWindowBlur() {
   }, 0);
 }
 
-/** Hand the remote to an embedded player on purpose (watch page "Full screen"): keys then go to
- *  the player (OK = play / pause), Back leaves full screen. */
-export function enterPlayer(iframe) {
-  if (!iframe) return;
+/** Hand the remote to the player on purpose (watch page "Full screen"): keys then go to the
+ *  player (OK = play / pause), Back / Escape leaves full screen and gives the remote back to the
+ *  page (see onFullscreenChange). Works with an embedded player (iframe) or a <video>. */
+let inPlayer = false;
+let returnFocusTo = null;
+export function enterPlayer(player) {
+  if (!player) return;
+  const active = document.activeElement;
+  if (active && active !== document.body && active.tagName !== "IFRAME") returnFocusTo = active;
   enteringIframe = true;
   setTimeout(() => {
     enteringIframe = false;
   }, 1000);
-  iframe.focus();
+  if (player.tagName === "VIDEO" && !player.hasAttribute("tabindex")) player.tabIndex = -1;
+  player.focus({ preventScroll: true });
+}
+
+// Leaving full screen (Escape / Back, which the browser handles even inside a cross-origin
+// player, or the player's own button) left the focus inside the player: every key then went to
+// it and the remote was stuck there. Take the focus back to where the user was.
+let lastFullscreenExit = 0;
+function onFullscreenChange() {
+  if (fullscreenElement()) {
+    inPlayer = true;
+    return;
+  }
+  inPlayer = false;
+  lastFullscreenExit = Date.now();
+  const restore = () => {
+    const el = document.activeElement;
+    const stuck = !el || el === document.body || el.tagName === "IFRAME" || el.tagName === "VIDEO";
+    if (!stuck && document.hasFocus()) return;
+    window.focus();
+    const back =
+      (returnFocusTo && usable(returnFocusTo) && returnFocusTo) ||
+      document.querySelector(".watchpage__fullscreenBtn") ||
+      startingPoint(candidates());
+    back?.focus({ preventScroll: true });
+  };
+  setTimeout(restore, 0);
+  setTimeout(restore, 300); // some players take the focus back while leaving full screen
+}
+
+// Pages can give Back their own meaning (the watch page returns to the title's details page)
+let backHandler = null;
+export function setBackHandler(fn) {
+  backHandler = fn;
+  return () => {
+    if (backHandler === fn) backHandler = null;
+  };
+}
+
+function goBack() {
+  if (fullscreenElement()) {
+    (document.exitFullscreen || document.webkitExitFullscreen)?.call(document)?.catch?.(() => {});
+    return;
+  }
+  // the key that left full screen (some browsers also send it to the page): not a second Back
+  if (Date.now() - lastFullscreenExit < 600) return;
+  if (backHandler) {
+    backHandler();
+    return;
+  }
+  if (window.location.pathname === "/") return;
+  // react-router keeps the position in the history: nothing to go back to (link opened directly)
+  if ((window.history.state?.idx ?? 1) > 0) window.history.back();
+  else window.location.assign("/");
 }
 
 function focusElement(el) {
@@ -240,7 +307,19 @@ function closePopup(active) {
   return false;
 }
 
+// "Keyboard mode" while the remote / arrows are used: hover effects off (a card under a
+// resting mouse pointer looked selected too) and the pointer hidden. Moving the mouse ends it.
+let keyboardMode = false;
+function setKeyboardMode(on) {
+  if (on === keyboardMode) return;
+  keyboardMode = on;
+  document.documentElement.classList.toggle("tv-keys", on);
+}
+
 function onKeyDown(e) {
+  if (DIRECTIONS[e.key] || e.key === "Enter" || BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)) {
+    setKeyboardMode(true);
+  }
   if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
   let active = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
   if (!active && lastFocused?.isConnected && lastFocused.getBoundingClientRect().width > 0) active = lastFocused;
@@ -252,10 +331,25 @@ function onKeyDown(e) {
     else if (DIRECTIONS[e.key]) return;
     else if (
       (e.key === "Enter" && editing.classList.contains("tv-editing")) || // remote: OK confirms
-      e.key === "Escape" || BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)
+      BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)
     ) {
       e.preventDefault();
       stopEditing();
+      return;
+    }
+  }
+
+  // a <video> in full screen: OK = play / pause, left / right = -10 s / +10 s
+  if (active?.tagName === "VIDEO" && fullscreenElement()?.contains(active)) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (active.paused) active.play()?.catch?.(() => {});
+      else active.pause();
+      return;
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      active.currentTime = Math.max(0, active.currentTime + (e.key === "ArrowLeft" ? -10 : 10));
       return;
     }
   }
@@ -321,18 +415,14 @@ function onKeyDown(e) {
   // Back / Escape from a card's ⊘ / ✕ button: back to the card
   const ownerCard = active?.matches(CARD_ACTION) ? active.closest(CARD_WITH_ACTIONS) : null;
 
-  if (e.key === "Escape") {
-    if (ownerCard) {
-      e.preventDefault();
-      ownerCard.focus({ preventScroll: true });
-    } else if (closePopup(active)) e.preventDefault();
-    return;
-  }
-
   if (BACK_KEYS.has(e.key) || BACK_KEY_CODES.has(e.keyCode)) {
     e.preventDefault();
+    if (e.repeat) return; // a held key must not go back several pages
     if (ownerCard) ownerCard.focus({ preventScroll: true });
-    else if (!closePopup(active) && window.location.pathname !== "/") window.history.back();
+    else if (closePopup(active)) return;
+    else if (typing && active.matches("input:not([type='checkbox']):not([type='radio']), textarea")) {
+      active.blur(); // leave the text field first (the arrows continue from it); Back again = back
+    } else goBack();
   }
 }
 
@@ -359,6 +449,12 @@ export function startSpatialNavigation() {
     }
   });
   window.addEventListener("blur", onWindowBlur);
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+  // real mouse movement only (scrolling under a still pointer also fires mousemove, unmoved)
+  document.addEventListener("mousemove", (e) => {
+    if (keyboardMode && (e.movementX || e.movementY)) setKeyboardMode(false);
+  });
   document.addEventListener("mouseover", (e) => {
     pointerOverIframe = e.target?.tagName === "IFRAME";
   });

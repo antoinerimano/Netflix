@@ -1,7 +1,7 @@
 .create-profile-container {
     max-width: 600px;
     margin: 50px auto;
-    background-color: #141414;
+    background-color: var(--color-bg);
     padding: 40px;
     border-radius: 10px;
     box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
@@ -14,7 +14,7 @@
 .title {
     font-size: 2rem;
     margin-bottom: 20px;
-    color: #e50914;
+    color: var(--color-brand);
 }
 
 .profile-form {
@@ -41,7 +41,7 @@
 
 .profile-input:focus, .profile-select:focus {
     outline: none;
-    border-color: #e50914;
+    border-color: var(--color-brand);
 }
 
 .avatar-options {
@@ -64,12 +64,12 @@
 }
 
 .avatar-option.selected {
-    border-color: #e50914;
+    border-color: var(--color-brand);
 }
 
 .profile-submit-button {
     padding: 15px 20px;
-    background-color: #e50914;
+    background-color: var(--color-brand);
     border: none;
     border-radius: 5px;
     color: white;
@@ -79,12 +79,12 @@
 }
 
 .profile-submit-button:hover {
-    background-color: #f40612;
+    background-color: var(--color-brand-hover);
 }
 
 .error-message {
     margin-top: 20px;
-    color: #e50914;
+    color: var(--color-brand);
     font-size: 1rem;
 }
 @media (min-width:2500px) and (min-height: 1500px){

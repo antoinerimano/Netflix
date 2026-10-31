@@ -19,6 +19,7 @@ import WatchPage from './components/WatchPage';
 import ActorDetail from './components/ActorDetails';
 import ProtectedStaffRoute from './ProtectedStaffRoute';
 import ProtectedRoute from './ProtectedRoute';
+import DesignSystemPage from './design/DesignSystemPage';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
@@ -79,6 +80,11 @@ function App() {
           }
         />
         <Route path="/admin/*" element={<Navigate to="/" replace />} />
+
+        {/* Living style guide (src/design), development only */}
+        {process.env.NODE_ENV !== 'production' ? (
+          <Route path="/design-system" element={<DesignSystemPage />} />
+        ) : null}
 
         {/* Optionnel: catch-all */}
         {/* <Route path="*" element={<Navigate to="/" replace />} /> */}

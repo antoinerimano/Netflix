@@ -88,7 +88,7 @@
   --filters-field-hover: rgba(255,255,255,0.12);
   --filters-text: rgba(255,255,255,0.92);
   --filters-muted: rgba(255,255,255,0.55);
-  --filters-accent: #e50914; /* Netflix-ish red */
+  --filters-accent: var(--color-brand); /* Netflix-ish red */
   --filters-accent-hover: #ff2732;
   --filters-focus: rgba(229,9,20,0.35);
 }
@@ -321,13 +321,13 @@
 
 /* When open (Chrome/Edge mostly): style the option list */
 .movie-filters select option {
-  background-color: #141414;   /* dark menu */
+  background-color: var(--color-bg);   /* dark menu */
   color: rgba(255,255,255,0.92);
 }
 
 /* If you have optgroups one day */
 .movie-filters select optgroup {
-  background-color: #141414;
+  background-color: var(--color-bg);
   color: rgba(255,255,255,0.70);
 }
 

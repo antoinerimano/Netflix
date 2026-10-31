@@ -2,10 +2,10 @@
 
 /* Scope styles only to this page */
 .tvs {
-  --bg: #141414;
+  --bg: var(--color-bg);
   --text: #ffffff;
   --muted: #b3b3b3;
-  --accent: #e50914;
+  --accent: var(--color-brand);
   --card-radius: 14px;
   --card-shadow: 0 10px 24px rgba(0,0,0,0.45);
 
@@ -119,7 +119,7 @@
   padding: 10px 16px;
   border: 0;
   border-radius: 8px;
-  background: #e50914;
+  background: var(--color-brand);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -156,7 +156,7 @@
   .tvs {
     background: radial-gradient(1200px 700px at 30% -20%, rgba(229,9,20,.18), transparent 55%),
                 radial-gradient(900px 600px at 110% 0%, rgba(255,255,255,.06), transparent 45%),
-                #141414 !important;
+                var(--color-bg) !important;
     min-height: 100vh !important;
   }
 
@@ -291,7 +291,7 @@
 
   /* Dropdown options dark (fix blanc) */
   .tvs-filters select option{
-    background: #141414 !important;
+    background: var(--color-bg) !important;
     color: rgba(255,255,255,.92) !important;
   }
 }

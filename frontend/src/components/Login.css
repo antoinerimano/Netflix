@@ -5,7 +5,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #141414;
+    background-color: var(--color-bg);
     color: #fff;
   
     background: url("https://zuvo-movies-cdn.b-cdn.net/mosaic_4k_landscape.jpg") no-repeat center center fixed;
@@ -52,7 +52,7 @@
     font-size: 18px;
     border: none;
     border-radius: 5px;
-    background-color: #e50914;
+    background-color: var(--color-brand);
     color: #fff;
     cursor: pointer;
     font-weight: bold;
@@ -60,11 +60,11 @@
 }
 
 .login-button:hover {
-    background-color: #f40612;
+    background-color: var(--color-brand-hover);
 }
 
 .error-message {
-    color: #e50914;
+    color: var(--color-brand);
     margin-bottom: 20px;
 }
 

@@ -1,28 +1,5 @@
-/* src/index.css or a global CSS file */
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #141414;
-  font-family: 'Arial', sans-serif;
-}
+/* Global base styles (body, headings, links, scrollbars): src/design/base.css */
 
-* {
-  box-sizing: border-box;
-}
-
-h1, h2, h3, h4, h5, h6, p, ul {
-  margin: 0;
-  padding: 0;
-}
-
-ul {
-  list-style: none;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
 /* =========================
    Netflix-like Loading UI
    ========================= */
@@ -34,7 +11,7 @@ a {
   --nf-text: rgba(255, 255, 255, 0.92);
   --nf-subtext: rgba(255, 255, 255, 0.68);
 
-  --nf-red: #e50914;
+  --nf-red: var(--color-brand);
   --nf-red2: #ff2a2a;
   --nf-red-soft: rgba(229, 9, 20, 0.25);
   --nf-glow: rgba(229, 9, 20, 0.35);

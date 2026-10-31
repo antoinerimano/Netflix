@@ -3,8 +3,10 @@
 // Recommendations: like = strong interest, dislike = never recommended + similar titles go down.
 import React, { useEffect, useState } from "react";
 import { fetchRating, setRating } from "../api/recoApi";
+import { Button } from "../design";
+import { ThumbUpIcon, ThumbDownIcon } from "../design/icons";
 
-export default function RatingButtons({ titleId, buttonClassName }) {
+export default function RatingButtons({ titleId, variant = "glass" }) {
   const profileId = localStorage.getItem("activeProfileId");
   const [rating, setRatingState] = useState(null); // "like" | "dislike" | null
 
@@ -28,34 +30,23 @@ export default function RatingButtons({ titleId, buttonClassName }) {
     setRating({ profileId, titleId, rating: next }).catch(() => setRatingState(previous));
   };
 
-  const style = (active) => ({
-    opacity: rating && !active ? 0.55 : 1,
-    outline: active ? "2px solid currentColor" : "none",
-    outlineOffset: 2,
-  });
-
   return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <button
-        type="button"
-        className={buttonClassName}
-        style={style(rating === "like")}
-        aria-pressed={rating === "like"}
-        title={rating === "like" ? "Remove like" : "I like this"}
+    <>
+      <Button
+        variant={variant}
+        icon={<ThumbUpIcon />}
+        pressed={rating === "like"}
+        label={rating === "like" ? "Liked" : "I like this"}
         onClick={() => choose("like")}
-      >
-        👍
-      </button>
-      <button
-        type="button"
-        className={buttonClassName}
-        style={style(rating === "dislike")}
-        aria-pressed={rating === "dislike"}
-        title={rating === "dislike" ? "Remove dislike" : "Not for me: hide it and show less like it"}
+      />
+      <Button
+        variant={variant}
+        icon={<ThumbDownIcon />}
+        pressed={rating === "dislike"}
+        label="Not for me"
+        title="Hide it and show less like it"
         onClick={() => choose("dislike")}
-      >
-        👎
-      </button>
-    </div>
+      />
+    </>
   );
 }

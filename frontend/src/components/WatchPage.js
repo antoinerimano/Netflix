@@ -4,7 +4,7 @@ import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource } from "../api/recoApi";
-import { enterPlayer } from "../tv/spatialNavigation";
+import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from "../utils/tmdbImage";
 
 // sources saved by older versions used the DB column names
@@ -163,12 +163,15 @@ export default function WatchPage() {
   const [hint, setHint] = useState("");
 
   const [isPulsing, setIsPulsing] = useState(false);
+  // full screen with the remote handed to the player: show its keys for a few seconds
+  const [playerKeysHint, setPlayerKeysHint] = useState(false);
   const [sourceLoading, setSourceLoading] = useState(false);
 
   // ✅ Hide hint while user is interacting with the player (hover)
   const [hoverPlayer, setHoverPlayer] = useState(false);
 
   const iframeRef = useRef(null);
+  const videoRef = useRef(null);
   const playerWrapRef = useRef(null);
 
   const showHint = useCallback((msg) => setHint(msg), []);
@@ -278,8 +281,27 @@ export default function WatchPage() {
     if (!wrap) return;
     const request = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
     request?.call(wrap)?.catch?.(() => {});
-    enterPlayer(iframeRef.current);
+    enterPlayer(iframeRef.current || videoRef.current);
+    setPlayerKeysHint(true);
   }, []);
+
+  useEffect(() => {
+    if (!playerKeysHint) return;
+    const t = setTimeout(() => setPlayerKeysHint(false), 5000);
+    const onChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) setPlayerKeysHint(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, [playerKeysHint]);
+
+  // TV remote Back / Escape: back to this title's details page (leaves full screen first)
+  useEffect(() => setBackHandler(goBack), [goBack]);
 
   // Links: provider domain + path template, filled with this movie / episode
   const providers = useMemo(() => {
@@ -652,6 +674,7 @@ export default function WatchPage() {
     if (sourceType === "direct") {
       return (
         <video
+          ref={videoRef}
           className="watchpage__video"
           controls
           playsInline
@@ -738,7 +761,7 @@ export default function WatchPage() {
 
           <div className="watchpage__topActions">
             {sourceType !== "none" ? (
-              <button className="watchpage__pillBtn" onClick={goFullscreen} title="Full screen (F)">
+              <button className="watchpage__pillBtn watchpage__fullscreenBtn" onClick={goFullscreen} title="Full screen (F)">
                 ⛶ Full screen
               </button>
             ) : null}
@@ -790,10 +813,34 @@ export default function WatchPage() {
             <div
               ref={playerWrapRef}
               className="watchpage__playerWrap"
+              // TV remote / keyboard: the player is a tile, OK = full screen with the remote
+              // handed to the player (play / pause, seek...); Back leaves it
+              tabIndex={sourceType !== "none" ? 0 : -1}
+              aria-label="Player: press OK to control it in full screen"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.target === e.currentTarget && sourceType !== "none") {
+                  e.preventDefault();
+                  goFullscreen();
+                }
+              }}
               onMouseEnter={() => setHoverPlayer(true)}
               onMouseLeave={() => setHoverPlayer(false)}
             >
               {PlayerNode}
+
+              {sourceType !== "none" ? (
+                <div className="watchpage__playerFocusHint" aria-hidden="true">
+                  <span className="watchpage__key">OK</span> Control the player
+                </div>
+              ) : null}
+
+              {playerKeysHint ? (
+                <div className="watchpage__playerKeys" aria-hidden="true">
+                  <span><span className="watchpage__key">OK</span> / <span className="watchpage__key">Space</span> Play · Pause</span>
+                  <span><span className="watchpage__key">◀</span> <span className="watchpage__key">▶</span> Rewind · Forward</span>
+                  <span><span className="watchpage__key">Back</span> Exit full screen</span>
+                </div>
+              ) : null}
 
               {banner ? (
                 <div className="watchpage__softHint">

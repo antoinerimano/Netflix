@@ -8,6 +8,8 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import './MovieDetail.css';
 import Navbar from './Navbar';
+import { Button, EmptyState, Spinner, friendlyError } from '../design';
+import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
 
 /* --- Helpers --- */
@@ -90,7 +92,10 @@ const MovieDetail = () => {
   const activeProfileId = localStorage.getItem('activeProfileId');
   const [isInList, setIsInList] = useState(false);
 
+  const [loadError, setLoadError] = useState(null);
+
   useEffect(() => {
+    setLoadError(null);
     fetchMovieById(parseInt(movieId, 10))
       .then((data) => {
         setMovie(data);
@@ -98,6 +103,7 @@ const MovieDetail = () => {
       })
       .catch((err) => {
         console.error('Failed to fetch movie:', err);
+        setLoadError(err);
         setLoading(false);
       });
   }, [movieId]);
@@ -135,12 +141,31 @@ const MovieDetail = () => {
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
+        <Spinner />
       </div>
     );
   }
 
-  if (!movie) return <div>Movie not found</div>;
+  if (!movie) {
+    return (
+      <div className="homepage">
+        <Navbar />
+        <EmptyState
+          page
+          tone="error"
+          title="Movie unavailable"
+          actions={
+            <>
+              <Button variant="primary" to="/movies">Browse movies</Button>
+              <Button variant="ghost" onClick={() => navigate(-1)}>Go back</Button>
+            </>
+          }
+        >
+          {friendlyError(loadError || { status: 404 }, 'this movie')}
+        </EmptyState>
+      </div>
+    );
+  }
 
   const runtime = formatMinutes(movie.runtime_minutes);
 
@@ -195,7 +220,6 @@ const MovieDetail = () => {
                   {castObjs.slice(0, 8).map((a, idx) => {
                     const name = a?.name || a?.english_name || "";
                     const img = tmdbProfileUrl(a?.profile_path || a?.profile || a?.photo || "");
-                    console.log("ACTOR CLICK DATA:", a);
                     return (
                       <div
                         className="movie-detail-cast-card"
@@ -205,9 +229,6 @@ const MovieDetail = () => {
                         onClick={() => {
                           if (!a?.tmdb_id) return;
                           navigate(`/actor/${a.tmdb_id}`);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && a?.tmdb_id) window.location.assign(`/actor/${a.tmdb_id}`);
                         }}
                       >
                         <div className="movie-detail-cast-photo">
@@ -235,10 +256,12 @@ const MovieDetail = () => {
               </div>
             ) : null}
 
-            {/* ✅ garde classes + ajoute beacon */}
-            <div className="provider-row">
-              <button
-                className="movie-detail-play-button btn-provider-like-play"
+            {/* actions: one primary (Watch), the rest as round icon buttons */}
+            <div className="ui-actions movie-detail-actions">
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<PlayIcon />}
                 onClick={() => {
                   const watchUrl = `/watch/${movie.id}`;
 
@@ -252,21 +275,17 @@ const MovieDetail = () => {
                   window.location.href = watchUrl;
                 }}
               >
-                <svg viewBox="0 0 24 24" stroke="#ffffff" className="play-icon" fill="none">
-                  <path
-                    d="M16.6 9.3C18.1 10.2 18.8 10.6 19.1 11.2c.2.5.2 1.1 0 1.6-.2.5-.9 1-2.5 1.9L9.9 18.9c-1.6 1-2.4 1.5-3.1 1.5-.6 0-1.1-.3-1.5-.8C5 19.1 5 18.1 5 16.2V7.8C5 5.9 5 4.9 5.3 4.4c.4-.5.9-.8 1.5-.8.7 0 1.5.5 3.1 1.4l6.7 4.3z"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span>Watch</span>
-              </button>
+                Watch
+              </Button>
+              <Button
+                variant="glass"
+                icon={isInList ? <CheckIcon /> : <PlusIcon />}
+                pressed={isInList}
+                label={isInList ? 'In My List' : 'Add to My List'}
+                onClick={handleToggleList}
+              />
+              <RatingButtons titleId={movie.id} />
             </div>
-
-            <button className="movie-detail-add-button" onClick={handleToggleList}>
-              {isInList ? 'Remove from My List' : 'Add to My List'}
-            </button>
-            <RatingButtons titleId={movie.id} buttonClassName="movie-detail-add-button" />
           </div>
         </div>
       </div>

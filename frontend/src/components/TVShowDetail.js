@@ -12,6 +12,8 @@ import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
 import './TVShowDetail.css';
 import Navbar from './Navbar';
+import { Button, EmptyState, Spinner, friendlyError } from '../design';
+import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 import { tmdbImage, tmdbSrcSet, tmdbBackground, IMG } from '../utils/tmdbImage';
 
 
@@ -88,7 +90,7 @@ export default function TVShowDetail() {
           setActiveSeasonNumber(first.season_number);
         }
       })
-      .catch((e) => setErr(e?.message || 'Failed to load show'))
+      .catch((e) => setErr(friendlyError(e, 'this show')))
       .finally(() => alive && setLoading(false));
 
     return () => { alive = false; };
@@ -153,16 +155,28 @@ export default function TVShowDetail() {
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
+        <Spinner />
       </div>
     );
   }
 
   if (err || !title) {
     return (
-      <div className="tvd-loading">
-        <p>{err || 'Not found'}</p>
-        <Link to="/tv" className="tvd-btn-secondary">← Back</Link>
+      <div className="tvd">
+        <Navbar />
+        <EmptyState
+          page
+          tone="error"
+          title="Show unavailable"
+          actions={
+            <>
+              <Button variant="primary" to="/tv">Browse TV shows</Button>
+              <Button variant="ghost" onClick={() => navigate(-1)}>Go back</Button>
+            </>
+          }
+        >
+          {err || friendlyError({ status: 404 }, 'this show')}
+        </EmptyState>
       </div>
     );
   }
@@ -226,9 +240,6 @@ export default function TVShowDetail() {
                         if (!a?.tmdb_id) return;
                         navigate(`/actor/${a.tmdb_id}`);
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && a?.tmdb_id) window.location.assign(`/actor/${a.tmdb_id}`);
-                      }}
                     >
                       <div className="movie-detail-cast-photo">
                         <img
@@ -250,10 +261,12 @@ export default function TVShowDetail() {
 
           <p className="tvd-description">{title.description}</p>
 
-          {/* ✅ GARDE TES CLASSES: tvd-actions + tvd-play--1 */}
-          <div className="tvd-actions">
-            <a
-              className="tvd-play tvd-play--1"
+          {/* actions: one primary (Watch), the rest as round icon buttons */}
+          <div className="ui-actions tvd-actions">
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<PlayIcon />}
               href={defaultWatchUrl}
               onClick={(e) => {
                 e.preventDefault();
@@ -268,19 +281,18 @@ export default function TVShowDetail() {
                 window.location.href = defaultWatchUrl;
               }}
             >
-              ▶ Watch
-            </a>
+              Watch
+            </Button>
+            <Button
+              variant="glass"
+              icon={isInList ? <CheckIcon /> : <PlusIcon />}
+              pressed={isInList}
+              label={isInList ? 'In My List' : 'Add to My List'}
+              onClick={handleToggleList}
+            />
+            <RatingButtons titleId={title.id} />
+            <FollowButton titleId={title.id} />
           </div>
-
-          <button
-            type="button"
-            className="tvd-add-button"
-            onClick={handleToggleList}
-          >
-            {isInList ? 'Remove from My List' : 'Add to My List'}
-          </button>
-          <RatingButtons titleId={title.id} buttonClassName="tvd-add-button" />
-          <FollowButton titleId={title.id} buttonClassName="tvd-add-button" />
         </div>
       </section>
 

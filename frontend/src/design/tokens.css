@@ -1,0 +1,141 @@
+/* ===== Tauruss design tokens =====
+   The single source for colors, type, spacing, radii, shadows and motion. Components and pages
+   use these variables instead of raw values, so the whole app stays one product and can be
+   restyled from here. Preview: /design-system (development builds).
+
+   Naming: --color-<role>, --font-*, --text-<step>, --space-<n> (4 px grid), --radius-*,
+   --shadow-*, --ease-* / --duration-*, --z-*. */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- Color: surfaces (darkest -> lightest) ---------- */
+  --color-bg: #0f0f12; /* page */
+  --color-bg-deep: #08080a; /* behind the hero, player, full-screen pages */
+  --color-surface-1: #18181c; /* cards, panels */
+  --color-surface-2: #222228; /* raised: menus, inputs, hovered rows */
+  --color-surface-3: #2e2e36; /* pressed / selected surfaces */
+  --color-overlay: rgba(8, 8, 10, 0.72); /* scrims over images, modals backdrop */
+  --color-glass: rgba(255, 255, 255, 0.08); /* translucent buttons / chips on images */
+  --color-glass-hover: rgba(255, 255, 255, 0.16);
+
+  /* ---------- Color: borders ---------- */
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.24);
+
+  /* ---------- Color: text ---------- */
+  --color-text: #f5f5f7; /* titles, body */
+  --color-text-secondary: rgba(245, 245, 247, 0.72); /* descriptions, meta */
+  --color-text-muted: rgba(245, 245, 247, 0.5); /* hints, placeholders, disabled */
+  --color-text-on-brand: #ffffff;
+  --color-text-inverse: #0f0f12; /* on white buttons */
+
+  /* ---------- Color: brand + status ---------- */
+  --color-brand: #e50914;
+  --color-brand-hover: #f6121d;
+  --color-brand-pressed: #c10710;
+  --color-brand-soft: rgba(229, 9, 20, 0.16);
+  --color-success: #46d369;
+  --color-warning: #f5b50a;
+  --color-danger: #ff4d4f;
+  --color-info: #4ea8ff;
+  --color-rating: #f5c518; /* ★ */
+
+  /* ---------- Typography ---------- */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* type scale (1.25 ratio, rem so it follows the TV scale below) */
+  --text-xs: 0.75rem; /* 12 badges, captions */
+  --text-sm: 0.875rem; /* 14 meta, secondary */
+  --text-md: 1rem; /* 16 body */
+  --text-lg: 1.125rem; /* 18 lead, card titles */
+  --text-xl: 1.375rem; /* 22 section titles */
+  --text-2xl: 1.75rem; /* 28 page titles */
+  --text-3xl: 2.25rem; /* 36 detail titles */
+  --text-4xl: clamp(2.25rem, 4.5vw, 3.75rem); /* hero titles */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-black: 800;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.06em;
+
+  /* ---------- Spacing (4 px grid) ---------- */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem; /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-8: 2rem; /* 32 */
+  --space-10: 2.5rem; /* 40 */
+  --space-12: 3rem; /* 48 */
+  --space-16: 4rem; /* 64 */
+
+  /* page side margin: grows with the screen, keeps TVs clear of overscan */
+  --page-gutter: clamp(1rem, 4vw, 3.75rem);
+  --page-max: 1600px;
+  --nav-height: 4rem;
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px; /* badges */
+  --radius-md: 10px; /* buttons, inputs, cards */
+  --radius-lg: 14px; /* panels, large cards */
+  --radius-xl: 20px; /* sheets, player */
+  --radius-pill: 999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.6);
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 360ms;
+
+  /* ---------- Layers ---------- */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-nav: 1000;
+  --z-dropdown: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+
+  /* ---------- Focus (keyboard / TV remote, see tv/focus.css) ---------- */
+  --focus-ring: #ffffff;
+  --focus-halo: rgba(255, 255, 255, 0.22);
+  --focus-accent: var(--color-brand);
+  --focus-speed: 160ms;
+}
+
+/* TV browsers (html.tv-device, set in design/index.js from the user agent): everything sized in
+   rem grows together, read from 3 m away. Not by screen width: a 1080p desktop monitor is as
+   wide as a TV but read from 60 cm. */
+html.tv-device {
+  font-size: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}

@@ -7,6 +7,8 @@ import MovieCard from './MovieCard';
 import './List.css';
 import { logTitleClick, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
+import { Button, EmptyState, Skeleton } from '../design';
+import { PlusIcon } from '../design/icons';
 
 const List = () => {
   const navigate = useNavigate();
@@ -72,12 +74,38 @@ const List = () => {
   return (
     <div>
       <Navbar />
+      {!loading && (error || list.length === 0) ? (
+        error ? (
+          <EmptyState
+            page
+            tone="error"
+            title="Couldn't load your list"
+            actions={<Button variant="primary" onClick={() => window.location.reload()}>Try again</Button>}
+          >
+            {error}
+          </EmptyState>
+        ) : (
+          <EmptyState
+            page
+            icon={<PlusIcon />}
+            title="Your list is empty"
+            actions={
+              <>
+                <Button variant="primary" to="/movies">Browse movies</Button>
+                <Button variant="glass" to="/tv">Browse TV shows</Button>
+              </>
+            }
+          >
+            Add movies and shows with the + button to find them here later.
+          </EmptyState>
+        )
+      ) : (
       <div className="ps-store-movie-grid">
         {loading ? (
-          <p>Loading…</p>
-        ) : error ? (
-          <p>{error}</p>
-        ) : list.length > 0 ? (
+          Array.from({ length: 12 }, (_, i) => (
+            <Skeleton key={i} style={{ aspectRatio: '2 / 3' }} />
+          ))
+        ) : (
           list.map((item, idx) => (
             <MovieCard
               key={item.id}
@@ -87,10 +115,9 @@ const List = () => {
               onRemove={() => handleRemove(item.id)}
             />
           ))
-        ) : (
-          <p>Your list is empty</p>
         )}
       </div>
+      )}
     </div>
   );
 };

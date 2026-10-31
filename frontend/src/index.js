@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './design'; // design system: tokens, base styles, shared components (first)
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

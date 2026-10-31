@@ -95,7 +95,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #e50914; /* Netflix red */
+  background: var(--color-brand); /* Netflix red */
   color: #fff;
   font-weight: 700;
   font-size: 1rem;
@@ -107,7 +107,7 @@
   transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
   box-shadow: 0 8px 18px rgba(229, 9, 20, 0.28);
 }
-.tvd-play:hover { background: #f6121d; transform: translateY(-1px) scale(1.03); }
+.tvd-play:hover { background: var(--color-brand-hover); transform: translateY(-1px) scale(1.03); }
 .tvd-play:active { transform: translateY(0) scale(0.99); }
 .tvd-play--2 { background: #333; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
 .tvd-play--2:hover { background: #3b3b3b; }
@@ -144,8 +144,8 @@
 }
 .tvd-chip:hover { background: #242424; border-color: #3a3a3a; transform: translateY(-1px); }
 .tvd-chip.is-active {
-  background: #e50914;
-  border-color: #e50914;
+  background: var(--color-brand);
+  border-color: var(--color-brand);
   color: #fff;
   box-shadow: 0 6px 14px rgba(229, 9, 20, 0.35), inset 0 0 0 1px rgba(255,255,255,0.06);
   transform: translateY(-1px);
@@ -162,7 +162,7 @@
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  background: #e50914;
+  background: var(--color-brand);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -194,7 +194,7 @@
   letter-spacing: 0.02em;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid #e50914;
+  border: 1px solid var(--color-brand);
   color: #fff;
   background: rgba(229, 9, 20, 0.18);
 }
@@ -218,7 +218,7 @@
 /* ---------- Episode card (VERTICAL EXPANSION ON HOVER) ---------- */
 .tvd-ep-card {
   position: relative;
-  background: #141414;
+  background: var(--color-bg);
   border: 1px solid #1f1f1f;
   border-radius: 12px;
   overflow: hidden; /* keeps image rounded; hover body is inside flow */
@@ -324,7 +324,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #e50914;
+  background: var(--color-brand);
   color: #fff;
   font-weight: 700;
   font-size: .9rem;
@@ -336,7 +336,7 @@
   transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
   box-shadow: 0 8px 18px rgba(229, 9, 20, 0.25);
 }
-.tvd-ep-card__play:hover { background: #f6121d; transform: translateY(-1px); }
+.tvd-ep-card__play:hover { background: var(--color-brand-hover); transform: translateY(-1px); }
 .tvd-ep-card__play:active { transform: translateY(0); }
 .tvd-ep-card__play--2 { background: #333; box-shadow: 0 8px 18px rgba(0,0,0,0.35); }
 .tvd-ep-card__play--2:hover { background: #3a3a3a; }

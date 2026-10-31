@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at top, #141414 0%, #000 100%);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background: radial-gradient(circle at top, var(--color-bg) 0%, #000 100%);
+  font-family: var(--font-sans);
   padding: 2rem;
   text-align: center;
 }
@@ -28,7 +28,7 @@
 }
 
 .confirm-email-message.error {
-  color: #e50914; /* Netflix red */
+  color: var(--color-brand); /* Netflix red */
   text-shadow: 0 0 10px rgba(229, 9, 20, 0.6);
 }
 

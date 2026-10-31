@@ -1,0 +1,351 @@
+/* ===== Shared components (React: src/design/components.js) =====
+   Class names start with ui- so they never collide with page styles. */
+
+/* ---------- Button ----------
+   primary   : the ONE main action of a screen (Play / Watch / Save) - brand red
+   secondary : other actions - light surface (white on images, like streaming apps)
+   glass     : actions over images / video (More info, icon actions on a hero)
+   ghost     : low-emphasis (Cancel, Back, links that look like buttons)
+   danger    : destructive (Delete profile) */
+.ui-btn {
+  --btn-h: 2.75rem;
+  --btn-px: var(--space-5);
+  --btn-fs: var(--text-md);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--btn-h);
+  padding: 0 var(--btn-px);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--btn-fs);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--duration-normal) var(--ease-standard),
+    border-color var(--duration-normal) var(--ease-standard), color var(--duration-normal) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard),
+    opacity var(--duration-normal) var(--ease-standard);
+}
+.ui-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ui-btn__icon {
+  display: inline-flex;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+.ui-btn__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* sizes */
+.ui-btn--sm {
+  --btn-h: 2.125rem;
+  --btn-px: var(--space-3);
+  --btn-fs: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+.ui-btn--lg {
+  --btn-h: 3.25rem;
+  --btn-px: var(--space-8);
+  --btn-fs: var(--text-lg);
+}
+.ui-btn--block {
+  width: 100%;
+}
+
+/* variants */
+.ui-btn--primary {
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  box-shadow: 0 6px 18px rgba(229, 9, 20, 0.28);
+}
+.ui-btn--primary:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+}
+.ui-btn--primary:active:not(:disabled) {
+  background: var(--color-brand-pressed);
+}
+
+.ui-btn--secondary {
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+}
+.ui-btn--secondary:hover:not(:disabled) {
+  background: rgba(245, 245, 247, 0.82);
+}
+
+.ui-btn--glass {
+  background: var(--color-glass);
+  border-color: var(--color-border);
+  color: var(--color-text);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.ui-btn--glass:hover:not(:disabled) {
+  background: var(--color-glass-hover);
+  border-color: var(--color-border-strong);
+}
+
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.ui-btn--ghost:hover:not(:disabled) {
+  background: var(--color-glass);
+  color: var(--color-text);
+}
+
+.ui-btn--danger {
+  background: transparent;
+  border-color: rgba(255, 77, 79, 0.5);
+  color: var(--color-danger);
+}
+.ui-btn--danger:hover:not(:disabled) {
+  background: rgba(255, 77, 79, 0.12);
+}
+
+/* round icon-only button (+ My List, 👍, 🔔...) */
+.ui-btn--icon {
+  --btn-px: 0;
+  width: var(--btn-h);
+  border-radius: var(--radius-pill);
+}
+.ui-btn--icon .ui-btn__icon {
+  width: 1.375em;
+  height: 1.375em;
+}
+/* toggled on (in My List, liked, following) */
+.ui-btn[aria-pressed="true"]:not(.ui-btn--primary) {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-text-inverse);
+}
+
+/* loading */
+.ui-btn.is-loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+.ui-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid currentColor;
+  border-color: var(--color-text) transparent var(--color-text) transparent;
+  border-radius: 50%;
+  animation: ui-spin 0.8s linear infinite;
+}
+
+/* group of actions (detail pages, dialogs) */
+.ui-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* tooltip-like label under icon buttons, shown on hover / focus */
+.ui-btn[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: var(--z-raised);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -4px);
+  transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+.ui-btn[data-label]:hover::before,
+.ui-btn[data-label]:focus-visible::before {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- Chip (filters, seasons, sources) ---------- */
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-glass);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-standard),
+    border-color var(--duration-normal) var(--ease-standard), color var(--duration-normal) var(--ease-standard);
+}
+.ui-chip:hover {
+  background: var(--color-glass-hover);
+  color: var(--color-text);
+}
+.ui-chip.is-selected,
+.ui-chip[aria-pressed="true"] {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-text-inverse);
+}
+
+/* ---------- Badge (HD, TV, Movie, NEW, S1E2, ratings) ---------- */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-glass);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ui-badge--brand {
+  background: var(--color-brand);
+  border-color: transparent;
+  color: var(--color-text-on-brand);
+}
+.ui-badge--rating {
+  background: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  color: var(--color-text);
+}
+.ui-badge--rating .ui-badge__star {
+  color: var(--color-rating);
+}
+
+/* ---------- Skeleton (loading placeholders, instead of empty / black boxes) ---------- */
+.ui-skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+}
+.ui-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: ui-shimmer 1.4s ease-in-out infinite;
+}
+.ui-skeleton--text {
+  height: 0.9em;
+  border-radius: var(--radius-xs);
+}
+.ui-skeleton--circle {
+  border-radius: 50%;
+}
+@keyframes ui-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ---------- Spinner ---------- */
+.ui-spinner {
+  display: inline-block;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-brand);
+  border-radius: 50%;
+  animation: ui-spin 0.8s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Empty / error state ---------- */
+.ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+}
+.ui-empty--page {
+  min-height: calc(100vh - var(--nav-height));
+}
+.ui-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: var(--space-2);
+  border-radius: 50%;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.ui-empty__icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+.ui-empty--error .ui-empty__icon {
+  background: var(--color-brand-soft);
+  border-color: rgba(229, 9, 20, 0.35);
+  color: var(--color-brand);
+}
+.ui-empty__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+.ui-empty__text {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+.ui-empty .ui-actions {
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+/* ---------- Section title (rows, detail sections) ---------- */
+.ui-section-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+  letter-spacing: var(--tracking-tight);
+}

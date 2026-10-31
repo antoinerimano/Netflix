@@ -732,7 +732,7 @@
   --wp-card2: rgba(62, 22, 22, 0.06);
   --wp-border: rgba(255,255,255,0.12);
 
-  --wp-accent: #e50914;
+  --wp-accent: var(--color-brand);
   --wp-accentSoft: rgba(229,9,20,0.22);
   --wp-accentGlow: rgba(229,9,20,0.35);
 

@@ -95,7 +95,7 @@
 }
 
 .play-button {
-  background: #e50914;
+  background: var(--color-brand);
   color: #fff;
 }
 

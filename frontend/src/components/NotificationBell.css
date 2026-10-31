@@ -30,7 +30,7 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  background: #e50914;
+  background: var(--color-brand);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -45,7 +45,7 @@
   width: 320px;
   max-height: 420px;
   overflow-y: auto;
-  background-color: #141414;
+  background-color: var(--color-bg);
   border: 1px solid #333;
   border-radius: 5px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
@@ -79,7 +79,7 @@
 
 .notif__item--new {
   color: #fff;
-  box-shadow: inset 3px 0 0 #e50914;
+  box-shadow: inset 3px 0 0 var(--color-brand);
 }
 
 .notif__item img,

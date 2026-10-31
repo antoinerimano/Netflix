@@ -3,12 +3,7 @@
    Rings are box-shadows, not outlines: on TV browsers (Tizen / webOS run old Chromium) outlines
    don't follow rounded corners and look like boxes. */
 
-:root {
-  --focus-ring: #ffffff;
-  --focus-halo: rgba(255, 255, 255, 0.22);
-  --focus-accent: #e50914;
-  --focus-speed: 160ms;
-}
+/* colors / speed: --focus-ring, --focus-halo, --focus-accent, --focus-speed in design/tokens.css */
 
 /* Base: a crisp white ring + soft halo that follows the element's own border-radius */
 :focus {
@@ -40,12 +35,19 @@
   box-shadow: 0 0 0 3px var(--focus-ring), 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
+/* ---------- Design system buttons / chips (design/components.css): an offset ring (a gap in
+   the page color, then white) that stays visible on white and red buttons alike ---------- */
+.ui-btn:focus-visible,
+.ui-chip:focus-visible {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 5px var(--focus-ring), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+
 /* ---------- Cards: the hover look + a white frame drawn ABOVE the image ----------
    (a ring on the card itself is hidden by the image inside it) */
 .movie-card::after,
 .ps-store-movie-card::after,
-.tvd-ep-card::after,
-.movie-detail-cast-card::after {
+.tvd-ep-card::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -56,14 +58,12 @@
   z-index: 10;
   transition: opacity var(--focus-speed) ease;
 }
-.ps-store-movie-card,
-.movie-detail-cast-card {
+.ps-store-movie-card {
   position: relative;
 }
 .movie-card:focus-visible::after,
 .ps-store-movie-card:focus-visible::after,
-.tvd-ep-card:focus-visible::after,
-.movie-detail-cast-card:focus-visible::after {
+.tvd-ep-card:focus-visible::after {
   opacity: 1;
 }
 .movie-card:focus-visible,
@@ -76,16 +76,131 @@
 .movie-card:focus-visible img {
   transform: scale(1.06);
 }
+/* ---------- Actor cards (movie / show pages): the photo is framed and lifted, the name lights
+   up; the card itself (photo + text) gets no box. Same look on mouse hover. ---------- */
 .movie-detail-cast-card {
-  border-radius: 10px;
+  cursor: pointer;
+  border-radius: 12px;
 }
 .movie-detail-cast-card:focus-visible {
-  transform: translateY(-4px);
   box-shadow: none;
 }
-/* room for the enlarged card inside the row slider (it clips what overflows) */
+.movie-detail-cast-photo {
+  border-radius: 12px;
+  transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease;
+}
+.movie-detail-cast-photo img {
+  display: block;
+  border-radius: 12px;
+  filter: brightness(0.82) saturate(0.9);
+  transition: filter var(--focus-speed) ease;
+}
+.movie-detail-cast-name,
+.movie-detail-cast-role {
+  transition: color var(--focus-speed) ease, opacity var(--focus-speed) ease;
+}
+.movie-detail-cast-card:focus-visible .movie-detail-cast-photo,
+.movie-detail-cast-card:hover .movie-detail-cast-photo {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+.movie-detail-cast-card:hover:not(:focus-visible) .movie-detail-cast-photo {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6); /* mouse: lift only, the white frame is the remote's */
+}
+.movie-detail-cast-card:focus-visible .movie-detail-cast-photo img,
+.movie-detail-cast-card:hover .movie-detail-cast-photo img {
+  filter: none;
+}
+.movie-detail-cast-card:focus-visible .movie-detail-cast-name {
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.movie-detail-cast-card:focus-visible .movie-detail-cast-role {
+  opacity: 1;
+}
+html.tv-keys .movie-detail-cast-card:hover:not(:focus-visible) .movie-detail-cast-photo {
+  transform: none;
+  box-shadow: none;
+}
+html.tv-keys .movie-detail-cast-card:hover:not(:focus-visible) .movie-detail-cast-photo img {
+  filter: brightness(0.82) saturate(0.9);
+}
+
+/* ---------- Watch page player tile ---------- */
+.watchpage__playerWrap:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 34px 140px rgba(0, 0, 0, 0.58);
+}
+.watchpage__playerFocusHint {
+  position: absolute;
+  left: 50%;
+  bottom: 72px; /* above the players' own control bars */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  transition: opacity var(--focus-speed) ease, transform var(--focus-speed) ease;
+}
+.watchpage__playerWrap:focus-visible .watchpage__playerFocusHint {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.watchpage__playerKeys {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  max-width: calc(100% - 32px);
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  pointer-events: none;
+  animation: tv-keys-hint 5s ease forwards;
+}
+@keyframes tv-keys-hint {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.watchpage__key {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-align: center;
+}
+/* In a row the slider clips what overflows: an enlarged card was cut off at the screen edges
+   (first / last card) and covered its neighbours. Row cards keep their size; the frame, the
+   zoomed image and the info panel mark the focus. */
+.row .movie-card:focus-visible {
+  transform: none;
+}
 .row .slick-list {
-  padding: 10px 0;
+  padding: 6px 0;
 }
 
 /* ---------- Navbar text links: no box, white text + red underline ---------- */
@@ -133,8 +248,15 @@ textarea:focus-visible {
   box-shadow: 0 0 0 3px var(--focus-accent), 0 0 0 7px rgba(229, 9, 20, 0.25);
 }
 
-/* "Hold OK" hint on a focused card that has a ⊘ / ✕ button (spatialNavigation: long press) */
+/* "Hold OK" hint on a focused card that has a ⊘ / ✕ button (spatialNavigation: long press).
+   Only after resting on the card: shown at once it flashed on every card while scrolling a row. */
+@keyframes tv-hint-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .movie-card:focus-visible:has(.row-remove-btn)::before {
+  opacity: 0;
+  animation: tv-hint-in 200ms ease 1.2s forwards;
   content: "Hold OK · options";
   position: absolute;
   top: 8px;
@@ -155,6 +277,33 @@ textarea:focus-visible {
   opacity: 1;
   pointer-events: auto;
   transform: scale(1.15);
+}
+
+/* ---------- Keyboard mode (html.tv-keys, set by spatialNavigation while the remote / arrows
+   are used): a card under the resting mouse pointer must not look selected too ---------- */
+html.tv-keys,
+html.tv-keys * {
+  cursor: none !important;
+}
+html.tv-keys .movie-card:hover:not(:focus-visible) {
+  transform: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+}
+html.tv-keys .movie-card:hover:not(:focus-visible) img,
+html.tv-keys .row .slick-slide img:hover,
+html.tv-keys .ps-store-movie-card:hover:not(:focus-visible),
+html.tv-keys .tvd-ep-card:hover:not(:focus-visible) {
+  transform: none;
+}
+html.tv-keys .tvd-ep-card:hover:not(:focus-within) .tvd-ep-card__hover {
+  display: none;
+}
+html.tv-keys .movie-card:hover:not(:focus-within) .movie-info,
+html.tv-keys .movie-card:hover:not(:focus-within) .row-remove-btn {
+  opacity: 0;
+}
+html.tv-keys .movie-card:focus-visible img {
+  transform: scale(1.06);
 }
 
 @media (prefers-reduced-motion: reduce) {

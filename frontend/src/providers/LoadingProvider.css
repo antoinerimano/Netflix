@@ -14,7 +14,7 @@
 .nf-spinner {
   width: 84px; height: 84px; border-radius: 50%;
   background: conic-gradient(from 0deg,
-    #e50914 0 90deg,
+    var(--color-brand) 0 90deg,
     #b20710 90deg 180deg,
     #8f0a12 180deg 270deg,
     #4d0b0f 270deg 360deg);
@@ -32,9 +32,9 @@
 }
 
 .nf-n {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: var(--font-sans);
   font-weight: 900; font-size: 86px; letter-spacing: 2px;
-  color: #e50914;
+  color: var(--color-brand);
   text-shadow: 0 0 28px rgba(229,9,20,.25), 0 10px 40px rgba(229,9,20,.18);
   transform: translateY(4px);
 }
