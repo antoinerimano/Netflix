@@ -1,0 +1,230 @@
+{% extends "admin/base_site.html" %}
+{% load humanize %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  /* Text / surfaces come from the admin theme variables (they follow its light / dark toggle).
+     Chart color: one blue (single series). Status colors are fixed and always paired with an
+     icon + a word, never color alone. */
+  .dash {
+    --dash-bar: #2a78d6;
+    --dash-good: #0ca30c;
+    --dash-warning: #fab219;
+    --dash-serious: #ec835a;
+    --dash-critical: #d03b3b;
+    --dash-card: var(--darkened-bg, #f8f8f8);
+    --dash-line: var(--hairline-color, #e8e8e8);
+    --dash-ink: var(--body-fg, #333);
+    --dash-quiet: var(--body-quiet-color, #666);
+  }
+  @media (prefers-color-scheme: dark) {
+    html[data-theme="auto"] .dash { --dash-bar: #3987e5; }
+  }
+  html[data-theme="dark"] .dash { --dash-bar: #3987e5; }
+
+  .dash { display: grid; gap: 20px; max-width: 1200px; }
+  .dash h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--dash-ink); background: none; padding: 0; text-transform: none; letter-spacing: 0; }
+  .dash-card { background: var(--dash-card); border: 1px solid var(--dash-line); border-radius: 8px; padding: 16px 18px; }
+  .dash-sub { color: var(--dash-quiet); font-size: 12px; margin: -6px 0 12px; }
+  .dash-grid2 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+
+  /* hero numbers */
+  .dash-tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .dash-tile { background: var(--dash-card); border: 1px solid var(--dash-line); border-radius: 8px; padding: 14px 16px; }
+  .dash-tile-label { color: var(--dash-quiet); font-size: 12px; }
+  .dash-tile-value { color: var(--dash-ink); font-size: 30px; font-weight: 600; line-height: 1.2; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+  /* plays per day: column chart */
+  .dash-cols { display: grid; grid-template-columns: repeat({{ plays|length }}, 1fr); gap: 6px; align-items: end; height: 160px; padding-top: 8px; border-bottom: 1px solid var(--dash-line); }
+  .dash-col { position: relative; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+  .dash-col-bar { width: 100%; background: var(--dash-bar); border-radius: 4px 4px 0 0; }
+  .dash-col-bar--some { min-height: 3px; } /* a day with plays stays visible; a day with none stays empty */
+  .dash-col:hover .dash-col-bar { filter: brightness(1.15); }
+  .dash-col-tip { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+    background: var(--dash-ink); color: var(--body-bg, #fff); font-size: 11px; padding: 3px 7px; border-radius: 4px; opacity: 0; pointer-events: none; transition: opacity 120ms; z-index: 2; }
+  .dash-col:hover .dash-col-tip { opacity: 1; }
+  .dash-col-axis { display: grid; grid-template-columns: repeat({{ plays|length }}, 1fr); gap: 6px; margin-top: 4px; color: var(--dash-quiet); font-size: 10px; text-align: center; }
+
+  /* horizontal bars (providers, top titles) */
+  .dash-hbar { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+  .dash-hbar-track { flex: 1; height: 8px; background: var(--dash-line); border-radius: 4px; overflow: hidden; }
+  .dash-hbar-fill { height: 100%; background: var(--dash-bar); border-radius: 4px; }
+  .dash-hbar-value { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; color: var(--dash-ink); }
+
+  /* tables */
+  .dash table { width: 100%; border-collapse: collapse; }
+  .dash th { text-align: left; font-weight: 600; font-size: 11px; color: var(--dash-quiet); text-transform: uppercase; letter-spacing: 0.03em; padding: 6px 8px; border-bottom: 1px solid var(--dash-line); background: none; }
+  .dash td { padding: 8px; border-bottom: 1px solid var(--dash-line); vertical-align: middle; color: var(--dash-ink); }
+  .dash tr:last-child td { border-bottom: 0; }
+  .dash .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .dash .quiet { color: var(--dash-quiet); font-size: 12px; }
+  .dash pre { margin: 4px 0 0; white-space: pre-wrap; font-size: 11px; color: var(--dash-quiet); max-width: 520px; }
+
+  /* status: icon + word + color */
+  .dash-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .dash-status::before { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: #fff; font-size: 10px; line-height: 1; }
+  .dash-status--good::before { content: "✓"; background: var(--dash-good); }
+  .dash-status--warning::before { content: "!"; background: var(--dash-warning); color: #222; }
+  .dash-status--serious::before { content: "!"; background: var(--dash-serious); }
+  .dash-status--critical::before { content: "✕"; background: var(--dash-critical); }
+  .dash-status--none::before { content: "–"; background: var(--dash-quiet); }
+
+  .dash details summary { cursor: pointer; color: var(--dash-quiet); font-size: 12px; margin-top: 10px; }
+  .dash-links a { margin-right: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash">
+  <p class="quiet dash-links">
+    Updated {{ now|date:"M j, H:i" }} UTC ·
+    <a href="{% url 'admin:users_provider_changelist' %}">Providers</a>
+    <a href="{% url 'admin-dashboard' %}">Refresh</a>
+  </p>
+
+  {# ---------- headline numbers ---------- #}
+  <div class="dash-tiles">
+    {% for label, value in tiles %}
+      <div class="dash-tile">
+        <div class="dash-tile-label">{{ label }}</div>
+        <div class="dash-tile-value">{{ value|intcomma }}</div>
+      </div>
+    {% endfor %}
+    <div class="dash-tile">
+      <div class="dash-tile-label">Home pages failing</div>
+      <div class="dash-tile-value">{{ snapshots_failed|intcomma }}</div>
+    </div>
+  </div>
+
+  {# ---------- plays per day ---------- #}
+  <section class="dash-card">
+    <h2>Plays per day</h2>
+    <p class="dash-sub">Play button presses, last {{ plays|length }} days (UTC) · {{ plays_total|intcomma }} in total · busiest day {{ plays_top|intcomma }}</p>
+    <div class="dash-cols" role="img" aria-label="Plays per day, last {{ plays|length }} days">
+      {% for d in plays %}
+        <div class="dash-col">
+          <div class="dash-col-bar{% if d.n %} dash-col-bar--some{% endif %}" style="height: {{ d.height }}%"></div>
+          <div class="dash-col-tip">{{ d.day|date:"D M j" }}: {{ d.n|intcomma }} plays</div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="dash-col-axis" aria-hidden="true">
+      {% for d in plays %}<div>{% if forloop.first or forloop.last or forloop.counter|divisibleby:3 %}{{ d.day|date:"M j" }}{% endif %}</div>{% endfor %}
+    </div>
+    <details>
+      <summary>Show as a table</summary>
+      <table>
+        <tr><th>Day</th><th class="num">Plays</th></tr>
+        {% for d in plays %}<tr><td>{{ d.day|date:"D M j" }}</td><td class="num">{{ d.n|intcomma }}</td></tr>{% endfor %}
+      </table>
+    </details>
+  </section>
+
+  {# ---------- providers ---------- #}
+  <section class="dash-card">
+    <h2>Stream providers</h2>
+    <p class="dash-sub">Status from the last health check · uptime over 24 h of checks · plays and how often they actually played, last 7 days</p>
+    <table>
+      <tr>
+        <th>Provider</th><th>Status</th><th class="num">Uptime 24 h</th><th>Plays, 7 days</th><th class="num">Played OK</th><th>Last check</th>
+      </tr>
+      {% for r in providers %}
+        <tr>
+          <td><strong>{{ r.p.label }}</strong>{% if not r.p.enabled %} <span class="quiet">(disabled)</span>{% endif %}<br><span class="quiet">{{ r.p.domain }}</span></td>
+          <td>
+            {% if r.p.status == "up" %}<span class="dash-status dash-status--good">Up</span>
+            {% elif r.p.status == "down" %}<span class="dash-status dash-status--critical">Down</span>
+            {% else %}<span class="dash-status dash-status--none">Unknown</span>{% endif %}
+            {% if r.p.suggested_domain %}<br><span class="quiet">suggests {{ r.p.suggested_domain }}</span>{% endif %}
+          </td>
+          <td class="num">{% if r.uptime is not None %}{{ r.uptime }} %{% else %}<span class="quiet">no checks</span>{% endif %}</td>
+          <td>
+            <div class="dash-hbar" title="{{ r.plays }} plays">
+              <div class="dash-hbar-track"><div class="dash-hbar-fill" style="width: {{ r.plays_width }}%"></div></div>
+              <span class="dash-hbar-value">{{ r.plays|intcomma }}</span>
+            </div>
+          </td>
+          <td class="num">{% if r.success is not None %}{{ r.success }} %{% else %}<span class="quiet">–</span>{% endif %}</td>
+          <td class="quiet">{% if r.p.checked_at %}{{ r.p.checked_at|naturaltime }}{% else %}never{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  {# ---------- scheduled jobs ---------- #}
+  <section class="dash-card">
+    <h2>Scheduled jobs</h2>
+    <p class="dash-sub">Last run of each command (cron) · "late" = no run for longer than its usual schedule</p>
+    <table>
+      <tr><th>Job</th><th>Status</th><th>Last run</th><th class="num">Duration</th><th class="num">Runs / failures, 7 days</th></tr>
+      {% for j in jobs %}
+        <tr>
+          <td><strong>{{ j.label }}</strong><br><span class="quiet">{{ j.name }}</span></td>
+          <td>
+            {% if j.state == "ok" %}<span class="dash-status dash-status--good">OK</span>
+            {% elif j.state == "failed" %}<span class="dash-status dash-status--critical">Failed</span>
+            {% elif j.state == "late" %}<span class="dash-status dash-status--warning">Late</span>
+            {% elif j.state == "running" %}<span class="dash-status dash-status--serious">Running / stopped</span>
+            {% else %}<span class="dash-status dash-status--none">Never ran</span>{% endif %}
+          </td>
+          <td>
+            {% if j.last %}{{ j.last.started_at|naturaltime }}
+              {% if j.last.error %}<pre>{{ j.last.error }}</pre>{% elif j.last.summary %}<pre>{{ j.last.summary }}</pre>{% endif %}
+            {% else %}<span class="quiet">–</span>{% endif %}
+          </td>
+          <td class="num">{% if j.last.duration %}{{ j.last.duration|stringformat:"s"|slice:":7" }}{% else %}<span class="quiet">–</span>{% endif %}</td>
+          <td class="num">{{ j.runs }} / {% if j.failures %}<strong>{{ j.failures }}</strong>{% else %}0{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  <div class="dash-grid2">
+    {# ---------- most watched ---------- #}
+    <section class="dash-card">
+      <h2>Most watched this week</h2>
+      <p class="dash-sub">Different profiles that pressed Play, last 7 days</p>
+      {% if top_titles %}
+        <table>
+          {% for t in top_titles %}
+            <tr>
+              <td>{{ t.title__title }} <span class="quiet">{% if t.title__type == "tv" %}TV{% else %}Movie{% endif %}</span></td>
+              <td style="width: 45%">
+                <div class="dash-hbar" title="{{ t.viewers }} profiles">
+                  <div class="dash-hbar-track"><div class="dash-hbar-fill" style="width: {{ t.width }}%"></div></div>
+                  <span class="dash-hbar-value">{{ t.viewers|intcomma }}</span>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}<p class="quiet">No plays this week yet.</p>{% endif %}
+    </section>
+
+    {# ---------- home pages + catalog ---------- #}
+    <section class="dash-card">
+      <h2>Home pages</h2>
+      <p class="dash-sub">Built per profile by the home pages job</p>
+      <table>
+        <tr><td>Profiles with a home page</td><td class="num">{{ snapshots_total|intcomma }}</td></tr>
+        <tr><td>Profiles without one yet</td><td class="num">{{ profiles_without_snapshot|intcomma }}</td></tr>
+        <tr><td>Oldest home page</td><td class="num">{% if snapshots_oldest %}{{ snapshots_oldest|naturaltime }}{% else %}–{% endif %}</td></tr>
+        <tr><td>Last build failed</td><td class="num">{% if snapshots_failed %}<span class="dash-status dash-status--critical">{{ snapshots_failed }}</span>{% else %}<span class="dash-status dash-status--good">0</span>{% endif %}</td></tr>
+      </table>
+      {% if failed_snapshots %}
+        <details>
+          <summary>Failed builds</summary>
+          <table>
+            {% for s in failed_snapshots %}<tr><td>{{ s.profile.name }} <span class="quiet">#{{ s.profile_id }}</span><pre>{{ s.last_error|truncatechars:300 }}</pre></td></tr>{% endfor %}
+          </table>
+        </details>
+      {% endif %}
+
+      <h2 style="margin-top: 18px">Catalog</h2>
+      <table>
+        {% for label, value in catalog %}<tr><td>{{ label }}</td><td class="num">{{ value|intcomma }}</td></tr>{% endfor %}
+      </table>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -11,6 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 import numpy as np
+from users.jobs import tracked
 
 
 def _join(x):
@@ -32,6 +33,7 @@ class Command(BaseCommand):
         p.add_argument("--topk", type=int, default=80)
         p.add_argument("--model-name", type=str, default="all-MiniLM-L6-v2")
 
+    @tracked("build_embeddings")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **o):
         t = o["type"]
         topk = o["topk"]

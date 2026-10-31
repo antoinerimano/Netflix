@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from users.maturity import rating_from_tmdb
 from users.models import Title
+from users.jobs import tracked
 
 APPEND = {"movie": "release_dates", "tv": "content_ratings"}
 
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         parser.add_argument("--all", action="store_true", help="Refresh titles already rated too.")
         parser.add_argument("--batch", type=int, default=400)
 
+    @tracked("backfill_ratings")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         api_key = os.environ.get("TMDB_API_KEY") or getattr(settings, "TMDB_API_KEY", None)
         if not api_key:

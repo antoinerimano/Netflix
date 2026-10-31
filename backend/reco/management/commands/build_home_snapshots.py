@@ -8,6 +8,7 @@ from django.utils import timezone
 from users.models import Profile
 from reco.models import RecoHomeSnapshot
 from reco.views import build_home_payload_exact
+from users.jobs import tracked
 
 
 class Command(BaseCommand):
@@ -21,6 +22,7 @@ class Command(BaseCommand):
         # optionnel: si tu veux limiter aux profils actifs
         parser.add_argument("--only-active-days", type=int, default=None)
 
+    @tracked("build_home_snapshots")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         hours = opts["hours"]
         limit = opts["limit"]

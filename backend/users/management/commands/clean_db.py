@@ -11,6 +11,7 @@ from django.db import transaction
 from django.db.models import Count, Min, Q
 
 from users.models import Title, TVShowExtras, Season, Episode, Actor
+from users.jobs import tracked
 
 
 # Stream links are not stored anymore: they are built from users.Provider templates.
@@ -591,6 +592,7 @@ class Command(BaseCommand):
         for row in qs[:25]:
             self.log(f"  - type={row['type']} tmdb_id={row['tmdb_id']} count={row['c']}")
 
+    @tracked("clean_db")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         dry_run = bool(opts["dry_run"])
         overwrite = bool(opts["overwrite"])

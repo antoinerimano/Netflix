@@ -13,6 +13,7 @@ from django.db.models import Count
 
 from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
+from users.jobs import tracked
 
 # Stream links are not stored anymore: they are built from users.Provider templates.
 
@@ -438,6 +439,7 @@ class Command(BaseCommand):
                     out.append(tid)
         return out
 
+    @tracked("sync_tmdb_daily_episodes")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         pages = int(opts["pages"])
         language = str(opts["language"])

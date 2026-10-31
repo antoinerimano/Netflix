@@ -14,6 +14,7 @@ from django.db.models import Count
 
 from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
+from users.jobs import tracked
 
 
 # Stream links are not stored anymore: they are built from users.Provider templates.
@@ -606,6 +607,7 @@ class Command(BaseCommand):
 
         stats["tv"]["seasons_synced"] += seasons_synced
 
+    @tracked("sync_tmdb_monthly")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         pages = int(opts["pages"])
         min_votes = int(opts["min_votes"])

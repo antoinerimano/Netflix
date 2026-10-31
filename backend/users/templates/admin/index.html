@@ -1,0 +1,8 @@
+{% extends "admin/index.html" %}
+{# the stock admin home, with the dashboard link on top #}
+{% block content %}
+<p style="margin: 0 0 16px;">
+  <a href="{% url 'admin-dashboard' %}" class="button default" style="padding: 8px 14px;">📊 Dashboard</a>
+</p>
+{{ block.super }}
+{% endblock %}

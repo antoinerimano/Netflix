@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",  # admin dashboard numbers / "3 minutes ago"
 
     "rest_framework",
     "rest_framework.authtoken",

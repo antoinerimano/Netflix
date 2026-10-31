@@ -9,6 +9,7 @@ from users.models import Title, Profile
 from reco.models import TitleEmbedding, TitleImpression, TitleAction, RecoModelArtifact
 
 import lightgbm as lgb
+from users.jobs import tracked
 
 
 FEATURES = [
@@ -86,6 +87,7 @@ class Command(BaseCommand):
         p.add_argument("--model-name", type=str, default="all-MiniLM-L6-v2")
         p.add_argument("--max-rows", type=int, default=400000)
 
+    @tracked("train_ranker")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **o):
         days = o["days"]
         name = o["name"]

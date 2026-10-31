@@ -9,6 +9,7 @@ from django.utils import timezone
 from reco.models import Notification, ShowFollow
 from users.emails import send_templated_email
 from users.models import Episode
+from users.jobs import tracked
 
 LOOKBACK_DAYS = 3  # catches episodes even if a run was missed
 
@@ -22,6 +23,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--no-email", action="store_true", help="Only create the in-app notifications.")
 
+    @tracked("notify_new_episodes")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         today = timezone.localdate()
         follows = list(ShowFollow.objects.values_list("profile_id", "title_id", "created_at"))

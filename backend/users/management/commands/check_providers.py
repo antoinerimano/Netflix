@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 
 from users.models import Provider
 from users.providers import check_providers
+from users.jobs import tracked
 
 
 class Command(BaseCommand):
@@ -14,6 +15,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("keys", nargs="*", help="Provider keys to check (default: all enabled).")
 
+    @tracked("check_providers")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         qs = Provider.objects.filter(enabled=True)
         if opts["keys"]:

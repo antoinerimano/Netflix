@@ -4,13 +4,14 @@
 # to backup domains.
 import logging
 import re
+from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlsplit
 
 import requests
 from django.utils import timezone
 
-from .models import Provider
+from .models import Provider, ProviderCheck
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ PROBE_MOVIE = {"tmdb_id": 550, "imdb_id": "tt0137523"}
 PROBE_EPISODE = {"tmdb_id": 1396, "imdb_id": "tt0903747", "season": 1, "episode": 1}
 
 PROBE_TIMEOUT = 10
+CHECK_HISTORY_DAYS = 30
 PROBE_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/130.0 Safari/537.36",
@@ -143,4 +145,9 @@ def check_providers(queryset=None):
         results = list(pool.map(lambda p: check_provider(p, save=False), providers))
     for p in providers:  # save from the main thread (DB connections are per thread)
         p.save()
+    # history for the admin dashboard (uptime); keep 30 days
+    ProviderCheck.objects.bulk_create(
+        [ProviderCheck(provider_key=p.key, status=p.status, detail=p.status_detail[:300]) for p in providers]
+    )
+    ProviderCheck.objects.filter(checked_at__lt=timezone.now() - timedelta(days=CHECK_HISTORY_DAYS)).delete()
     return results

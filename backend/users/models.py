@@ -349,3 +349,28 @@ class Provider(models.Model):
 
     def backups(self):
         return [d.strip().rstrip("/") for d in self.backup_domains.splitlines() if d.strip()]
+
+
+class ProviderCheck(models.Model):
+    """One health check of a provider (check_providers): uptime history for the admin dashboard."""
+    provider_key = models.CharField(max_length=40, db_index=True)
+    checked_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    status = models.CharField(max_length=10)
+    detail = models.CharField(max_length=300, blank=True, default="")
+
+
+class JobRun(models.Model):
+    """One run of a scheduled command (syncs, home builds, alerts...): shown on the admin dashboard."""
+    name = models.CharField(max_length=60, db_index=True)
+    started_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    ok = models.BooleanField(null=True)  # None = still running (or killed)
+    summary = models.TextField(blank=True, default="")  # last lines it printed
+    error = models.TextField(blank=True, default="")
+
+    class Meta:
+        indexes = [models.Index(fields=["name", "-started_at"])]
+
+    @property
+    def duration(self):
+        return (self.finished_at - self.started_at) if self.finished_at else None
