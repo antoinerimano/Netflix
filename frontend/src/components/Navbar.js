@@ -352,7 +352,7 @@ const Navbar = () => {
         {isAuthenticated ? (
           <div className="profile-container" ref={profileRef}>
             <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" aria-expanded={isProfileDropdownOpen} onClick={toggleProfileDropdown}>
-              <Avatar src={profilePhoto} name={selectedProfile?.name || ''} size="100%" className="profile-avatar" />
+              <Avatar src={profilePhoto} name={selectedProfile?.name || ''} size="100%" className="navbar__avatar" />
             </div>
             {isProfileDropdownOpen && (
               <div className="profile-dropdown" role="menu">

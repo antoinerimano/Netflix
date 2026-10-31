@@ -550,3 +550,10 @@
     animation: none;
   }
 }
+
+/* own class: the account page's global .profile-avatar (44px circle) reshaped it */
+.navbar__avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+}

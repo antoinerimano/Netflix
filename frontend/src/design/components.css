@@ -580,14 +580,16 @@
 
 /* ---------- Avatar ---------- */
 .ui-avatar {
-  display: inline-block;
+  /* block, not inline: an inline image keeps room for text descenders under it (it sat 6px
+     high in its square) */
+  display: block;
   flex: none;
   border-radius: var(--radius-md);
   object-fit: cover;
   background: var(--color-surface-2);
 }
 .ui-avatar--initial {
-  display: inline-grid;
+  display: grid;
   place-items: center;
   overflow: hidden;
   color: #ffffff;
