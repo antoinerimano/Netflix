@@ -25,7 +25,8 @@ function Icon({ children, filled = false, ...props }) {
 
 export const PlayIcon = (p) => (
   <Icon filled {...p}>
-    <path d="M7 4.6v14.8a1 1 0 0 0 1.52.85l12-7.4a1 1 0 0 0 0-1.7l-12-7.4A1 1 0 0 0 7 4.6Z" />
+    {/* optically centered: the box spans x 6-20, the heavier left side sits a bit left of 12 */}
+    <path d="M6 4.6v14.8a1 1 0 0 0 1.52.85l12-7.4a1 1 0 0 0 0-1.7l-12-7.4A1 1 0 0 0 6 4.6Z" />
   </Icon>
 );
 export const PauseIcon = (p) => (

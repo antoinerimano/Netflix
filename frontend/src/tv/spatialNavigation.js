@@ -83,6 +83,16 @@ function openModal() {
   return all.length ? all[all.length - 1] : null;
 }
 
+// An open dropdown (profile menu, notifications): its items and its button only, so the arrows
+// can't wander to the page behind it while it stays open. Back / Escape closes it.
+function openMenu() {
+  for (const { panel, toggle } of POPUPS) {
+    const el = document.querySelector(panel);
+    if (el) return el.closest(".profile-container, .notif") || el.parentElement || document.querySelector(toggle)?.parentElement;
+  }
+  return null;
+}
+
 function fullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
@@ -90,7 +100,7 @@ function fullscreenElement() {
 function candidates() {
   // in full screen / an open dialog only what is shown can be reached (the rest of the page is
   // still laid out behind it)
-  const root = fullscreenElement() || openModal() || document;
+  const root = fullscreenElement() || openModal() || openMenu() || document;
   return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
     if (el.closest(".slick-cloned, [inert]")) return false;
     const r = el.getBoundingClientRect();

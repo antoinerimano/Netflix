@@ -282,9 +282,8 @@
     padding: 0 var(--page-gutter);
   }
   .watchpage__providerRow {
-    margin: 0 calc(-1 * var(--page-gutter));
-    padding-left: var(--page-gutter);
-    padding-right: var(--page-gutter);
+    margin: -10px calc(-1 * var(--page-gutter));
+    padding: 10px var(--page-gutter);
   }
 }
 /* phone turned sideways: the player fills the screen height */

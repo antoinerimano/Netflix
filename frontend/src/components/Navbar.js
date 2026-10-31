@@ -192,6 +192,23 @@ const Navbar = () => {
   const handleNavigateList = () => navigate('/list');
   const handleLogin = () => navigate('/login');
   const toggleProfileDropdown = () => setIsProfileDropdownOpen((v) => !v);
+
+  // the profile menu closes when clicking / moving the focus elsewhere, or on another page
+  // (it stayed open over the page, and the remote went on to the rows behind it)
+  const profileRef = useRef(null);
+  useEffect(() => {
+    if (!isProfileDropdownOpen) return undefined;
+    const onOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setIsProfileDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('focusin', onOutside);
+    return () => {
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('focusin', onOutside);
+    };
+  }, [isProfileDropdownOpen]);
+  useEffect(() => setIsProfileDropdownOpen(false), [pathname]);
   const openSearch = () => {
     setSearchOpen(true);
     setTimeout(() => searchRef.current?.querySelector('input')?.focus(), 0);
@@ -330,7 +347,7 @@ const Navbar = () => {
 
         {/* PROFILE */}
         {isAuthenticated ? (
-          <div className="profile-container">
+          <div className="profile-container" ref={profileRef}>
             <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" aria-expanded={isProfileDropdownOpen} onClick={toggleProfileDropdown}>
               <img
                 src={profilePhoto || "/default-profile.png"}

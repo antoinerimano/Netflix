@@ -32,12 +32,16 @@ export default function NotificationBell() {
     return () => clearInterval(t);
   }, [load]);
 
-  // close when clicking elsewhere
+  // close when clicking or moving the focus (Tab / remote) elsewhere
   useEffect(() => {
     if (!open) return;
-    const onDown = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    const onOutside = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("focusin", onOutside);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("focusin", onOutside);
+    };
   }, [open]);
 
   if (!profileId) return null;

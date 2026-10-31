@@ -106,8 +106,8 @@
 .browse__genres {
   flex: 1;
   min-width: 0;
-  padding-left: var(--space-2);
-  padding-right: var(--space-8);
+  margin: -10px 0; /* room for focus rings, vertical only (see .ui-scroller) */
+  padding: 10px var(--space-8) 10px var(--space-2);
   /* fade at the edges: the row obviously scrolls */
   -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
   mask-image: linear-gradient(to right, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
