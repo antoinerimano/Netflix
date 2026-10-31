@@ -134,3 +134,10 @@ export const confirmEmailChange = async (userId, token) => {
   );
   return res.data;
 };
+
+/** Account page: the user + their profiles (in parallel; no subscription / payment history) */
+export const fetchAccount = async (userId) => {
+  const id = encodeURIComponent(userId);
+  const [user, profiles] = await Promise.all([http.get(`/users/${id}/`), http.get(`/users/${id}/profiles/`)]);
+  return { ...user.data, profiles: profiles.data };
+};

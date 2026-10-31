@@ -100,8 +100,8 @@ Status: [ ] todo   [~] in progress   [x] done
          Remote: tabs open on focus, rows land on the current choice, dialogs scroll (instantly) to
          the focus clear of pinned bars, wrapped rows continue at line ends; walked at 320 / 390 /
          desktop with no hidden or unreachable item
-[x] 4.13 Account page: settings rows (name, email, password), plan with status / renewal, profiles
-         list with the shared profile editor, payment history, sign out; email / password / sign-out
+[x] 4.13 Account page: settings rows (name, email, password), profiles list with the shared
+         profile editor, sign out (plan / payment history left out: old features, the APIs stay); email / password / sign-out
          in dialogs with toasts (no alert() / reload); old CSS that leaked app-wide removed
 [ ] 4.14 Notifications panel (header, icons, mark all read, empty state)
 [ ] 4.15 Search results page (grid + "see all", recent / trending before typing)

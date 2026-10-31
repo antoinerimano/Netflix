@@ -1,14 +1,15 @@
 // src/components/AccountManagement.js
-// Account page: account (name, email, password), plan, profiles, payment history, sign out.
+// Account page: account (name, email, password), profiles, sign out. (Plan / payment history
+// were removed: the subscription API stays for a possible return.)
 // Settings-style rows with one action each; changes happen in dialogs (design Modal) and are
 // confirmed with a toast. Profiles use the same editor as "Who's watching?".
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchUserData, requestPasswordReset, requestEmailChange } from '../api/userApi';
+import { fetchAccount, requestPasswordReset, requestEmailChange } from '../api/userApi';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { AuthContext } from './AuthContext';
-import { Avatar, Badge, Button, EmptyState, Field, Modal, SectionTitle, Skeleton, Toast, friendlyError } from '../design';
+import { Avatar, Button, EmptyState, Field, Modal, SectionTitle, Skeleton, Toast, friendlyError } from '../design';
 import { ChevronRightIcon, PlusIcon } from '../design/icons';
 import ProfileEditor from './profiles/ProfileEditor';
 import { ageSummary } from './profiles/ProfileForm';
@@ -24,16 +25,6 @@ const formatDate = (d) => {
   const date = new Date(d);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 };
-const formatMoney = (amount, currency) => {
-  const n = Number(amount);
-  if (!Number.isFinite(n)) return String(amount ?? '');
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: (currency || 'USD').toUpperCase() }).format(n);
-  } catch {
-    return `${n.toFixed(2)} ${currency || ''}`.trim();
-  }
-};
-
 function Row({ label, value, children }) {
   return (
     <div className="account-row">
@@ -65,8 +56,8 @@ export default function AccountManagement() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await fetchUserData(userId);
-      setUser({ ...data, profiles: asList(data.profiles), paymentHistory: asList(data.paymentHistory) });
+      const data = await fetchAccount(userId);
+      setUser({ ...data, profiles: asList(data.profiles) });
     } catch (e) {
       setError(e);
     } finally {
@@ -155,7 +146,7 @@ export default function AccountManagement() {
     content = (
       <div className="account" aria-busy="true">
         <Skeleton variant="text" width="10rem" height="2.4rem" />
-        {[0, 1, 2].map((i) => (
+        {[0, 1].map((i) => (
           <div key={i} className="account-card">
             <Skeleton variant="text" width="8rem" />
             <Skeleton height="3rem" />
@@ -182,9 +173,7 @@ export default function AccountManagement() {
       </EmptyState>
     );
   } else {
-    const sub = user.subscription;
     const profiles = user.profiles;
-    const payments = [...user.paymentHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
     content = (
       <div className="account">
         <header className="account__head">
@@ -205,38 +194,6 @@ export default function AccountManagement() {
               Change
             </Button>
           </Row>
-        </section>
-
-        <section className="account-card" aria-labelledby="account-plan">
-          <SectionTitle as="h2" id="account-plan">Plan</SectionTitle>
-          {sub ? (
-            <Row
-              label={
-                <span className="account-plan">
-                  {sub.plan_type || 'Plan'}
-                  <Badge tone={sub.status === 'Active' ? 'brand' : 'default'}>{sub.status || 'Unknown'}</Badge>
-                  {sub.is_trial ? <Badge>Trial</Badge> : null}
-                </span>
-              }
-              value={
-                sub.renewal_date
-                  ? `Renews on ${formatDate(sub.renewal_date)}`
-                  : sub.start_date
-                    ? `Since ${formatDate(sub.start_date)}`
-                    : ''
-              }
-            >
-              <Button variant="glass" size="sm" to="/choose-subscription">
-                Change plan
-              </Button>
-            </Row>
-          ) : (
-            <Row label="No plan yet" value="Choose a plan to start watching.">
-              <Button variant="primary" size="sm" to="/choose-subscription">
-                Choose a plan
-              </Button>
-            </Row>
-          )}
         </section>
 
         <section className="account-card" aria-labelledby="account-profiles">
@@ -278,26 +235,6 @@ export default function AccountManagement() {
               </li>
             ) : null}
           </ul>
-        </section>
-
-        <section className="account-card" aria-labelledby="account-payments">
-          <SectionTitle as="h2" id="account-payments">Payment history</SectionTitle>
-          {payments.length ? (
-            <ul className="account-payments">
-              {payments.map((pay) => (
-                <li key={pay.id} className="account-payment">
-                  <span className="account-payment__main">
-                    <span className="account-payment__plan">{pay.plan_type || 'Payment'}</span>
-                    <span className="account-payment__date">{formatDate(pay.date)}</span>
-                  </span>
-                  <span className="account-payment__amount">{formatMoney(pay.amount, pay.currency)}</span>
-                  <Badge tone={/succeed|paid|complete/i.test(pay.status || '') ? 'default' : 'brand'}>{pay.status || '—'}</Badge>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="account-card__empty">No payments yet.</p>
-          )}
         </section>
 
         <section className="account-card account-card--quiet">
