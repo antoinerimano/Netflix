@@ -1,87 +1,79 @@
-// src/components/AccountManagement.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  fetchUserData,
-  updateProfile,
-  createProfile,
-  deleteProfile,
-  requestPasswordReset,
-  requestEmailChange,
-} from '../api/userApi';
-
+// src/components/AccountManagement.js
+// Account page: account (name, email, password), plan, profiles, payment history, sign out.
+// Settings-style rows with one action each; changes happen in dialogs (design Modal) and are
+// confirmed with a toast. Profiles use the same editor as "Who's watching?".
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { fetchUserData, requestPasswordReset, requestEmailChange } from '../api/userApi';
 import Navbar from './Navbar';
-import ProfileAgeFields, { describeAgeLimit } from './ProfileAgeFields';
+import Footer from './Footer';
+import { AuthContext } from './AuthContext';
+import { Avatar, Badge, Button, EmptyState, Field, Modal, SectionTitle, Skeleton, Toast, friendlyError } from '../design';
+import { ChevronRightIcon, PlusIcon } from '../design/icons';
+import ProfileEditor from './profiles/ProfileEditor';
+import { ageSummary } from './profiles/ProfileForm';
+import { MAX_PROFILES } from '../utils/activeProfile';
 import './AccountManagement.css';
-import { useParams, useNavigate } from 'react-router-dom';
-import ConfirmationModal from './ConfirmationModal';
 
-const AccountManagement = () => {
+const LANGUAGE_NAMES = { en: 'English', fr: 'Français', es: 'Español', de: 'Deutsch', zh: '中文' };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const asList = (x) => (Array.isArray(x) ? x : x?.results ?? []);
+const formatDate = (d) => {
+  if (!d) return '';
+  const date = new Date(d);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+};
+const formatMoney = (amount, currency) => {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return String(amount ?? '');
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: (currency || 'USD').toUpperCase() }).format(n);
+  } catch {
+    return `${n.toFixed(2)} ${currency || ''}`.trim();
+  }
+};
+
+function Row({ label, value, children }) {
+  return (
+    <div className="account-row">
+      <div className="account-row__text">
+        <span className="account-row__label">{label}</span>
+        <span className="account-row__value">{value}</span>
+      </div>
+      {children ? <div className="account-row__action">{children}</div> : null}
+    </div>
+  );
+}
+
+export default function AccountManagement() {
   const { userId } = useParams();
   const navigate = useNavigate();
-
-  const avatarOptions = useMemo(
-    () => ['/avatars/male.webp', '/avatars/female.webp', '/avatars/kid.webp'],
-    []
-  );
-
-  const [userData, setUserData] = useState(null);
+  const { logout } = useContext(AuthContext);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState({ message: '', tone: 'success' });
+  const clearToast = useCallback(() => setToast({ message: '', tone: 'success' }), []);
 
-  const [editingProfileId, setEditingProfileId] = useState(null);
-  const [addingNewProfile, setAddingNewProfile] = useState(false);
-
-  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [dialog, setDialog] = useState(null); // 'email' | 'password' | 'signout' | null
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(null); // profile | 'new' | null
 
-  const [newProfile, setNewProfile] = useState({
-    name: '',
-    age_restriction: 'NC-17',
-    is_kids: false,
-    language_preference: 'en',
-    avatar_url: null,
-    user: userId,
-  });
-
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalAction, setModalAction] = useState(null);
-
-  // --- helpers ---
-  const normalizeUser = (data) => {
-    if (!data) return data;
-
-    const profilesArr = Array.isArray(data.profiles)
-      ? data.profiles
-      : (data.profiles?.results ?? []);
-
-    const paymentHistoryArr = Array.isArray(data.paymentHistory)
-      ? data.paymentHistory
-      : (data.paymentHistory?.results ?? []);
-
-    return {
-      ...data,
-      profiles: profilesArr,
-      paymentHistory: paymentHistoryArr,
-    };
-  };
-
-  const loadUserData = async () => {
-    setLoading(true);
+  const load = useCallback(async () => {
     setError(null);
     try {
       const data = await fetchUserData(userId);
-      setUserData(normalizeUser(data));
-    } catch (err) {
-      setError('Failed to load user data');
+      setUser({ ...data, profiles: asList(data.profiles), paymentHistory: asList(data.paymentHistory) });
+    } catch (e) {
+      setError(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  // auth/guard
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
     if (!storedUserId) {
@@ -89,422 +81,336 @@ const AccountManagement = () => {
       return;
     }
     if (storedUserId !== userId) {
-      setError('Not authorized to access this account');
+      setError({ status: 403 });
       setLoading(false);
       return;
     }
-    loadUserData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+    load();
+  }, [userId, load, navigate]);
 
-  // email change errors persisted
+  // an email change refused on the confirmation page comes back here
   useEffect(() => {
-    const storedError = localStorage.getItem('emailChangeError');
-    if (storedError) {
-      setEmailError(storedError);
+    const stored = localStorage.getItem('emailChangeError');
+    if (stored) {
       localStorage.removeItem('emailChangeError');
+      setToast({ message: stored, tone: 'error' });
     }
   }, []);
 
-  // keep newProfile.user in sync if route changes
-  useEffect(() => {
-    setNewProfile((p) => ({ ...p, user: userId }));
-  }, [userId]);
-
-  // Close-first wrapper so the modal unmounts immediately, then run the async action.
-  const runActionAfterClosingModal = (actionFn) => {
-    setShowModal(false);
-    if (typeof actionFn === 'function') {
-      setTimeout(() => actionFn(), 0);
-    }
-  };
-
-  // --- profile actions ---
-  const handleUpdateProfile = async (profileId, updatedProfile) => {
-    if (!updatedProfile.name || !updatedProfile.age_restriction || !updatedProfile.language_preference) {
-      alert('All fields are required');
-      return;
-    }
-
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setLoading(true);
-
-    try {
-      await updateProfile(userId, profileId, updatedProfile);
-      // safest: re-fetch the user so shapes always match
-      await loadUserData();
-      setEditingProfileId(null);
-    } catch (err) {
-      setError('Failed to update profile');
-    } finally {
-      setLoading(false);
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAddNewProfile = async () => {
-    if (!newProfile.name || !newProfile.age_restriction || !newProfile.language_preference) {
-      alert('All fields are required');
-      return;
-    }
-
-    const currentProfiles = userData?.profiles ?? [];
-    if (currentProfiles.length >= 4) {
-      alert('You cannot add more than 4 profiles');
-      return;
-    }
-
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setLoading(true);
-
-    try {
-      await createProfile(userId, newProfile);
-      await loadUserData();
-      setAddingNewProfile(false);
-      setNewProfile({
-        name: '',
-        age_restriction: 'NC-17',
-        is_kids: false,
-        language_preference: 'en',
-        avatar_url: null,
-        user: userId,
-      });
-    } catch (err) {
-      setError('Failed to add new profile');
-    } finally {
-      setLoading(false);
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteProfile = async (profileId) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setLoading(true);
-
-    try {
-      await deleteProfile(userId, profileId);
-      localStorage.removeItem(`userList_${profileId}`);
-      await loadUserData();
-    } catch (err) {
-      setError('Failed to delete profile');
-    } finally {
-      setLoading(false);
-      setIsSubmitting(false);
-    }
-  };
-
-  // --- account actions ---
-  const handleRequestPasswordReset = () => {
-    setModalMessage('Are you sure you want to reset your password?');
-    setModalAction(() => async () => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        await requestPasswordReset(userData.email);
-        alert('A password reset link has been sent to your email.');
-      } catch (err) {
-        setError('Failed to send password reset email');
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-    setShowModal(true);
-  };
-
-  const handleRequestEmailChange = async () => {
-    if (!showEmailInput) {
-      setShowEmailInput(true);
-      setEmailError('');
-      return;
-    }
-
-    setModalMessage('Are you sure you want to change your email?');
-    setModalAction(() => async () => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        const result = await requestEmailChange(userId, newEmail);
-
-        if (result?.error) {
-          setEmailError(result.error);
-        } else {
-          alert('An email change confirmation has been sent to your new email.');
-          setShowEmailInput(false);
-          setNewEmail('');
-          setEmailError('');
-          window.location.reload();
-        }
-      } catch (err) {
-        setError('Failed to request email change');
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-    setShowModal(true);
-  };
-
-  const handleCancelEmailChange = () => {
-    setShowEmailInput(false);
+  const openEmail = () => {
     setNewEmail('');
     setEmailError('');
+    setDialog('email');
+  };
+  const sendEmailChange = async (e) => {
+    e?.preventDefault();
+    const email = newEmail.trim();
+    if (!EMAIL_RE.test(email)) {
+      setEmailError('Enter a valid email address.');
+      return;
+    }
+    if (email.toLowerCase() === String(user.email).toLowerCase()) {
+      setEmailError('This is already your email.');
+      return;
+    }
+    setBusy(true);
+    const result = await requestEmailChange(userId, email);
+    setBusy(false);
+    if (result?.error) {
+      setEmailError(result.error);
+      return;
+    }
+    setDialog(null);
+    setToast({ message: `Confirmation link sent to ${email}`, tone: 'success' });
   };
 
-  // --- render guards ---
+  const sendPasswordReset = async () => {
+    setBusy(true);
+    try {
+      await requestPasswordReset(user.email);
+      setDialog(null);
+      setToast({ message: `Reset link sent to ${user.email}`, tone: 'success' });
+    } catch {
+      setToast({ message: "Couldn't send the link. Please try again.", tone: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const signOut = () => {
+    logout();
+    localStorage.removeItem('userId');
+    localStorage.removeItem('activeProfileId');
+    navigate('/login');
+  };
+
+  const onProfileEdited = async ({ type, profile }) => {
+    setEditing(null);
+    await load();
+    setToast({ message: `${profile.name} ${type}`, tone: 'success' });
+  };
+
+  let content;
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
+    content = (
+      <div className="account" aria-busy="true">
+        <Skeleton variant="text" width="10rem" height="2.4rem" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="account-card">
+            <Skeleton variant="text" width="8rem" />
+            <Skeleton height="3rem" />
+            <Skeleton height="3rem" />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (error || !user) {
+    content = (
+      <EmptyState
+        page
+        tone="error"
+        title={error?.status === 403 ? 'Not your account' : "Couldn't load your account"}
+        actions={
+          error?.status === 403 ? (
+            <Button variant="primary" to="/">Go home</Button>
+          ) : (
+            <Button variant="primary" onClick={load}>Try again</Button>
+          )
+        }
+      >
+        {error?.status === 403 ? 'You can only manage the account you are signed in with.' : friendlyError(error, 'your account')}
+      </EmptyState>
+    );
+  } else {
+    const sub = user.subscription;
+    const profiles = user.profiles;
+    const payments = [...user.paymentHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+    content = (
+      <div className="account">
+        <header className="account__head">
+          <h1 className="account__title">Account</h1>
+          {user.created_at ? <p className="account__since">Member since {formatDate(user.created_at)}</p> : null}
+        </header>
+
+        <section className="account-card" aria-labelledby="account-details">
+          <SectionTitle as="h2" id="account-details">Account</SectionTitle>
+          <Row label="Name" value={user.name} />
+          <Row label="Email" value={user.email}>
+            <Button variant="glass" size="sm" onClick={openEmail}>
+              Change
+            </Button>
+          </Row>
+          <Row label="Password" value="••••••••">
+            <Button variant="glass" size="sm" onClick={() => setDialog('password')}>
+              Change
+            </Button>
+          </Row>
+        </section>
+
+        <section className="account-card" aria-labelledby="account-plan">
+          <SectionTitle as="h2" id="account-plan">Plan</SectionTitle>
+          {sub ? (
+            <Row
+              label={
+                <span className="account-plan">
+                  {sub.plan_type || 'Plan'}
+                  <Badge tone={sub.status === 'Active' ? 'brand' : 'default'}>{sub.status || 'Unknown'}</Badge>
+                  {sub.is_trial ? <Badge>Trial</Badge> : null}
+                </span>
+              }
+              value={
+                sub.renewal_date
+                  ? `Renews on ${formatDate(sub.renewal_date)}`
+                  : sub.start_date
+                    ? `Since ${formatDate(sub.start_date)}`
+                    : ''
+              }
+            >
+              <Button variant="glass" size="sm" to="/choose-subscription">
+                Change plan
+              </Button>
+            </Row>
+          ) : (
+            <Row label="No plan yet" value="Choose a plan to start watching.">
+              <Button variant="primary" size="sm" to="/choose-subscription">
+                Choose a plan
+              </Button>
+            </Row>
+          )}
+        </section>
+
+        <section className="account-card" aria-labelledby="account-profiles">
+          <div className="account-card__head">
+            <SectionTitle as="h2" id="account-profiles">Profiles</SectionTitle>
+            <span className="account-card__count">
+              {profiles.length} of {MAX_PROFILES}
+            </span>
+          </div>
+          <ul className="account-profiles">
+            {profiles.map((p) => (
+              <li key={p.id}>
+                <button type="button" className="account-profile" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
+                  <Avatar src={p.avatar_url} name={p.name} size="3rem" />
+                  <span className="account-profile__text">
+                    <span className="account-profile__name">{p.name}</span>
+                    <span className="account-profile__meta">
+                      {ageSummary(p)} · {LANGUAGE_NAMES[p.language_preference] || p.language_preference || 'English'}
+                    </span>
+                  </span>
+                  <span className="account-profile__edit" aria-hidden="true">
+                    Edit
+                    <ChevronRightIcon />
+                  </span>
+                </button>
+              </li>
+            ))}
+            {profiles.length < MAX_PROFILES ? (
+              <li>
+                <button type="button" className="account-profile account-profile--add" onClick={() => setEditing('new')}>
+                  <span className="account-profile__plus" aria-hidden="true">
+                    <PlusIcon />
+                  </span>
+                  <span className="account-profile__text">
+                    <span className="account-profile__name">Add profile</span>
+                    <span className="account-profile__meta">One for each person, up to {MAX_PROFILES}</span>
+                  </span>
+                </button>
+              </li>
+            ) : null}
+          </ul>
+        </section>
+
+        <section className="account-card" aria-labelledby="account-payments">
+          <SectionTitle as="h2" id="account-payments">Payment history</SectionTitle>
+          {payments.length ? (
+            <ul className="account-payments">
+              {payments.map((pay) => (
+                <li key={pay.id} className="account-payment">
+                  <span className="account-payment__main">
+                    <span className="account-payment__plan">{pay.plan_type || 'Payment'}</span>
+                    <span className="account-payment__date">{formatDate(pay.date)}</span>
+                  </span>
+                  <span className="account-payment__amount">{formatMoney(pay.amount, pay.currency)}</span>
+                  <Badge tone={/succeed|paid|complete/i.test(pay.status || '') ? 'default' : 'brand'}>{pay.status || '—'}</Badge>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="account-card__empty">No payments yet.</p>
+          )}
+        </section>
+
+        <section className="account-card account-card--quiet">
+          <Row label="Sign out" value={`Signed in as ${user.email}`}>
+            <Button variant="danger" size="sm" onClick={() => setDialog('signout')}>
+              Sign out
+            </Button>
+          </Row>
+        </section>
       </div>
     );
   }
-  if (error) return <div>Error: {error}</div>;
-  if (!userData) return <div>Error: Unable to load user data.</div>;
-
-  const profiles = userData?.profiles ?? [];
 
   return (
-    <div>
+    <div className="account-page">
       <Navbar />
-      <div className="account-management-container">
-        <h2>Account Settings</h2>
+      <main>{content}</main>
+      <Footer />
 
-        <div className="account-section">
-          <h3>Profile Information</h3>
-          <div className="account-details">
-            <p><strong>Name:</strong> {userData.name}</p>
-            <p><strong>Email:</strong> {userData.email}</p>
+      <Modal
+        open={dialog === 'email'}
+        onClose={() => setDialog(null)}
+        title="Change your email"
+        size="sm"
+        scrollable={false}
+        initialFocus="#account-new-email"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDialog(null)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button variant="primary" loading={busy} onClick={sendEmailChange}>
+              Send confirmation
+            </Button>
+          </>
+        }
+      >
+        <form className="account-dialog" onSubmit={sendEmailChange} noValidate>
+          <p className="account-dialog__text">
+            We'll send a confirmation link to the new address. Your email changes once you open it.
+          </p>
+          <Field label="Current email">
+            <p className="account-dialog__current">{user?.email}</p>
+          </Field>
+          <Field label="New email" htmlFor="account-new-email" error={emailError}>
+            <input
+              id="account-new-email"
+              className="ui-input"
+              type="email"
+              autoComplete="email"
+              value={newEmail}
+              placeholder="name@example.com"
+              onChange={(e) => {
+                setNewEmail(e.target.value);
+                setEmailError('');
+              }}
+            />
+          </Field>
+        </form>
+      </Modal>
 
-            {showEmailInput && (
-              <div className="email-input-container">
-                <input
-                  type="email"
-                  className={`email-input ${emailError ? 'error-input' : ''}`}
-                  placeholder="Enter new email"
-                  value={newEmail}
-                  onChange={(e) => {
-                    setNewEmail(e.target.value);
-                    setEmailError('');
-                  }}
-                />
-                <button
-                  className="change-button cancel-button"
-                  onClick={handleCancelEmailChange}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+      <Modal
+        open={dialog === 'password'}
+        onClose={() => setDialog(null)}
+        title="Change your password"
+        size="sm"
+        scrollable={false}
+        initialFocus=".ui-modal__footer .ui-btn--primary"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDialog(null)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button variant="primary" loading={busy} onClick={sendPasswordReset}>
+              Send reset link
+            </Button>
+          </>
+        }
+      >
+        <p className="account-dialog__text">
+          We'll email a link to <strong>{user?.email}</strong> to choose a new password. The link works once.
+        </p>
+      </Modal>
 
-            {emailError && <p className="error-message">{emailError}</p>}
+      <Modal
+        open={dialog === 'signout'}
+        onClose={() => setDialog(null)}
+        title="Sign out?"
+        size="sm"
+        scrollable={false}
+        initialFocus=".ui-modal__footer .ui-btn--ghost"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDialog(null)}>
+              Stay signed in
+            </Button>
+            <Button variant="danger" onClick={signOut}>
+              Sign out
+            </Button>
+          </>
+        }
+      >
+        <p className="account-dialog__text">You'll need your email and password to sign in again on this device.</p>
+      </Modal>
 
-            <button className="change-button" onClick={handleRequestEmailChange} disabled={isSubmitting}>
-              {showEmailInput ? 'Confirm Email Change' : 'Change Email'}
-            </button>
+      <ProfileEditor
+        editing={editing}
+        canDelete={(user?.profiles?.length || 0) > 1}
+        onClose={() => setEditing(null)}
+        onDone={onProfileEdited}
+      />
 
-            <button className="change-button" onClick={handleRequestPasswordReset} disabled={isSubmitting}>
-              Change Password
-            </button>
-          </div>
-        </div>
-
-        <div className="account-section">
-          <h3>Profiles</h3>
-
-          <div className="profiles">
-            {profiles.length > 0 ? (
-              profiles.map((profile) => (
-                <div key={profile.id} className="profile">
-                  {editingProfileId === profile.id ? (
-                    <div className="profile-edit">
-                      <label>
-                        Name:
-                        <input
-                          type="text"
-                          value={profile.name || ''}
-                          onChange={(e) =>
-                            setUserData((prev) => ({
-                              ...prev,
-                              profiles: prev.profiles.map((p) =>
-                                p.id === profile.id ? { ...p, name: e.target.value } : p
-                              ),
-                            }))
-                          }
-                        />
-                      </label>
-
-                      <ProfileAgeFields
-                        profile={profile}
-                        onChange={(patch) =>
-                          setUserData((prev) => ({
-                            ...prev,
-                            profiles: prev.profiles.map((p) => (p.id === profile.id ? { ...p, ...patch } : p)),
-                          }))
-                        }
-                      />
-
-                      <label>
-                        Language:
-                        <select
-                          value={profile.language_preference || 'en'}
-                          onChange={(e) =>
-                            setUserData((prev) => ({
-                              ...prev,
-                              profiles: prev.profiles.map((p) =>
-                                p.id === profile.id ? { ...p, language_preference: e.target.value } : p
-                              ),
-                            }))
-                          }
-                        >
-                          <option value="en">English</option>
-                          <option value="es">Español</option>
-                          <option value="fr">Français</option>
-                          <option value="de">Deutsch</option>
-                          <option value="zh">中文</option>
-                        </select>
-                      </label>
-
-                      <label>
-                        Choose Profile Picture:
-                        <div className="avatar-options">
-                          {avatarOptions.map((avatar, index) => (
-                            <img
-                              key={index}
-                              src={avatar}
-                              alt={`Avatar ${index + 1}`}
-                              className={`avatar-option ${profile.avatar_url === avatar ? 'selected' : ''}`}
-                              onClick={() =>
-                                setUserData((prev) => ({
-                                  ...prev,
-                                  profiles: prev.profiles.map((p) =>
-                                    p.id === profile.id ? { ...p, avatar_url: avatar } : p
-                                  ),
-                                }))
-                              }
-                            />
-                          ))}
-                        </div>
-                      </label>
-
-                      <button onClick={() => handleUpdateProfile(profile.id, profile)} disabled={isSubmitting}>
-                        Save Profile
-                      </button>
-                      <button onClick={() => setEditingProfileId(null)} disabled={isSubmitting}>
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="profile-view">
-                      <img
-                        src={profile.avatar_url || '/default-profile.png'}
-                        alt={profile.name}
-                        className="profile-avatar"
-                      />
-                      <div className="profile-details">
-                        <p><strong>Name:</strong> {profile.name}</p>
-                        <p><strong>Age Restriction:</strong> {describeAgeLimit(profile)}</p>
-                        <p><strong>Language:</strong> {profile.language_preference}</p>
-
-                        <button
-                          className="profile-button"
-                          onClick={() => setEditingProfileId(profile.id)}
-                          disabled={isSubmitting}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="profile-button"
-                          onClick={() => handleDeleteProfile(profile.id)}
-                          disabled={isSubmitting}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No profiles available</p>
-            )}
-
-            {addingNewProfile ? (
-              <div className="profile-edit">
-                <label>
-                  Name:
-                  <input
-                    type="text"
-                    value={newProfile.name}
-                    onChange={(e) => setNewProfile({ ...newProfile, name: e.target.value })}
-                  />
-                </label>
-
-                <ProfileAgeFields
-                  profile={newProfile}
-                  onChange={(patch) => setNewProfile({ ...newProfile, ...patch })}
-                />
-
-                <label>
-                  Language:
-                  <select
-                    value={newProfile.language_preference}
-                    onChange={(e) => setNewProfile({ ...newProfile, language_preference: e.target.value })}
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="zh">中文</option>
-                  </select>
-                </label>
-
-                <label>
-                  Choose Profile Picture:
-                  <div className="avatar-options">
-                    {avatarOptions.map((avatar, index) => (
-                      <img
-                        key={index}
-                        src={avatar}
-                        alt={`Avatar ${index + 1}`}
-                        className={`avatar-option ${newProfile.avatar_url === avatar ? 'selected' : ''}`}
-                        onClick={() => setNewProfile({ ...newProfile, avatar_url: avatar })}
-                      />
-                    ))}
-                  </div>
-                </label>
-
-                <button onClick={handleAddNewProfile} disabled={isSubmitting}>
-                  Add Profile
-                </button>
-                <button onClick={() => setAddingNewProfile(false)} disabled={isSubmitting}>
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                className="add-profile-button"
-                onClick={() => setAddingNewProfile(true)}
-                disabled={isSubmitting}
-              >
-                Add Profile
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {showModal && (
-        <ConfirmationModal
-          message={modalMessage}
-          onConfirm={() => runActionAfterClosingModal(modalAction)}
-          onCancel={() => setShowModal(false)}
-        />
-      )}
+      <Toast message={toast.message} tone={toast.tone} onDone={clearToast} />
     </div>
   );
-};
-
-export default AccountManagement;
+}

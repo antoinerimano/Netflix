@@ -4,12 +4,12 @@
 // switches without reloading the app (utils/activeProfile.js).
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { fetchUserProfiles, createProfile, updateProfile, deleteProfile } from '../../api/userApi';
-import { Avatar, Button, EmptyState, Modal, Skeleton, friendlyError } from '../../design';
+import { fetchUserProfiles } from '../../api/userApi';
+import { Avatar, Button, EmptyState, Skeleton, Toast, friendlyError } from '../../design';
 import { PlusIcon } from '../../design/icons';
-import ProfileForm, { EMPTY_PROFILE, ageSummary } from './ProfileForm';
-import { CheckIcon } from '../../design/icons';
-import { MAX_PROFILES, getActiveProfileId, setActiveProfile, clearActiveProfile } from '../../utils/activeProfile';
+import { ageSummary } from './ProfileForm';
+import ProfileEditor from './ProfileEditor';
+import { MAX_PROFILES, getActiveProfileId, setActiveProfile } from '../../utils/activeProfile';
 import './profiles.css';
 
 const PencilIcon = () => (
@@ -27,7 +27,6 @@ export default function ProfilesPage() {
   const [error, setError] = useState(null);
   const [manage, setManage] = useState(() => new URLSearchParams(location.search).has('manage'));
   const [editing, setEditing] = useState(null); // profile | 'new' | null
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const activeId = getActiveProfileId();
 
   const load = useCallback(async () => {
@@ -56,39 +55,15 @@ export default function ProfilesPage() {
     navigate(target, { replace: true });
   };
 
-  // short confirmation after a change ("Sam added")
-  const [toast, setToast] = useState('');
-  useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(''), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const [toast, setToast] = useState(''); // short confirmation after a change ("Sam added")
+  const clearToast = useCallback(() => setToast(''), []);
 
-  const save = async (values) => {
-    if (editing === 'new') {
-      const created = await createProfile(userId, { ...values, user: userId });
-      setEditing(null);
-      await load();
-      setToast(`${values.name} added`);
-      if (!manage && created?.id) choose(created); // a new profile from "Who's watching?": start watching
-      return;
-    }
-    const updated = await updateProfile(userId, editing.id, { ...editing, ...values });
-    if (String(editing.id) === activeId) setActiveProfile({ ...editing, ...values, ...(updated || {}) });
+  const onEdited = async ({ type, profile }) => {
     setEditing(null);
     await load();
-    setToast(`${values.name} saved`);
-  };
-
-  const remove = async () => {
-    const p = editing;
-    await deleteProfile(userId, p.id);
-    localStorage.removeItem(`userList_${p.id}`);
-    if (String(p.id) === activeId) clearActiveProfile();
-    setConfirmDelete(false);
-    setEditing(null);
-    await load();
-    setToast(`${p.name} deleted`);
+    setToast(`${profile.name} ${type}`);
+    // a new profile from "Who's watching?": start watching with it
+    if (type === 'added' && !manage && profile?.id) choose(profile);
   };
 
   const canAdd = profiles && profiles.length < MAX_PROFILES;
@@ -184,53 +159,14 @@ export default function ProfilesPage() {
         ) : null}
       </main>
 
-      {toast ? (
-        <div className="profiles__toast" role="status">
-          <CheckIcon aria-hidden="true" />
-          {toast}
-        </div>
-      ) : null}
+      <Toast message={toast} onDone={clearToast} />
 
-      <Modal
-        open={!!editing}
-        onClose={() => {
-          setEditing(null);
-          setConfirmDelete(false);
-        }}
-        title={editing === 'new' ? 'Add a profile' : 'Edit profile'}
-        size="md"
-        scrollable={false}
-        initialFocus="#profile-name"
-      >
-        {editing ? (
-          <ProfileForm
-            key={editing === 'new' ? 'new' : editing.id}
-            initial={editing === 'new' ? EMPTY_PROFILE : editing}
-            submitLabel={editing === 'new' ? 'Add profile' : 'Save'}
-            onSubmit={save}
-            onCancel={() => setEditing(null)}
-            extraActions={
-              editing !== 'new' && profiles.length > 1 ? (
-                confirmDelete ? (
-                  <span className="profiles__confirm">
-                    Delete {editing.name}?{' '}
-                    <Button variant="danger" size="sm" onClick={remove}>
-                      Delete
-                    </Button>{' '}
-                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
-                      Keep
-                    </Button>
-                  </span>
-                ) : (
-                  <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-                    Delete profile
-                  </Button>
-                )
-              ) : null
-            }
-          />
-        ) : null}
-      </Modal>
+      <ProfileEditor
+        editing={editing}
+        canDelete={(profiles?.length || 0) > 1}
+        onClose={() => setEditing(null)}
+        onDone={onEdited}
+      />
     </div>
   );
 }

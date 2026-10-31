@@ -123,8 +123,13 @@ function nearest(from, dir, list) {
   const a = from.getBoundingClientRect();
   const ca = center(a);
   const area = from.closest(SCROLL_AREAS);
-  let best = null;
-  let bestScore = Infinity;
+  // best candidate in line with "from" (same row / column) and best one off-line (diagonal),
+  // inside the scrolling area "from" is in first, outside it only when nothing is left inside
+  const best = { in: { line: null, off: null }, out: { line: null, off: null } };
+  const keep = (slot, kind, el, score, gap) => {
+    const cur = best[slot][kind];
+    if (!cur || score < cur.score) best[slot][kind] = { el, score, gap };
+  };
   for (const el of list) {
     if (el === from || el.contains(from)) continue;
     if (from.contains(el) && from.matches(CARD_WITH_ACTIONS)) continue; // card buttons: hold OK
@@ -135,27 +140,34 @@ function nearest(from, dir, list) {
     let main;
     let cross;
     let aligned;
+    let gap; // empty space between the two boxes along the direction
     if (dir === "right" || dir === "left") {
       main = dir === "right" ? dx : -dx;
       cross = Math.abs(dy);
       aligned = b.top < a.bottom && b.bottom > a.top;
+      gap = Math.max(0, dir === "right" ? b.left - a.right : a.left - b.right);
     } else {
       main = dir === "down" ? dy : -dy;
       cross = Math.abs(dx);
       aligned = b.left < a.right && b.right > a.left;
+      gap = Math.max(0, dir === "down" ? b.top - a.bottom : a.top - b.bottom);
     }
     if (main <= 1) continue; // not in that direction
     // left / right stay on the same line (end of a row: stay there, like a TV)
     if (!aligned && (dir === "left" || dir === "right")) continue;
-    // leave the scrolling area (e.g. for the dialog's buttons) only when nothing is left in it
-    const outside = area && !area.contains(el) ? 100000 : 0;
-    const score = main + (aligned ? 0 : 2 * cross + 1000) + outside;
-    if (score < bestScore) {
-      bestScore = score;
-      best = el;
-    }
+    const slot = area && !area.contains(el) ? "out" : "in";
+    if (aligned) keep(slot, "line", el, main, gap);
+    else keep(slot, "off", el, main + 0.5 * cross, gap); // diagonal: the closest overall
   }
-  return best;
+  const pick = ({ line, off }) => {
+    if (!line) return off?.el || null;
+    if (!off) return line.el;
+    // in line wins, unless the diagonal one is much closer (footer "Contact" -> the "Sign out"
+    // button just above, not the logo at the top of the page)
+    const step = dir === "up" || dir === "down" ? a.height : a.width;
+    return line.gap <= off.gap + Math.max(step, 48) * 1.5 ? line.el : off.el;
+  };
+  return pick(best.in) || pick(best.out);
 }
 
 // The page's main action, then its content, when nothing is focused yet

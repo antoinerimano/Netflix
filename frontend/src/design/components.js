@@ -4,7 +4,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
-import { AlertIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
+import { AlertIcon, CheckIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
 import { AvatarArt, isBuiltAvatar, parseAvatar } from "./avatarArt";
 
 const cx = (...parts) => parts.filter(Boolean).join(" ");
@@ -328,5 +328,25 @@ export function Field({ label, hint, error, children, className, htmlFor }) {
         <p className="ui-field__hint">{hint}</p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Toast: a short confirmation at the bottom of the screen ("Sam saved"), gone by itself.
+ * Render it with the current message; onDone clears it.
+ */
+export function Toast({ message, onDone, duration = 2600, tone = "success" }) {
+  React.useEffect(() => {
+    if (!message) return undefined;
+    const t = setTimeout(() => onDone?.(), duration);
+    return () => clearTimeout(t);
+  }, [message, duration, onDone]);
+  if (!message) return null;
+  return ReactDOM.createPortal(
+    <div className={cx("ui-toast", `ui-toast--${tone}`)} role="status" aria-live="polite">
+      {tone === "error" ? <AlertIcon aria-hidden="true" /> : <CheckIcon aria-hidden="true" />}
+      {message}
+    </div>,
+    document.body
   );
 }
