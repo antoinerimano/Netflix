@@ -19,7 +19,7 @@ import CastRow, { castObjects } from './detail/CastRow';
 import MoreLikeThis from './detail/MoreLikeThis';
 import { DetailSkeleton, languageName } from './MovieDetail';
 import { Button, Chip, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
-import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
+import { PlayIcon, PlusIcon, CheckIcon, ChevronRightIcon } from '../design/icons';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
 
 const getActiveProfileId = () => localStorage.getItem('activeProfileId');
@@ -52,6 +52,15 @@ export default function TVShowDetail() {
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [activeProfileId, setActiveProfileId] = useState(() => localStorage.getItem('activeProfileId'));
   const [isInList, setIsInList] = useState(false);
+  // episodes whose synopsis is open (hidden by default: a 2-line cut was never enough)
+  const [openSynopsis, setOpenSynopsis] = useState(() => new Set());
+  const toggleSynopsis = (id) =>
+    setOpenSynopsis((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const cast = useMemo(() => castObjects(title?.actors), [title]);
   const navigate = useNavigate();
 
@@ -278,9 +287,10 @@ export default function TVShowDetail() {
                   let stillBackground;
                   if (still) stillBackground = `url(${still})`;
                   else if (artwork) stillBackground = `url(${tmdbImage(artwork, IMG.backdropCard)})`;
+                  const synopsisOpen = openSynopsis.has(ep.id);
                   return (
+                    <div key={ep.id} className="tvd-ep">
                     <div
-                      key={ep.id}
                       className="tvd-ep-card"
                       tabIndex={0}
                       role="button"
@@ -305,7 +315,26 @@ export default function TVShowDetail() {
                         {ep.episode_number}. {ep.name || `Episode ${ep.episode_number}`}
                       </div>
                       {meta ? <div className="tvd-ep-card__meta">{meta}</div> : null}
-                      {ep.overview ? <p className="tvd-ep-card__desc">{ep.overview}</p> : null}
+                    </div>
+                    {ep.overview ? (
+                      <>
+                        <button
+                          type="button"
+                          className={`tvd-ep__toggle${synopsisOpen ? ' is-open' : ''}`}
+                          aria-expanded={synopsisOpen}
+                          aria-controls={`ep-synopsis-${ep.id}`}
+                          onClick={() => toggleSynopsis(ep.id)}
+                        >
+                          {synopsisOpen ? 'Hide synopsis' : 'Synopsis'}
+                          <ChevronRightIcon aria-hidden="true" />
+                        </button>
+                        {synopsisOpen ? (
+                          <p id={`ep-synopsis-${ep.id}`} className="tvd-ep__synopsis">
+                            {ep.overview}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : null}
                     </div>
                   );
                 })}

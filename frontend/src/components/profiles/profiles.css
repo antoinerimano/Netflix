@@ -142,7 +142,7 @@
   display: grid;
   place-items: center;
   border-radius: var(--radius-lg);
-  background: rgba(8, 8, 10, 0.55);
+  background: rgba(8, 8, 10, 0.68); /* the pencil reads clearly over a photo or an initial */
   color: #ffffff;
 }
 .profile-tile__edit svg {

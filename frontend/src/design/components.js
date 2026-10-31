@@ -268,7 +268,13 @@ export function Avatar({ src, name = "", size = "2.5rem", className, radius }) {
   }
   return (
     <span className={cx("ui-avatar ui-avatar--initial", className)} style={{ ...style, background: color }} aria-hidden="true">
-      <span>{(name || "?").trim().charAt(0).toUpperCase() || "?"}</span>
+      {/* SVG: scales with any avatar size and centers the capital exactly (baseline at
+          50 + half the cap height, Inter caps ~0.73em); CSS text sat at the top in some boxes */}
+      <svg viewBox="0 0 100 100" width="100%" height="100%" focusable="false">
+        <text x="50" y="67.5" textAnchor="middle" fontSize="48" fontWeight="800" fill="#ffffff">
+          {(name || "?").trim().charAt(0).toUpperCase() || "?"}
+        </text>
+      </svg>
     </span>
   );
 }

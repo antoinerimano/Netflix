@@ -589,17 +589,15 @@
   background: var(--color-surface-2);
 }
 .ui-avatar--initial {
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  color: #ffffff;
-  container-type: inline-size;
 }
-.ui-avatar--initial span {
-  font-size: 48cqw; /* the letter scales with the avatar */
-  font-weight: var(--weight-black);
-  line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+.ui-avatar--initial svg {
+  display: block;
+  font-family: var(--font-sans);
+}
+.ui-avatar--initial text {
+  paint-order: stroke;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
 }
 
 /* ---------- Form fields ---------- */
