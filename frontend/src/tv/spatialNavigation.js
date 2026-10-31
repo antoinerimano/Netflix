@@ -150,7 +150,7 @@ const START_SELECTORS = [
 // Groups remember their position: going down to the next row and back up returns to the card
 // you were on (like TV apps), and entering a group lands on its current item (season shown,
 // source playing, active profile) rather than whatever happens to be closest.
-const GROUPS = ".row, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
+const GROUPS = ".row, .detail-similar, .detail-cast, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
 const CURRENT_IN_GROUP = ".is-active, .selected, [aria-pressed='true'], [aria-current='page']";
 const lastInGroup = new WeakMap();
 

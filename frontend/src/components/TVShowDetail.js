@@ -16,6 +16,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import DetailHero, { splitGenres } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
+import MoreLikeThis from './detail/MoreLikeThis';
 import { DetailSkeleton, languageName } from './MovieDetail';
 import { Button, Chip, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
@@ -312,6 +313,8 @@ export default function TVShowDetail() {
             )}
           </section>
         ) : null}
+
+        <MoreLikeThis titleId={title.id} />
 
         <CastRow cast={cast} />
 

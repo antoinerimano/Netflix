@@ -323,3 +323,9 @@ export const fetchTitlesPage = async ({
   Object.keys(params).forEach((k) => (params[k] === '' || params[k] == null) && delete params[k]);
   return listTitlesPage(params);
 };
+
+/** "More like this": titles nearest to this one (embeddings), best first */
+export const fetchSimilarTitles = async (titleId, limit = 18) => {
+  const res = await API.get(`/titles/${encodeURIComponent(titleId)}/similar/`, { params: { limit } });
+  return Array.isArray(res.data) ? res.data : [];
+};

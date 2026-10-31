@@ -11,6 +11,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import DetailHero, { splitGenres } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
+import MoreLikeThis from './detail/MoreLikeThis';
 import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 
@@ -224,6 +225,8 @@ const MovieDetail = () => {
             <TrailerEmbed url={movie.trailer_url} />
           </section>
         ) : null}
+
+        <MoreLikeThis titleId={movie.id} />
 
         <CastRow cast={cast} />
 

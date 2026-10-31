@@ -567,6 +567,34 @@ class TitleViewSet(viewsets.ModelViewSet):
         title = self.get_object()
         qs = title.seasons.all().order_by("season_number")
         return Response(SeasonSerializer(qs, many=True, context=self.get_serializer_context()).data)
+    @action(detail=True, methods=["get"])
+    @method_decorator(cache_page(60*60))
+    @method_decorator(vary_on_headers("X-Profile-Id"))  # kids and adults get different answers
+    def similar(self, request, pk=None):
+        """'More like this' on detail pages: nearest titles by embedding (reco.TitleSimilar,
+        built by build_embeddings), best first, within the active profile's age limit."""
+        from reco.models import TitleSimilar  # reco depends on users: import here
+        from reco.views import MODEL_NAME
+
+        try:
+            limit = max(1, min(int(request.query_params.get("limit", 18)), 30))
+        except ValueError:
+            limit = 18
+        ids = list(
+            TitleSimilar.objects.filter(title_id=pk, model_name=MODEL_NAME)
+            .order_by("-score")
+            .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
+        )
+        titles = (
+            Title.objects.only(*TitleListSerializer.Meta.fields)
+            .filter(id__in=ids)
+            .exclude(id=pk)
+            .filter(allowed_titles_q(request_profile(request)))
+        )
+        rank = {tid: i for i, tid in enumerate(ids)}
+        ordered = sorted(titles, key=lambda t: rank.get(t.id, len(rank)))[:limit]
+        return Response(TitleListSerializer(ordered, many=True, context=self.get_serializer_context()).data)
+
     @action(detail=False, methods=["get"])
     @method_decorator(cache_page(60*60))
     def genres(self, request):

@@ -85,7 +85,7 @@ Status: [ ] todo   [~] in progress   [x] done
         Slim top bar (Back, title, S/E, Next episode, Full screen), player sized to the
         screen, sources as one chip row under it; dashboard bits removed (theme, panel,
         tip, shortcut legend).
-[ ] 4.10 "More like this" on detail pages (TitleSimilar already in the DB: needs an API)
+[x] 4.10 "More like this" on detail pages (GET /api/titles/<id>/similar/, TitleSimilar)
 [ ] 4.11 Actor page: name, photo, bio, known-for rows (today: "Actor" + a grid)
 [ ] 4.12 Profiles: "Who's watching?" screen, switch without reloading, create / edit
          profile in the design system

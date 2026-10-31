@@ -299,6 +299,16 @@
   aspect-ratio: 16 / 9;
 }
 
+/* ================= More like this ================= */
+.detail-similar {
+  gap: var(--space-4);
+  padding: 6px 2px var(--space-2);
+}
+.detail-similar > li {
+  flex: 0 0 clamp(7.5rem, 13vw, 11rem);
+  min-width: 0;
+}
+
 /* ================= Cast ================= */
 .detail-cast {
   display: flex;
