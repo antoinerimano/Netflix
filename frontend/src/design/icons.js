@@ -112,3 +112,21 @@ export const StarIcon = (p) => (
     <path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.8Z" />
   </Icon>
 );
+export const VolumeOnIcon = (p) => (
+  <Icon {...p}>
+    <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+    <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+  </Icon>
+);
+export const VolumeOffIcon = (p) => (
+  <Icon {...p}>
+    <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+    <path d="m16 9 6 6M22 9l-6 6" />
+  </Icon>
+);
+export const BanIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m5.6 5.6 12.8 12.8" />
+  </Icon>
+);

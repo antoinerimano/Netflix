@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import './Navbar.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { searchTitles } from '../api/titlesApi';
 import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
@@ -26,6 +26,17 @@ const Navbar = () => {
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const current = (path) => (path === '/' ? pathname === '/' : pathname.startsWith(path)) ? 'page' : undefined;
+
+  // transparent over the page's artwork at the top, solid once the page scrolls under it
+  const [scrolled, setScrolled] = useState(() => typeof window !== 'undefined' && window.scrollY > 8);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
   const userId = localStorage.getItem('userId');
@@ -186,7 +197,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}`}>
       <div className="logo" tabIndex={0} role="button" aria-label="Home" onClick={handleNavigateHome}>
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
@@ -204,10 +215,10 @@ const Navbar = () => {
       <button className="menu-toggle" onClick={toggleMenu}>☰</button>
 
       <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-        <li tabIndex={0} role="button" onClick={handleNavigateHome}>Home</li>
-        <li tabIndex={0} role="button" onClick={handleNavigateMovies}>Movies</li>
-        <li tabIndex={0} role="button" onClick={handleNavigateTV}>TV Shows</li>
-        <li tabIndex={0} role="button" onClick={handleNavigateList}>My List</li>
+        <li tabIndex={0} role="button" aria-current={current('/')} onClick={handleNavigateHome}>Home</li>
+        <li tabIndex={0} role="button" aria-current={current('/movies')} onClick={handleNavigateMovies}>Movies</li>
+        <li tabIndex={0} role="button" aria-current={current('/tv')} onClick={handleNavigateTV}>TV Shows</li>
+        <li tabIndex={0} role="button" aria-current={current('/list')} onClick={handleNavigateList}>My List</li>
         {isStaff && (
           <>
             <li tabIndex={0} role="button" onClick={() => navigate('/admin/users')}>Admin Users</li>

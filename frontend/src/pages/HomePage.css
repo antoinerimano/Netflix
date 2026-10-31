@@ -1,0 +1,53 @@
+/* src/pages/HomePage.css */
+
+/* the first row rises over the bottom of the banner (it fades into the page there) */
+.homepage .hero + .row {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(-1 * clamp(var(--space-6), 5vh, var(--space-12)));
+}
+.homepage .row:last-of-type {
+  margin-bottom: var(--space-12);
+}
+
+/* ---------- Loading skeleton: the page's shape (banner + rows) ---------- */
+.home-skeleton__hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  height: min(70vh, 40rem);
+  padding: 0 var(--page-gutter) var(--space-12);
+  background: linear-gradient(to top, var(--color-bg), var(--color-bg-deep));
+}
+.home-skeleton__buttons {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.home-skeleton__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding-left: var(--page-gutter);
+  overflow: hidden;
+}
+.home-skeleton__cards {
+  display: flex;
+  gap: var(--space-2);
+}
+.home-skeleton__card {
+  flex: 0 0 calc((100vw - var(--page-gutter)) / 5.15 - var(--space-2));
+  aspect-ratio: 16 / 9;
+}
+@media (max-width: 1024px) {
+  .home-skeleton__card {
+    flex-basis: calc((100vw - var(--page-gutter)) / 3.15 - var(--space-2));
+  }
+}
+@media (max-width: 600px) {
+  .home-skeleton__card {
+    flex-basis: calc((100vw - var(--page-gutter)) / 2.2 - var(--space-2));
+  }
+}

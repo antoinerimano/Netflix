@@ -6,25 +6,26 @@ import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
+import { ChevronRightIcon, CloseIcon, BanIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
 
 const LOAD_ON_HOVER_MS = 1000;
 const STALL_HIDE_MS = 900;
 
 
 
-const NextArrow = ({ className, style, onClick }) => (
-  <div className={`${className} custom-arrow`} style={{ ...style, display: 'flex', right: '10px' }} onClick={onClick}>
-    <svg viewBox="0 0 1024 1024" className="icon" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff">
-      <path d="M256 120.768L306.432 64 768 512l-461.568 448L256 903.232 659.072 512z" fill="#ffffff"></path>
-    </svg>
-  </div>
-);
+// Mouse-only paging arrows (the remote moves card by card); aria-hidden: not in the TV focus order
+const NextArrow = ({ className, onClick }) => {
+  const disabled = String(className).includes('slick-disabled');
+  return (
+    <div className={`${className} row-arrow row-arrow--next`} aria-hidden="true" onClick={onClick} style={{ display: disabled ? 'none' : undefined }}>
+      <ChevronRightIcon />
+    </div>
+  );
+};
 
-const PrevArrow = ({ className, style, onClick, isVisible }) => (
-  <div className={`${className} custom-arrow`} style={{ ...style, display: isVisible ? 'flex' : 'none', left: '10px' }} onClick={onClick}>
-    <svg viewBox="0 0 1024 1024" className="icon" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff">
-      <path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="#ffffff"></path>
-    </svg>
+const PrevArrow = ({ className, onClick, isVisible }) => (
+  <div className={`${className} row-arrow row-arrow--prev`} aria-hidden="true" onClick={onClick} style={{ display: isVisible ? undefined : 'none' }}>
+    <ChevronRightIcon style={{ transform: 'rotate(180deg)' }} />
   </div>
 );
 
@@ -45,6 +46,8 @@ const getSlidesToShowFromSettings = (settings) => {
   }
   return settings.slidesToShow || 4;
 };
+// Cards fully shown (slidesToShow has a fraction: the next card peeks in, showing the row scrolls)
+const fullCards = (settings) => Math.max(1, Math.floor(getSlidesToShowFromSettings(settings)));
 
 const Row = ({ title, movies }) => {
   const navigate = useNavigate();
@@ -288,7 +291,7 @@ const Row = ({ title, movies }) => {
   const ensureCardVisible = (index) => {
     const slider = sliderRef.current;
     if (!slider) return;
-    const show = getSlidesToShowFromSettings(settings);
+    const show = fullCards(settings);
     const current = currentSlideRef.current;
     if (index < current) slider.slickGoTo(index);
     else if (index >= current + show) slider.slickGoTo(index - show + 1);
@@ -298,19 +301,23 @@ const Row = ({ title, movies }) => {
     dots: false,
     infinite: false,
     accessibility: false, // its own arrow-key handling would fight the TV navigation
-    speed: 500,
-    slidesToShow: 4,
+    speed: 450,
+    cssEase: 'cubic-bezier(0.2, 0, 0, 1)',
+    // a fraction: part of the next card shows at the right edge (the row obviously scrolls)
+    slidesToShow: 6.15,
     slidesToScroll: 1,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow isVisible={showPrevArrow} />,
     responsive: [
-      { breakpoint: 1024, settings: { slidesToShow: 3, slidesToScroll: 1 } },
-      { breakpoint: 600, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 480, settings: { slidesToShow: 1, slidesToScroll: 1 } },
+      { breakpoint: 1920, settings: { slidesToShow: 5.15, slidesToScroll: 1 } },
+      { breakpoint: 1400, settings: { slidesToShow: 4.15, slidesToScroll: 1 } },
+      { breakpoint: 1024, settings: { slidesToShow: 3.15, slidesToScroll: 1 } },
+      { breakpoint: 600, settings: { slidesToShow: 2.2, slidesToScroll: 1 } },
+      { breakpoint: 420, settings: { slidesToShow: 1.3, slidesToScroll: 1 } },
     ],
     afterChange: (current) => {
       const totalSlides = displayedMovies.length;
-      const slidesToShow = getSlidesToShowFromSettings(settings);
+      const slidesToShow = fullCards(settings);
       currentSlideRef.current = current;
 
       setShowPrevArrow(current > 0);
@@ -333,7 +340,7 @@ const Row = ({ title, movies }) => {
    * Logs only the visible window (current .. current+slidesToShow-1) and de-dupes.
    */
   const logVisible = useCallback((startIndex, slidesToShowOverride) => {
-    const slidesToShow = slidesToShowOverride ?? getSlidesToShowFromSettings(settings);
+    const slidesToShow = slidesToShowOverride ?? fullCards(settings);
     const visible = displayedMovies.slice(startIndex, startIndex + slidesToShow);
 
     const items = [];
@@ -363,7 +370,7 @@ const Row = ({ title, movies }) => {
 
   // --- NEW: initial impressions on mount / when row changes ---
   useEffect(() => {
-    const slidesToShow = getSlidesToShowFromSettings(settings);
+    const slidesToShow = fullCards(settings);
     logVisible(0, slidesToShow);
 
     // Reset de-dupe if the row title changes (optional; keeps it cleaner)
@@ -376,8 +383,8 @@ const Row = ({ title, movies }) => {
   if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
 
   return (
-    <div className="row" ref={rowRef}>
-      <h2>{title}</h2>
+    <section className="row" ref={rowRef} aria-label={title}>
+      <h2 className="row__title">{title}</h2>
       <Slider ref={sliderRef} {...settings}>
         {displayedMovies.map((movie, index) => {
           const key = `${title}-${movie.id}-${index}`;
@@ -407,7 +414,7 @@ const Row = ({ title, movies }) => {
           return (
             // react-slick overwrites tabIndex (-1) and style on each slide's root element:
             // this wrapper takes it, so the card itself stays focusable (TV remote / keyboard)
-            <div key={key}>
+            <div key={key} className="row-slide">
             <div
               data-id={key}
               className="movie-card"
@@ -448,11 +455,23 @@ const Row = ({ title, movies }) => {
                 />
               )}
 
+              {/* shown when the artwork is missing / broken (the image covers it otherwise) */}
+              <span className="row-card__fallback" aria-hidden="true">{movie?.title}</span>
               <img
                 src={tmdbImage(posterSrc, IMG.backdropCard)}
-                alt={movie?.title}
+                alt=""
                 loading="lazy"
                 decoding="async"
+                onError={(e) => {
+                  // landscape image broken: try the poster, then show the title tile
+                  const img = e.currentTarget;
+                  if (!img.dataset.fallback && movie?.poster && movie.poster !== posterSrc) {
+                    img.dataset.fallback = '1';
+                    img.src = tmdbImage(movie.poster, IMG.poster);
+                  } else {
+                    img.style.display = 'none';
+                  }
+                }}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -463,75 +482,43 @@ const Row = ({ title, movies }) => {
               />
 
               <button
-                  className={`row-remove-btn${movie?.resume ? ' row-remove-btn--resume' : ''}`}
+                  className={`row-remove-btn row-card-btn${movie?.resume ? ' row-remove-btn--resume' : ''}`}
                   onClick={(e) => (movie?.resume ? removeFromContinueWatching(e, movie) : handleNotInterested(e, movie))}
                   aria-label={movie?.resume ? 'Remove from Continue watching' : 'Not interested'}
                   title={movie?.resume ? 'Remove from Continue watching' : 'Not interested: never show this again'}
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    left: 8,
-                    zIndex: 3,
-                    width: 26,
-                    height: 26,
-                    borderRadius: 9999,
-                    border: 'none',
-                    background: 'rgba(0,0,0,0.55)',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
                 >
-                  {movie?.resume ? '✕' : '⊘'}
+                  {movie?.resume ? <CloseIcon /> : <BanIcon />}
                 </button>
 
               {canRenderVideo && isVisible && (
                 <button
-                  className="row-unmute-btn"
+                  className="row-unmute-btn row-card-btn"
                   onClick={(e) => toggleMute(e, key)}
                   aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
                   title={isMuted ? 'Unmute' : 'Mute'}
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    zIndex: 3,
-                    width: 26,
-                    height: 26,
-                    borderRadius: 9999,
-                    border: 'none',
-                    background: 'rgba(0,0,0,0.55)',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
                 >
-                  {isMuted ? '🔇' : '🔊'}
+                  {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
                 </button>
               )}
 
-              <div className="movie-info">
-                <p className="title-line" title={movie?.title}>
-                  {movie?.title}
-                  {movie?.resume ? (
-                    <span className="media-type-badge">
-                      {movie.resume.season ? `S${movie.resume.season} E${movie.resume.episode}` : 'Resume'}
-                    </span>
-                  ) : movie?.latest_episode ? (
-                    <span className="media-type-badge">
-                      {`New · S${movie.latest_episode.season} E${movie.latest_episode.episode}`}
-                    </span>
-                  ) : movie?.type && (
-                    <span className="media-type-badge">
-                      {String(movie.type).toLowerCase() === 'tv' ? 'TV Show' : 'Movie'}
-                    </span>
-                  )}
-                </p>
+              {/* status on the artwork, always visible: where you are / what's new */}
+              {movie?.resume ? (
+                <span className="row-card-badge">
+                  {movie.resume.season ? `S${movie.resume.season} · E${movie.resume.episode}` : 'Resume'}
+                </span>
+              ) : movie?.latest_episode ? (
+                <span className="row-card-badge row-card-badge--new">
+                  {`New · S${movie.latest_episode.season} E${movie.latest_episode.episode}`}
+                </span>
+              ) : null}
 
+              {hasProgress && (
+                <div className="progress-bar-container" aria-label={`${Math.round(progressPercent)}% watched`}>
+                  <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+                </div>
+              )}
+
+              <div className="movie-info">
                 {(releaseYear || movie?.rating) && (
                   <div className="meta-row">
                     {releaseYear && <span className="release-year">{releaseYear}</span>}
@@ -542,22 +529,23 @@ const Row = ({ title, movies }) => {
                 {/* "Why this?": reason computed with the recommendations */}
                 {movie?.why && <p className="why-line">{movie.why}</p>}
 
-                {hasProgress && (
-                  <div className="progress-bar-container">
-                    <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
-                  </div>
-                )}
-
                 <p className={`movie-description ${isTagline ? 'is-tagline' : ''}`} title={displayText}>
                   {displayText}
                 </p>
               </div>
             </div>
+            {/* title under the card: always readable (TV, touch), the artwork rarely shows it */}
+            <div className="row-card__caption" aria-hidden="true">
+              <span className="row-card__title">{movie?.title}</span>
+              {movie?.type ? (
+                <span className="row-card__type">{String(movie.type).toLowerCase() === 'tv' ? 'Series' : 'Film'}</span>
+              ) : null}
+            </div>
             </div>
           );
         })}
       </Slider>
-    </div>
+    </section>
   );
 };
 

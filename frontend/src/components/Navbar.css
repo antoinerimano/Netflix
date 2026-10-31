@@ -613,3 +613,87 @@ fill: #ffffff;
   color: #aaa;
   white-space: normal;
 }
+
+/* =========================
+   Design system navbar (tokens: src/design/tokens.css)
+   Stays at the top, transparent over the page's artwork, solid once the page scrolls.
+   ========================= */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: linear-gradient(to bottom, rgba(8, 8, 10, 0.78), rgba(8, 8, 10, 0));
+  transition: background-color var(--duration-slow) var(--ease-standard),
+    box-shadow var(--duration-slow) var(--ease-standard);
+}
+.navbar.navbar--solid {
+  background-color: rgba(15, 15, 18, 0.94);
+  box-shadow: 0 1px 0 var(--color-border-subtle), var(--shadow-md);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar.navbar--solid {
+    background-color: rgba(15, 15, 18, 0.78);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+  }
+}
+
+/* links: quiet by default, white on hover, the current page bold with a red bar */
+.nav-links li {
+  position: relative;
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-medium);
+  transition: color var(--duration-normal) var(--ease-standard);
+}
+.nav-links li:hover {
+  /* the old hover (red block, bold, larger text) made the whole bar jump */
+  background-color: transparent;
+  font-weight: var(--weight-medium);
+  font-size: 1rem;
+  padding: 0;
+  color: var(--color-text);
+}
+.nav-links li[aria-current="page"] {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+@media (min-width: 769px) {
+  .navbar {
+    height: var(--nav-height);
+    padding: 0 var(--page-gutter);
+  }
+  .nav-links li[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-brand);
+  }
+
+  /* the search box widens over its neighbours instead of pushing the links sideways */
+  .search-profile {
+    width: clamp(200px, 18vw, 360px);
+    height: 2.5rem;
+  }
+  .search-profile input {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    background: rgba(15, 15, 18, 0.6);
+    padding: 0 var(--space-4);
+  }
+  .search-profile input:focus {
+    background: var(--color-surface-1);
+    box-shadow: 0 0 0 2px var(--color-brand);
+  }
+  .search-profile .search-results {
+    top: calc(100% + 8px);
+  }
+}

@@ -1,7 +1,9 @@
 // src/pages/HomePage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
+import Hero, { heroArtwork } from "../components/Hero";
+import { Skeleton } from "../design";
+import "./HomePage.css";
 import Row from "../components/Row";
 import { fetchHomeRecoRows } from "../api/recoApi";
 
@@ -69,7 +71,9 @@ const HomePage = () => {
         const hasTrailer = (it) =>
           typeof it?.trailer_clip_url === "string" &&
           it.trailer_clip_url.trim().length > 0;
+        // a wide artwork, else at least a poster: a banner without any image was all black
         const hasBg = (it) => !!(it?.landscape_image || it?.landscape_url);
+        const hasArt = (it) => !!heroArtwork(it);
 
         const candidates = [];
         for (const t of priority) {
@@ -81,8 +85,8 @@ const HomePage = () => {
         }
 
         let pick = candidates.find((it) => hasTrailer(it) && hasBg(it)) || null;
-        pick = pick || candidates.find((it) => hasTrailer(it)) || null;
-        pick = pick || candidates[0] || null;
+        pick = pick || candidates.find((it) => hasBg(it)) || null;
+        pick = pick || candidates.find((it) => hasArt(it)) || null;
 
         setHeroPick(pick);
 
@@ -134,9 +138,32 @@ const HomePage = () => {
   }, [homeRows]);
 
   if (loading) {
+    // the page's shape while it loads (banner + rows), not a spinner on an empty screen
     return (
-      <div className="loading-container">
-        <div className="loading-spinner" />
+      <div className="homepage">
+        <Navbar />
+        <div className="home-skeleton" aria-busy="true" aria-label="Loading">
+          <div className="home-skeleton__hero">
+            <Skeleton variant="text" width="9rem" />
+            <Skeleton width="min(28rem, 70%)" height="3.5rem" />
+            <Skeleton variant="text" width="min(34rem, 80%)" />
+            <Skeleton variant="text" width="min(26rem, 60%)" />
+            <div className="home-skeleton__buttons">
+              <Skeleton width="8rem" height="3.25rem" />
+              <Skeleton width="10rem" height="3.25rem" />
+            </div>
+          </div>
+          {[0, 1].map((r) => (
+            <div key={r} className="home-skeleton__row">
+              <Skeleton variant="text" width="12rem" height="1.4rem" />
+              <div className="home-skeleton__cards">
+                {[0, 1, 2, 3, 4, 5].map((c) => (
+                  <Skeleton key={c} className="home-skeleton__card" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

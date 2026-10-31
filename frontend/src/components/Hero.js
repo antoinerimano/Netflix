@@ -1,370 +1,183 @@
-// Hero.jsx
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+// src/components/Hero.js
+// Home page banner: full-bleed artwork fading into the page, the featured title, a meta line
+// (year · ★ · type), Play + More info. The trailer starts by itself (muted) after a few seconds
+// when the banner is on screen: TV remotes can't hover. It fades back to the artwork at the end.
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 import { logOutboundClickBeacon, logTitleClick } from '../api/analyticsApi';
+import { Button, Rating, Badge } from '../design';
+import { PlayIcon, InfoIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import { tmdbImage, tmdbSrcSet, IMG } from '../utils/tmdbImage';
 
-const HOVER_IN_DELAY_MS = 120;
-const STALL_HIDE_MS = 900;
+const TRAILER_DELAY_MS = 3000;
 
-// ✅ TMDB image base (secure)
-const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/';
-// Choisis ta taille : "w1280" (recommandé) ou "original" (plus lourd)
-const TMDB_BACKDROP_SIZE = 'w1280';
+const isValidUrl = (url) => typeof url === 'string' && /^https?:\/\//i.test(url.trim());
+const isTv = (t) => String(t?.type || t?.title_type || t?.media_type || '').toLowerCase() === 'tv';
+const yearOf = (t) =>
+  t?.release_year || String(t?.release_date || t?.first_air_date || '').match(/\d{4}/)?.[0] || '';
 
-// ✅ clé TMDB (frontend)
-const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
+/** Artwork for the banner: the landscape image, else the poster (shown blurred, see CSS) */
+export function heroArtwork(t) {
+  const wide = t?.landscape_image || t?.landscape_url || '';
+  if (wide) return { url: wide, wide: true };
+  if (t?.poster) return { url: t.poster, wide: false };
+  return null;
+}
 
-const isValidTrailerUrl = (url) => {
-  if (typeof url !== "string") return false;
-  const s = url.trim();
-  if (!s) return false;
-  const lower = s.toLowerCase();
-  if (lower === "null" || lower === "undefined") return false;
-  return /^https?:\/\//i.test(s);
-};
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-const normalizePath = (p) => {
-  if (!p) return '';
-  const s = String(p).trim();
-  if (!s) return '';
-  return s.startsWith('/') ? s : `/${s}`;
-};
-
-const tmdbImageUrl = (filePath, size = TMDB_BACKDROP_SIZE) => {
-  const p = normalizePath(filePath);
-  if (!p) return '';
-  return `${TMDB_IMG_BASE}${size}${p}`;
-};
-
-// Si tu as une URL TMDB mais en petite taille (w185, w300, w500, ...), upgrade en w1280
-const upgradeTmdbSizedUrl = (url, size = TMDB_BACKDROP_SIZE) => {
-  if (typeof url !== 'string') return '';
-  const s = url.trim();
-  if (!s) return '';
-  if (!/image\.tmdb\.org\/t\/p\//i.test(s)) return s;
-  return s.replace(/\/t\/p\/w\d+\//i, `/t/p/${size}/`);
-};
-
-const guessTmdbType = (movie) => {
-  // essaie de deviner si c’est un film ou une série
-  const t = String(movie?.title_type || movie?.type || movie?.media_type || '').toLowerCase();
-  if (t.includes('tv') || t.includes('show') || t === 'series') return 'tv';
-  return 'movie';
-};
-
-const Hero = ({ hero }) => {
-  const movie = hero;
-
-  const [isHovering, setIsHovering] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [videoFailed, setVideoFailed] = useState(false);
-
-  // ✅ background image “finale” (TMDB HD si possible)
-  const [bgUrl, setBgUrl] = useState('');
-
+const Hero = ({ hero: title }) => {
+  const navigate = useNavigate();
+  const rootRef = useRef(null);
   const videoRef = useRef(null);
-  const hoverInTimer = useRef(null);
-  const stallTimer = useRef(null);
 
-  const trailerUrl = useMemo(() => {
-    const raw = movie?.trailer_clip_url;
-    return typeof raw === 'string' ? raw.trim() : '';
-  }, [movie?.trailer_clip_url]);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [videoOn, setVideoOn] = useState(false); // trailer visible
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [ended, setEnded] = useState(false); // played once: stay on the artwork
+  const [onScreen, setOnScreen] = useState(true);
 
-  const hasTrailer = useMemo(() => {
-    return !videoFailed && isValidTrailerUrl(trailerUrl);
-  }, [trailerUrl, videoFailed]);
+  const art = heroArtwork(title);
+  const trailer = (title?.trailer_clip_url || '').trim();
+  const canPlayTrailer = isValidUrl(trailer) && !videoFailed && !prefersReducedMotion();
 
-  const safeClear = (tRef) => {
-    if (tRef.current) {
-      clearTimeout(tRef.current);
-      tRef.current = null;
-    }
-  };
-
-  const tryPlay = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-
-    try { v.currentTime = 0; } catch {}
-    const p = v.play?.();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
-  }, []);
-
-  // reset fail state quand on change de hero
+  // new title: start over from the artwork
   useEffect(() => {
+    setImageLoaded(false);
+    setVideoOn(false);
     setVideoFailed(false);
-    setShowVideo(false);
-    setIsHovering(false);
-    safeClear(hoverInTimer);
-    safeClear(stallTimer);
+    setEnded(false);
+  }, [title?.id]);
 
-    const v = videoRef.current;
-    if (v) {
-      try { v.pause(); } catch {}
-      try { v.currentTime = 0; } catch {}
-    }
-  }, [movie?.id]);
-
+  // only play while the banner is on screen and the tab visible
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = isMuted;
-  }, [isMuted]);
-
-  const handleMouseEnter = () => {
-    if (!hasTrailer) return;
-    setIsHovering(true);
-
-    safeClear(hoverInTimer);
-    hoverInTimer.current = setTimeout(() => {
-      tryPlay();
-    }, HOVER_IN_DELAY_MS);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    safeClear(hoverInTimer);
-    safeClear(stallTimer);
-    setShowVideo(false);
-
-    const v = videoRef.current;
-    if (v) {
-      try { v.pause(); } catch {}
-      try { v.currentTime = 0; } catch {}
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      safeClear(hoverInTimer);
-      safeClear(stallTimer);
-    };
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const io = new IntersectionObserver(([entry]) => setOnScreen(entry.intersectionRatio > 0.4), {
+      threshold: [0, 0.4, 1],
+    });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
-  const handleLoadedMetadata = () => {
-    if (isHovering) tryPlay();
-  };
-
-  const handlePlaying = () => {
-    safeClear(stallTimer);
-    setShowVideo(true);
-  };
-
-  const startStallWatchdog = () => {
-    safeClear(stallTimer);
-    stallTimer.current = setTimeout(() => {
-      if (!isHovering) return;
-      setShowVideo(false);
-      const v = videoRef.current;
-      if (v) {
-        try { v.pause(); } catch {}
-      }
-    }, STALL_HIDE_MS);
-  };
-
-  const handleWaiting = startStallWatchdog;
-  const handleStalled = startStallWatchdog;
-
-  const handleError = () => {
-    safeClear(stallTimer);
-    setShowVideo(false);
-    setVideoFailed(true);
-  };
-
-  const handleEnded = () => {
-    const v = videoRef.current;
-    if (isHovering && v) {
-      tryPlay();
-    } else {
-      setShowVideo(false);
-    }
-  };
-
-  const toggleMute = useCallback(() => {
-    const v = videoRef.current;
-    const next = !isMuted;
-    setIsMuted(next);
-
-    if (v) {
-      v.muted = next;
-      if (!next && v.paused) {
-        const p = v.play?.();
-        if (p && typeof p.catch === 'function') p.catch(() => {});
-      }
-    }
-  }, [isMuted]);
-
-  // ✅ Résolution du background en HD via TMDB si possible
   useEffect(() => {
-    let alive = true;
-    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const v = videoRef.current;
+    if (!canPlayTrailer || !v || ended) return undefined;
+    if (!onScreen) {
+      v.pause();
+      return undefined;
+    }
+    const t = setTimeout(() => {
+      if (document.visibilityState !== 'visible') return;
+      v.play()?.catch(() => setVideoFailed(true)); // autoplay refused: stay on the artwork
+    }, v.currentTime > 0 ? 300 : TRAILER_DELAY_MS); // resuming after scrolling back: no wait
+    return () => clearTimeout(t);
+  }, [canPlayTrailer, onScreen, title?.id, ended]);
 
-    const resolveBg = async () => {
-      const fallbackRaw = movie?.landscape_image || movie?.landscape_url || '';
-      const fallback = upgradeTmdbSizedUrl(fallbackRaw, TMDB_BACKDROP_SIZE) || fallbackRaw || '';
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
 
-      // 1) Si on a déjà backdrop_path : direct
-      if (movie?.backdrop_path) {
-        const u = tmdbImageUrl(movie.backdrop_path, TMDB_BACKDROP_SIZE);
-        if (alive) setBgUrl(u || fallback);
-        return;
-      }
+  const watchUrl = title?.id ? `/watch/${title.id}` : null;
+  const detailUrl = title?.id ? `/${isTv(title) ? 'tv' : 'movies'}/${title.id}` : null;
 
-      // 2) Si on a une URL TMDB “petite” en DB : upgrade sans API
-      if (typeof fallbackRaw === 'string' && /image\.tmdb\.org\/t\/p\/w\d+\//i.test(fallbackRaw)) {
-        const u = upgradeTmdbSizedUrl(fallbackRaw, TMDB_BACKDROP_SIZE);
-        if (alive) setBgUrl(u || fallback);
-        return;
-      }
+  const play = useCallback(() => {
+    if (!watchUrl) return;
+    logOutboundClickBeacon({ title_id: title.id, surface: 'hero', provider: 'watch_page', url: watchUrl });
+    window.location.href = watchUrl;
+  }, [title, watchUrl]);
 
-      // 3) Sinon : fetch TMDB par tmdb_id si dispo + clé dispo
-      const tmdbId = movie?.tmdb_id ?? movie?.tmbd_id ?? movie?.tmdbId ?? movie?.tmbdId;
-      if (!TMDB_API_KEY || !tmdbId) {
-        if (alive) setBgUrl(fallback);
-        return;
-      }
+  const moreInfo = useCallback(() => {
+    if (!detailUrl) return;
+    logTitleClick({ title_id: title.id, surface: 'hero', position: 0, row_title: 'Hero' });
+    navigate(detailUrl);
+  }, [title, detailUrl, navigate]);
 
-      const mediaType = guessTmdbType(movie); // "movie" ou "tv"
-      const url = `https://api.themoviedb.org/3/${mediaType}/${Number(tmdbId)}?api_key=${TMDB_API_KEY}`;
+  const description = useMemo(() => (title?.tagline || title?.description || '').trim(), [title]);
 
-      try {
-        const r = await fetch(url, { signal: ctrl?.signal });
-        if (!r.ok) throw new Error(`TMDB ${r.status}`);
-        const j = await r.json();
+  if (!title) return <div className="hero hero--empty" aria-hidden="true" />;
 
-        const backdrop = j?.backdrop_path;
-        const poster = j?.poster_path;
-
-        const best = tmdbImageUrl(backdrop || poster, TMDB_BACKDROP_SIZE) || fallback;
-        if (alive) setBgUrl(best);
-      } catch (e) {
-        // abort ou erreur : fallback DB
-        if (alive) setBgUrl(fallback);
-      }
-    };
-
-    resolveBg();
-
-    return () => {
-      alive = false;
-      if (ctrl) ctrl.abort();
-    };
-  }, [
-    movie?.id,
-    movie?.backdrop_path,
-    movie?.landscape_image,
-    movie?.landscape_url,
-    movie?.tmdb_id,
-    movie?.tmbd_id,
-    movie?.tmdbId,
-    movie?.tmbdId,
-    movie?.title_type,
-    movie?.type,
-    movie?.media_type,
-  ]);
-
-  const watchUrl = movie?.id ? `/watch/${movie.id}` : null;
+  const year = yearOf(title);
+  const rating = title.rating ?? title.vote_average;
 
   return (
-    <div
-      className="hero"
-      style={{
-        backgroundImage: bgUrl ? `url('${bgUrl}')` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {hasTrailer && (
-        <video
-          key={movie?.id || trailerUrl} // ✅ force reset vidéo quand hero change
-          ref={videoRef}
-          src={trailerUrl}
-          muted={isMuted}
-          playsInline
-          preload="metadata"
-          loop
-          onClick={toggleMute}
-          onLoadedMetadata={handleLoadedMetadata}
-          onPlaying={handlePlaying}
-          onWaiting={handleWaiting}
-          onStalled={handleStalled}
-          onError={handleError}
-          onEnded={handleEnded}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 0,
-            opacity: showVideo ? 1 : 0,
-            transition: 'opacity 180ms ease-out',
-            pointerEvents: 'auto',
-            cursor: 'pointer',
-          }}
-        />
-      )}
+    <section ref={rootRef} className={`hero${videoOn ? ' is-playing' : ''}`} aria-label={`Featured: ${title.title}`}>
+      <div className="hero__media" aria-hidden="true">
+        {art ? (
+          <img
+            className={`hero__image${art.wide ? '' : ' hero__image--poster'}${imageLoaded ? ' is-loaded' : ''}`}
+            src={tmdbImage(art.url, art.wide ? IMG.backdropHero : IMG.posterLarge)}
+            srcSet={art.wide ? tmdbSrcSet(art.url, [780, 1280]) : undefined}
+            sizes="100vw"
+            alt=""
+            fetchpriority="high"
+            decoding="async"
+            onLoad={() => setImageLoaded(true)}
+          />
+        ) : null}
 
-      {hasTrailer && (
-        <button
-          className="unmute-btn"
-          onClick={toggleMute}
-          aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
-          title={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted ? '🔇' : '🔊'}
-        </button>
-      )}
-
-      <div className="hero-overlay" style={{ position: 'relative', zIndex: 33333 }}>
-        <h1>{movie?.title}</h1>
-        <p>{movie?.tagline ?? movie?.description}</p>
-
-        <div className="hero-buttons">
-          <a
-            className="hero-button play-button"
-            href={watchUrl || '#'}
-            onClick={(e) => {
-              if (!watchUrl) return;
-              e.preventDefault();
-
-              logOutboundClickBeacon({
-                title_id: movie.id,
-                surface: 'hero',
-                provider: 'watch_page',
-                url: watchUrl,
-              });
-
-              window.location.href = watchUrl;
+        {canPlayTrailer ? (
+          <video
+            key={title.id}
+            ref={videoRef}
+            className="hero__video"
+            src={trailer}
+            muted={muted}
+            playsInline
+            preload="none"
+            onPlaying={() => setVideoOn(true)}
+            onEnded={() => {
+              setVideoOn(false);
+              setEnded(true);
             }}
-          >
-            Play
-          </a>
+            onError={() => {
+              setVideoOn(false);
+              setVideoFailed(true);
+            }}
+          />
+        ) : null}
+        <div className="hero__scrim" />
+      </div>
 
-          {movie?.id ? (
-            <a
-              className="hero-button info-button"
-              href={`/${String(movie.type || '').toLowerCase() === 'tv' ? 'tv' : 'movies'}/${movie.id}`}
-              onClick={() => {
-                logTitleClick({
-                  title_id: movie.id,
-                  surface: 'hero',
-                  position: 0,
-                  row_title: 'Hero',
-                });
-              }}
-            >
-              More Info
-            </a>
-          ) : (
-            <button className="hero-button info-button" disabled>More Info</button>
-          )}
+      <div className="hero__content">
+        <div className="hero__kicker">
+          <Badge tone="brand">{isTv(title) ? 'Series' : 'Film'}</Badge>
+          <span>Featured for you</span>
+        </div>
+
+        <h1 className="hero__title">{title.title}</h1>
+
+        <div className="hero__meta">
+          {year ? <span>{year}</span> : null}
+          {Number(rating) > 0 ? <Rating value={rating} /> : null}
+          {title.resume ? <span>Continue watching</span> : null}
+        </div>
+
+        {description ? <p className="hero__description">{description}</p> : null}
+
+        <div className="ui-actions hero__actions">
+          <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={play}>
+            {title.resume ? 'Resume' : 'Play'}
+          </Button>
+          <Button variant="glass" size="lg" icon={<InfoIcon />} onClick={moreInfo}>
+            More info
+          </Button>
         </div>
       </div>
-    </div>
+
+      {canPlayTrailer && videoOn ? (
+        <Button
+          className="hero__mute"
+          variant="glass"
+          icon={muted ? <VolumeOffIcon /> : <VolumeOnIcon />}
+          label={muted ? 'Sound on' : 'Sound off'}
+          onClick={() => setMuted((m) => !m)}
+        />
+      ) : null}
+    </section>
   );
 };
 
