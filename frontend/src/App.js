@@ -20,6 +20,7 @@ import ActorDetail from './components/ActorDetails';
 import ProtectedStaffRoute from './ProtectedStaffRoute';
 import ProtectedRoute from './ProtectedRoute';
 import DesignSystemPage from './design/DesignSystemPage';
+import NotFound from './pages/NotFound';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
@@ -86,8 +87,8 @@ function App() {
           <Route path="/design-system" element={<DesignSystemPage />} />
         ) : null}
 
-        {/* Optionnel: catch-all */}
-        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+        {/* unknown address: a real "not found" page (was a blank screen) */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

@@ -8,6 +8,7 @@ import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
 import Navbar from './Navbar';
+import Footer from './Footer';
 import DetailHero, { splitGenres } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
 import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
@@ -268,6 +269,7 @@ const MovieDetail = () => {
           </dl>
         </section>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -66,13 +66,19 @@ function atTextEdge(el, dir) {
   return start === end && (dir === "left" ? start === 0 : end === length);
 }
 
+function openModal() {
+  const all = document.querySelectorAll(".ui-modal");
+  return all.length ? all[all.length - 1] : null;
+}
+
 function fullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
 
 function candidates() {
-  // in full screen only what is shown can be reached (the rest of the page is still laid out)
-  const root = fullscreenElement() || document;
+  // in full screen / an open dialog only what is shown can be reached (the rest of the page is
+  // still laid out behind it)
+  const root = fullscreenElement() || openModal() || document;
   return [...root.querySelectorAll(FOCUSABLE)].filter((el) => {
     if (el.closest(".slick-cloned, [inert]")) return false;
     const r = el.getBoundingClientRect();
@@ -290,6 +296,11 @@ const POPUPS = [
 ];
 
 function closePopup(active) {
+  const modal = openModal();
+  if (modal) {
+    modal.querySelector(".ui-modal__close")?.click(); // the dialog puts the focus back itself
+    return true;
+  }
   for (const { panel, toggle } of POPUPS) {
     if (document.querySelector(panel)) {
       const button = document.querySelector(toggle);
@@ -355,6 +366,16 @@ function onKeyDown(e) {
   }
 
   const dir = DIRECTIONS[e.key];
+  // a focused text box that scrolls (dialog text): up / down read it, then leave it at its ends
+  if ((dir === "up" || dir === "down") && active?.matches?.(".ui-modal__body")) {
+    const max = active.scrollHeight - active.clientHeight;
+    const canScroll = dir === "down" ? active.scrollTop < max - 1 : active.scrollTop > 0;
+    if (canScroll) {
+      e.preventDefault();
+      active.scrollBy({ top: (dir === "down" ? 1 : -1) * Math.max(80, active.clientHeight * 0.6), behavior: "smooth" });
+      return;
+    }
+  }
   if (dir) {
     // in a text field, left / right move the cursor, and only leave the field from its ends
     // (an empty field is left right away): otherwise a remote user is stuck in the search box

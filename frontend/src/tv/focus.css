@@ -240,11 +240,16 @@ html.tv-keys .movie-detail-cast-card:hover:not(:focus-visible) .movie-detail-cas
 }
 
 /* ---------- Round icons: circular ring ---------- */
-.profile-icon:focus-visible,
 .notif__button:focus-visible,
-.share-button:focus-visible {
+.share-button:focus-visible,
+.navbar__icon-btn:focus-visible {
   border-radius: 50%;
   box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+}
+/* the avatar is a rounded square: the ring follows its shape */
+.profile-icon:focus-visible {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--focus-ring), 0 0 0 8px var(--focus-halo);
 }
 
 /* ---------- Menus and lists: lighter row + white inset frame ----------

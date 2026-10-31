@@ -2,8 +2,9 @@
 // Shared UI components (styles: components.css, values: tokens.css). Pages use these instead of
 // their own buttons / chips / loaders so the app looks like one product.
 import React from "react";
+import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
-import { AlertIcon, FilmIcon, StarIcon } from "./icons";
+import { AlertIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
 
 const cx = (...parts) => parts.filter(Boolean).join(" ");
 
@@ -157,4 +158,85 @@ export function friendlyError(err, what = "this page") {
     return "You seem to be offline. Check your connection and try again.";
   }
   return "Something went wrong. Please try again.";
+}
+
+/**
+ * Modal dialog: rendered over the page (portal), scrolls inside when the content is long (the
+ * header with its close button stays visible), closes with the close button, a click on the
+ * backdrop, Escape or the TV remote's Back (tv/spatialNavigation.js: .ui-modal). While open the
+ * page behind doesn't scroll and the remote / Tab keys stay inside it; the focus goes back to
+ * what opened it when it closes.
+ */
+export function Modal({ open, onClose, title, children, footer, size = "md", className }) {
+  const cardRef = React.useRef(null);
+  const openerRef = React.useRef(null);
+  const titleId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return undefined;
+    openerRef.current = document.activeElement;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // focus the close button: Enter / OK closes, arrows move inside
+    const t = setTimeout(() => cardRef.current?.querySelector(".ui-modal__close")?.focus({ preventScroll: true }), 0);
+
+    const onKey = (e) => {
+      if (e.key === "Tab") {
+        // keep Tab inside the dialog
+        const items = [...cardRef.current.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+        if (!items.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      const opener = openerRef.current;
+      if (opener && opener.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [open]);
+
+  if (!open) return null;
+  const node = (
+    <div className="ui-modal" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
+      <div
+        ref={cardRef}
+        className={cx("ui-modal__card", `ui-modal__card--${size}`, className)}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+      >
+        <header className="ui-modal__header">
+          {title ? (
+            <h2 id={titleId} className="ui-modal__title">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
+          <button type="button" className="ui-btn ui-btn--ghost ui-btn--icon ui-btn--sm ui-modal__close" aria-label="Close" onClick={onClose}>
+            <span className="ui-btn__icon">
+              <CloseIcon />
+            </span>
+          </button>
+        </header>
+        {/* tabIndex: the remote / keyboard can focus the text and scroll it with the arrows */}
+        <div className="ui-modal__body" tabIndex={0}>
+          {children}
+        </div>
+        {footer ? <footer className="ui-modal__footer ui-actions">{footer}</footer> : null}
+      </div>
+    </div>
+  );
+  return ReactDOM.createPortal(node, document.body);
 }
