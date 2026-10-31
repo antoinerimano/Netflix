@@ -87,8 +87,8 @@ Status: [ ] todo   [~] in progress   [x] done
         tip, shortcut legend).
 [x] 4.10 "More like this" on detail pages (GET /api/titles/<id>/similar/, TitleSimilar)
 [x] 4.11 Actor page: photo, name, counts, movies / shows grids with the character (no bio stored)
-[ ] 4.12 Profiles: "Who's watching?" screen, switch without reloading, create / edit
-         profile in the design system
+[x] 4.12 Profiles: "Who's watching?" (/profiles), manage / edit / delete in a sheet, switch without reloading,
+         shared profile form (picture or colored initial, Kids switch, age chips), sign-up step fixed
 [ ] 4.13 Account page redesign (one primary action, profiles as avatars)
 [ ] 4.14 Notifications panel (header, icons, mark all read, empty state)
 [ ] 4.15 Search results page (grid + "see all", recent / trending before typing)

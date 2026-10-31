@@ -6,6 +6,8 @@ import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
 import NotificationBell from './NotificationBell';
+import { Avatar } from '../design';
+import { setActiveProfile } from '../utils/activeProfile';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 import {
@@ -16,7 +18,7 @@ const SITE_URL = 'https://tauruss.top/';
 
 const Navbar = () => {
   const [profiles, setProfiles] = useState([]);
-  const [profilePhoto, setProfilePhoto] = useState('/default-profile.png');
+  const [profilePhoto, setProfilePhoto] = useState('');
   const [selectedProfile, setCurrentProfile] = useState(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -79,12 +81,12 @@ const Navbar = () => {
           list.find((p) => String(p.id) === String(savedProfileId)) || list[0] || null;
 
         setCurrentProfile(active);
-        setProfilePhoto(active?.avatar_url || '/default-profile.png');
+        setProfilePhoto(active?.avatar_url || '');
       } catch (e) {
         console.error('Failed to load profiles:', e);
         setProfiles([]);
         setCurrentProfile(null);
-        setProfilePhoto('/default-profile.png');
+        setProfilePhoto('');
       }
     };
 
@@ -138,11 +140,12 @@ const Navbar = () => {
     if (!selected) return;
 
     setCurrentProfile(selected);
-    setProfilePhoto(selected?.avatar_url || '/default-profile.png');
+    setProfilePhoto(selected?.avatar_url || '');
     setIsProfileDropdownOpen(false);
-    localStorage.setItem('activeProfileId', selected.id);
-    window.dispatchEvent(new Event("activeProfileChanged"));
-    window.location.reload();
+    if (String(selected.id) === localStorage.getItem('activeProfileId')) return;
+    // the app remounts its pages for the new profile (App.js): no full reload
+    setActiveProfile(selected);
+    navigate('/');
   };
 
   const handleInputChange = (e) => setQuery(e.target.value);
@@ -349,15 +352,7 @@ const Navbar = () => {
         {isAuthenticated ? (
           <div className="profile-container" ref={profileRef}>
             <div className="profile-icon" tabIndex={0} role="button" aria-label="Profiles and account" aria-expanded={isProfileDropdownOpen} onClick={toggleProfileDropdown}>
-              <img
-                src={profilePhoto || "/default-profile.png"}
-                alt=""
-                className="profile-avatar"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = "/default-profile.png";
-                }}
-              />
+              <Avatar src={profilePhoto} name={selectedProfile?.name || ''} size="100%" className="profile-avatar" />
             </div>
             {isProfileDropdownOpen && (
               <div className="profile-dropdown" role="menu">
@@ -374,7 +369,7 @@ const Navbar = () => {
                         aria-checked={!!isCurrent}
                         onClick={() => handleProfileChange(profile.id)}
                       >
-                        <img src={profile.avatar_url || '/default-profile.png'} alt="" />
+                        <Avatar src={profile.avatar_url} name={profile.name} size="2rem" radius="var(--radius-sm)" />
                         <span className="profile-option__name">{profile.name}</span>
                         {isCurrent ? <CheckIcon className="profile-option__check" aria-hidden="true" /> : null}
                       </div>
@@ -383,6 +378,9 @@ const Navbar = () => {
                 ) : (
                   <div className="profile-option profile-option--hint">No profiles found</div>
                 )}
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/profiles?manage')}>
+                  Manage profiles
+                </div>
                 <div className="dropdown-divider"></div>
                 {isStaff && (
                   <>

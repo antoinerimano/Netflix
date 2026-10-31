@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import Movies from './components/Movies';
@@ -21,17 +21,37 @@ import ProtectedStaffRoute from './ProtectedStaffRoute';
 import ProtectedRoute from './ProtectedRoute';
 import DesignSystemPage from './design/DesignSystemPage';
 import NotFound from './pages/NotFound';
+import ProfilesPage from './components/profiles/ProfilesPage';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
 
 function App() {
+  // a profile switch remounts every page for the new profile (its home, list, age limit...)
+  // instead of reloading the whole app
+  const [profileKey, setProfileKey] = useState(() => localStorage.getItem('activeProfileId') || '');
+  useEffect(() => {
+    const onChange = () => setProfileKey(localStorage.getItem('activeProfileId') || '');
+    window.addEventListener('activeProfileChanged', onChange);
+    return () => window.removeEventListener('activeProfileChanged', onChange);
+  }, []);
+
   return (
     <>
       {/* ✅ charge le script 1 seule fois pour toute l'app */}
       <AdManagerLoader />
 
-      <Routes>
+      <Routes key={profileKey}>
+        {/* "Who's watching?": signed in, no profile needed yet */}
+        <Route
+          path="/profiles"
+          element={
+            <ProtectedRoute requireProfile={false}>
+              <ProfilesPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ✅ Home protégée: si pas connecté => /login */}
         <Route
           path="/"

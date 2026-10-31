@@ -253,3 +253,65 @@ export function Modal({
   );
   return ReactDOM.createPortal(node, document.body);
 }
+
+/**
+ * Profile avatar: a picture (avatar_url = "/avatars/kid.webp") or a colored tile with the
+ * initial (avatar_url = "color:#e50914"). Broken / missing pictures fall back to the tile.
+ */
+export function Avatar({ src, name = "", size = "2.5rem", className, radius }) {
+  const [failed, setFailed] = React.useState(false);
+  const isColor = typeof src === "string" && src.startsWith("color:");
+  const color = isColor ? src.slice(6) : "#3a3a44";
+  const style = { width: size, height: size, borderRadius: radius };
+  if (src && !isColor && !failed) {
+    return <img className={cx("ui-avatar", className)} style={style} src={src} alt="" onError={() => setFailed(true)} />;
+  }
+  return (
+    <span className={cx("ui-avatar ui-avatar--initial", className)} style={{ ...style, background: color }} aria-hidden="true">
+      <span>{(name || "?").trim().charAt(0).toUpperCase() || "?"}</span>
+    </span>
+  );
+}
+
+/** On / off switch (a button with role="switch": OK on a remote toggles it) */
+export function Switch({ checked, onChange, label, description, className, id }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      id={id}
+      aria-checked={!!checked}
+      className={cx("ui-switch", checked && "is-on", className)}
+      onClick={() => onChange?.(!checked)}
+    >
+      <span className="ui-switch__text">
+        <span className="ui-switch__label">{label}</span>
+        {description ? <span className="ui-switch__desc">{description}</span> : null}
+      </span>
+      <span className="ui-switch__track" aria-hidden="true">
+        <span className="ui-switch__thumb" />
+      </span>
+    </button>
+  );
+}
+
+/** Form field: label + control + hint / error */
+export function Field({ label, hint, error, children, className, htmlFor }) {
+  return (
+    <div className={cx("ui-field", error && "has-error", className)}>
+      {label ? (
+        <label className="ui-field__label" htmlFor={htmlFor}>
+          {label}
+        </label>
+      ) : null}
+      {children}
+      {error ? (
+        <p className="ui-field__error" role="alert">
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="ui-field__hint">{hint}</p>
+      ) : null}
+    </div>
+  );
+}

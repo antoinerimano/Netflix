@@ -16,7 +16,7 @@ function isJwtExpired(token) {
   }
 }
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, requireProfile = true }) {
   const location = useLocation();
 
   const token =
@@ -34,9 +34,12 @@ export default function ProtectedRoute({ children }) {
   const refresh = localStorage.getItem("refresh");
   const expired = hasToken ? (refresh ? isJwtExpired(refresh) : isJwtExpired(token)) : true;
 
-  if (!hasToken || expired || !hasProfile) {
-
+  if (!hasToken || expired) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+  // signed in but no profile chosen: "Who's watching?", then back here
+  if (requireProfile && !hasProfile) {
+    return <Navigate to="/profiles" replace state={{ from: location }} />;
   }
 
   return children;

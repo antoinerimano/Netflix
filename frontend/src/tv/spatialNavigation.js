@@ -153,7 +153,7 @@ function nearest(from, dir, list) {
 
 // The page's main action, then its content, when nothing is focused yet
 const START_SELECTORS = [
-  ".ui-btn--primary, .hero-button, .movie-detail-play-button, .tvd-play, .watchpage__playerWrap[tabindex='0']", // Play / Watch
+  ".profile-tile, .ui-btn--primary, .hero-button, .movie-detail-play-button, .tvd-play, .watchpage__playerWrap[tabindex='0']", // Play / Watch
   ".movie-card, .poster-card, .tvd-ep-card", // cards
 ];
 

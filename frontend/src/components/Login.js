@@ -31,15 +31,20 @@ const Login = () => {
 
       setIsAuthenticated(true);
 
-      let profileId = data.default_profile_id ? String(data.default_profile_id) : null;
+      // several profiles: "Who's watching?" (then where the user was going)
+      const resProfiles = await fetchUserProfiles(data.user.id);
+      const profiles = Array.isArray(resProfiles) ? resProfiles : (resProfiles?.results || resProfiles?.profiles || []);
+      if (profiles.length > 1 && !(data.user.is_staff && location.state?.from?.pathname?.startsWith('/admin/'))) {
+        localStorage.removeItem('activeProfileId');
+        localStorage.removeItem('activeProfile');
+        navigate('/profiles', { replace: true, state: { from: location.state?.from } });
+        return;
+      }
 
-      if (!profileId) {
-        const resProfiles = await fetchUserProfiles(data.user.id);
-        const profiles = Array.isArray(resProfiles) ? resProfiles : (resProfiles?.profiles || []);
-        if (profiles.length) {
-          profileId = String(profiles[0].id);
-          localStorage.setItem('activeProfile', JSON.stringify(profiles[0]));
-        }
+      let profileId = data.default_profile_id ? String(data.default_profile_id) : null;
+      if (!profileId && profiles.length) {
+        profileId = String(profiles[0].id);
+        localStorage.setItem('activeProfile', JSON.stringify(profiles[0]));
       }
 
       if (profileId) {
