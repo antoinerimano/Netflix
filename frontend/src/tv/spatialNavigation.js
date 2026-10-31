@@ -115,9 +115,14 @@ function center(r) {
 }
 
 /** Nearest candidate in a direction; elements in the same row / column win over diagonal ones. */
+// Areas that scroll by themselves: what's scrolled out of view inside them is further down /
+// up than the buttons fixed around them (a dialog's footer), but comes first
+const SCROLL_AREAS = ".ui-modal__body, .search-results, .notif__panel, .profile-dropdown";
+
 function nearest(from, dir, list) {
   const a = from.getBoundingClientRect();
   const ca = center(a);
+  const area = from.closest(SCROLL_AREAS);
   let best = null;
   let bestScore = Infinity;
   for (const el of list) {
@@ -142,7 +147,9 @@ function nearest(from, dir, list) {
     if (main <= 1) continue; // not in that direction
     // left / right stay on the same line (end of a row: stay there, like a TV)
     if (!aligned && (dir === "left" || dir === "right")) continue;
-    const score = main + (aligned ? 0 : 2 * cross + 1000);
+    // leave the scrolling area (e.g. for the dialog's buttons) only when nothing is left in it
+    const outside = area && !area.contains(el) ? 100000 : 0;
+    const score = main + (aligned ? 0 : 2 * cross + 1000) + outside;
     if (score < bestScore) {
       bestScore = score;
       best = el;
@@ -160,14 +167,27 @@ const START_SELECTORS = [
 // Groups remember their position: going down to the next row and back up returns to the card
 // you were on (like TV apps), and entering a group lands on its current item (season shown,
 // source playing, active profile) rather than whatever happens to be closest.
-const GROUPS = ".row, .detail-similar, .detail-cast, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
-const CURRENT_IN_GROUP = ".is-active, .selected, [aria-pressed='true'], [aria-current='page']";
+const GROUPS = ".row, .profiles__grid, .profile-form__pictures, .profile-form__letter-colors, .profile-form__chips, .avatar-builder__tabs, .avatar-builder__colors, .avatar-builder__options, .detail-similar, .detail-cast, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
+const CURRENT_IN_GROUP = ".is-active, .selected, .is-selected, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-current='page']";
 const lastInGroup = new WeakMap();
 
 function usable(el) {
   if (!el?.isConnected || !el.matches(FOCUSABLE)) return false;
   const r = el.getBoundingClientRect();
   return r.width > 0 && r.height > 0 && window.getComputedStyle(el).pointerEvents !== "none";
+}
+
+// End of a line in a group that wraps (chips, color / style grids): right continues with the next
+// item of the group, left with the previous one, like TV grids. (Without it, the items on the
+// next line could be unreachable: nothing is aligned with them from the end of the line above.)
+// Rows that slide (home rows) stop at their ends instead.
+function wrapInGroup(from, dir, list) {
+  const group = from.closest(GROUPS);
+  if (!group || group.matches(".row")) return null;
+  const items = list.filter((el) => group.contains(el) && el.closest(GROUPS) === group);
+  const i = items.indexOf(from);
+  if (i < 0) return null;
+  return items[dir === "right" ? i + 1 : i - 1] || null;
 }
 
 function preferInGroup(from, next) {
@@ -300,8 +320,9 @@ function revealHorizontally(el) {
   const r = el.getBoundingClientRect();
   const box = row.getBoundingClientRect();
   const margin = 32; // past the faded edges
-  if (r.left < box.left + margin) row.scrollBy({ left: r.left - box.left - margin, behavior: "smooth" });
-  else if (r.right > box.right - margin) row.scrollBy({ left: r.right - box.right + margin, behavior: "smooth" });
+  // instant, like dialogs: a smooth scroll inside an overflow box doesn't always run
+  if (r.left < box.left + margin) row.scrollLeft += r.left - box.left - margin;
+  else if (r.right > box.right - margin) row.scrollLeft += r.right - box.right + margin;
 }
 
 function focusElement(el) {
@@ -309,13 +330,27 @@ function focusElement(el) {
   revealHorizontally(el);
   // scroll the page vertically only: scrolling horizontally would break the row sliders
   const r = el.getBoundingClientRect();
-  const panel = el.closest(".search-results, .notif__panel, .profile-dropdown");
+  const panel = el.closest(".search-results, .notif__panel, .profile-dropdown, .ui-modal__body");
   if (panel) {
-    // inside a dropdown: scroll the dropdown itself, vertically only (scrollIntoView could also
-    // scroll the page sideways)
+    // inside a dropdown / dialog: scroll it, vertically only (scrollIntoView could also scroll the
+    // page sideways), keeping a margin and staying clear of a header pinned inside it
     const p = panel.getBoundingClientRect();
-    if (r.top < p.top) panel.scrollTop -= p.top - r.top;
-    else if (r.bottom > p.bottom) panel.scrollTop += r.bottom - p.bottom;
+    // a pinned header above the item (the avatar preview on phones; on wide screens it's a
+    // column beside the choices and doesn't count)
+    // (and a bar pinned at the bottom: a form's Save / Cancel)
+    const pinnedBox = (sel) =>
+      [...panel.querySelectorAll(sel)]
+        .filter((x) => window.getComputedStyle(x).position === "sticky" && !x.contains(el))
+        .map((x) => x.getBoundingClientRect())
+        .find((b) => b.left < r.right && b.right > r.left);
+    const pinned = pinnedBox(".avatar-builder__stage");
+    const pinnedBottom = pinnedBox(".profile-form__actions");
+    const top = p.top + (pinned ? pinned.height : 0) + 20;
+    const bottom = p.bottom - (pinnedBottom ? pinnedBottom.height : 0) - 20;
+    // instant: short distances, and a smooth scroll inside an overflow box doesn't always run
+    // (it stayed put in some browsers / TV engines, leaving the focused item hidden)
+    if (r.top < top) panel.scrollTop += r.top - top;
+    else if (r.bottom > bottom) panel.scrollTop += r.bottom - bottom;
   } else if (r.top < TOP_MARGIN || r.bottom > window.innerHeight * COMFORT_BOTTOM) {
     // near an edge: bring it to a steady spot ~40% down the screen (TV apps keep the active
     // row in place), or just under the navbar if it is taller than that
@@ -421,6 +456,7 @@ function onKeyDown(e) {
     if (typing && (dir === "left" || dir === "right") && !atTextEdge(active, dir)) return;
     const list = candidates();
     let next = active ? nearest(active, dir, list) : startingPoint(list);
+    if (!next && active && (dir === "left" || dir === "right")) next = wrapInGroup(active, dir, list);
     if (next && active && (dir === "up" || dir === "down")) next = preferInGroup(active, next);
     if (next) {
       e.preventDefault(); // no page scroll: we scroll to the focused element ourselves

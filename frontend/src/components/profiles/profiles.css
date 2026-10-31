@@ -189,75 +189,6 @@
   font-size: var(--text-sm);
 }
 
-/* ================= Profile form ================= */
-.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-.profile-form__preview {
-  display: flex;
-  justify-content: center;
-}
-.profile-form__preview .ui-avatar {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-}
-.profile-form__avatars {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
-  gap: var(--space-3);
-}
-.profile-form__avatar {
-  position: relative;
-  aspect-ratio: 1;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-standard);
-}
-.profile-form__avatar .ui-avatar {
-  width: 100% !important;
-  height: 100% !important;
-  border-radius: var(--radius-md);
-  opacity: 0.7;
-  transition: opacity var(--duration-fast);
-}
-.profile-form__avatar:hover .ui-avatar,
-.profile-form__avatar.is-selected .ui-avatar {
-  opacity: 1;
-}
-.profile-form__avatar.is-selected {
-  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
-}
-.profile-form__avatar:active {
-  transform: scale(0.95);
-}
-.profile-form__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-.profile-form__error {
-  margin: 0;
-  color: var(--color-danger);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-.profile-form__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  padding-top: var(--space-2);
-}
-.profile-form__extra {
-  margin-right: auto;
-}
-
 /* ================= Sign-up: first profile ================= */
 .profiles__main--form {
   justify-content: flex-start;
@@ -297,118 +228,401 @@
   }
 }
 
-/* ================= Picture grid: create / edit your own ================= */
-.profile-form__avatar--create {
+/* ================= Profile form ================= */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+/* preview + name side by side (stacked on narrow phones) */
+.profile-form__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.profile-form__preview {
+  flex: none;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--color-border);
+}
+.profile-form__preview .ui-avatar {
+  border-radius: var(--radius-lg);
+}
+.profile-form__name {
+  flex: 1;
+  min-width: 0;
+}
+
+/* picture: Create / your avatar, Letter, photos */
+.profile-form__pictures {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 4.25rem));
+  gap: var(--space-3);
+}
+.profile-form__pic {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast);
+}
+.profile-form__pic .ui-avatar {
+  border-radius: var(--radius-md);
+  opacity: 0.75;
+  transition: opacity var(--duration-fast);
+}
+.profile-form__pic:hover .ui-avatar,
+.profile-form__pic.is-selected .ui-avatar {
+  opacity: 1;
+}
+.profile-form__pic:hover {
+  transform: translateY(-2px);
+}
+.profile-form__pic.is-selected {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
+}
+.profile-form__pic--create {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   border: 2px dashed var(--color-border-strong);
-  color: var(--color-text-secondary);
-  font-size: 0.6875rem;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.16), rgba(139, 92, 246, 0.16));
+  color: var(--color-text);
+  font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
 }
-.profile-form__avatar--create svg {
-  width: 1.25rem;
-  height: 1.25rem;
+.profile-form__pic--create svg {
+  width: 1.4rem;
+  height: 1.4rem;
 }
-.profile-form__avatar--create:hover {
+.profile-form__pic--create:hover {
   border-color: var(--color-text);
-  color: var(--color-text);
 }
-.profile-form__avatar-edit {
+.profile-form__pic-badge {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
+  right: -5px;
+  bottom: -5px;
   display: grid;
   place-items: center;
-  width: 1.375rem;
-  height: 1.375rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
   background: var(--color-text);
   color: var(--color-text-inverse);
   box-shadow: var(--shadow-sm);
 }
-.profile-form__avatar-edit svg {
-  width: 0.8rem;
-  height: 0.8rem;
+.profile-form__pic-badge svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+.profile-form__letter-colors {
+  flex-wrap: nowrap; /* one scrolling line (.ui-scroller): every color reachable by the remote */
+  gap: var(--space-2);
+  margin-top: calc(var(--space-1) - 10px);
+  animation: ui-fade-in var(--duration-normal) var(--ease-standard);
+}
+.profile-form__color {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform var(--duration-fast);
+}
+.profile-form__color:hover {
+  transform: scale(1.08);
+}
+.profile-form__color.is-selected {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
+}
+.profile-form__color svg {
+  width: 1rem;
+  height: 1rem;
+}
+.profile-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.profile-form__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.profile-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+.profile-form__extra {
+  margin-right: auto;
+}
+@media (max-width: 420px) {
+  .profile-form__identity {
+    gap: var(--space-4);
+  }
+  .profile-form__preview {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+  .profile-form__pictures {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .profile-form__actions .ui-btn--primary {
+    flex: 1;
+  }
 }
 
 /* ================= Avatar builder ================= */
+/* phones: preview + actions pinned at the top of the sheet, tabs under it, choices scroll.
+   wide screens: preview in a left column, tabs + choices on the right. */
+.avatar-builder-modal .ui-modal__body {
+  padding-top: 0;
+}
 .avatar-builder {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
 }
 .avatar-builder__stage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  margin: 0 calc(-1 * var(--space-6));
+  padding: var(--space-4) var(--space-6) var(--space-3);
+  background: var(--color-surface-1);
+  box-shadow: 0 10px 14px -12px rgba(0, 0, 0, 0.8);
 }
 .avatar-builder__preview {
-  width: 9rem;
-  height: 9rem;
+  flex: none;
+  width: 6.5rem;
+  height: 6.5rem;
   overflow: hidden;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl), 0 0 0 1px var(--color-border);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--color-border);
 }
 .avatar-builder__preview svg {
   display: block;
 }
+.avatar-builder__stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.avatar-builder__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
 .avatar-builder__tabs {
   justify-content: flex-start;
 }
-.avatar-builder__options {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+.avatar-builder__tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: ui-fade-in var(--duration-normal) var(--ease-standard);
+}
+.avatar-builder__group {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
-.avatar-builder__options.is-colors {
-  grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+.avatar-builder__label {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.avatar-builder__colors {
+  /* one line that scrolls (.ui-scroller): wrapped rows left colors out of the remote's reach */
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+}
+.avatar-builder__swatch {
+  flex: none;
+}
+.avatar-builder__swatch {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform var(--duration-fast);
+}
+.avatar-builder__swatch:hover {
+  transform: scale(1.1);
+}
+.avatar-builder__swatch.is-selected {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
+}
+.avatar-builder__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+  gap: var(--space-3);
 }
 .avatar-builder__option {
-  position: relative;
-  aspect-ratio: 1;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   padding: 0;
   border: 0;
   border-radius: var(--radius-md);
-  background: var(--color-surface-2);
+  background: transparent;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast);
 }
 .avatar-builder__option svg {
   display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast);
 }
-.avatar-builder__option:hover {
+.avatar-builder__option:hover svg {
   transform: translateY(-2px);
 }
-.avatar-builder__option.is-selected {
+.avatar-builder__option.is-selected svg {
   box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
 }
-.is-colors .avatar-builder__option {
-  border-radius: 50%;
-  overflow: visible;
-  background: transparent;
+.avatar-builder__option-name {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.avatar-builder__swatch {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+.avatar-builder__option.is-selected .avatar-builder__option-name {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+/* the option button's own ring would frame the name too: frame the picture instead */
+.avatar-builder__option:focus-visible {
+  box-shadow: none;
+}
+.avatar-builder__option:focus-visible svg {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 5px var(--focus-ring);
+  transform: scale(1.05);
+}
+.avatar-builder__option:focus-visible .avatar-builder__option-name {
+  color: var(--color-text);
+}
+
+@media (min-width: 760px) {
+  .avatar-builder {
+    grid-template-columns: 12.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+  .avatar-builder__stage {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0;
+    padding: var(--space-5) 0 0;
+    box-shadow: none;
+  }
+  .avatar-builder__preview {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .avatar-builder__stage-actions {
+    justify-content: center;
+  }
+  .avatar-builder__panel {
+    padding-top: var(--space-5);
+  }
 }
 @media (max-width: 600px) {
+  .avatar-builder__stage {
+    margin: 0 calc(-1 * var(--space-5));
+    padding: var(--space-3) var(--space-5);
+  }
   .avatar-builder__preview {
-    width: 7rem;
-    height: 7rem;
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+  .avatar-builder__stage-actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .avatar-builder__options {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3) var(--space-2);
   }
-  .avatar-builder__options.is-colors {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+/* ================= Manage: details + confirmation ================= */
+.profile-tile__meta {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+.profiles__toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(var(--space-8), env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-xl);
+  transform: translateX(-50%);
+  animation: ui-pop-in var(--duration-slow) var(--ease-out);
+}
+.profiles__toast svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--color-success);
+}
+
+/* in a dialog: Save / Cancel / Delete pinned at the bottom, always reachable */
+.ui-modal__body .profile-form__actions {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  z-index: 3;
+  margin: 0 calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-1);
+}
+@media (max-width: 600px) {
+  .ui-modal__body .profile-form__actions {
+    margin: 0 calc(-1 * var(--space-5)) calc(-1 * var(--space-6));
+    padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   }
 }

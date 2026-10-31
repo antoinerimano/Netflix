@@ -1,53 +1,86 @@
 // src/components/profiles/AvatarBuilder.js
-// "Create your avatar": pick each part (background, pattern, face, skin, eyes, mouth, hair / hat,
-// hair color, extras, top) with live previews of your own avatar, or "Surprise me". The result
-// is a short code saved in Profile.avatar_url (design/avatarArt.js).
+// "Create your avatar": one tab per area (Hair, Hats, Eyes, Brows, Mouth, Beard, Extras, Face,
+// Top, Background), each with its colors (swatches) and its styles (live previews of your own
+// character). "Surprise me" + Undo. The preview stays in view: left column on wide screens,
+// pinned at the top on phones. Remote: a tab opens as soon as it's focused; Down goes to its
+// colors, then its styles; every row lands on its current choice.
 import React, { useEffect, useState } from 'react';
 import { Button, Chip, Modal } from '../../design';
-import { DiceIcon } from '../../design/icons';
+import { DiceIcon, ArrowLeftIcon } from '../../design/icons';
 import {
-  AvatarArt, PARTS, BACKGROUNDS, SKINS, HAIR_COLORS, SHIRTS, encodeAvatar, parseAvatar, randomAvatar, isBuiltAvatar,
+  AvatarArt, BACKGROUNDS, SKINS, HAIR_COLORS, CLOTH_COLORS, partByKey, encodeAvatar, parseAvatar, randomAvatar, isBuiltAvatar,
 } from '../../design/avatarArt';
 
-const SWATCHES = {
+const COLOR_FILL = {
   bg: (i) => `linear-gradient(135deg, ${BACKGROUNDS[i][0]}, ${BACKGROUNDS[i][1]})`,
   sk: (i) => SKINS[i],
   hc: (i) => HAIR_COLORS[i],
-  sh: (i) => SHIRTS[i],
+  hwc: (i) => CLOTH_COLORS[i],
+  sh: (i) => CLOTH_COLORS[i],
 };
-// the order of the tabs (the saved code keeps PARTS' order): the fun parts first
-const TAB_ORDER = ['hr', 'hc', 'ey', 'mo', 'ex', 'fc', 'sk', 'sh', 'bg', 'pt'];
-const TABS = TAB_ORDER.map((k) => PARTS.find((p) => p.key === k));
-
-const OPTION_NAMES = {
-  pt: ['None', 'Dots', 'Stripes', 'Waves', 'Stars'],
-  fc: ['Round', 'Square', 'Oval', 'Wide'],
-  ey: ['Dots', 'Shiny', 'Happy', 'Wink', 'Sleepy', 'Stars', 'Shades', 'Big'],
-  mo: ['Smile', 'Grin', 'Surprised', 'Neutral', 'Tongue', 'Smirk'],
-  hr: ['None', 'Short', 'Spiky', 'Curly', 'Long', 'Bun', 'Mohawk', 'Cap', 'Beanie', 'Crown'],
-  ex: ['None', 'Blush', 'Freckles', 'Glasses', 'Mustache', 'Earrings'],
-};
+const TABS = [
+  { id: 'hair', label: 'Hair', color: 'hc', style: 'hr' },
+  { id: 'hat', label: 'Hats', color: 'hwc', style: 'hw' },
+  { id: 'eyes', label: 'Eyes', style: 'ey' },
+  { id: 'brows', label: 'Brows', style: 'eb' },
+  { id: 'mouth', label: 'Mouth', style: 'mo' },
+  { id: 'beard', label: 'Beard', style: 'bd' },
+  { id: 'extras', label: 'Extras', style: 'ex' },
+  { id: 'face', label: 'Face', color: 'sk', style: 'fc' },
+  { id: 'top', label: 'Top', color: 'sh', style: 'ts' },
+  { id: 'scene', label: 'Background', color: 'bg', style: 'pt' },
+];
+const COLOR_NAMES = { hc: 'Hair color', hwc: 'Hat color', sk: 'Skin', sh: 'Color', bg: 'Colors' };
 
 export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
   const [spec, setSpec] = useState(() => (isBuiltAvatar(initial) ? parseAvatar(initial) : randomAvatar()));
-  const [tab, setTab] = useState('hr');
+  const [history, setHistory] = useState([]); // previous specs ("Surprise me" can be undone)
+  const [tabId, setTabId] = useState('hair');
 
-  // reopened: start from the profile's avatar (or a fresh surprise)
   useEffect(() => {
-    if (open) setSpec(isBuiltAvatar(initial) ? parseAvatar(initial) : randomAvatar());
+    if (!open) return;
+    setSpec(isBuiltAvatar(initial) ? parseAvatar(initial) : randomAvatar());
+    setHistory([]);
+    setTabId('hair');
   }, [open, initial]);
 
-  const part = PARTS.find((p) => p.key === tab);
-  const choose = (i) => setSpec((s) => ({ ...s, [tab]: i }));
+  const tab = TABS.find((t) => t.id === tabId);
+  const update = (patch) => {
+    setHistory((h) => [...h.slice(-19), spec]);
+    setSpec((s) => ({ ...s, ...patch }));
+  };
+  const surprise = () => {
+    setHistory((h) => [...h.slice(-19), spec]);
+    setSpec(randomAvatar());
+  };
+  const undo = () => {
+    if (!history.length) return;
+    setSpec(history[history.length - 1]);
+    setHistory((h) => h.slice(0, -1));
+  };
+  const openTab = (id, el) => {
+    setTabId(id);
+    // keep the tab inside its row, sideways only: a vertical scrollIntoView fought the remote's
+    // own scrolling of the sheet (which keeps items clear of the pinned preview)
+    const row = el?.parentElement;
+    if (!row) return;
+    const r = el.getBoundingClientRect();
+    const box = row.getBoundingClientRect();
+    if (r.left < box.left + 24) row.scrollLeft += r.left - box.left - 24;
+    else if (r.right > box.right - 24) row.scrollLeft += r.right - box.right + 24;
+  };
+
+  const styleKey = tab.style;
+  const stylePart = partByKey[styleKey];
 
   return (
     <Modal
       open={open}
       onClose={onCancel}
       title="Create your avatar"
-      size="md"
+      size="lg"
       scrollable={false}
-      initialFocus=".avatar-builder__options [aria-checked='true']"
+      initialFocus=".avatar-builder__tabs [aria-selected='true']"
       className="avatar-builder-modal"
       footer={
         <>
@@ -65,51 +98,81 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
           <div className="avatar-builder__preview">
             <AvatarArt spec={spec} title="Your avatar" />
           </div>
-          <Button variant="glass" size="sm" icon={<DiceIcon />} onClick={() => setSpec(randomAvatar())}>
-            Surprise me
-          </Button>
+          <div className="avatar-builder__stage-actions">
+            <Button variant="glass" size="sm" icon={<DiceIcon />} onClick={surprise}>
+              Surprise me
+            </Button>
+            <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={undo} disabled={!history.length}>
+              Undo
+            </Button>
+          </div>
         </div>
 
-        <div className="ui-scroller avatar-builder__tabs" role="tablist" aria-label="Avatar parts">
-          {TABS.map((p) => (
-            <Chip
-              key={p.key}
-              role="tab"
-              aria-selected={tab === p.key}
-              selected={tab === p.key}
-              onClick={(e) => {
-                setTab(p.key);
-                e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-              }}
-            >
-              {p.label}
-            </Chip>
-          ))}
-        </div>
-
-        <div className={`avatar-builder__options${part.color ? ' is-colors' : ''}`} role="radiogroup" aria-label={part.label}>
-          {Array.from({ length: part.count }, (_, i) => {
-            const selected = spec[tab] === i;
-            const label = OPTION_NAMES[tab]?.[i] || `${part.label} ${i + 1}`;
-            return (
-              <button
-                key={i}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={label}
-                title={label}
-                className={`avatar-builder__option${selected ? ' is-selected' : ''}`}
-                onClick={() => choose(i)}
+        <div className="avatar-builder__panel">
+          <div className="ui-scroller avatar-builder__tabs" role="tablist" aria-label="Avatar parts">
+            {TABS.map((t) => (
+              <Chip
+                key={t.id}
+                role="tab"
+                id={`avb-tab-${t.id}`}
+                aria-selected={tabId === t.id}
+                aria-controls="avb-panel"
+                selected={tabId === t.id}
+                // remote / keyboard: the tab opens as soon as it's focused (no OK needed)
+                onFocus={(e) => tabId !== t.id && openTab(t.id, e.currentTarget)}
+                onClick={(e) => openTab(t.id, e.currentTarget)}
               >
-                {part.color ? (
-                  <span className="avatar-builder__swatch" style={{ background: SWATCHES[tab](i) }} />
-                ) : (
-                  <AvatarArt spec={{ ...spec, [tab]: i }} />
-                )}
-              </button>
-            );
-          })}
+                {t.label}
+              </Chip>
+            ))}
+          </div>
+
+          <div id="avb-panel" role="tabpanel" aria-labelledby={`avb-tab-${tabId}`} className="avatar-builder__tabpanel" key={tabId}>
+            {tab.color ? (
+              <section className="avatar-builder__group">
+                <h3 className="avatar-builder__label">{COLOR_NAMES[tab.color]}</h3>
+                <div className="ui-scroller avatar-builder__colors" role="radiogroup" aria-label={COLOR_NAMES[tab.color]}>
+                  {Array.from({ length: partByKey[tab.color].count }, (_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      role="radio"
+                      aria-checked={spec[tab.color] === i}
+                      aria-label={`${COLOR_NAMES[tab.color]} ${i + 1}`}
+                      className={`avatar-builder__swatch${spec[tab.color] === i ? ' is-selected' : ''}`}
+                      style={{ background: COLOR_FILL[tab.color](i) }}
+                      onClick={() => update({ [tab.color]: i })}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="avatar-builder__group">
+              <h3 className="avatar-builder__label">{tab.color ? 'Style' : stylePart.label}</h3>
+              <div className="avatar-builder__options" role="radiogroup" aria-label={stylePart.label}>
+                {Array.from({ length: stylePart.count }, (_, i) => {
+                  const selected = spec[styleKey] === i;
+                  const name = stylePart.names?.[i] || `${stylePart.label} ${i + 1}`;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={name}
+                      title={name}
+                      className={`avatar-builder__option${selected ? ' is-selected' : ''}`}
+                      onClick={() => update({ [styleKey]: i })}
+                    >
+                      <AvatarArt spec={{ ...spec, [styleKey]: i }} />
+                      <span className="avatar-builder__option-name">{name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </Modal>

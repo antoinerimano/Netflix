@@ -7,7 +7,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { fetchUserProfiles, createProfile, updateProfile, deleteProfile } from '../../api/userApi';
 import { Avatar, Button, EmptyState, Modal, Skeleton, friendlyError } from '../../design';
 import { PlusIcon } from '../../design/icons';
-import ProfileForm, { EMPTY_PROFILE } from './ProfileForm';
+import ProfileForm, { EMPTY_PROFILE, ageSummary } from './ProfileForm';
+import { CheckIcon } from '../../design/icons';
 import { MAX_PROFILES, getActiveProfileId, setActiveProfile, clearActiveProfile } from '../../utils/activeProfile';
 import './profiles.css';
 
@@ -55,11 +56,20 @@ export default function ProfilesPage() {
     navigate(target, { replace: true });
   };
 
+  // short confirmation after a change ("Sam added")
+  const [toast, setToast] = useState('');
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(''), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const save = async (values) => {
     if (editing === 'new') {
       const created = await createProfile(userId, { ...values, user: userId });
       setEditing(null);
       await load();
+      setToast(`${values.name} added`);
       if (!manage && created?.id) choose(created); // a new profile from "Who's watching?": start watching
       return;
     }
@@ -67,6 +77,7 @@ export default function ProfilesPage() {
     if (String(editing.id) === activeId) setActiveProfile({ ...editing, ...values, ...(updated || {}) });
     setEditing(null);
     await load();
+    setToast(`${values.name} saved`);
   };
 
   const remove = async () => {
@@ -77,6 +88,7 @@ export default function ProfilesPage() {
     setConfirmDelete(false);
     setEditing(null);
     await load();
+    setToast(`${p.name} deleted`);
   };
 
   const canAdd = profiles && profiles.length < MAX_PROFILES;
@@ -122,7 +134,11 @@ export default function ProfilesPage() {
                   ) : null}
                 </span>
                 <span className="profile-tile__name">{p.name}</span>
-                {p.is_kids ? <span className="profile-tile__badge">Kids</span> : null}
+                {manage ? (
+                  <span className="profile-tile__meta">{ageSummary(p)}</span>
+                ) : p.is_kids ? (
+                  <span className="profile-tile__badge">Kids</span>
+                ) : null}
               </button>
             </li>
           );
@@ -167,6 +183,13 @@ export default function ProfilesPage() {
           </div>
         ) : null}
       </main>
+
+      {toast ? (
+        <div className="profiles__toast" role="status">
+          <CheckIcon aria-hidden="true" />
+          {toast}
+        </div>
+      ) : null}
 
       <Modal
         open={!!editing}

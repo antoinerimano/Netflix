@@ -1,26 +1,18 @@
 // src/components/profiles/ProfileForm.js
-// Create / edit a profile: name, picture (photos or a colored initial), Kids switch, age limit,
-// language. Used by the "Who's watching?" page, the sign-up flow and the account page.
-// Backend rules for the age limit: users/maturity.py (a Kids profile never goes above PG).
+// Create / edit a profile: preview + name, picture (your own avatar, a letter in a color, or a
+// photo), Kids switch, age limit, language. Used by "Who's watching?", the sign-up step and the
+// account page. Backend rules for the age limit: users/maturity.py (Kids never above PG).
 import React, { useState } from 'react';
 import { Avatar, Button, Chip, Field, Switch } from '../../design';
 import AvatarBuilder from './AvatarBuilder';
 import { isBuiltAvatar } from '../../design/avatarArt';
-import { WandIcon } from '../../design/icons';
+import { WandIcon, CheckIcon } from '../../design/icons';
 import './profiles.css';
 
-export const AVATARS = [
-  '/avatars/male.webp',
-  '/avatars/female.webp',
-  '/avatars/kid.webp',
-  'color:#e50914',
-  'color:#f5a524',
-  'color:#2bb673',
-  'color:#1f8bff',
-  'color:#8b5cf6',
-  'color:#ec4899',
-  'color:#14b8a6',
-];
+const PHOTOS = ['/avatars/male.webp', '/avatars/female.webp', '/avatars/kid.webp'];
+const LETTER_COLORS = ['#e50914', '#f5a524', '#2bb673', '#1f8bff', '#8b5cf6', '#ec4899', '#14b8a6', '#3a3a44'];
+const isLetter = (src) => typeof src === 'string' && src.startsWith('color:');
+
 const AGE_LIMITS = [
   { value: 'G', label: 'All ages', hint: 'G' },
   { value: 'PG', label: '7+', hint: 'PG' },
@@ -39,25 +31,35 @@ const LANGUAGES = [
 
 export const EMPTY_PROFILE = {
   name: '',
-  avatar_url: AVATARS[3],
+  avatar_url: `color:${LETTER_COLORS[0]}`,
   is_kids: false,
   age_restriction: 'NC-17',
   language_preference: 'en',
 };
 
+/** "Kids · All ages", "13+", "No limit": a profile's limit in a few words */
+export function ageSummary(profile) {
+  const opt = AGE_LIMITS.find((a) => a.value === profile?.age_restriction) || AGE_LIMITS[AGE_LIMITS.length - 1];
+  const label = profile?.is_kids && !KIDS_LIMITS.includes(opt.value) ? 'All ages' : opt.label;
+  return profile?.is_kids ? `Kids · ${label}` : label;
+}
+
 /**
  * initial: profile to edit (or EMPTY_PROFILE); onSubmit(values) -> Promise; onCancel optional;
  * extraActions: node shown left of the buttons (e.g. Delete).
  */
-export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Save', onSubmit, onCancel, extraActions, autoFocusName = true }) {
+export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Save', onSubmit, onCancel, extraActions }) {
   const [values, setValues] = useState({ ...EMPTY_PROFILE, ...initial });
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
   const [saving, setSaving] = useState(false);
   const [builderOpen, setBuilderOpen] = useState(false);
-  const builtAvatar = isBuiltAvatar(values.avatar_url) ? values.avatar_url : '';
+  // the last avatar / letter color used in this form: switching to a photo and back keeps them
+  const [ownAvatar, setOwnAvatar] = useState(isBuiltAvatar(initial?.avatar_url) ? initial.avatar_url : '');
+  const [letterColor, setLetterColor] = useState(isLetter(initial?.avatar_url) ? initial.avatar_url : `color:${LETTER_COLORS[0]}`);
 
   const set = (patch) => setValues((v) => ({ ...v, ...patch }));
+  const pic = values.avatar_url || '';
   const limits = values.is_kids ? AGE_LIMITS.filter((a) => KIDS_LIMITS.includes(a.value)) : AGE_LIMITS;
   const age = values.is_kids && !KIDS_LIMITS.includes(values.age_restriction) ? 'G' : values.age_restriction;
 
@@ -66,6 +68,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
     const name = values.name.trim();
     if (!name) {
       setNameError('Give the profile a name.');
+      document.getElementById('profile-name')?.focus();
       return;
     }
     setNameError('');
@@ -75,86 +78,122 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
       await onSubmit({ ...values, name, age_restriction: age });
     } catch (err) {
       setError(err?.message || 'Could not save the profile. Please try again.');
-      setSaving(false);
-      return;
     }
     setSaving(false);
   };
 
   return (
     <form className="profile-form" onSubmit={submit} noValidate>
-      <div className="profile-form__preview" aria-hidden="true">
-        <Avatar src={values.avatar_url} name={values.name} size="5.5rem" />
+      <div className="profile-form__identity">
+        <div className="profile-form__preview" aria-hidden="true">
+          <Avatar src={pic} name={values.name} size="100%" />
+        </div>
+        <Field label="Name" htmlFor="profile-name" error={nameError} className="profile-form__name">
+          <input
+            id="profile-name"
+            className="ui-input"
+            value={values.name}
+            maxLength={30}
+            autoComplete="off"
+            placeholder="e.g. Sam"
+            onChange={(e) => set({ name: e.target.value })}
+          />
+        </Field>
       </div>
 
-      <Field label="Name" htmlFor="profile-name" error={nameError}>
-        <input
-          id="profile-name"
-          className="ui-input"
-          value={values.name}
-          maxLength={30}
-          autoComplete="off"
-          autoFocus={autoFocusName}
-          placeholder="e.g. Sam"
-          onChange={(e) => set({ name: e.target.value })}
-        />
-      </Field>
-
-      <Field label="Picture" hint="Pick one, or create your own character.">
-        <div className="profile-form__avatars" role="radiogroup" aria-label="Profile picture">
-          {/* your own avatar: create it, or edit the one you made */}
-          {builtAvatar ? (
+      <Field label="Picture">
+        <div className="profile-form__pictures" role="radiogroup" aria-label="Profile picture">
+          {/* your own character: create it, or edit the one you made */}
+          {ownAvatar ? (
             <button
               type="button"
               role="radio"
-              aria-checked
-              aria-label="Your avatar: edit it"
-              title="Edit your avatar"
-              className="profile-form__avatar is-selected profile-form__avatar--own"
-              onClick={() => setBuilderOpen(true)}
+              aria-checked={pic === ownAvatar}
+              aria-label={pic === ownAvatar ? 'Your avatar: edit it' : 'Your avatar'}
+              className={`profile-form__pic profile-form__pic--own${pic === ownAvatar ? ' is-selected' : ''}`}
+              onClick={() => (pic === ownAvatar ? setBuilderOpen(true) : set({ avatar_url: ownAvatar }))}
             >
-              <Avatar src={builtAvatar} name={values.name} size="100%" />
-              <span className="profile-form__avatar-edit" aria-hidden="true">
+              <Avatar src={ownAvatar} name={values.name} size="100%" />
+              <span className="profile-form__pic-badge" aria-hidden="true">
                 <WandIcon />
               </span>
             </button>
           ) : (
             <button
               type="button"
-              className="profile-form__avatar profile-form__avatar--create"
+              className="profile-form__pic profile-form__pic--create"
               aria-label="Create your own avatar"
-              title="Create your own"
               onClick={() => setBuilderOpen(true)}
             >
               <WandIcon />
               <span>Create</span>
             </button>
           )}
-          {AVATARS.map((a, i) => (
+
+          {/* a letter: one tile, its colors below when chosen */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isLetter(pic)}
+            aria-label="Letter"
+            className={`profile-form__pic${isLetter(pic) ? ' is-selected' : ''}`}
+            onClick={() => set({ avatar_url: letterColor })}
+          >
+            <Avatar src={isLetter(pic) ? pic : letterColor} name={values.name || 'A'} size="100%" />
+          </button>
+
+          {PHOTOS.map((src, i) => (
             <button
-              key={a}
+              key={src}
               type="button"
               role="radio"
-              aria-checked={values.avatar_url === a}
+              aria-checked={pic === src}
               aria-label={`Picture ${i + 1}`}
-              className={`profile-form__avatar${values.avatar_url === a ? ' is-selected' : ''}`}
-              onClick={() => set({ avatar_url: a })}
+              className={`profile-form__pic${pic === src ? ' is-selected' : ''}`}
+              onClick={() => set({ avatar_url: src })}
             >
-              <Avatar src={a} name={values.name} size="100%" />
+              <Avatar src={src} name={values.name} size="100%" />
             </button>
           ))}
         </div>
+
+        {isLetter(pic) ? (
+          <div className="ui-scroller profile-form__letter-colors" role="radiogroup" aria-label="Letter color">
+            {LETTER_COLORS.map((c) => {
+              const code = `color:${c}`;
+              const selected = pic === code;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={`Color ${c}`}
+                  className={`profile-form__color${selected ? ' is-selected' : ''}`}
+                  style={{ background: c }}
+                  onClick={() => {
+                    setLetterColor(code);
+                    set({ avatar_url: code });
+                  }}
+                >
+                  {selected ? <CheckIcon aria-hidden="true" /> : null}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </Field>
 
       <AvatarBuilder
         open={builderOpen}
-        initial={builtAvatar}
+        initial={ownAvatar}
         onCancel={() => setBuilderOpen(false)}
         onDone={(code) => {
+          setOwnAvatar(code);
           set({ avatar_url: code });
           setBuilderOpen(false);
           // the "Create" tile became "your avatar": keep the focus there (TV remote / keyboard)
-          setTimeout(() => document.querySelector('.profile-form__avatar--own')?.focus({ preventScroll: true }), 60);
+          setTimeout(() => document.querySelector('.profile-form__pic--own')?.focus({ preventScroll: true }), 60);
         }}
       />
 
@@ -162,13 +201,15 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
         checked={!!values.is_kids}
         label="Kids profile"
         description="Only titles rated for children, a simpler home page."
-        onChange={(on) => set({ is_kids: on, age_restriction: on && !KIDS_LIMITS.includes(values.age_restriction) ? 'G' : values.age_restriction })}
+        onChange={(on) =>
+          set({ is_kids: on, age_restriction: on && !KIDS_LIMITS.includes(values.age_restriction) ? 'G' : values.age_restriction })
+        }
       />
 
-      <Field label="Age limit" hint={values.is_kids ? 'Kids profiles go up to 7+ (PG).' : 'Titles above this rating are hidden.'}>
-        <div className="profile-form__chips" role="group" aria-label="Age limit">
+      <Field label="Age limit" hint={values.is_kids ? 'Kids profiles go up to 7+ (PG).' : 'Titles rated above this are hidden.'}>
+        <div className="profile-form__chips" role="radiogroup" aria-label="Age limit">
           {limits.map((a) => (
-            <Chip key={a.value} selected={age === a.value} onClick={() => set({ age_restriction: a.value })} title={a.hint}>
+            <Chip key={a.value} role="radio" aria-checked={age === a.value} selected={age === a.value} onClick={() => set({ age_restriction: a.value })} title={a.hint}>
               {a.label}
             </Chip>
           ))}

@@ -93,6 +93,13 @@ Status: [ ] todo   [~] in progress   [x] done
          extras, face, skin, top, background, pattern, "Surprise me"), saved as a short code in
          avatar_url, drawn in SVG everywhere; episode synopsis on hover (0.7 s) / remote focus (1 s),
          "Synopsis" toggle on touch screens
+[x] 4.12c Avatar builder v2 + friendlier profile management: brows, beards, hats as their own part
+         (+ color), top styles, 12 hair styles, more eyes / mouths / colors / backgrounds / patterns,
+         Undo; 10 tabs (color + style together); preview always in view; one "Letter" tile (colors on
+         demand); pinned Save / Cancel; limits shown in Manage; "saved / added / deleted" toasts.
+         Remote: tabs open on focus, rows land on the current choice, dialogs scroll (instantly) to
+         the focus clear of pinned bars, wrapped rows continue at line ends; walked at 320 / 390 /
+         desktop with no hidden or unreachable item
 [ ] 4.13 Account page redesign (one primary action, profiles as avatars)
 [ ] 4.14 Notifications panel (header, icons, mark all read, empty state)
 [ ] 4.15 Search results page (grid + "see all", recent / trending before typing)
