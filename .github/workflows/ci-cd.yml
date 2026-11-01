@@ -52,12 +52,12 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: System packages (mysqlclient build, gettext)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev pkg-config gettext
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -89,9 +89,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20" # same as frontend/Dockerfile
           cache: npm
@@ -134,12 +134,12 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: "3306"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: System packages (mysqlclient build)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev pkg-config
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -151,7 +151,7 @@ jobs:
           grep -v -i '^sentence-transformers' requirements.txt > /tmp/requirements-ci.txt
           pip install -r /tmp/requirements-ci.txt
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -175,7 +175,7 @@ jobs:
 
       - name: Report (screenshots, videos and traces of what failed)
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -195,7 +195,7 @@ jobs:
       cancel-in-progress: false # never stop a deploy halfway
     steps:
       - name: Pull, rebuild and migrate on the server
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
