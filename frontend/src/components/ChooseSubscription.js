@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { fetchUserData, createFreeSubscription } from '../api/subscriptionApi';
 import ConfirmationModal from './ConfirmationModal';
+import { BrandLoader } from '../design';
 import './ChooseSubscription.css';
 
 const ChooseSubscription = () => {
@@ -45,12 +46,7 @@ const ChooseSubscription = () => {
   };
 
   if (redirecting) {
-    return (
-      <div className="choose-subscription-page">
-        <h2 className="subscription-title">Redirecting...</h2>
-        <p>You will be redirected shortly. Please wait while we process your subscription.</p>
-      </div>
-    );
+    return <BrandLoader page size={96} label="Setting up your account…" showLabel />;
   }
 
   return (

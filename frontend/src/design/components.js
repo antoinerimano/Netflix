@@ -6,6 +6,7 @@ import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
 import { AlertIcon, CheckIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
 import { AvatarArt, isBuiltAvatar, parseAvatar } from "./avatarArt";
+import BrandLoader from "./BrandLoader";
 
 const cx = (...parts) => parts.filter(Boolean).join(" ");
 
@@ -120,8 +121,9 @@ export function Skeleton({ variant = "block", width, height, radius, className, 
   );
 }
 
-export function Spinner({ className, label = "Loading" }) {
-  return <span className={cx("ui-spinner", className)} role="status" aria-label={label} />;
+/** Loading indicator: the animated Taurus emblem (BrandLoader). size in px. */
+export function Spinner({ className, label = "Loading", size = 56 }) {
+  return <BrandLoader size={size} label={label} className={className} />;
 }
 
 /**
@@ -350,3 +352,5 @@ export function Toast({ message, onDone, duration = 2600, tone = "success" }) {
     document.body
   );
 }
+
+export { default as BrandLoader } from "./BrandLoader";

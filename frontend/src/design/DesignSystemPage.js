@@ -2,7 +2,8 @@
 // Living style guide: every token and shared component on one page (/design-system, development
 // builds only). Check here first when adding UI: if a piece exists, use it; if not, add it here.
 import React, { useState } from "react";
-import { Button, Chip, Badge, Rating, Skeleton, Spinner, EmptyState, SectionTitle } from "./components";
+import { Button, Chip, Badge, Rating, Skeleton, EmptyState, SectionTitle } from "./components";
+import BrandLoader from "./BrandLoader";
 import * as Icons from "./icons";
 import "./DesignSystemPage.css";
 
@@ -157,7 +158,7 @@ export default function DesignSystemPage() {
         </div>
       </Section>
 
-      <Section title="Loading" note="Skeletons in the shape of what is coming, not full-screen spinners.">
+      <Section title="Loading" note="Skeletons in the shape of what is coming; the brand loader for start-up and waits with nothing to sketch (a video loading).">
         <div className="ds-skeletons">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="ds-skeleton-card">
@@ -167,8 +168,10 @@ export default function DesignSystemPage() {
             </div>
           ))}
         </div>
-        <div className="ds-row">
-          <Spinner />
+        <div className="ds-row ds-loaders">
+          <BrandLoader size={40} />
+          <BrandLoader size={72} />
+          <BrandLoader size={120} label="Loading your profile" showLabel />
         </div>
       </Section>
 

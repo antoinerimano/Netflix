@@ -1,5 +1,6 @@
 // src/components/AdminMovies.js
 import React, { useEffect, useMemo, useState } from "react";
+import { BrandLoader } from '../design';
 import { makeTitlesApi } from "../api/titlesApi";
 import styles from "./AdminPanel.module.css";
 
@@ -353,7 +354,7 @@ export default function AdminMovies() {
       </form>
 
       {loading ? (
-        <p>Loading…</p>
+        <BrandLoader size={64} label="Loading titles" />
       ) : (
         <div className={styles["admin-table-wrapper"]}>
           <table>

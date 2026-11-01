@@ -108,7 +108,9 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 4.15 Search page (/search): big field, All / Movies / TV, up to 60 results with why they
          matched, recent searches + popular before typing; navbar Enter / "See all results";
          phones open it from the search icon. Backend: no popular filler for text that matched nothing
-[ ] 4.16 Skeletons instead of spinners on the remaining pages (account, actor)
+[x] 4.16 Loading: page-shaped skeletons everywhere content loads, and a brand loader (the Taurus
+         emblem traced to vector, drawing itself, filling, a light sweep, a red glow) for the
+         start-up splash (index.html), a video source loading, permission checks and redirects
 [ ] 4.17 Page transitions (fade between pages, shared hero image)
 [ ] 4.18 Watch page on phones: description / episodes under the sources
 [ ] 4.19 Logo: lighter version (dark red on near-black is hard to read, mostly on TV)
