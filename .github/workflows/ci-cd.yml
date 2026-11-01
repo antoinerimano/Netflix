@@ -123,7 +123,7 @@ jobs:
       cancel-in-progress: false # never stop a deploy halfway
     steps:
       - name: Pull, rebuild and migrate on the server
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
