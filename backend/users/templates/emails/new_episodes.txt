@@ -1,13 +1,13 @@
-{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
-Hello{% if user.name %} {{ user.name }}{% endif %},
+{% load i18n %}{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
+{% if user.name %}{% blocktranslate with name=user.name %}Hello {{ name }},{% endblocktranslate %}{% else %}{% translate "Hello," %}{% endif %}
 
-Shows you follow on {{ company_name }} have new episodes:
+{% blocktranslate with company=company_name %}Shows you follow on {{ company }} have new episodes:{% endblocktranslate %}
 {% for ep in episodes %}
-- {{ ep.show }}, season {{ ep.season }} episode {{ ep.episode }}
+- {{ ep.show }}, {% blocktranslate with season=ep.season episode=ep.episode %}Season {{ season }}, episode {{ episode }}{% endblocktranslate %}
   {{ ep.link }}
 {% endfor %}
-You get this email because you clicked "Notify me" on these shows. Click it again on a show's page to stop.
+{% translate "You get this email because you clicked “Notify me” on these shows. Click it again on a show's page to stop." %}
 
 --
-This email was sent by {{ company_name }}. For help, contact {{ support_email }}.
+{% blocktranslate with company=company_name %}This email was sent by {{ company }}. For help, contact{% endblocktranslate %} {{ support_email }}.
 {% endautoescape %}

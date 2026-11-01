@@ -4,6 +4,7 @@
 // when the banner is on screen: TV remotes can't hover. It fades back to the artwork at the end.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Hero.css';
 import { logOutboundClickBeacon, logTitleClick } from '../api/analyticsApi';
 import { Button, Rating, Badge } from '../design';
@@ -29,6 +30,7 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const Hero = ({ hero: title }) => {
+  const { t } = useTranslation('catalog');
   const navigate = useNavigate();
   const rootRef = useRef(null);
   const videoRef = useRef(null);
@@ -70,11 +72,11 @@ const Hero = ({ hero: title }) => {
       v.pause();
       return undefined;
     }
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (document.visibilityState !== 'visible') return;
       v.play()?.catch(() => setVideoFailed(true)); // autoplay refused: stay on the artwork
     }, v.currentTime > 0 ? 300 : TRAILER_DELAY_MS); // resuming after scrolling back: no wait
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [canPlayTrailer, onScreen, title?.id, ended]);
 
   useEffect(() => {
@@ -104,7 +106,7 @@ const Hero = ({ hero: title }) => {
   const rating = title.rating ?? title.vote_average;
 
   return (
-    <section ref={rootRef} className={`hero${videoOn ? ' is-playing' : ''}`} aria-label={`Featured: ${title.title}`}>
+    <section ref={rootRef} className={`hero${videoOn ? ' is-playing' : ''}`} aria-label={t('hero.featuredLabel', { title: title.title })}>
       <div className="hero__media" aria-hidden="true">
         {art ? (
           <picture>
@@ -155,8 +157,8 @@ const Hero = ({ hero: title }) => {
 
       <div className="hero__content">
         <div className="hero__kicker">
-          <Badge tone="brand">{isTv(title) ? 'Series' : 'Film'}</Badge>
-          <span>Featured for you</span>
+          <Badge tone="brand">{isTv(title) ? t('common:kind.tv') : t('common:kind.movie')}</Badge>
+          <span>{t('hero.featured')}</span>
         </div>
 
         <h1 className="hero__title">{title.title}</h1>
@@ -164,17 +166,17 @@ const Hero = ({ hero: title }) => {
         <div className="hero__meta">
           {year ? <span>{year}</span> : null}
           {Number(rating) > 0 ? <Rating value={rating} /> : null}
-          {title.resume ? <span>Continue watching</span> : null}
+          {title.resume ? <span>{t('hero.continueWatching')}</span> : null}
         </div>
 
         {description ? <p className="hero__description">{description}</p> : null}
 
         <div className="ui-actions hero__actions">
           <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={play}>
-            {title.resume ? 'Resume' : 'Play'}
+            {title.resume ? t('options.resume') : t('options.play')}
           </Button>
           <Button variant="glass" size="lg" icon={<InfoIcon />} onClick={moreInfo}>
-            More info
+            {t('options.moreInfo')}
           </Button>
         </div>
       </div>
@@ -184,7 +186,7 @@ const Hero = ({ hero: title }) => {
           className="hero__mute"
           variant="glass"
           icon={muted ? <VolumeOffIcon /> : <VolumeOnIcon />}
-          label={muted ? 'Sound on' : 'Sound off'}
+          label={muted ? t('trailer.soundOn') : t('trailer.soundOff')}
           onClick={() => setMuted((m) => !m)}
         />
       ) : null}

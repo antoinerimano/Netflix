@@ -3,45 +3,43 @@
 // then Trailer, Cast and Details sections.
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useFormat, languageName as intlLanguageName } from '../i18n/format';
 import { fetchMovieById } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import DetailHero, { splitGenres } from './detail/DetailHero';
+import DetailHero, { splitGenres, genreName } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
 import MoreLikeThis from './detail/MoreLikeThis';
 import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 
 /* --- Helpers --- */
-function formatMinutes(mins) {
-  if (mins === null || mins === undefined || !Number(mins)) return '';
-  const h = Math.floor(mins / 60);
-  const m = Math.floor(mins % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-function getNames(list, key = 'name') {
+/** countries: names, or TMDB objects ({ iso_3166_1, name }: shown in the app's language) */
+export function getNames(list, regionName, key = 'name') {
   if (!list) return [];
   if (Array.isArray(list)) {
-    return list.map((x) => (typeof x === 'string' ? x : x?.[key] || x?.english_name)).filter(Boolean);
+    return list
+      .map((x) => {
+        if (typeof x === 'string') return x;
+        if (x?.iso_3166_1 && regionName) return regionName(x.iso_3166_1);
+        return x?.[key] || x?.english_name;
+      })
+      .filter(Boolean);
   }
   if (typeof list === 'object') return Object.values(list).filter(Boolean).map(String);
   return [];
 }
 const yearOf = (d) => String(d || '').match(/\d{4}/)?.[0] || '';
-export const languageName = (code) => {
-  if (!code) return '';
-  try {
-    return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code.toUpperCase();
-  } catch {
-    return code.toUpperCase();
-  }
-};
+/** "ja" -> "Japanese" in the app's language */
+export const languageName = (code) => intlLanguageName(code);
 
 /* --- Trailer embed --- */
 function TrailerEmbed({ url }) {
+  const { t } = useTranslation('catalog');
   if (!url) return null;
   const ytMatch =
     url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/) ||
@@ -50,8 +48,8 @@ function TrailerEmbed({ url }) {
     return (
       <div className="trailer-embed">
         <iframe
-          src={`https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`}
-          title="Trailer"
+          src={`https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&hl=${document.documentElement.lang || 'en'}&cc_lang_pref=${document.documentElement.lang || 'en'}`}
+          title={t('detail.trailer')}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
@@ -68,15 +66,16 @@ function TrailerEmbed({ url }) {
   }
   return (
     <div className="trailer-embed">
-      <iframe src={url} title="Trailer" loading="lazy" />
+      <iframe src={url} title={t('detail.trailer')} loading="lazy" />
     </div>
   );
 }
 
 /** The page's shape while it loads */
 export function DetailSkeleton() {
+  const { t } = useTranslation();
   return (
-    <div className="detail-hero" aria-busy="true" aria-label="Loading">
+    <div className="detail-hero" aria-busy="true" aria-label={t('loading')}>
       <div className="detail-hero__content">
         <Skeleton width="4rem" height="1.4rem" />
         <Skeleton width="min(30rem, 80%)" height="3.5rem" />
@@ -94,6 +93,8 @@ export function DetailSkeleton() {
 }
 
 const MovieDetail = () => {
+  const { t, i18n } = useTranslation('catalog');
+  const fmt = useFormat();
   const { movieId } = useParams();
   const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
@@ -104,7 +105,7 @@ const MovieDetail = () => {
   const [isInList, setIsInList] = useState(false);
 
   const cast = useMemo(() => castObjects(movie?.actors, { byPopularity: true }), [movie]);
-  const countryList = useMemo(() => getNames(movie?.production_countries), [movie]);
+  const countryList = useMemo(() => getNames(movie?.production_countries, fmt.regionName), [movie, fmt.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let alive = true;
@@ -120,7 +121,7 @@ const MovieDetail = () => {
     return () => {
       alive = false;
     };
-  }, [movieId]);
+  }, [movieId, i18n.resolvedLanguage]); // the title and synopsis come back in the app's language
 
   // My List (saved on the server, per profile)
   useEffect(() => {
@@ -169,25 +170,26 @@ const MovieDetail = () => {
         <EmptyState
           page
           tone="error"
-          title="Movie unavailable"
+          title={t('detail.movieUnavailable')}
           actions={
             <>
-              <Button variant="primary" to="/movies">Browse movies</Button>
-              <Button variant="ghost" onClick={() => navigate(-1)}>Go back</Button>
+              <Button variant="primary" to="/movies">{t('detail.browseMovies')}</Button>
+              <Button variant="ghost" onClick={() => navigate(-1)}>{t('actions.goBack')}</Button>
             </>
           }
         >
-          {friendlyError(loadError || { status: 404 }, 'this movie')}
+          {friendlyError(loadError || { status: 404 }, 'movie')}
         </EmptyState>
       </div>
     );
   }
 
   const year = yearOf(movie.release_date) || movie.release_year;
-  const runtime = formatMinutes(movie.runtime_minutes);
-  const language = languageName(movie.original_language);
-  const genres = splitGenres(movie.genre);
-  const starring = cast.slice(0, 3).map((a) => a.name || a.english_name).join(', ');
+  const runtime = fmt.formatRuntime(movie.runtime_minutes);
+  const language = fmt.languageName(movie.original_language);
+  const genres = splitGenres(movie.genre).map((g) => genreName(g));
+  const starring = fmt.formatList(cast.slice(0, 3).map((a) => a.name || a.english_name));
+  const released = movie.release_date ? fmt.formatDate(movie.release_date, { dateStyle: 'long' }) || movie.release_date : year;
 
   return (
     <div className="detail">
@@ -198,19 +200,19 @@ const MovieDetail = () => {
         kind="movie"
         meta={[year, runtime, language]}
         credits={[
-          { label: 'Starring', value: starring },
-          { label: 'Director', value: movie.director },
+          { label: t('detail.starring'), value: starring },
+          { label: t('detail.director'), value: movie.director },
         ]}
         actions={
           <>
             <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={watch}>
-              Watch
+              {t('detail.watch')}
             </Button>
             <Button
               variant="glass"
               icon={isInList ? <CheckIcon /> : <PlusIcon />}
               pressed={isInList}
-              label={isInList ? 'In My List' : 'Add to My List'}
+              label={isInList ? t('options.inList') : t('options.addToList')}
               onClick={handleToggleList}
             />
             <RatingButtons titleId={movie.id} />
@@ -221,7 +223,7 @@ const MovieDetail = () => {
       <div className="detail-body">
         {movie.trailer_url ? (
           <section className="detail-section">
-            <SectionTitle>Trailer</SectionTitle>
+            <SectionTitle>{t('detail.trailer')}</SectionTitle>
             <TrailerEmbed url={movie.trailer_url} />
           </section>
         ) : null}
@@ -231,42 +233,42 @@ const MovieDetail = () => {
         <CastRow cast={cast} />
 
         <section className="detail-section">
-          <SectionTitle>Details</SectionTitle>
+          <SectionTitle>{t('detail.details')}</SectionTitle>
           <dl className="detail-facts">
             {genres.length ? (
               <div>
-                <dt>Genres</dt>
-                <dd>{genres.join(', ')}</dd>
+                <dt>{t('detail.genres')}</dt>
+                <dd>{fmt.formatList(genres, 'unit')}</dd>
               </div>
             ) : null}
-            {movie.release_date || year ? (
+            {released ? (
               <div>
-                <dt>Released</dt>
-                <dd>{movie.release_date || year}</dd>
+                <dt>{t('detail.released')}</dt>
+                <dd>{released}</dd>
               </div>
             ) : null}
             {runtime ? (
               <div>
-                <dt>Runtime</dt>
+                <dt>{t('detail.runtime')}</dt>
                 <dd>{runtime}</dd>
               </div>
             ) : null}
             {language ? (
               <div>
-                <dt>Original language</dt>
+                <dt>{t('detail.originalLanguage')}</dt>
                 <dd>{language}</dd>
               </div>
             ) : null}
             {movie.director ? (
               <div>
-                <dt>Director</dt>
+                <dt>{t('detail.director')}</dt>
                 <dd>{movie.director}</dd>
               </div>
             ) : null}
             {countryList.length ? (
               <div>
-                <dt>Countries</dt>
-                <dd>{countryList.join(', ')}</dd>
+                <dt>{t('detail.countries')}</dt>
+                <dd>{fmt.formatList(countryList, 'unit')}</dd>
               </div>
             ) : null}
           </dl>

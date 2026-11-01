@@ -2,6 +2,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Slider from 'react-slick';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { formatNumber } from '../i18n/format';
+import { whyText } from '../i18n/catalogText';
 import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
@@ -52,8 +55,11 @@ const getSlidesToShowFromSettings = (settings) => {
 // Cards fully shown (slidesToShow has a fraction: the next card peeks in, showing the row scrolls)
 const fullCards = (settings) => Math.max(1, Math.floor(getSlidesToShowFromSettings(settings)));
 
-const Row = ({ title, movies }) => {
+// title: shown (translated); analyticsTitle: the row's stable name for analytics (same in every language)
+const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
+  const { t, i18n } = useTranslation('catalog');
   const navigate = useNavigate();
+  const title = analyticsTitle || shownTitle;
 
   const [hoveredKey, setHoveredKey] = useState(null);
   const [visibleVideoKeys, setVisibleVideoKeys] = useState(() => new Set());
@@ -162,9 +168,12 @@ const Row = ({ title, movies }) => {
   };
 
   useEffect(() => {
+    // the timer stores are objects that live as long as the row: read them at cleanup time
+    const hoverIn = hoverInTimers.current;
+    const stalls = stallTimers.current;
     return () => {
-      Object.keys(hoverInTimers.current).forEach((k) => clearTimeout(hoverInTimers.current[k]));
-      Object.keys(stallTimers.current).forEach((k) => clearTimeout(stallTimers.current[k]));
+      Object.keys(hoverIn).forEach((k) => clearTimeout(hoverIn[k]));
+      Object.keys(stalls).forEach((k) => clearTimeout(stalls[k]));
     };
   }, []);
 
@@ -395,7 +404,7 @@ const Row = ({ title, movies }) => {
         items,
       });
     }
-  }, [displayedMovies, title]); // settings is stable here (object literal), don’t include it to avoid loops
+  }, [displayedMovies, title]); // eslint-disable-line react-hooks/exhaustive-deps -- settings: a new object each render (its values don't change), including it would loop
 
   // --- NEW: initial impressions on mount / when row changes ---
   useEffect(() => {
@@ -412,8 +421,8 @@ const Row = ({ title, movies }) => {
   if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
 
   return (
-    <section className="row" ref={rowRef} aria-label={title}>
-      <h2 className="row__title">{title}</h2>
+    <section className="row" ref={rowRef} aria-label={shownTitle}>
+      <h2 className="row__title">{shownTitle}</h2>
       <Slider ref={sliderRef} {...settings}>
         {displayedMovies.map((movie, index) => {
           const key = `${title}-${movie.id}-${index}`;
@@ -532,8 +541,8 @@ const Row = ({ title, movies }) => {
                     e.stopPropagation();
                     openOptions(movie, index);
                   }}
-                  aria-label={`Options for ${movie?.title || 'this title'}`}
-                  title="Options"
+                  aria-label={t('options.for', { title: movie?.title || '' })}
+                  title={t('options.title')}
                 >
                   <MoreIcon />
                 </button>
@@ -542,8 +551,8 @@ const Row = ({ title, movies }) => {
                 <button
                   className="row-unmute-btn row-card-btn"
                   onClick={(e) => toggleMute(e, key)}
-                  aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
-                  title={isMuted ? 'Unmute' : 'Mute'}
+                  aria-label={isMuted ? t('trailer.unmuteLabel') : t('trailer.muteLabel')}
+                  title={isMuted ? t('trailer.unmute') : t('trailer.mute')}
                 >
                   {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
                 </button>
@@ -552,16 +561,16 @@ const Row = ({ title, movies }) => {
               {/* status on the artwork, always visible: where you are / what's new */}
               {movie?.resume ? (
                 <span className="row-card-badge">
-                  {movie.resume.season ? `S${movie.resume.season} · E${movie.resume.episode}` : 'Resume'}
+                  {movie.resume.season ? t('episodeShort', { season: movie.resume.season, episode: movie.resume.episode }) : t('options.resume')}
                 </span>
               ) : movie?.latest_episode ? (
                 <span className="row-card-badge row-card-badge--new">
-                  {`New · S${movie.latest_episode.season} E${movie.latest_episode.episode}`}
+                  {t('card.newEpisode', { season: movie.latest_episode.season, episode: movie.latest_episode.episode })}
                 </span>
               ) : null}
 
               {hasProgress && (
-                <div className="progress-bar-container" aria-label={`${Math.round(progressPercent)}% watched`}>
+                <div className="progress-bar-container" aria-label={t('card.watched', { percent: formatNumber(progressPercent / 100, { style: 'percent' }, i18n.resolvedLanguage) })}>
                   <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
                 </div>
               )}
@@ -570,12 +579,12 @@ const Row = ({ title, movies }) => {
                 {(releaseYear || movie?.rating) && (
                   <div className="meta-row">
                     {releaseYear && <span className="release-year">{releaseYear}</span>}
-                    {movie?.rating && <span className="rating">★ {parseFloat(movie.rating).toFixed(1)}</span>}
+                    {movie?.rating && <span className="rating">★ {formatNumber(parseFloat(movie.rating), { minimumFractionDigits: 1, maximumFractionDigits: 1 }, i18n.resolvedLanguage)}</span>}
                   </div>
                 )}
 
-                {/* "Why this?": reason computed with the recommendations */}
-                {movie?.why && <p className="why-line">{movie.why}</p>}
+                {/* "Why this?": reason computed with the recommendations, worded in the app's language */}
+                {whyText(movie) ? <p className="why-line">{whyText(movie)}</p> : null}
 
                 <p className={`movie-description ${isTagline ? 'is-tagline' : ''}`} title={displayText}>
                   {displayText}
@@ -586,7 +595,7 @@ const Row = ({ title, movies }) => {
             <div className="row-card__caption" aria-hidden="true">
               <span className="row-card__title">{movie?.title}</span>
               {movie?.type ? (
-                <span className="row-card__type">{String(movie.type).toLowerCase() === 'tv' ? 'Series' : 'Film'}</span>
+                <span className="row-card__type">{String(movie.type).toLowerCase() === 'tv' ? t('common:kind.tv') : t('common:kind.movie')}</span>
               ) : null}
             </div>
             </div>

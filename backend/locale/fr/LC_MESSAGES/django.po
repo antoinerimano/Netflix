@@ -1,0 +1,243 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-01 10:06-0500\n"
+"Language: fr\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: .\reco\management\commands\notify_new_episodes.py:98
+#, python-format
+msgid "New episode of %(show)s"
+msgstr "Nouvel épisode de %(show)s"
+
+#: .\reco\management\commands\notify_new_episodes.py:101
+#, python-format
+msgid "%(count)d new episode of shows you follow"
+msgid_plural "%(count)d new episodes of shows you follow"
+msgstr[0] "%(count)d nouvel épisode des séries que vous suivez"
+msgstr[1] "%(count)d nouveaux épisodes des séries que vous suivez"
+
+#: .\users\templates\emails\_button.html:11
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "Bonjour %(name)s,"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+msgid "Hello,"
+msgstr "Bonjour,"
+
+#: .\users\templates\emails\base.html:27
+#: .\users\templates\emails\email_change.txt:12
+#: .\users\templates\emails\new_episodes.txt:12
+#: .\users\templates\emails\password_reset.txt:12
+#, python-format
+msgid "This email was sent by %(company)s. For help, contact"
+msgstr ""
+"Cet e-mail vous a été envoyé par %(company)s. Pour obtenir de l'aide, "
+"écrivez à"
+
+#: .\users\templates\emails\email_change.html:3
+#: .\users\templates\emails\email_change.html:4 .\users\views.py:266
+msgid "Confirm your new email address"
+msgstr "Confirmez votre nouvelle adresse e-mail"
+
+#: .\users\templates\emails\email_change.html:6
+#, python-format
+msgid ""
+"We received a request to change your account email to <strong>%(new_email)s</"
+"strong>. Click the button below to confirm:"
+msgstr ""
+"Nous avons reçu une demande de modification de l'adresse e-mail de votre "
+"compte en <strong>%(new_email)s</strong>. Cliquez sur le bouton ci-dessous "
+"pour confirmer :"
+
+#: .\users\templates\emails\email_change.html:7
+msgid "Confirm email change"
+msgstr "Confirmer le changement d'e-mail"
+
+#: .\users\templates\emails\email_change.html:9
+#: .\users\templates\emails\email_change.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: nothing will change."
+msgstr ""
+"Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : rien "
+"ne changera."
+
+#: .\users\templates\emails\email_change.txt:4
+#, python-format
+msgid "We received a request to change your account email to %(new_email)s."
+msgstr ""
+"Nous avons reçu une demande de modification de l'adresse e-mail de votre "
+"compte en %(new_email)s."
+
+#: .\users\templates\emails\email_change.txt:5
+msgid "Open this link to confirm:"
+msgstr "Ouvrez ce lien pour confirmer :"
+
+#: .\users\templates\emails\new_episodes.html:3
+#: .\users\templates\emails\new_episodes.html:4
+msgid "New episodes are out"
+msgstr "De nouveaux épisodes sont disponibles"
+
+#: .\users\templates\emails\new_episodes.html:6
+#: .\users\templates\emails\new_episodes.txt:4
+#, python-format
+msgid "Shows you follow on %(company)s have new episodes:"
+msgstr "Des séries que vous suivez sur %(company)s ont de nouveaux épisodes :"
+
+#: .\users\templates\emails\new_episodes.html:12
+#: .\users\templates\emails\new_episodes.txt:6
+#, python-format
+msgid "Season %(season)s, episode %(episode)s"
+msgstr "Saison %(season)s, épisode %(episode)s"
+
+#: .\users\templates\emails\new_episodes.html:16
+msgid "Watch"
+msgstr "Regarder"
+
+#: .\users\templates\emails\new_episodes.html:22
+#: .\users\templates\emails\new_episodes.txt:9
+msgid ""
+"You get this email because you clicked “Notify me” on these shows. Click it "
+"again on a show's page to stop."
+msgstr ""
+"Vous recevez cet e-mail car vous avez cliqué sur « M'avertir » pour ces "
+"séries. Cliquez à nouveau sur la page d'une série pour arrêter."
+
+#: .\users\templates\emails\password_reset.html:3 .\users\views.py:440
+msgid "Reset your password"
+msgstr "Réinitialisez votre mot de passe"
+
+#: .\users\templates\emails\password_reset.html:4
+msgid "Password reset request"
+msgstr "Demande de réinitialisation du mot de passe"
+
+#: .\users\templates\emails\password_reset.html:6
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account. "
+"Click the button below to choose a new one:"
+msgstr ""
+"Nous avons reçu une demande de réinitialisation du mot de passe de votre "
+"compte %(company)s. Cliquez sur le bouton ci-dessous pour en choisir un "
+"nouveau :"
+
+#: .\users\templates\emails\password_reset.html:7
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#: .\users\templates\emails\password_reset.html:9
+#: .\users\templates\emails\password_reset.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: your account is safe."
+msgstr ""
+"Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre "
+"compte est en sécurité."
+
+#: .\users\templates\emails\password_reset.txt:4
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account."
+msgstr ""
+"Nous avons reçu une demande de réinitialisation du mot de passe de votre "
+"compte %(company)s."
+
+#: .\users\templates\emails\password_reset.txt:5
+msgid "Open this link to choose a new one:"
+msgstr "Ouvrez ce lien pour en choisir un nouveau :"
+
+#: .\users\views.py:139 .\users\views.py:425
+msgid "Email is required."
+msgstr "L'e-mail est obligatoire."
+
+#: .\users\views.py:141
+msgid "Password is required."
+msgstr "Le mot de passe est obligatoire."
+
+#: .\users\views.py:143
+msgid "This email is already registered."
+msgstr "Cette adresse e-mail est déjà enregistrée."
+
+#: .\users\views.py:174
+#, python-format
+msgid "You already have an active %(plan)s subscription."
+msgstr "Vous avez déjà un abonnement %(plan)s actif."
+
+#: .\users\views.py:208
+#, python-format
+msgid "%(plan)s subscription created!"
+msgstr "Abonnement %(plan)s créé !"
+
+#: .\users\views.py:222
+msgid "Invalid credentials."
+msgstr "Identifiants incorrects."
+
+#: .\users\views.py:254
+msgid "New email is required."
+msgstr "Le nouvel e-mail est obligatoire."
+
+#: .\users\views.py:257 .\users\views.py:295
+msgid "This email is already in use."
+msgstr "Cette adresse e-mail est déjà utilisée."
+
+#: .\users\views.py:272
+msgid "Confirmation email sent."
+msgstr "E-mail de confirmation envoyé."
+
+#: .\users\views.py:284
+msgid "This confirmation link is incomplete."
+msgstr "Ce lien de confirmation est incomplet."
+
+#: .\users\views.py:289
+msgid "This confirmation link has expired."
+msgstr "Ce lien de confirmation a expiré."
+
+#: .\users\views.py:291
+msgid "This confirmation link is not valid."
+msgstr "Ce lien de confirmation n'est pas valide."
+
+#: .\users\views.py:299
+msgid "Email updated."
+msgstr "E-mail mis à jour."
+
+#: .\users\views.py:343
+msgid "This subscription is already canceled."
+msgstr "Cet abonnement est déjà annulé."
+
+#: .\users\views.py:410
+msgid "Refresh token is required."
+msgstr "Le jeton d'actualisation est obligatoire."
+
+#: .\users\views.py:429
+msgid "If an account exists for this email, a reset link has been sent."
+msgstr ""
+"Si un compte existe pour cet e-mail, un lien de réinitialisation a été "
+"envoyé."
+
+#: .\users\views.py:453
+msgid "All fields are required."
+msgstr "Tous les champs sont obligatoires."
+
+#: .\users\views.py:459
+msgid "This reset link is not valid."
+msgstr "Ce lien de réinitialisation n'est pas valide."
+
+#: .\users\views.py:462
+msgid "This reset link has expired or was already used."
+msgstr "Ce lien de réinitialisation a expiré ou a déjà été utilisé."
+
+#: .\users\views.py:471
+msgid "Your password has been changed."
+msgstr "Votre mot de passe a été modifié."

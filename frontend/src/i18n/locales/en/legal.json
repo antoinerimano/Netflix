@@ -1,0 +1,18 @@
+{
+  "dmca": {
+    "intro": "In accordance with the Digital Millennium Copyright Act of 1998, Tauruss will respond expeditiously to claims of copyright infringement that are reported to its designated copyright agent identified below.",
+    "liability": "Under Section 512(f), any person who knowingly materially misrepresents that material or activity is infringing may be subject to liability. Tauruss reserves the right, at its sole discretion, to remove content and terminate the accounts of users who infringe, or appear to infringe, the intellectual property or other rights of third parties.",
+    "filingTitle": "Filing a notice",
+    "filingText": "If you believe your copyrighted work has been copied in a way that constitutes infringement, please send our copyright agent:",
+    "noticeItems": [
+      "A physical or electronic signature of a person authorized to act on behalf of the owner of the exclusive right allegedly infringed.",
+      "Identification of the copyrighted work claimed to have been infringed (or a representative list if several works are covered by one notice).",
+      "Identification of the material claimed to be infringing, with information reasonably sufficient for us to locate it.",
+      "Your contact information: name, address, telephone number and, if available, an email address.",
+      "A statement that you have a good-faith belief that the use is not authorized by the copyright owner, its agent or the law.",
+      "A statement that the information in the notice is accurate and, under penalty of perjury, that you are authorized to act on behalf of the owner of the exclusive right."
+    ],
+    "contactTitle": "Copyright contact",
+    "contactText": "Email <mail>{{email}}</mail>. We apologize for any misuse of our service and will do our best to find and remove infringing files."
+  }
+}

@@ -4,6 +4,8 @@
 // an empty state that explains how to get alerts. Phones: a full-width sheet under the bar.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { formatDate, formatRelativeDay } from '../i18n/format';
 import { fetchNotifications, markNotificationsRead } from '../api/recoApi';
 import { tmdbImage } from '../utils/tmdbImage';
 import { BellIcon, PlayIcon, TvIcon } from '../design/icons';
@@ -12,22 +14,22 @@ import './NotificationBell.css';
 
 const REFRESH_MS = 5 * 60 * 1000;
 
-/** "Today", "Yesterday", "3 days ago", "Mar 4" */
-function whenAired(dateStr) {
+/** "Today", "Yesterday", "3 days ago", "Mar 4" (in the app's language) */
+function whenAired(dateStr, lng) {
   if (!dateStr) return '';
-  const d = new Date(`${String(dateStr).slice(0, 10)}T00:00:00`);
+  const day = String(dateStr).slice(0, 10);
+  const d = new Date(`${day}T00:00:00`);
   if (Number.isNaN(d.getTime())) return '';
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const days = Math.round((today - d) / 86400000);
-  if (days <= 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (days < 7) return formatRelativeDay(Math.max(days, 0), lng);
+  return formatDate(day, { month: 'short', day: 'numeric' }, lng);
 }
 
 function Item({ n, onOpen }) {
-  const when = whenAired(n.air_date);
+  const { t, i18n } = useTranslation('catalog');
+  const when = whenAired(n.air_date, i18n.resolvedLanguage);
   return (
     <li>
       <button type="button" className={`notif__item${n.read ? '' : ' is-new'}`} onClick={() => onOpen(n)}>
@@ -44,17 +46,18 @@ function Item({ n, onOpen }) {
         <span className="notif__text">
           <span className="notif__show">{n.show}</span>
           <span className="notif__ep">
-            New episode · S{n.season} E{n.episode}
+            {t('notifications.newEpisode', { season: n.season, episode: n.episode })}
           </span>
           {when ? <span className="notif__when">{when}</span> : null}
         </span>
-        {n.read ? null : <span className="notif__dot" aria-label="New" />}
+        {n.read ? null : <span className="notif__dot" aria-label={t('notifications.new')} />}
       </button>
     </li>
   );
 }
 
 export default function NotificationBell() {
+  const { t } = useTranslation('catalog');
   const navigate = useNavigate();
   const [profileId, setProfileId] = useState(() => localStorage.getItem('activeProfileId'));
   const [data, setData] = useState({ unread: 0, items: [] });
@@ -76,8 +79,8 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, REFRESH_MS);
-    return () => clearInterval(t);
+    const timer = setInterval(load, REFRESH_MS);
+    return () => clearInterval(timer);
   }, [load]);
 
   // close when clicking or moving the focus (Tab / remote) elsewhere
@@ -119,19 +122,19 @@ export default function NotificationBell() {
         type="button"
         className="notif__button"
         onClick={toggle}
-        aria-label={data.unread ? `${data.unread} new episode${data.unread > 1 ? 's' : ''}` : 'Notifications'}
+        aria-label={data.unread ? t('notifications.unread', { count: data.unread }) : t('notifications.title')}
         aria-expanded={open}
-        title="New episodes of shows you follow"
+        title={t('notifications.subtitle')}
       >
         <BellIcon />
         {data.unread > 0 && <span className="notif__badge">{data.unread > 9 ? '9+' : data.unread}</span>}
       </button>
 
       {open && (
-        <div className="notif__panel" role="dialog" aria-label="Notifications">
+        <div className="notif__panel" role="dialog" aria-label={t('notifications.title')}>
           <header className="notif__head">
-            <h2 className="notif__title">Notifications</h2>
-            <span className="notif__sub">New episodes of the shows you follow</span>
+            <h2 className="notif__title">{t('notifications.title')}</h2>
+            <span className="notif__sub">{t('notifications.subtitle')}</span>
           </header>
 
           {data.items.length === 0 ? (
@@ -139,8 +142,8 @@ export default function NotificationBell() {
               <span className="notif__empty-icon" aria-hidden="true">
                 <BellIcon />
               </span>
-              <p className="notif__empty-title">No new episodes yet</p>
-              <p className="notif__empty-text">Tap the bell on a show's page to get an alert when a new episode is out.</p>
+              <p className="notif__empty-title">{t('notifications.emptyTitle')}</p>
+              <p className="notif__empty-text">{t('notifications.emptyText')}</p>
               <Button
                 variant="glass"
                 size="sm"
@@ -149,14 +152,14 @@ export default function NotificationBell() {
                   navigate('/tv');
                 }}
               >
-                Browse TV shows
+                {t('notifications.browse')}
               </Button>
             </div>
           ) : (
             <div className="notif__lists">
               {fresh.length ? (
                 <section>
-                  <h3 className="notif__group">New</h3>
+                  <h3 className="notif__group">{t('notifications.new')}</h3>
                   <ul className="notif__list">
                     {fresh.map((n) => (
                       <Item key={n.id} n={n} onOpen={openEpisode} />
@@ -166,7 +169,7 @@ export default function NotificationBell() {
               ) : null}
               {earlier.length ? (
                 <section>
-                  <h3 className="notif__group">Earlier</h3>
+                  <h3 className="notif__group">{t('notifications.earlier')}</h3>
                   <ul className="notif__list">
                     {earlier.map((n) => (
                       <Item key={n.id} n={n} onOpen={openEpisode} />

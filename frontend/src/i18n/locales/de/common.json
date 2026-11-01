@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "Tauruss – Filme und Serien in HD streamen"
+  },
+  "loading": "Wird geladen",
+  "checkingPermissions": "Berechtigungen werden geprüft…",
+  "language": {
+    "label": "Sprache"
+  },
+  "actions": {
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "continue": "Weiter",
+    "delete": "Löschen",
+    "done": "Fertig",
+    "tryAgain": "Erneut versuchen",
+    "goHome": "Zur Startseite",
+    "goBack": "Zurück"
+  },
+  "kind": {
+    "movie": "Film",
+    "tv": "Serie"
+  },
+  "rating": {
+    "outOf10": "Bewertet mit {{value}} von 10"
+  },
+  "errors": {
+    "notFound": "Diese Seite wurde nicht gefunden. Vielleicht wurde sie entfernt.",
+    "notFound_page": "Diese Seite wurde nicht gefunden. Vielleicht wurde sie entfernt.",
+    "notFound_title": "Dieser Titel wurde nicht gefunden. Vielleicht wurde er entfernt.",
+    "notFound_movie": "Dieser Film wurde nicht gefunden. Vielleicht wurde er entfernt.",
+    "notFound_show": "Diese Serie wurde nicht gefunden. Vielleicht wurde sie entfernt.",
+    "notFound_movies": "Diese Filme wurden nicht gefunden. Vielleicht wurden sie entfernt.",
+    "notFound_shows": "Diese Serien wurden nicht gefunden. Vielleicht wurden sie entfernt.",
+    "notFound_actor": "Diese Person wurde nicht gefunden.",
+    "notFound_account": "Dein Konto wurde nicht gefunden.",
+    "notFound_profiles": "Deine Profile wurden nicht gefunden.",
+    "notFound_results": "Keine Ergebnisse gefunden.",
+    "sessionExpired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    "server": "Unser Server hat gerade Probleme. Bitte versuche es gleich noch einmal.",
+    "offline": "Du scheinst offline zu sein. Prüfe deine Verbindung und versuche es erneut.",
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "text": "Diese Seite existiert nicht oder wurde verschoben."
+  },
+  "footer": {
+    "dmca": "DMCA-Hinweis",
+    "contact": "Kontakt",
+    "copyright": "© {{year}} Tauruss. Alle Rechte vorbehalten."
+  },
+  "nav": {
+    "main": "Hauptnavigation",
+    "home": "Start",
+    "movies": "Filme",
+    "tv": "Serien",
+    "myList": "Meine Liste",
+    "adminUsers": "Admin: Nutzer",
+    "adminMovies": "Admin: Titel",
+    "search": "Suchen",
+    "searchPlaceholder": "Filme & Serien suchen",
+    "searchLabel": "Filme und Serien suchen",
+    "seeAllResults": "Alle Ergebnisse für „{{query}}“ anzeigen",
+    "share": "Website teilen",
+    "shareHint": "tauruss.top teilen (Strg+D für ein Lesezeichen)",
+    "shareText": "Schau dir Taurus an",
+    "shareApp": "Tauruss teilen",
+    "linkCopied": "Link kopiert!",
+    "shared": "Geteilt!",
+    "profileMenu": "Profile und Konto",
+    "profiles": "Profile",
+    "noProfiles": "Keine Profile gefunden",
+    "manageProfiles": "Profile verwalten",
+    "install": "App installieren",
+    "installIos": "Tippe in Safari auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
+    "account": "Kontoeinstellungen",
+    "signOut": "Abmelden",
+    "signIn": "Anmelden"
+  }
+}

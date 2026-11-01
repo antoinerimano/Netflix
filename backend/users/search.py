@@ -153,6 +153,16 @@ def _filters_q(p):
     return q
 
 
+def _filters_key(p):
+    """The filters as data, for the app to word ({"key": "filters", "genres": [...], ...})."""
+    key = {"key": "filters", "genres": [GENRE_WORDS[w][0] for w in p.genre_words]}
+    if p.year_from:
+        key["yearFrom"], key["yearTo"] = p.year_from, p.year_to
+    if p.kind:
+        key["kind"] = p.kind
+    return key
+
+
 def _describe_filters(p):
     parts = [GENRE_WORDS[w][0] for w in p.genre_words]
     if p.year_from:
@@ -199,8 +209,13 @@ def fuzzy_title_ids(text, limit=20):
 
 # ---------- search ----------
 
-def search_titles(q, profile=None, kind=None, limit=15):
-    """-> [(Title, reason)] best first."""
+def search_titles(q, profile=None, kind=None, limit=15, language=None):
+    """
+    -> [(Title, reason, reason_key)] best first. reason: English sentence ("" for a plain name
+    match); reason_key: the same as data for the app to word ({"key": "with", "name": ...}) or None.
+    language: app code; titles also match by their translated name in it (TitleTranslation).
+    """
+    from .models import TitleTranslation
     from reco.models import TitleSimilar  # reco depends on users, not the other way round
 
     p = parse_query(q)
@@ -209,14 +224,15 @@ def search_titles(q, profile=None, kind=None, limit=15):
     allowed = Title.objects.filter(allowed_titles_q(profile))
     base = allowed.filter(_filters_q(p))
     filters_label = _describe_filters(p)
+    filters_key = _filters_key(p) if filters_label else None
 
-    scores = {}  # id -> [score, reason]
+    scores = {}  # id -> [score, reason, reason_key]
 
-    def add(ids, score, reason):
+    def add(ids, score, reason, key=None):
         for rank, tid in enumerate(ids):
             s = score - rank * 0.01  # keep the order of ranked lists
             if tid not in scores or scores[tid][0] < s:
-                scores[tid] = [s, reason]
+                scores[tid] = [s, reason, key]
 
     # "like X": titles similar to the best match for X
     if p.like:
@@ -226,7 +242,7 @@ def search_titles(q, profile=None, kind=None, limit=15):
                 TitleSimilar.objects.filter(title=src).order_by("-score").values_list("similar_id", flat=True)[:300]
             )
             keep = set(base.filter(id__in=sim).values_list("id", flat=True))
-            add([i for i in sim if i in keep], 70, f"Like {src.title}")
+            add([i for i in sim if i in keep], 70, f"Like {src.title}", {"key": "like", "title_id": src.id, "title": src.title})
 
     # "with X": actor
     if p.starring:
@@ -251,26 +267,36 @@ def search_titles(q, profile=None, kind=None, limit=15):
                 add([tid], 70, "")
             else:
                 add([tid], 50, "")
+        # the name in the app's language ("Le Parrain" -> The Godfather)
+        if language and language != "en":
+            translated = (
+                TitleTranslation.objects.filter(language=language, title__in=base)
+                .filter(Q(name__istartswith=text) | Q(name__icontains=f" {text}"))
+                .values_list("title_id", "name")[:300]
+            )
+            for tid, tname in translated:
+                tn = _name(tname)
+                add([tid], 100 if tn == name else (85 if tn.startswith(name) else 70), "")
         if expr:
             # directing outranks appearing in it (documentaries about a director)
             directors = list(_ft(base, "director", expr).order_by("-popularity").values_list("id", "director")[:100])
             for director in dict.fromkeys(d for _, d in directors):
-                add([tid for tid, d in directors if d == director], 75, f"Directed by {director}")
+                add([tid for tid, d in directors if d == director], 75, f"Directed by {director}", {"key": "directedBy", "name": director})
             if not p.starring:
                 _add_actor(add, base, text, 60)
         kw_ids = list(TitleKeyword.objects.filter(keyword_norm=text).values_list("title_id", flat=True)[:300])
-        add(list(base.filter(id__in=kw_ids).values_list("id", flat=True)), 35, f"About {text}")
+        add(list(base.filter(id__in=kw_ids).values_list("id", flat=True)), 35, f"About {text}", {"key": "about", "text": text})
 
         # typos: only when the name matches are thin
-        if sum(1 for s, _ in scores.values() if s >= 50) < 3:
+        if sum(1 for s, *_ in scores.values() if s >= 50) < 3:
             fuzzy = fuzzy_title_ids(text)
             keep = set(base.filter(id__in=fuzzy).values_list("id", flat=True))
-            add([i for i in fuzzy if i in keep], 45, "Close match")
+            add([i for i in fuzzy if i in keep], 45, "Close match", {"key": "closeMatch"})
 
     # only filters ("90s crime shows"): best known matching titles. Not when there is text that
     # matched nothing ("qqzzxxw" with the TV Shows filter returned the 60 most popular shows).
     if not scores and not text and p.has_filters and not p.like and not p.starring:
-        add(list(base.order_by("-popularity").values_list("id", flat=True)[:limit]), 30, filters_label)
+        add(list(base.order_by("-popularity").values_list("id", flat=True)[:limit]), 30, filters_label, filters_key)
 
     if not scores:
         return []
@@ -282,10 +308,10 @@ def search_titles(q, profile=None, kind=None, limit=15):
     )
     out = []
     for tid in ranked[:limit]:
-        reason = scores[tid][1]
+        _score, reason, key = scores[tid]
         if not reason and filters_label and text:
-            reason = filters_label
-        out.append((titles[tid], reason))
+            reason, key = filters_label, filters_key
+        out.append((titles[tid], reason, key))
     return out
 
 
@@ -315,4 +341,4 @@ def _add_actor(add, base, name, score, max_actors=3):
             by_actor.setdefault(actor, []).append(tid)
     # several people share a last name: the one in the most titles is the one people mean
     for actor in sorted(by_actor, key=lambda a: len(by_actor[a]), reverse=True)[:max_actors]:
-        add(by_actor[actor], score, f"With {actor}")
+        add(by_actor[actor], score, f"With {actor}", {"key": "with", "name": actor})

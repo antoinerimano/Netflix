@@ -1,0 +1,50 @@
+{
+  "loadFailed": "无法加载此作品。",
+  "cantPlay": "无法播放此作品",
+  "seasonEpisode": "第 {{season}} 季 · 第 {{episode}} 集",
+  "back": "返回",
+  "nextEpisode": "下一集",
+  "fullscreen": "全屏",
+  "fullscreenHint": "全屏（F）",
+  "player": {
+    "label": "播放器",
+    "tileLabel": "播放器：按 OK 键在全屏模式下控制",
+    "chooseTitle": "选择片源",
+    "chooseText": "在下方选择片源，或粘贴你自己的链接。",
+    "loadingSource": "正在加载片源…",
+    "loadingNamed": "正在加载 {{source}}",
+    "notPlayable": "此链接似乎无法播放。请尝试其他片源。",
+    "noFullscreen": "此处无法使用全屏。请使用播放器自带的控件，或尝试其他片源。"
+  },
+  "keys": {
+    "control": "<key>OK</key> 控制播放器",
+    "playPause": "<key>OK</key> / <key>空格</key> 播放 · 暂停",
+    "seek": "<key>◀</key> <key>▶</key> 快退 · 快进",
+    "exit": "<key>返回</key> 退出全屏",
+    "volume": "<key>▲</key> <key>▼</key> 音量"
+  },
+  "sources": {
+    "label": "片源",
+    "title": "片源",
+    "help": "视频无法播放？请尝试其他片源。",
+    "choose": "选择片源",
+    "loadFailed": "无法加载片源。",
+    "switched": "{{from}} 加载失败，已切换到 {{to}}。",
+    "notPlaying": "{{source}} 无法播放？",
+    "try": "尝试 {{source}}",
+    "down": "离线？",
+    "downHint": "上次检查时无法连接到此片源",
+    "custom": "自定义链接",
+    "customLabel": "你的视频链接",
+    "customPlaceholder": "粘贴视频或播放器链接（https://…）"
+  },
+  "info": {
+    "about": "简介",
+    "seasonEpisodes": "第 {{number}} 季剧集",
+    "episodeNamed": "第 {{number}} 集：{{name}}",
+    "playing": "正在播放",
+    "playingNow": "正在播放",
+    "soon": "即将上线",
+    "comingSoon": "即将上线"
+  }
+}

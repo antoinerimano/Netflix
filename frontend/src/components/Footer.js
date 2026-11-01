@@ -2,69 +2,62 @@
 // Site footer + the DMCA notice (design system Modal: scrolls inside, closes with ×, Escape,
 // a click outside or the TV remote's Back).
 import React, { useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { Button, Modal } from '../design';
+import LanguagePicker from './LanguagePicker';
 import './Footer.css';
 
 const CONTACT = 'taurusadmin@proton.me';
 
 function DmcaNotice() {
+  const { t } = useTranslation('legal');
+  const items = t('dmca.noticeItems', { returnObjects: true });
   return (
     <div className="ui-prose">
-      <p>
-        In accordance with the Digital Millennium Copyright Act of 1998, Tauruss will respond
-        expeditiously to claims of copyright infringement that are reported to its designated
-        copyright agent identified below.
-      </p>
-      <p>
-        Under Section 512(f), any person who knowingly materially misrepresents that material or
-        activity is infringing may be subject to liability. Tauruss reserves the right, at its sole
-        discretion, to remove content and terminate the accounts of users who infringe, or appear to
-        infringe, the intellectual property or other rights of third parties.
-      </p>
+      <p>{t('dmca.intro')}</p>
+      <p>{t('dmca.liability')}</p>
 
-      <h3>Filing a notice</h3>
-      <p>If you believe your copyrighted work has been copied in a way that constitutes infringement, please send our copyright agent:</p>
+      <h3>{t('dmca.filingTitle')}</h3>
+      <p>{t('dmca.filingText')}</p>
       <ol>
-        <li>A physical or electronic signature of a person authorized to act on behalf of the owner of the exclusive right allegedly infringed.</li>
-        <li>Identification of the copyrighted work claimed to have been infringed (or a representative list if several works are covered by one notice).</li>
-        <li>Identification of the material claimed to be infringing, with information reasonably sufficient for us to locate it.</li>
-        <li>Your contact information: name, address, telephone number and, if available, an email address.</li>
-        <li>A statement that you have a good-faith belief that the use is not authorized by the copyright owner, its agent or the law.</li>
-        <li>A statement that the information in the notice is accurate and, under penalty of perjury, that you are authorized to act on behalf of the owner of the exclusive right.</li>
+        {(Array.isArray(items) ? items : []).map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ol>
 
-      <h3>Copyright contact</h3>
+      <h3>{t('dmca.contactTitle')}</h3>
       <p>
-        Email <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. We apologize for any misuse of our service
-        and will do our best to find and remove infringing files.
+        <Trans t={t} i18nKey="dmca.contactText" values={{ email: CONTACT }} components={{ mail: <a href={`mailto:${CONTACT}`}>{CONTACT}</a> }} />
       </p>
     </div>
   );
 }
 
 export default function Footer() {
+  const { t } = useTranslation();
   const [dmcaOpen, setDmcaOpen] = useState(false);
 
   return (
     <footer className="site-footer">
       <div className="site-footer__links">
         <button type="button" className="site-footer__link" onClick={() => setDmcaOpen(true)}>
-          DMCA notice
+          {t('footer.dmca')}
         </button>
         <a className="site-footer__link" href={`mailto:${CONTACT}`}>
-          Contact
+          {t('footer.contact')}
         </a>
+        <LanguagePicker compact className="site-footer__language" />
       </div>
-      <p className="site-footer__copy">© {new Date().getFullYear()} Tauruss. All rights reserved.</p>
+      <p className="site-footer__copy">{t('footer.copyright', { year: new Date().getFullYear() })}</p>
 
       <Modal
         open={dmcaOpen}
         onClose={() => setDmcaOpen(false)}
-        title="DMCA notice"
+        title={t('footer.dmca')}
         size="lg"
         footer={
           <Button variant="secondary" onClick={() => setDmcaOpen(false)}>
-            Close
+            {t('actions.close')}
           </Button>
         }
       >

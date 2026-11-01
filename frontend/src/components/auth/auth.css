@@ -123,3 +123,11 @@
     padding: var(--space-5);
   }
 }
+
+/* signed out: the language picker opposite the logo */
+.auth__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './design'; // design system: tokens, base styles, shared components (first)
+import './i18n'; // translations: picks the language before the first render
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -9,17 +10,21 @@ import { AuthProvider } from './components/AuthContext';
 import './pwa/installPrompt'; // catch the install prompt as early as possible
 import { startSpatialNavigation } from './tv/spatialNavigation';
 import './tv/focus.css'; // one focus look for keyboard / TV remote
+import { BrandLoader } from './design';
 
 startSpatialNavigation(); // TV remote / keyboard: arrows, Enter, Back
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <Router>
-        <App /> {/* Render App to include routing */}
-      </Router>
-    </AuthProvider>
+    {/* a language's texts are downloaded on first use: the brand loader shows meanwhile */}
+    <Suspense fallback={<BrandLoader page />}>
+      <AuthProvider>
+        <Router>
+          <App /> {/* Render App to include routing */}
+        </Router>
+      </AuthProvider>
+    </Suspense>
   </React.StrictMode>
 );
 

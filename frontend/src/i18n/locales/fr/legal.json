@@ -1,0 +1,18 @@
+{
+  "dmca": {
+    "intro": "Conformément au Digital Millennium Copyright Act de 1998, Tauruss répondra rapidement aux réclamations pour violation du droit d'auteur signalées à son agent désigné ci-dessous.",
+    "liability": "En vertu de la section 512(f), toute personne qui affirme sciemment et faussement qu'un contenu ou une activité est contrefaisant peut engager sa responsabilité. Tauruss se réserve le droit, à sa seule discrétion, de retirer des contenus et de fermer les comptes des utilisateurs qui portent atteinte, ou semblent porter atteinte, à la propriété intellectuelle ou à d'autres droits de tiers.",
+    "filingTitle": "Déposer une notification",
+    "filingText": "Si vous pensez que votre œuvre protégée a été copiée d'une manière constituant une contrefaçon, veuillez envoyer à notre agent :",
+    "noticeItems": [
+      "La signature physique ou électronique d'une personne autorisée à agir au nom du titulaire du droit exclusif prétendument violé.",
+      "L'identification de l'œuvre protégée prétendument contrefaite (ou une liste représentative si plusieurs œuvres sont concernées par une même notification).",
+      "L'identification du contenu prétendument contrefaisant, avec des informations suffisantes pour nous permettre de le localiser.",
+      "Vos coordonnées : nom, adresse, numéro de téléphone et, si possible, une adresse e-mail.",
+      "Une déclaration selon laquelle vous estimez de bonne foi que l'utilisation n'est pas autorisée par le titulaire des droits, son mandataire ou la loi.",
+      "Une déclaration selon laquelle les informations de la notification sont exactes et, sous peine de parjure, que vous êtes autorisé à agir au nom du titulaire du droit exclusif."
+    ],
+    "contactTitle": "Contact droit d'auteur",
+    "contactText": "E-mail : <mail>{{email}}</mail>. Nous nous excusons pour tout usage abusif de notre service et ferons de notre mieux pour trouver et retirer les fichiers contrefaisants."
+  }
+}

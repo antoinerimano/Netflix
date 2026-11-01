@@ -1,0 +1,18 @@
+{
+  "dmca": {
+    "intro": "In conformità con il Digital Millennium Copyright Act del 1998, Tauruss risponderà tempestivamente alle segnalazioni di violazione del copyright inviate al proprio agente designato indicato di seguito.",
+    "liability": "Ai sensi della sezione 512(f), chiunque dichiari consapevolmente e in modo sostanzialmente falso che un materiale o un'attività costituisce una violazione può essere ritenuto responsabile. Tauruss si riserva il diritto, a sua esclusiva discrezione, di rimuovere contenuti e chiudere gli account degli utenti che violano, o sembrano violare, la proprietà intellettuale o altri diritti di terzi.",
+    "filingTitle": "Inviare una segnalazione",
+    "filingText": "Se ritieni che la tua opera protetta sia stata copiata in un modo che costituisce una violazione, invia al nostro agente:",
+    "noticeItems": [
+      "La firma fisica o elettronica di una persona autorizzata ad agire per conto del titolare del diritto esclusivo presumibilmente violato.",
+      "L'identificazione dell'opera protetta presumibilmente violata (o un elenco rappresentativo se una segnalazione riguarda più opere).",
+      "L'identificazione del materiale presumibilmente in violazione, con informazioni sufficienti per permetterci di individuarlo.",
+      "I tuoi dati di contatto: nome, indirizzo, numero di telefono e, se disponibile, un indirizzo email.",
+      "Una dichiarazione in cui affermi di ritenere in buona fede che l'uso non sia autorizzato dal titolare del copyright, dal suo agente o dalla legge.",
+      "Una dichiarazione in cui affermi che le informazioni della segnalazione sono accurate e, sotto pena di falsa testimonianza, che sei autorizzato ad agire per conto del titolare del diritto esclusivo."
+    ],
+    "contactTitle": "Contatto per il copyright",
+    "contactText": "Email: <mail>{{email}}</mail>. Ci scusiamo per qualsiasi uso improprio del nostro servizio e faremo del nostro meglio per trovare e rimuovere i file in violazione."
+  }
+}

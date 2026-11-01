@@ -1,0 +1,50 @@
+{
+  "loadFailed": "この作品を読み込めませんでした。",
+  "cantPlay": "この作品を再生できません",
+  "seasonEpisode": "シーズン{{season}} · 第{{episode}}話",
+  "back": "戻る",
+  "nextEpisode": "次のエピソード",
+  "fullscreen": "全画面",
+  "fullscreenHint": "全画面（F）",
+  "player": {
+    "label": "プレーヤー",
+    "tileLabel": "プレーヤー：OK を押すと全画面で操作できます",
+    "chooseTitle": "ソースを選択",
+    "chooseText": "下からソースを選ぶか、自分のリンクを貼り付けてください。",
+    "loadingSource": "ソースを読み込んでいます…",
+    "loadingNamed": "{{source}}を読み込んでいます",
+    "notPlayable": "このリンクは再生できないようです。別のソースをお試しください。",
+    "noFullscreen": "ここでは全画面表示を利用できません。プレーヤーの操作ボタンを使うか、別のソースをお試しください。"
+  },
+  "keys": {
+    "control": "<key>OK</key> プレーヤーを操作",
+    "playPause": "<key>OK</key> / <key>スペース</key> 再生 · 一時停止",
+    "seek": "<key>◀</key> <key>▶</key> 巻き戻し · 早送り",
+    "exit": "<key>戻る</key> 全画面を終了",
+    "volume": "<key>▲</key> <key>▼</key> 音量"
+  },
+  "sources": {
+    "label": "ソース",
+    "title": "ソース",
+    "help": "動画が始まらない場合は、別のソースをお試しください。",
+    "choose": "ソースを選択",
+    "loadFailed": "ソースを読み込めませんでした。",
+    "switched": "{{from}}を読み込めなかったため、{{to}}に切り替えました。",
+    "notPlaying": "{{source}}で再生されませんか？",
+    "try": "{{source}}を試す",
+    "down": "オフライン？",
+    "downHint": "前回の確認でこのソースに接続できませんでした",
+    "custom": "自分のリンク",
+    "customLabel": "動画のリンク",
+    "customPlaceholder": "動画またはプレーヤーのリンクを貼り付け（https://…）"
+  },
+  "info": {
+    "about": "作品について",
+    "seasonEpisodes": "シーズン{{number}}のエピソード",
+    "episodeNamed": "第{{number}}話：{{name}}",
+    "playing": "再生中",
+    "playingNow": "再生中",
+    "soon": "近日公開",
+    "comingSoon": "近日公開"
+  }
+}

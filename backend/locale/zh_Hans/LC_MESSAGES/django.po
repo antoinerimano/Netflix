@@ -1,0 +1,226 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-01 10:06-0500\n"
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\reco\management\commands\notify_new_episodes.py:98
+#, python-format
+msgid "New episode of %(show)s"
+msgstr "%(show)s 有新剧集"
+
+#: .\reco\management\commands\notify_new_episodes.py:101
+#, python-format
+msgid "%(count)d new episode of shows you follow"
+msgid_plural "%(count)d new episodes of shows you follow"
+msgstr[0] "你关注的剧集有 %(count)d 集新剧集"
+
+#: .\users\templates\emails\_button.html:11
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "如果按钮无法使用，请将此链接复制到浏览器中："
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "%(name)s，你好："
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+msgid "Hello,"
+msgstr "你好："
+
+#: .\users\templates\emails\base.html:27
+#: .\users\templates\emails\email_change.txt:12
+#: .\users\templates\emails\new_episodes.txt:12
+#: .\users\templates\emails\password_reset.txt:12
+#, python-format
+msgid "This email was sent by %(company)s. For help, contact"
+msgstr "此邮件由 %(company)s 发送。如需帮助，请联系"
+
+#: .\users\templates\emails\email_change.html:3
+#: .\users\templates\emails\email_change.html:4 .\users\views.py:266
+msgid "Confirm your new email address"
+msgstr "确认你的新邮箱地址"
+
+#: .\users\templates\emails\email_change.html:6
+#, python-format
+msgid ""
+"We received a request to change your account email to <strong>%(new_email)s</"
+"strong>. Click the button below to confirm:"
+msgstr ""
+"我们收到了将你的账户邮箱更改为 <strong>%(new_email)s</strong> 的请求。请点击"
+"下方按钮确认："
+
+#: .\users\templates\emails\email_change.html:7
+msgid "Confirm email change"
+msgstr "确认更改邮箱"
+
+#: .\users\templates\emails\email_change.html:9
+#: .\users\templates\emails\email_change.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: nothing will change."
+msgstr "如果这不是你本人的操作，请忽略此邮件，任何内容都不会改变。"
+
+#: .\users\templates\emails\email_change.txt:4
+#, python-format
+msgid "We received a request to change your account email to %(new_email)s."
+msgstr "我们收到了将你的账户邮箱更改为 %(new_email)s 的请求。"
+
+#: .\users\templates\emails\email_change.txt:5
+msgid "Open this link to confirm:"
+msgstr "打开此链接以确认："
+
+#: .\users\templates\emails\new_episodes.html:3
+#: .\users\templates\emails\new_episodes.html:4
+msgid "New episodes are out"
+msgstr "新剧集已上线"
+
+#: .\users\templates\emails\new_episodes.html:6
+#: .\users\templates\emails\new_episodes.txt:4
+#, python-format
+msgid "Shows you follow on %(company)s have new episodes:"
+msgstr "你在 %(company)s 关注的剧集有新剧集："
+
+#: .\users\templates\emails\new_episodes.html:12
+#: .\users\templates\emails\new_episodes.txt:6
+#, python-format
+msgid "Season %(season)s, episode %(episode)s"
+msgstr "第 %(season)s 季 第 %(episode)s 集"
+
+#: .\users\templates\emails\new_episodes.html:16
+msgid "Watch"
+msgstr "观看"
+
+#: .\users\templates\emails\new_episodes.html:22
+#: .\users\templates\emails\new_episodes.txt:9
+msgid ""
+"You get this email because you clicked “Notify me” on these shows. Click it "
+"again on a show's page to stop."
+msgstr ""
+"你收到此邮件是因为你在这些剧集上点击了“通知我”。在剧集页面再次点击即可停止。"
+
+#: .\users\templates\emails\password_reset.html:3 .\users\views.py:440
+msgid "Reset your password"
+msgstr "重置密码"
+
+#: .\users\templates\emails\password_reset.html:4
+msgid "Password reset request"
+msgstr "密码重置请求"
+
+#: .\users\templates\emails\password_reset.html:6
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account. "
+"Click the button below to choose a new one:"
+msgstr ""
+"我们收到了重置你的 %(company)s 账户密码的请求。请点击下方按钮设置新密码："
+
+#: .\users\templates\emails\password_reset.html:7
+msgid "Reset password"
+msgstr "重置密码"
+
+#: .\users\templates\emails\password_reset.html:9
+#: .\users\templates\emails\password_reset.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: your account is safe."
+msgstr "如果这不是你本人的操作，请忽略此邮件，你的账户是安全的。"
+
+#: .\users\templates\emails\password_reset.txt:4
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account."
+msgstr "我们收到了重置你的 %(company)s 账户密码的请求。"
+
+#: .\users\templates\emails\password_reset.txt:5
+msgid "Open this link to choose a new one:"
+msgstr "打开此链接以设置新密码："
+
+#: .\users\views.py:139 .\users\views.py:425
+msgid "Email is required."
+msgstr "邮箱为必填项。"
+
+#: .\users\views.py:141
+msgid "Password is required."
+msgstr "密码为必填项。"
+
+#: .\users\views.py:143
+msgid "This email is already registered."
+msgstr "该邮箱已被注册。"
+
+#: .\users\views.py:174
+#, python-format
+msgid "You already have an active %(plan)s subscription."
+msgstr "你已有一个有效的 %(plan)s 订阅。"
+
+#: .\users\views.py:208
+#, python-format
+msgid "%(plan)s subscription created!"
+msgstr "%(plan)s 订阅已创建！"
+
+#: .\users\views.py:222
+msgid "Invalid credentials."
+msgstr "登录信息不正确。"
+
+#: .\users\views.py:254
+msgid "New email is required."
+msgstr "新邮箱为必填项。"
+
+#: .\users\views.py:257 .\users\views.py:295
+msgid "This email is already in use."
+msgstr "该邮箱已被使用。"
+
+#: .\users\views.py:272
+msgid "Confirmation email sent."
+msgstr "确认邮件已发送。"
+
+#: .\users\views.py:284
+msgid "This confirmation link is incomplete."
+msgstr "此确认链接不完整。"
+
+#: .\users\views.py:289
+msgid "This confirmation link has expired."
+msgstr "此确认链接已过期。"
+
+#: .\users\views.py:291
+msgid "This confirmation link is not valid."
+msgstr "此确认链接无效。"
+
+#: .\users\views.py:299
+msgid "Email updated."
+msgstr "邮箱已更新。"
+
+#: .\users\views.py:343
+msgid "This subscription is already canceled."
+msgstr "此订阅已取消。"
+
+#: .\users\views.py:410
+msgid "Refresh token is required."
+msgstr "刷新令牌为必填项。"
+
+#: .\users\views.py:429
+msgid "If an account exists for this email, a reset link has been sent."
+msgstr "如果该邮箱存在账户，我们已发送重置链接。"
+
+#: .\users\views.py:453
+msgid "All fields are required."
+msgstr "所有字段均为必填项。"
+
+#: .\users\views.py:459
+msgid "This reset link is not valid."
+msgstr "此重置链接无效。"
+
+#: .\users\views.py:462
+msgid "This reset link has expired or was already used."
+msgstr "此重置链接已过期或已被使用。"
+
+#: .\users\views.py:471
+msgid "Your password has been changed."
+msgstr "你的密码已更改。"

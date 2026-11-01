@@ -1,0 +1,50 @@
+{
+  "loadFailed": "Impossibile caricare questo titolo.",
+  "cantPlay": "Impossibile riprodurre questo titolo",
+  "seasonEpisode": "Stagione {{season}} · Episodio {{episode}}",
+  "back": "Indietro",
+  "nextEpisode": "Episodio successivo",
+  "fullscreen": "Schermo intero",
+  "fullscreenHint": "Schermo intero (F)",
+  "player": {
+    "label": "Player",
+    "tileLabel": "Player: premi OK per controllarlo a schermo intero",
+    "chooseTitle": "Scegli una fonte",
+    "chooseText": "Scegli una fonte qui sotto o incolla un tuo link.",
+    "loadingSource": "Caricamento della fonte…",
+    "loadingNamed": "Caricamento di {{source}}",
+    "notPlayable": "Questo link non sembra riproducibile. Prova un'altra fonte.",
+    "noFullscreen": "Lo schermo intero non è disponibile qui. Usa i controlli del player o prova un'altra fonte."
+  },
+  "keys": {
+    "control": "<key>OK</key> Controlla il player",
+    "playPause": "<key>OK</key> / <key>Spazio</key> Riproduci · Pausa",
+    "seek": "<key>◀</key> <key>▶</key> Indietro · Avanti",
+    "exit": "<key>Indietro</key> Esci dallo schermo intero",
+    "volume": "<key>▲</key> <key>▼</key> Volume"
+  },
+  "sources": {
+    "label": "Fonti",
+    "title": "Fonte",
+    "help": "Il video non parte? Prova un'altra fonte.",
+    "choose": "Scegli una fonte",
+    "loadFailed": "Impossibile caricare le fonti.",
+    "switched": "{{from}} non si è caricata, passaggio a {{to}}.",
+    "notPlaying": "Non parte su {{source}}?",
+    "try": "Prova {{source}}",
+    "down": "offline?",
+    "downHint": "Il nostro ultimo controllo non ha raggiunto questa fonte",
+    "custom": "Il tuo link",
+    "customLabel": "Il tuo link video",
+    "customPlaceholder": "Incolla un link video o di un player (https://…)"
+  },
+  "info": {
+    "about": "Informazioni",
+    "seasonEpisodes": "Episodi della stagione {{number}}",
+    "episodeNamed": "Episodio {{number}}: {{name}}",
+    "playing": "In riproduzione",
+    "playingNow": "in riproduzione",
+    "soon": "Presto",
+    "comingSoon": "in arrivo"
+  }
+}

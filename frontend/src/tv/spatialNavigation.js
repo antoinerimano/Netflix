@@ -119,13 +119,29 @@ function center(r) {
 // up than the buttons fixed around them (a dialog's footer), but comes first
 const SCROLL_AREAS = ".ui-modal__body, .search-results, .notif__lists, .profile-dropdown";
 
+const FIXED_BARS = ".navbar, .tabbar";
+
+/** The fixed / sticky bar el sits in (navbar, a page's sticky filter bar), or null */
+function pinnedAncestor(el) {
+  for (let p = el; p && p !== document.body; p = p.parentElement) {
+    const pos = window.getComputedStyle(p).position;
+    if (pos === "fixed" || pos === "sticky") return p;
+  }
+  return null;
+}
+
 function nearest(from, dir, list) {
   const a = from.getBoundingClientRect();
   const ca = center(a);
   const area = from.closest(SCROLL_AREAS);
+  // the bars fixed on screen (navbar, phone tab bar) are always "just above / below" whatever the
+  // page shows: going up from a row must reach the banner first, the navbar only from the top
+  const fromBar = from.closest(FIXED_BARS);
+  // from a pinned bar, page content scrolled out of sight (under the bar) is not "above" it
+  const pinned = !fromBar && (dir === "up" || dir === "down") ? pinnedAncestor(from) : null;
   // best candidate in line with "from" (same row / column) and best one off-line (diagonal),
   // inside the scrolling area "from" is in first, outside it only when nothing is left inside
-  const best = { in: { line: null, off: null }, out: { line: null, off: null } };
+  const best = { in: { line: null, off: null }, out: { line: null, off: null }, bar: { line: null, off: null } };
   const keep = (slot, kind, el, score, gap) => {
     const cur = best[slot][kind];
     if (!cur || score < cur.score) best[slot][kind] = { el, score, gap };
@@ -153,9 +169,22 @@ function nearest(from, dir, list) {
       gap = Math.max(0, dir === "down" ? b.top - a.bottom : a.top - b.bottom);
     }
     if (main <= 1) continue; // not in that direction
+    // up / down: an element on the same line (a few pixels higher, a taller button beside) is
+    // not "above": the boxes must not overlap vertically by more than half the smaller one
+    if (dir === "up" || dir === "down") {
+      const overlap = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (overlap > Math.min(a.height, b.height) / 2) continue;
+    }
     // left / right stay on the same line (end of a row: stay there, like a TV)
     if (!aligned && (dir === "left" || dir === "right")) continue;
-    const slot = area && !area.contains(el) ? "out" : "in";
+    if (pinned && !pinned.contains(el) && !el.closest(FIXED_BARS) && !inViewport(el)) {
+      // what comes after the bar in the page scrolls under it (not above it); what comes before
+      // it (the page's header) really is above
+      const after = pinned.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING;
+      if (dir === "up" ? after : !after) continue;
+    }
+    let slot = area && !area.contains(el) ? "out" : "in";
+    if (!fromBar && (dir === "up" || dir === "down") && el.closest(FIXED_BARS)) slot = "bar";
     if (aligned) keep(slot, "line", el, main, gap);
     else keep(slot, "off", el, main + 0.5 * cross, gap); // diagonal: the closest overall
   }
@@ -167,7 +196,7 @@ function nearest(from, dir, list) {
     const step = dir === "up" || dir === "down" ? a.height : a.width;
     return line.gap <= off.gap + Math.max(step, 48) * 1.5 ? line.el : off.el;
   };
-  return pick(best.in) || pick(best.out);
+  return pick(best.in) || pick(best.out) || pick(best.bar);
 }
 
 // The page's main action, then its content, when nothing is focused yet. A form starts on its
@@ -214,17 +243,71 @@ function preferInGroup(from, next) {
   return current || next;
 }
 
+function onScreen(el) {
+  const r = el.getBoundingClientRect();
+  return r.bottom > TOP_MARGIN && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+}
+
 function startingPoint(list) {
-  const onScreen = (el) => {
-    const r = el.getBoundingClientRect();
-    return r.bottom > TOP_MARGIN && r.top < window.innerHeight;
-  };
+  // what the user can see first (the page may be scrolled: restored scroll, mouse wheel), then
+  // the page's main action wherever it is
   for (const selector of START_SELECTORS) {
-    const match = list.filter((el) => el.matches(selector));
-    const pick = match.find(onScreen) || match[0];
+    const pick = list.find((el) => el.matches(selector) && onScreen(el));
     if (pick) return pick;
   }
-  return list.find((el) => onScreen(el) && el.getBoundingClientRect().top >= TOP_MARGIN) || list[0];
+  const visible = list.find((el) => onScreen(el) && el.getBoundingClientRect().top >= TOP_MARGIN);
+  if (visible) return visible;
+  for (const selector of START_SELECTORS) {
+    const pick = list.find((el) => el.matches(selector));
+    if (pick) return pick;
+  }
+  return list[0];
+}
+
+// The page was scrolled by the wheel / a touch since the remote last moved: the focused element
+// may be far out of sight, and the next arrow continues from what's on screen instead.
+let userScrolled = false;
+function inViewport(el) {
+  const r = el.getBoundingClientRect();
+  return r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+}
+
+// The focused element went away (a button shown only while a trailer plays, a row that reloaded):
+// the remote continues from the element closest to where the focus was, never from nowhere.
+let lastRect = null;
+let lastRectPage = "";
+function rememberRect(el) {
+  const r = el?.getBoundingClientRect?.();
+  if (r && r.width > 0) {
+    lastRect = r; // a removed element measures 0: keep where it was
+    lastRectPage = window.location.pathname;
+  }
+}
+// only on the page it was measured on: after a navigation the new page starts at its main action
+const lastSpot = () => (lastRectPage === window.location.pathname ? lastRect : null);
+function closestTo(rect, list) {
+  if (!rect) return null;
+  const c = center(rect);
+  let best = null;
+  let bestD = Infinity;
+  for (const el of list) {
+    if (!onScreen(el)) continue;
+    const p = center(el.getBoundingClientRect());
+    const d = Math.hypot(p.x - c.x, (p.y - c.y) * 1.5); // same row first
+    if (d < bestD) {
+      bestD = d;
+      best = el;
+    }
+  }
+  return best;
+}
+function recoverFocus() {
+  if (!keyboardMode || inPlayer) return;
+  const el = document.activeElement;
+  if (el && el !== document.body) return;
+  if (lastFocused?.isConnected && usable(lastFocused)) return; // only blurred: arrows continue from it
+  const back = closestTo(lastSpot(), candidates());
+  if (back) back.focus({ preventScroll: true });
 }
 
 // Focus can be lost without the user moving (an ad, a popup or the player iframe takes it):
@@ -341,6 +424,7 @@ function revealHorizontally(el) {
 }
 
 function focusElement(el) {
+  userScrolled = false;
   el.focus({ preventScroll: true });
   revealHorizontally(el);
   // scroll the page vertically only: scrolling horizontally would break the row sliders
@@ -455,6 +539,9 @@ function onKeyDown(e) {
   }
 
   const dir = DIRECTIONS[e.key];
+  // a closed <select> (language picker...): the browser would change its value with the arrows,
+  // and a remote user only meant to move on. Its list opens with OK.
+  if (dir && active?.tagName === "SELECT" && editing !== active) e.preventDefault();
   // a focused text box that scrolls (dialog text): up / down read it, then leave it at its ends
   if ((dir === "up" || dir === "down") && active?.matches?.(".ui-modal__body")) {
     const max = active.scrollHeight - active.clientHeight;
@@ -470,7 +557,13 @@ function onKeyDown(e) {
     // (an empty field is left right away): otherwise a remote user is stuck in the search box
     if (typing && (dir === "left" || dir === "right") && !atTextEdge(active, dir)) return;
     const list = candidates();
-    let next = active ? nearest(active, dir, list) : startingPoint(list);
+    // the focused element was scrolled out of sight (mouse wheel, restored scroll): continue from
+    // what's on screen, not from somewhere the user can't see
+    const lost = active && userScrolled && !fullscreenElement() && !openModal() && !active.closest(SCROLL_AREAS) && !inViewport(active);
+    // nothing focused because the focused element went away (a row rebuilt itself): the first
+    // key lands next to where it was, not on the page's first button
+    const fallback = () => (lastFocused && !lastFocused.isConnected && closestTo(lastSpot(), list)) || startingPoint(list);
+    let next = active && !lost ? nearest(active, dir, list) : fallback();
     if (!next && active && (dir === "left" || dir === "right")) next = wrapInGroup(active, dir, list);
     if (next && active && (dir === "up" || dir === "down")) next = preferInGroup(active, next);
     if (next) {
@@ -582,13 +675,25 @@ export function startSpatialNavigation() {
   window.addEventListener("keyup", onKeyUp);
   document.addEventListener("focusin", (e) => {
     lastFocused = e.target;
+    rememberRect(e.target);
     if (keyboardMode && e.target?.matches?.(FOCUSABLE)) placeByEntry.set(entryKey(), placeOf(e.target));
     const group = e.target.closest?.(GROUPS);
     if (group) lastInGroup.set(group, e.target);
   });
   document.addEventListener("focusout", (e) => {
     if (e.target === editing) stopEditing();
+    if (keyboardMode) rememberRect(e.target);
   });
+  // a focused element removed from the page fires no event in some browsers: check after DOM changes
+  let recoverQueued = false;
+  new MutationObserver(() => {
+    if (recoverQueued || !keyboardMode) return;
+    recoverQueued = true;
+    requestAnimationFrame(() => {
+      recoverQueued = false;
+      if (lastFocused && !lastFocused.isConnected) recoverFocus();
+    });
+  }).observe(document.body, { childList: true, subtree: true });
   // clicked with the mouse: arrows behave natively in this control (no red "remote" ring)
   document.addEventListener("pointerdown", (e) => {
     const control = e.target.closest?.(`${ADJUSTABLE}, select`);
@@ -597,6 +702,8 @@ export function startSpatialNavigation() {
       editing = control;
     }
   });
+  window.addEventListener("wheel", () => (userScrolled = true), { passive: true });
+  window.addEventListener("touchmove", () => (userScrolled = true), { passive: true });
   window.addEventListener("blur", onWindowBlur);
   document.addEventListener("fullscreenchange", onFullscreenChange);
   document.addEventListener("webkitfullscreenchange", onFullscreenChange);

@@ -1,0 +1,41 @@
+{
+  "title": "Konto",
+  "memberSince": "Mitglied seit {{date}}",
+  "notYours": "Nicht dein Konto",
+  "notYoursText": "Du kannst nur das Konto verwalten, mit dem du angemeldet bist.",
+  "loadError": "Dein Konto konnte nicht geladen werden",
+  "change": "Ändern",
+  "email": {
+    "title": "E-Mail-Adresse ändern",
+    "intro": "Wir schicken einen Bestätigungslink an die neue Adresse. Deine E-Mail-Adresse ändert sich, sobald du ihn öffnest.",
+    "current": "Aktuelle E-Mail-Adresse",
+    "new": "Neue E-Mail-Adresse",
+    "placeholder": "name@beispiel.de",
+    "send": "Bestätigung senden",
+    "invalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "same": "Das ist bereits deine E-Mail-Adresse.",
+    "sent": "Bestätigungslink an {{email}} gesendet"
+  },
+  "password": {
+    "title": "Passwort ändern",
+    "intro": "Wir schicken einen Link an <strong>{{email}}</strong>, mit dem du ein neues Passwort wählen kannst. Der Link funktioniert nur einmal.",
+    "send": "Link zum Zurücksetzen senden",
+    "sent": "Link zum Zurücksetzen an {{email}} gesendet",
+    "failed": "Der Link konnte nicht gesendet werden. Bitte versuche es erneut."
+  },
+  "profiles": {
+    "title": "Profile",
+    "count_one": "{{count}} von {{max}}",
+    "count_other": "{{count}} von {{max}}",
+    "edit": "Bearbeiten",
+    "addHint_one": "Eines pro Person, bis zu {{count}}",
+    "addHint_other": "Eines pro Person, bis zu {{count}}"
+  },
+  "signOut": {
+    "label": "Abmelden",
+    "title": "Abmelden?",
+    "signedInAs": "Angemeldet als {{email}}",
+    "text": "Du brauchst deine E-Mail-Adresse und dein Passwort, um dich auf diesem Gerät wieder anzumelden.",
+    "stay": "Angemeldet bleiben"
+  }
+}

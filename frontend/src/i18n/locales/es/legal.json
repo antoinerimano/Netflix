@@ -1,0 +1,18 @@
+{
+  "dmca": {
+    "intro": "De acuerdo con la Digital Millennium Copyright Act de 1998, Tauruss responderá con rapidez a las reclamaciones por infracción de derechos de autor comunicadas a su agente designado, indicado más abajo.",
+    "liability": "Según la sección 512(f), cualquier persona que declare a sabiendas y de forma falsa que un material o una actividad infringe derechos puede incurrir en responsabilidad. Tauruss se reserva el derecho, a su entera discreción, de retirar contenido y cerrar las cuentas de los usuarios que infrinjan, o parezcan infringir, la propiedad intelectual u otros derechos de terceros.",
+    "filingTitle": "Presentar una notificación",
+    "filingText": "Si crees que tu obra protegida se ha copiado de una forma que constituye una infracción, envía a nuestro agente:",
+    "noticeItems": [
+      "La firma física o electrónica de una persona autorizada para actuar en nombre del titular del derecho exclusivo presuntamente infringido.",
+      "La identificación de la obra protegida presuntamente infringida (o una lista representativa si una notificación abarca varias obras).",
+      "La identificación del material presuntamente infractor, con información suficiente para que podamos localizarlo.",
+      "Tus datos de contacto: nombre, dirección, número de teléfono y, si es posible, una dirección de correo electrónico.",
+      "Una declaración de que crees de buena fe que el uso no está autorizado por el titular de los derechos, su agente o la ley.",
+      "Una declaración de que la información de la notificación es exacta y, bajo pena de perjurio, de que estás autorizado para actuar en nombre del titular del derecho exclusivo."
+    ],
+    "contactTitle": "Contacto sobre derechos de autor",
+    "contactText": "Correo: <mail>{{email}}</mail>. Pedimos disculpas por cualquier uso indebido de nuestro servicio y haremos todo lo posible por encontrar y retirar los archivos infractores."
+  }
+}

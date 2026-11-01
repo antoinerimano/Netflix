@@ -1,0 +1,208 @@
+{
+  "kids": "Enfants",
+  "create": {
+    "title": "Créez votre profil",
+    "subtitle_one": "Vous pourrez ajouter jusqu'à {{count}} profil plus tard, un par personne.",
+    "subtitle_many": "Vous pourrez ajouter jusqu'à {{count}} profils plus tard, un par personne.",
+    "subtitle_other": "Vous pourrez ajouter jusqu'à {{count}} profils plus tard, un par personne."
+  },
+  "who": {
+    "title": "Qui regarde ?",
+    "loadError": "Impossible de charger vos profils",
+    "watchAs": "Regarder en tant que {{name}}"
+  },
+  "manage": {
+    "title": "Gérer les profils",
+    "subtitle": "Choisissez un profil pour le modifier.",
+    "edit": "Modifier {{name}}"
+  },
+  "add": {
+    "title": "Ajouter un profil",
+    "submit": "Ajouter le profil"
+  },
+  "edit": {
+    "title": "Modifier le profil",
+    "confirmDelete": "Supprimer {{name}} ?",
+    "keep": "Garder",
+    "delete": "Supprimer le profil"
+  },
+  "toast": {
+    "added": "{{name}} ajouté",
+    "saved": "{{name}} enregistré",
+    "deleted": "{{name}} supprimé"
+  },
+  "age": {
+    "all": "Tous publics",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "Sans limite",
+    "everything": "Tout",
+    "kidsSummary": "Enfants · {{limit}}"
+  },
+  "form": {
+    "name": "Nom",
+    "namePlaceholder": "ex. Sam",
+    "nameRequired": "Donnez un nom au profil.",
+    "saveFailed": "Impossible d'enregistrer le profil. Veuillez réessayer.",
+    "picture": "Image",
+    "pictureGroup": "Image du profil",
+    "ownAvatar": "Votre avatar",
+    "ownAvatarEdit": "Votre avatar : le modifier",
+    "createAvatar": "Créer votre propre avatar",
+    "create": "Créer",
+    "letter": "Lettre",
+    "photo": "Image {{number}}",
+    "letterColor": "Couleur de la lettre",
+    "color": "Couleur {{color}}",
+    "kids": "Profil enfant",
+    "kidsHint": "Uniquement des titres adaptés aux enfants, un accueil plus simple.",
+    "ageLimit": "Limite d'âge",
+    "ageLimitHint": "Les titres au-dessus de cette limite sont masqués.",
+    "ageLimitKidsHint": "Les profils enfants vont jusqu'à 7+ (PG).",
+    "language": "Langue",
+    "languageHint": "L'application, les titres et les résumés s'affichent dans cette langue."
+  },
+  "avatar": {
+    "title": "Créez votre avatar",
+    "use": "Utiliser cet avatar",
+    "surprise": "Surprends-moi",
+    "undo": "Annuler",
+    "partsLabel": "Éléments de l'avatar",
+    "style": "Style",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Cheveux",
+      "hat": "Chapeaux",
+      "eyes": "Yeux",
+      "brows": "Sourcils",
+      "mouth": "Bouche",
+      "beard": "Barbe",
+      "extras": "Extras",
+      "face": "Visage",
+      "top": "Haut",
+      "scene": "Fond"
+    },
+    "colors": {
+      "hc": "Couleur des cheveux",
+      "hwc": "Couleur du chapeau",
+      "sk": "Peau",
+      "sh": "Couleur",
+      "bg": "Couleurs"
+    },
+    "parts": {
+      "bg": "Fond",
+      "pt": "Motif",
+      "fc": "Forme du visage",
+      "sk": "Peau",
+      "ey": "Yeux",
+      "eb": "Sourcils",
+      "mo": "Bouche",
+      "hr": "Cheveux",
+      "hc": "Couleur des cheveux",
+      "hw": "Chapeau",
+      "hwc": "Couleur du chapeau",
+      "bd": "Barbe",
+      "ex": "Extras",
+      "sh": "Couleur du haut",
+      "ts": "Haut"
+    },
+    "names": {
+      "pt": [
+        "Aucun",
+        "Pois",
+        "Rayures",
+        "Vagues",
+        "Étoiles",
+        "Grille",
+        "Confettis"
+      ],
+      "fc": [
+        "Rond",
+        "Carré",
+        "Ovale",
+        "Large"
+      ],
+      "ey": [
+        "Points",
+        "Brillants",
+        "Joyeux",
+        "Clin d'œil",
+        "Endormis",
+        "Étoiles",
+        "Lunettes de soleil",
+        "Grands",
+        "Cils",
+        "Cœurs"
+      ],
+      "eb": [
+        "Aucun",
+        "Doux",
+        "Épais",
+        "Levés",
+        "Fâchés",
+        "Inquiets",
+        "Monosourcil"
+      ],
+      "mo": [
+        "Sourire",
+        "Grand sourire",
+        "Surpris",
+        "Neutre",
+        "Langue",
+        "Sourire en coin",
+        "Rire",
+        "Rouge à lèvres"
+      ],
+      "hr": [
+        "Aucun",
+        "Courts",
+        "En pointes",
+        "Bouclés",
+        "Longs",
+        "Chignon",
+        "Iroquoise",
+        "Afro",
+        "Raie sur le côté",
+        "Rasés",
+        "Queue de cheval",
+        "Couettes"
+      ],
+      "hw": [
+        "Aucun",
+        "Casquette",
+        "Bonnet",
+        "Couronne",
+        "Casque audio",
+        "Bandana",
+        "Haut-de-forme",
+        "Fleurs",
+        "Auréole",
+        "Oreilles de chat"
+      ],
+      "bd": [
+        "Aucune",
+        "Naissante",
+        "Complète",
+        "Bouc",
+        "Moustache",
+        "Guidon"
+      ],
+      "ex": [
+        "Aucun",
+        "Joues rosées",
+        "Taches de rousseur",
+        "Lunettes rondes",
+        "Lunettes carrées",
+        "Boucles d'oreilles",
+        "Grain de beauté"
+      ],
+      "ts": [
+        "T-shirt",
+        "Sweat à capuche",
+        "Col",
+        "Col roulé"
+      ]
+    }
+  }
+}

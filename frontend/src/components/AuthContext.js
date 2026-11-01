@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchUserProfiles } from '../api/userApi'; // <-- ajoute ça
+import { fetchUserProfiles } from '../api/userApi';
+import { setActiveProfile } from '../utils/activeProfile';
 
 export const AuthContext = createContext();
 
@@ -31,10 +32,8 @@ export const AuthProvider = ({ children }) => {
         const profiles = Array.isArray(resProfiles) ? resProfiles : (resProfiles?.profiles || []);
 
         if (profiles.length) {
-          const id = String(profiles[0].id);
-          localStorage.setItem('activeProfileId', id);
-          localStorage.setItem('activeProfile', JSON.stringify(profiles[0])); // optionnel
-          setActiveProfileId(id);
+          setActiveProfile(profiles[0]); // also switches to the profile's language
+          setActiveProfileId(String(profiles[0].id));
         }
       } catch (e) {
         // laisse activeProfileId à null si erreur

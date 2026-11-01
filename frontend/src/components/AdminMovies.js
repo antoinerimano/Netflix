@@ -1,5 +1,6 @@
 // src/components/AdminMovies.js
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BrandLoader } from '../design';
 import { makeTitlesApi } from "../api/titlesApi";
 import styles from "./AdminPanel.module.css";
@@ -40,6 +41,7 @@ function isValidYyyyOrIso(s) {
 }
 
 export default function AdminMovies() {
+  const { t } = useTranslation("admin");
   const [mode, setMode] = useState("movie"); // 'movie' | 'tv'
   const api = useMemo(() => makeTitlesApi(mode), [mode]);
 
@@ -52,41 +54,41 @@ export default function AdminMovies() {
   // ---- validation (mode-aware) ----
   const validate = (data) => {
     const e = {};
-    if (!data.title || data.title.trim().length < 2) e.title = "Title is required (min 2 chars)";
-    if (!data.genre || data.genre.trim().length < 2) e.genre = "Genre is required";
-    if (!data.rating || isNaN(Number(data.rating))) e.rating = "Rating must be a number";
+    if (!data.title || data.title.trim().length < 2) e.title = t("titles.errors.title");
+    if (!data.genre || data.genre.trim().length < 2) e.genre = t("titles.errors.genre");
+    if (!data.rating || isNaN(Number(data.rating))) e.rating = t("titles.errors.rating");
     if (!data.cast || !Array.isArray(data.cast) || !data.cast.length || !data.cast[0]) {
-      e.cast = "Cast is required (comma separated)";
+      e.cast = t("titles.errors.cast");
     }
     if (!/^\d+$/.test(String(data.tmdb_id || "").trim())) {
-      e.tmdb_id = "TMDB id is required (a number): stream links are built from it";
+      e.tmdb_id = t("titles.errors.tmdbId");
     }
     if (data.imdb_code && !/^tt\d+$/.test(String(data.imdb_code).trim())) {
-      e.imdb_code = "IMDb id looks like tt0137523";
+      e.imdb_code = t("titles.errors.imdbId");
     }
 
     // Movie-only validation
     if (mode === "movie") {
-      if (!data.director || data.director.trim().length < 2) e.director = "Director is required";
+      if (!data.director || data.director.trim().length < 2) e.director = t("titles.errors.director");
       if (data.runtime_minutes && isNaN(Number(data.runtime_minutes))) {
-        e.runtime_minutes = "Runtime must be a number";
+        e.runtime_minutes = t("titles.errors.runtime");
       }
       if (!data.release_date || !isValidYyyyOrIso(data.release_date)) {
-        e.release_date = "Valid year (YYYY) or date (YYYY-MM-DD) required";
+        e.release_date = t("titles.errors.date");
       }
     }
 
     // TV-only validation
     if (mode === "tv") {
       if (!data.first_air_date || !isValidYyyyOrIso(data.first_air_date)) {
-        e.first_air_date = "Valid year (YYYY) or date (YYYY-MM-DD) required";
+        e.first_air_date = t("titles.errors.date");
       }
     }
 
     // URL checks (validate when present)
-    if (!isValidUrl(data.poster)) e.poster = "Poster URL is invalid";
-    if (!isValidUrl(data.landscape_image)) e.landscape_image = "Landscape image URL is invalid";
-    if (!isValidUrl(data.trailer_clip_url)) e.trailer_clip_url = "Trailer clip URL is invalid";
+    if (!isValidUrl(data.poster)) e.poster = t("titles.errors.poster");
+    if (!isValidUrl(data.landscape_image)) e.landscape_image = t("titles.errors.landscape");
+    if (!isValidUrl(data.trailer_clip_url)) e.trailer_clip_url = t("titles.errors.trailer");
 
     return e;
   };
@@ -137,7 +139,7 @@ export default function AdminMovies() {
   };
 
   const onDelete = async (id) => {
-    if (!window.confirm(`Delete this ${mode === "movie" ? "movie" : "TV show"}?`)) return;
+    if (!window.confirm(t(`titles.confirmDelete_${mode}`))) return;
     await api.remove(id);
     setRows((prev) => prev.filter((r) => r.id !== id));
     if (editingId === id) {
@@ -195,14 +197,14 @@ export default function AdminMovies() {
   return (
     <div className={styles["admin-panel"]}>
       <div className={styles["button-row"]} style={{ justifyContent: "space-between" }}>
-        <h2>Admin Titles (Movies & TV)</h2>
+        <h2>{t("titles.heading")}</h2>
         <div>
           <button
             type="button"
             className={mode === "movie" ? styles["edit-btn"] : styles["reset-btn"]}
             onClick={() => setMode("movie")}
           >
-            Movies
+            {t("common:nav.movies")}
           </button>
           <button
             type="button"
@@ -210,14 +212,14 @@ export default function AdminMovies() {
             className={mode === "tv" ? styles["edit-btn"] : styles["reset-btn"]}
             onClick={() => setMode("tv")}
           >
-            TV
+            {t("common:nav.tv")}
           </button>
         </div>
       </div>
 
       <form onSubmit={onSubmit} className={styles["admin-form"]}>
         <div className={styles["form-group"]}>
-          <input name="title" placeholder="Title" value={form.title} onChange={onChange} />
+          <input name="title" placeholder={t("fields.title")} value={form.title} onChange={onChange} />
           {errors.title && <span className={styles.error}>{errors.title}</span>}
         </div>
 
@@ -225,7 +227,7 @@ export default function AdminMovies() {
           <div className={styles["form-group"]}>
             <input
               name="release_date"
-              placeholder="Release Year or Date (YYYY or YYYY-MM-DD)"
+              placeholder={t("fields.releaseDate")}
               value={form.release_date}
               onChange={onChange}
             />
@@ -235,7 +237,7 @@ export default function AdminMovies() {
           <div className={styles["form-group"]}>
             <input
               name="first_air_date"
-              placeholder="First Air Year or Date (YYYY or YYYY-MM-DD)"
+              placeholder={t("fields.firstAirDate")}
               value={form.first_air_date}
               onChange={onChange}
             />
@@ -244,7 +246,7 @@ export default function AdminMovies() {
         )}
 
         <div className={styles["form-group"]}>
-          <input name="genre" placeholder="Genre" value={form.genre} onChange={onChange} />
+          <input name="genre" placeholder={t("fields.genre")} value={form.genre} onChange={onChange} />
           {errors.genre && <span className={styles.error}>{errors.genre}</span>}
         </div>
 
@@ -254,7 +256,7 @@ export default function AdminMovies() {
             <div className={styles["form-group"]}>
               <input
                 name="director"
-                placeholder="Director"
+                placeholder={t("fields.director")}
                 value={form.director}
                 onChange={onChange}
               />
@@ -264,7 +266,7 @@ export default function AdminMovies() {
             <div className={styles["form-group"]}>
               <input
                 name="runtime_minutes"
-                placeholder="Runtime (minutes)"
+                placeholder={t("fields.runtime")}
                 value={form.runtime_minutes}
                 onChange={onChange}
               />
@@ -276,7 +278,7 @@ export default function AdminMovies() {
         <div className={styles["form-group"]}>
           <input
             name="cast"
-            placeholder="Cast (comma separated)"
+            placeholder={t("fields.cast")}
             value={castString}
             onChange={onChange}
           />
@@ -284,19 +286,19 @@ export default function AdminMovies() {
         </div>
 
         <div className={styles["form-group"]}>
-          <input name="rating" placeholder="Rating" value={form.rating} onChange={onChange} />
+          <input name="rating" placeholder={t("fields.rating")} value={form.rating} onChange={onChange} />
           {errors.rating && <span className={styles.error}>{errors.rating}</span>}
         </div>
 
         <div className={styles["form-group"]}>
-          <input name="poster" placeholder="Poster URL" value={form.poster} onChange={onChange} />
+          <input name="poster" placeholder={t("fields.poster")} value={form.poster} onChange={onChange} />
           {errors.poster && <span className={styles.error}>{errors.poster}</span>}
         </div>
 
         <div className={styles["form-group"]}>
           <input
             name="landscape_image"
-            placeholder="Landscape Image URL"
+            placeholder={t("fields.landscape")}
             value={form.landscape_image}
             onChange={onChange}
           />
@@ -305,19 +307,19 @@ export default function AdminMovies() {
 
         {/* --- ids used to build the stream links (both Movies & TV) --- */}
         <div className={styles["form-group"]}>
-          <input name="tmdb_id" placeholder="TMDB id (e.g. 550)" value={form.tmdb_id} onChange={onChange} />
+          <input name="tmdb_id" placeholder={t("fields.tmdbId")} value={form.tmdb_id} onChange={onChange} />
           {errors.tmdb_id && <span className={styles.error}>{errors.tmdb_id}</span>}
         </div>
 
         <div className={styles["form-group"]}>
-          <input name="imdb_code" placeholder="IMDb id (optional, e.g. tt0137523)" value={form.imdb_code} onChange={onChange} />
+          <input name="imdb_code" placeholder={t("fields.imdbId")} value={form.imdb_code} onChange={onChange} />
           {errors.imdb_code && <span className={styles.error}>{errors.imdb_code}</span>}
         </div>
 
         <div className={styles["form-group"]}>
           <input
             name="trailer_clip_url"
-            placeholder="Trailer Clip URL"
+            placeholder={t("fields.trailer")}
             value={form.trailer_clip_url}
             onChange={onChange}
           />
@@ -327,7 +329,7 @@ export default function AdminMovies() {
         <div className={styles["form-group"]}>
           <input
             name="description"
-            placeholder="Description"
+            placeholder={t("fields.description")}
             value={form.description}
             onChange={onChange}
           />
@@ -335,7 +337,7 @@ export default function AdminMovies() {
 
         <div className={styles["button-row"]}>
           <button type="submit" disabled={loading || Object.keys(errors).length > 0}>
-            {editingId ? "Update" : "Add"} {mode === "movie" ? "Movie" : "TV Show"}
+            {t(`titles.${editingId ? "update" : "add"}_${mode}`)}
           </button>
           {editingId && (
             <button
@@ -347,39 +349,39 @@ export default function AdminMovies() {
                 setErrors({});
               }}
             >
-              Cancel
+              {t("actions.cancel")}
             </button>
           )}
         </div>
       </form>
 
       {loading ? (
-        <BrandLoader size={64} label="Loading titles" />
+        <BrandLoader size={64} label={t("titles.loading")} />
       ) : (
         <div className={styles["admin-table-wrapper"]}>
           <table>
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Genre</th>
-                <th>Year</th>
-                <th>Actions</th>
+                <th>{t("fields.title")}</th>
+                <th>{t("titles.type")}</th>
+                <th>{t("fields.genre")}</th>
+                <th>{t("titles.year")}</th>
+                <th>{t("users.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td>{r.title}</td>
-                  <td>{mode.toUpperCase()}</td>
+                  <td>{mode === "tv" ? t("common:kind.tv") : t("common:kind.movie")}</td>
                   <td>{r.genre}</td>
                   <td>{yearForRow(r)}</td>
                   <td>
                     <button className={styles["edit-btn"]} onClick={() => onEdit(r.id)}>
-                      Edit
+                      {t("users.edit")}
                     </button>
                     <button className={styles["delete-btn"]} onClick={() => onDelete(r.id)}>
-                      Delete
+                      {t("actions.delete")}
                     </button>
                   </td>
                 </tr>
@@ -387,7 +389,7 @@ export default function AdminMovies() {
               {!rows.length && (
                 <tr>
                   <td colSpan={5} style={{ textAlign: "center", opacity: 0.7 }}>
-                    No {mode === "movie" ? "movies" : "TV shows"} yet.
+                    {t(`titles.empty_${mode}`)}
                   </td>
                 </tr>
               )}

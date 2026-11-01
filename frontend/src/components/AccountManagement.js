@@ -5,6 +5,9 @@
 // confirmed with a toast. Profiles use the same editor as "Who's watching?".
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES, normalizeLanguage } from '../i18n';
+import { useFormat } from '../i18n/format';
 import { fetchAccount, requestPasswordReset, requestEmailChange } from '../api/userApi';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -16,15 +19,9 @@ import { ageSummary } from './profiles/ProfileForm';
 import { MAX_PROFILES } from '../utils/activeProfile';
 import './AccountManagement.css';
 
-const LANGUAGE_NAMES = { en: 'English', fr: 'Français', es: 'Español', de: 'Deutsch', zh: '中文' };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const asList = (x) => (Array.isArray(x) ? x : x?.results ?? []);
-const formatDate = (d) => {
-  if (!d) return '';
-  const date = new Date(d);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-};
 function Row({ label, value, children }) {
   return (
     <div className="account-row">
@@ -38,6 +35,8 @@ function Row({ label, value, children }) {
 }
 
 export default function AccountManagement() {
+  const { t } = useTranslation('account');
+  const { formatDate } = useFormat();
   const { userId } = useParams();
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
@@ -97,11 +96,11 @@ export default function AccountManagement() {
     e?.preventDefault();
     const email = newEmail.trim();
     if (!EMAIL_RE.test(email)) {
-      setEmailError('Enter a valid email address.');
+      setEmailError(t('email.invalid'));
       return;
     }
     if (email.toLowerCase() === String(user.email).toLowerCase()) {
-      setEmailError('This is already your email.');
+      setEmailError(t('email.same'));
       return;
     }
     setBusy(true);
@@ -112,7 +111,7 @@ export default function AccountManagement() {
       return;
     }
     setDialog(null);
-    setToast({ message: `Confirmation link sent to ${email}`, tone: 'success' });
+    setToast({ message: t('email.sent', { email }), tone: 'success' });
   };
 
   const sendPasswordReset = async () => {
@@ -120,9 +119,9 @@ export default function AccountManagement() {
     try {
       await requestPasswordReset(user.email);
       setDialog(null);
-      setToast({ message: `Reset link sent to ${user.email}`, tone: 'success' });
+      setToast({ message: t('password.sent', { email: user.email }), tone: 'success' });
     } catch {
-      setToast({ message: "Couldn't send the link. Please try again.", tone: 'error' });
+      setToast({ message: t('password.failed'), tone: 'error' });
     } finally {
       setBusy(false);
     }
@@ -138,7 +137,7 @@ export default function AccountManagement() {
   const onProfileEdited = async ({ type, profile }) => {
     setEditing(null);
     await load();
-    setToast({ message: `${profile.name} ${type}`, tone: 'success' });
+    setToast({ message: t(`profiles:toast.${type}`, { name: profile.name }), tone: 'success' });
   };
 
   let content;
@@ -160,16 +159,16 @@ export default function AccountManagement() {
       <EmptyState
         page
         tone="error"
-        title={error?.status === 403 ? 'Not your account' : "Couldn't load your account"}
+        title={error?.status === 403 ? t('notYours') : t('loadError')}
         actions={
           error?.status === 403 ? (
-            <Button variant="primary" to="/">Go home</Button>
+            <Button variant="primary" to="/">{t('actions.goHome')}</Button>
           ) : (
-            <Button variant="primary" onClick={load}>Try again</Button>
+            <Button variant="primary" onClick={load}>{t('actions.tryAgain')}</Button>
           )
         }
       >
-        {error?.status === 403 ? 'You can only manage the account you are signed in with.' : friendlyError(error, 'your account')}
+        {error?.status === 403 ? t('notYoursText') : friendlyError(error, 'account')}
       </EmptyState>
     );
   } else {
@@ -177,45 +176,45 @@ export default function AccountManagement() {
     content = (
       <div className="account">
         <header className="account__head">
-          <h1 className="account__title">Account</h1>
-          {user.created_at ? <p className="account__since">Member since {formatDate(user.created_at)}</p> : null}
+          <h1 className="account__title">{t('title')}</h1>
+          {user.created_at ? <p className="account__since">{t('memberSince', { date: formatDate(user.created_at, { dateStyle: 'long' }) })}</p> : null}
         </header>
 
         <section className="account-card" aria-labelledby="account-details">
-          <SectionTitle as="h2" id="account-details">Account</SectionTitle>
-          <Row label="Name" value={user.name} />
-          <Row label="Email" value={user.email}>
+          <SectionTitle as="h2" id="account-details">{t('title')}</SectionTitle>
+          <Row label={t('auth:fields.name')} value={user.name} />
+          <Row label={t('auth:fields.email')} value={user.email}>
             <Button variant="glass" size="sm" onClick={openEmail}>
-              Change
+              {t('change')}
             </Button>
           </Row>
-          <Row label="Password" value="••••••••">
+          <Row label={t('auth:fields.password')} value="••••••••">
             <Button variant="glass" size="sm" onClick={() => setDialog('password')}>
-              Change
+              {t('change')}
             </Button>
           </Row>
         </section>
 
         <section className="account-card" aria-labelledby="account-profiles">
           <div className="account-card__head">
-            <SectionTitle as="h2" id="account-profiles">Profiles</SectionTitle>
+            <SectionTitle as="h2" id="account-profiles">{t('profiles.title')}</SectionTitle>
             <span className="account-card__count">
-              {profiles.length} of {MAX_PROFILES}
+              {t('profiles.count', { count: profiles.length, max: MAX_PROFILES })}
             </span>
           </div>
           <ul className="account-profiles">
             {profiles.map((p) => (
               <li key={p.id}>
-                <button type="button" className="account-profile" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
+                <button type="button" className="account-profile" onClick={() => setEditing(p)} aria-label={t('profiles:manage.edit', { name: p.name })}>
                   <Avatar src={p.avatar_url} name={p.name} size="3rem" />
                   <span className="account-profile__text">
                     <span className="account-profile__name">{p.name}</span>
                     <span className="account-profile__meta">
-                      {ageSummary(p)} · {LANGUAGE_NAMES[p.language_preference] || p.language_preference || 'English'}
+                      {ageSummary(p)} · {SUPPORTED_LANGUAGES[normalizeLanguage(p.language_preference) || 'en']}
                     </span>
                   </span>
                   <span className="account-profile__edit" aria-hidden="true">
-                    Edit
+                    {t('profiles.edit')}
                     <ChevronRightIcon />
                   </span>
                 </button>
@@ -228,8 +227,8 @@ export default function AccountManagement() {
                     <PlusIcon />
                   </span>
                   <span className="account-profile__text">
-                    <span className="account-profile__name">Add profile</span>
-                    <span className="account-profile__meta">One for each person, up to {MAX_PROFILES}</span>
+                    <span className="account-profile__name">{t('profiles:add.submit')}</span>
+                    <span className="account-profile__meta">{t('profiles.addHint', { count: MAX_PROFILES })}</span>
                   </span>
                 </button>
               </li>
@@ -238,9 +237,9 @@ export default function AccountManagement() {
         </section>
 
         <section className="account-card account-card--quiet">
-          <Row label="Sign out" value={`Signed in as ${user.email}`}>
+          <Row label={t('signOut.label')} value={t('signOut.signedInAs', { email: user.email })}>
             <Button variant="danger" size="sm" onClick={() => setDialog('signout')}>
-              Sign out
+              {t('signOut.label')}
             </Button>
           </Row>
         </section>
@@ -257,36 +256,36 @@ export default function AccountManagement() {
       <Modal
         open={dialog === 'email'}
         onClose={() => setDialog(null)}
-        title="Change your email"
+        title={t('email.title')}
         size="sm"
         scrollable={false}
         initialFocus="#account-new-email"
         footer={
           <>
             <Button variant="ghost" onClick={() => setDialog(null)} disabled={busy}>
-              Cancel
+              {t('actions.cancel')}
             </Button>
             <Button variant="primary" loading={busy} onClick={sendEmailChange}>
-              Send confirmation
+              {t('email.send')}
             </Button>
           </>
         }
       >
         <form className="account-dialog" onSubmit={sendEmailChange} noValidate>
           <p className="account-dialog__text">
-            We'll send a confirmation link to the new address. Your email changes once you open it.
+            {t('email.intro')}
           </p>
-          <Field label="Current email">
+          <Field label={t('email.current')}>
             <p className="account-dialog__current">{user?.email}</p>
           </Field>
-          <Field label="New email" htmlFor="account-new-email" error={emailError}>
+          <Field label={t('email.new')} htmlFor="account-new-email" error={emailError}>
             <input
               id="account-new-email"
               className="ui-input"
               type="email"
               autoComplete="email"
               value={newEmail}
-              placeholder="name@example.com"
+              placeholder={t('email.placeholder')}
               onChange={(e) => {
                 setNewEmail(e.target.value);
                 setEmailError('');
@@ -299,45 +298,45 @@ export default function AccountManagement() {
       <Modal
         open={dialog === 'password'}
         onClose={() => setDialog(null)}
-        title="Change your password"
+        title={t('password.title')}
         size="sm"
         scrollable={false}
         initialFocus=".ui-modal__footer .ui-btn--primary"
         footer={
           <>
             <Button variant="ghost" onClick={() => setDialog(null)} disabled={busy}>
-              Cancel
+              {t('actions.cancel')}
             </Button>
             <Button variant="primary" loading={busy} onClick={sendPasswordReset}>
-              Send reset link
+              {t('password.send')}
             </Button>
           </>
         }
       >
         <p className="account-dialog__text">
-          We'll email a link to <strong>{user?.email}</strong> to choose a new password. The link works once.
+          <Trans t={t} i18nKey="password.intro" values={{ email: user?.email }} components={{ strong: <strong /> }} />
         </p>
       </Modal>
 
       <Modal
         open={dialog === 'signout'}
         onClose={() => setDialog(null)}
-        title="Sign out?"
+        title={t('signOut.title')}
         size="sm"
         scrollable={false}
         initialFocus=".ui-modal__footer .ui-btn--ghost"
         footer={
           <>
             <Button variant="ghost" onClick={() => setDialog(null)}>
-              Stay signed in
+              {t('signOut.stay')}
             </Button>
             <Button variant="danger" onClick={signOut}>
-              Sign out
+              {t('signOut.label')}
             </Button>
           </>
         }
       >
-        <p className="account-dialog__text">You'll need your email and password to sign in again on this device.</p>
+        <p className="account-dialog__text">{t('signOut.text')}</p>
       </Modal>
 
       <ProfileEditor

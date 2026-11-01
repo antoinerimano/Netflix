@@ -4,6 +4,7 @@
 // switches without reloading the app (utils/activeProfile.js).
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { fetchUserProfiles } from '../../api/userApi';
 import { Avatar, Button, EmptyState, Skeleton, Toast, friendlyError } from '../../design';
 import { PlusIcon } from '../../design/icons';
@@ -20,6 +21,7 @@ const PencilIcon = () => (
 );
 
 export default function ProfilesPage() {
+  const { t } = useTranslation('profiles');
   const navigate = useNavigate();
   const location = useLocation();
   const userId = localStorage.getItem('userId');
@@ -61,13 +63,13 @@ export default function ProfilesPage() {
   const onEdited = async ({ type, profile }) => {
     setEditing(null);
     await load();
-    setToast(`${profile.name} ${type}`);
+    setToast(t(`toast.${type}`, { name: profile.name }));
     // a new profile from "Who's watching?": start watching with it
     if (type === 'added' && !manage && profile?.id) choose(profile);
   };
 
   const canAdd = profiles && profiles.length < MAX_PROFILES;
-  const title = manage ? 'Manage profiles' : "Who's watching?";
+  const title = manage ? t('manage.title') : t('who.title');
 
   let body;
   if (profiles === null) {
@@ -83,8 +85,8 @@ export default function ProfilesPage() {
     );
   } else if (error) {
     body = (
-      <EmptyState tone="error" title="Couldn't load your profiles" actions={<Button variant="primary" onClick={load}>Try again</Button>}>
-        {friendlyError(error, 'your profiles')}
+      <EmptyState tone="error" title={t('who.loadError')} actions={<Button variant="primary" onClick={load}>{t('actions.tryAgain')}</Button>}>
+        {friendlyError(error, 'profiles')}
       </EmptyState>
     );
   } else {
@@ -98,7 +100,7 @@ export default function ProfilesPage() {
                 type="button"
                 className={`profile-tile${manage ? ' is-managing' : ''}${isActive ? ' is-active' : ''}`}
                 onClick={() => (manage ? setEditing(p) : choose(p))}
-                aria-label={manage ? `Edit ${p.name}` : `Watch as ${p.name}`}
+                aria-label={manage ? t('manage.edit', { name: p.name }) : t('who.watchAs', { name: p.name })}
               >
                 <span className="profile-tile__art">
                   <Avatar src={p.avatar_url} name={p.name} size="100%" className="profiles__avatar" />
@@ -112,7 +114,7 @@ export default function ProfilesPage() {
                 {manage ? (
                   <span className="profile-tile__meta">{ageSummary(p)}</span>
                 ) : p.is_kids ? (
-                  <span className="profile-tile__badge">Kids</span>
+                  <span className="profile-tile__badge">{t('kids')}</span>
                 ) : null}
               </button>
             </li>
@@ -120,13 +122,13 @@ export default function ProfilesPage() {
         })}
         {canAdd ? (
           <li className="profiles__item">
-            <button type="button" className="profile-tile profile-tile--add" onClick={() => setEditing('new')} aria-label="Add a profile">
+            <button type="button" className="profile-tile profile-tile--add" onClick={() => setEditing('new')} aria-label={t('add.title')}>
               <span className="profile-tile__art">
                 <span className="profiles__avatar profile-tile__plus">
                   <PlusIcon />
                 </span>
               </span>
-              <span className="profile-tile__name">Add profile</span>
+              <span className="profile-tile__name">{t('add.submit')}</span>
             </button>
           </li>
         ) : null}
@@ -142,17 +144,17 @@ export default function ProfilesPage() {
 
       <main className="profiles__main">
         <h1 className="profiles__title">{title}</h1>
-        {manage ? <p className="profiles__subtitle">Choose a profile to edit it.</p> : null}
+        {manage ? <p className="profiles__subtitle">{t('manage.subtitle')}</p> : null}
         {body}
         {profiles?.length ? (
           <div className="profiles__actions">
             {manage ? (
               <Button variant="secondary" size="lg" onClick={() => setManage(false)}>
-                Done
+                {t('actions.done')}
               </Button>
             ) : (
               <Button variant="glass" onClick={() => setManage(true)}>
-                Manage profiles
+                {t('manage.title')}
               </Button>
             )}
           </div>

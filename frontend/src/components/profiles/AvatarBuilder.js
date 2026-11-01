@@ -5,6 +5,7 @@
 // pinned at the top on phones. Remote: a tab opens as soon as it's focused; Down goes to its
 // colors, then its styles; every row lands on its current choice.
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Chip, Modal } from '../../design';
 import { DiceIcon, ArrowLeftIcon } from '../../design/icons';
 import {
@@ -18,21 +19,22 @@ const COLOR_FILL = {
   hwc: (i) => CLOTH_COLORS[i],
   sh: (i) => CLOTH_COLORS[i],
 };
+// labels: profiles:avatar.tabs.<id>, avatar.colors.<color>, avatar.parts.<key>, avatar.names.<key>[i]
 const TABS = [
-  { id: 'hair', label: 'Hair', color: 'hc', style: 'hr' },
-  { id: 'hat', label: 'Hats', color: 'hwc', style: 'hw' },
-  { id: 'eyes', label: 'Eyes', style: 'ey' },
-  { id: 'brows', label: 'Brows', style: 'eb' },
-  { id: 'mouth', label: 'Mouth', style: 'mo' },
-  { id: 'beard', label: 'Beard', style: 'bd' },
-  { id: 'extras', label: 'Extras', style: 'ex' },
-  { id: 'face', label: 'Face', color: 'sk', style: 'fc' },
-  { id: 'top', label: 'Top', color: 'sh', style: 'ts' },
-  { id: 'scene', label: 'Background', color: 'bg', style: 'pt' },
+  { id: 'hair', color: 'hc', style: 'hr' },
+  { id: 'hat', color: 'hwc', style: 'hw' },
+  { id: 'eyes', style: 'ey' },
+  { id: 'brows', style: 'eb' },
+  { id: 'mouth', style: 'mo' },
+  { id: 'beard', style: 'bd' },
+  { id: 'extras', style: 'ex' },
+  { id: 'face', color: 'sk', style: 'fc' },
+  { id: 'top', color: 'sh', style: 'ts' },
+  { id: 'scene', color: 'bg', style: 'pt' },
 ];
-const COLOR_NAMES = { hc: 'Hair color', hwc: 'Hat color', sk: 'Skin', sh: 'Color', bg: 'Colors' };
 
 export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
+  const { t } = useTranslation('profiles');
   const [spec, setSpec] = useState(() => (isBuiltAvatar(initial) ? parseAvatar(initial) : randomAvatar()));
   const [history, setHistory] = useState([]); // previous specs ("Surprise me" can be undone)
   const [tabId, setTabId] = useState('hair');
@@ -44,7 +46,7 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
     setTabId('hair');
   }, [open, initial]);
 
-  const tab = TABS.find((t) => t.id === tabId);
+  const tab = TABS.find((x) => x.id === tabId);
   const update = (patch) => {
     setHistory((h) => [...h.slice(-19), spec]);
     setSpec((s) => ({ ...s, ...patch }));
@@ -72,12 +74,15 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
 
   const styleKey = tab.style;
   const stylePart = partByKey[styleKey];
+  const styleLabel = t(`avatar.parts.${styleKey}`, { defaultValue: stylePart.label });
+  const styleNames = t(`avatar.names.${styleKey}`, { returnObjects: true, defaultValue: stylePart.names || [] });
+  const colorLabel = tab.color ? t(`avatar.colors.${tab.color}`) : '';
 
   return (
     <Modal
       open={open}
       onClose={onCancel}
-      title="Create your avatar"
+      title={t('avatar.title')}
       size="lg"
       scrollable={false}
       initialFocus=".avatar-builder__tabs [aria-selected='true']"
@@ -85,10 +90,10 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
       footer={
         <>
           <Button variant="ghost" onClick={onCancel}>
-            Cancel
+            {t('actions.cancel')}
           </Button>
           <Button variant="primary" onClick={() => onDone(encodeAvatar(spec))}>
-            Use this avatar
+            {t('avatar.use')}
           </Button>
         </>
       }
@@ -96,33 +101,33 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
       <div className="avatar-builder">
         <div className="avatar-builder__stage">
           <div className="avatar-builder__preview">
-            <AvatarArt spec={spec} title="Your avatar" />
+            <AvatarArt spec={spec} title={t('form.ownAvatar')} />
           </div>
           <div className="avatar-builder__stage-actions">
             <Button variant="glass" size="sm" icon={<DiceIcon />} onClick={surprise}>
-              Surprise me
+              {t('avatar.surprise')}
             </Button>
             <Button variant="ghost" size="sm" icon={<ArrowLeftIcon />} onClick={undo} disabled={!history.length}>
-              Undo
+              {t('avatar.undo')}
             </Button>
           </div>
         </div>
 
         <div className="avatar-builder__panel">
-          <div className="ui-scroller avatar-builder__tabs" role="tablist" aria-label="Avatar parts">
-            {TABS.map((t) => (
+          <div className="ui-scroller avatar-builder__tabs" role="tablist" aria-label={t('avatar.partsLabel')}>
+            {TABS.map((x) => (
               <Chip
-                key={t.id}
+                key={x.id}
                 role="tab"
-                id={`avb-tab-${t.id}`}
-                aria-selected={tabId === t.id}
+                id={`avb-tab-${x.id}`}
+                aria-selected={tabId === x.id}
                 aria-controls="avb-panel"
-                selected={tabId === t.id}
+                selected={tabId === x.id}
                 // remote / keyboard: the tab opens as soon as it's focused (no OK needed)
-                onFocus={(e) => tabId !== t.id && openTab(t.id, e.currentTarget)}
-                onClick={(e) => openTab(t.id, e.currentTarget)}
+                onFocus={(e) => tabId !== x.id && openTab(x.id, e.currentTarget)}
+                onClick={(e) => openTab(x.id, e.currentTarget)}
               >
-                {t.label}
+                {t(`avatar.tabs.${x.id}`)}
               </Chip>
             ))}
           </div>
@@ -130,15 +135,15 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
           <div id="avb-panel" role="tabpanel" aria-labelledby={`avb-tab-${tabId}`} className="avatar-builder__tabpanel" key={tabId}>
             {tab.color ? (
               <section className="avatar-builder__group">
-                <h3 className="avatar-builder__label">{COLOR_NAMES[tab.color]}</h3>
-                <div className="ui-scroller avatar-builder__colors" role="radiogroup" aria-label={COLOR_NAMES[tab.color]}>
+                <h3 className="avatar-builder__label">{colorLabel}</h3>
+                <div className="ui-scroller avatar-builder__colors" role="radiogroup" aria-label={colorLabel}>
                   {Array.from({ length: partByKey[tab.color].count }, (_, i) => (
                     <button
                       key={i}
                       type="button"
                       role="radio"
                       aria-checked={spec[tab.color] === i}
-                      aria-label={`${COLOR_NAMES[tab.color]} ${i + 1}`}
+                      aria-label={t('avatar.numbered', { label: colorLabel, number: i + 1 })}
                       className={`avatar-builder__swatch${spec[tab.color] === i ? ' is-selected' : ''}`}
                       style={{ background: COLOR_FILL[tab.color](i) }}
                       onClick={() => update({ [tab.color]: i })}
@@ -149,11 +154,11 @@ export default function AvatarBuilder({ open, initial, onCancel, onDone }) {
             ) : null}
 
             <section className="avatar-builder__group">
-              <h3 className="avatar-builder__label">{tab.color ? 'Style' : stylePart.label}</h3>
-              <div className="avatar-builder__options" role="radiogroup" aria-label={stylePart.label}>
+              <h3 className="avatar-builder__label">{tab.color ? t('avatar.style') : styleLabel}</h3>
+              <div className="avatar-builder__options" role="radiogroup" aria-label={styleLabel}>
                 {Array.from({ length: stylePart.count }, (_, i) => {
                   const selected = spec[styleKey] === i;
-                  const name = stylePart.names?.[i] || `${stylePart.label} ${i + 1}`;
+                  const name = (Array.isArray(styleNames) && styleNames[i]) || t('avatar.numbered', { label: styleLabel, number: i + 1 });
                   return (
                     <button
                       key={i}

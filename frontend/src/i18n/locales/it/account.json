@@ -1,0 +1,43 @@
+{
+  "title": "Account",
+  "memberSince": "Membro dal {{date}}",
+  "notYours": "Non è il tuo account",
+  "notYoursText": "Puoi gestire solo l'account con cui hai effettuato l'accesso.",
+  "loadError": "Impossibile caricare il tuo account",
+  "change": "Modifica",
+  "email": {
+    "title": "Cambia la tua email",
+    "intro": "Invieremo un link di conferma al nuovo indirizzo. La tua email cambierà quando lo aprirai.",
+    "current": "Email attuale",
+    "new": "Nuova email",
+    "placeholder": "nome@esempio.com",
+    "send": "Invia conferma",
+    "invalid": "Inserisci un indirizzo email valido.",
+    "same": "Questa è già la tua email.",
+    "sent": "Link di conferma inviato a {{email}}"
+  },
+  "password": {
+    "title": "Cambia la password",
+    "intro": "Invieremo a <strong>{{email}}</strong> un link per scegliere una nuova password. Il link funziona una sola volta.",
+    "send": "Invia link di reimpostazione",
+    "sent": "Link di reimpostazione inviato a {{email}}",
+    "failed": "Impossibile inviare il link. Riprova."
+  },
+  "profiles": {
+    "title": "Profili",
+    "count_one": "{{count}} di {{max}}",
+    "count_many": "{{count}} di {{max}}",
+    "count_other": "{{count}} di {{max}}",
+    "edit": "Modifica",
+    "addHint_one": "Uno per persona, fino a {{count}}",
+    "addHint_many": "Uno per persona, fino a {{count}}",
+    "addHint_other": "Uno per persona, fino a {{count}}"
+  },
+  "signOut": {
+    "label": "Esci",
+    "title": "Uscire?",
+    "signedInAs": "Accesso effettuato come {{email}}",
+    "text": "Ti serviranno email e password per accedere di nuovo su questo dispositivo.",
+    "stay": "Resta connesso"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "Tauruss – Stream Movies & TV Shows Online in HD"
+  },
+  "loading": "Loading",
+  "checkingPermissions": "Checking permissions…",
+  "language": {
+    "label": "Language"
+  },
+  "actions": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "continue": "Continue",
+    "delete": "Delete",
+    "done": "Done",
+    "tryAgain": "Try again",
+    "goHome": "Go home",
+    "goBack": "Go back"
+  },
+  "kind": {
+    "movie": "Film",
+    "tv": "Series"
+  },
+  "rating": {
+    "outOf10": "Rated {{value}} out of 10"
+  },
+  "errors": {
+    "notFound": "We couldn't find this page. It may have been removed.",
+    "notFound_page": "We couldn't find this page. It may have been removed.",
+    "notFound_title": "We couldn't find this title. It may have been removed.",
+    "notFound_movie": "We couldn't find this movie. It may have been removed.",
+    "notFound_show": "We couldn't find this show. It may have been removed.",
+    "notFound_movies": "We couldn't find these movies. They may have been removed.",
+    "notFound_shows": "We couldn't find these shows. They may have been removed.",
+    "notFound_actor": "We couldn't find this actor.",
+    "notFound_account": "We couldn't find your account.",
+    "notFound_profiles": "We couldn't find your profiles.",
+    "notFound_results": "We couldn't find any results.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "server": "Our server is having trouble right now. Please try again in a moment.",
+    "offline": "You seem to be offline. Check your connection and try again.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page doesn't exist or has moved."
+  },
+  "footer": {
+    "dmca": "DMCA notice",
+    "contact": "Contact",
+    "copyright": "© {{year}} Tauruss. All rights reserved."
+  },
+  "nav": {
+    "main": "Main",
+    "home": "Home",
+    "movies": "Movies",
+    "tv": "TV Shows",
+    "myList": "My List",
+    "adminUsers": "Admin users",
+    "adminMovies": "Admin movies",
+    "search": "Search",
+    "searchPlaceholder": "Search movies & TV",
+    "searchLabel": "Search movies and TV shows",
+    "seeAllResults": "See all results for “{{query}}”",
+    "share": "Share site",
+    "shareHint": "Share tauruss.top (Ctrl+D to bookmark)",
+    "shareText": "Check out Taurus",
+    "shareApp": "Share Tauruss",
+    "linkCopied": "Link copied!",
+    "shared": "Shared!",
+    "profileMenu": "Profiles and account",
+    "profiles": "Profiles",
+    "noProfiles": "No profiles found",
+    "manageProfiles": "Manage profiles",
+    "install": "Install app",
+    "installIos": "Tap the Share button in Safari, then “Add to Home Screen”.",
+    "account": "Account settings",
+    "signOut": "Sign out",
+    "signIn": "Sign in"
+  }
+}

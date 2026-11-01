@@ -1,0 +1,50 @@
+{
+  "loadFailed": "Failed to load this title.",
+  "cantPlay": "Can't play this title",
+  "seasonEpisode": "Season {{season}} · Episode {{episode}}",
+  "back": "Back",
+  "nextEpisode": "Next episode",
+  "fullscreen": "Full screen",
+  "fullscreenHint": "Full screen (F)",
+  "player": {
+    "label": "Player",
+    "tileLabel": "Player: press OK to control it in full screen",
+    "chooseTitle": "Choose a source",
+    "chooseText": "Pick a source below, or paste your own link.",
+    "loadingSource": "Loading source…",
+    "loadingNamed": "Loading {{source}}",
+    "notPlayable": "This link doesn't seem playable. Try another source.",
+    "noFullscreen": "Full screen isn't available here. Use the player's own controls, or try another source."
+  },
+  "keys": {
+    "control": "<key>OK</key> Control the player",
+    "playPause": "<key>OK</key> / <key>Space</key> Play · Pause",
+    "seek": "<key>◀</key> <key>▶</key> Rewind · Forward",
+    "exit": "<key>Back</key> Exit full screen",
+    "volume": "<key>▲</key> <key>▼</key> Volume"
+  },
+  "sources": {
+    "label": "Sources",
+    "title": "Source",
+    "help": "Video not starting? Try another source.",
+    "choose": "Choose a source",
+    "loadFailed": "Failed to load sources.",
+    "switched": "{{from}} didn't load, switched to {{to}}.",
+    "notPlaying": "Not playing on {{source}}?",
+    "try": "Try {{source}}",
+    "down": "offline?",
+    "downHint": "Our last check could not reach this source",
+    "custom": "Your link",
+    "customLabel": "Your video link",
+    "customPlaceholder": "Paste a video or player link (https://…)"
+  },
+  "info": {
+    "about": "About",
+    "seasonEpisodes": "Season {{number}} episodes",
+    "episodeNamed": "Episode {{number}}: {{name}}",
+    "playing": "Playing",
+    "playingNow": "playing",
+    "soon": "Soon",
+    "comingSoon": "coming soon"
+  }
+}

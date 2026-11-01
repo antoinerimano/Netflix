@@ -1,5 +1,6 @@
 // src/api/titlesApi.js
 import http from './http';
+import { currentLanguage } from '../i18n';
 
 // ---------- base axios ----------
 // shared client: adds the JWT header and refreshes it when it expires
@@ -110,7 +111,9 @@ export function fetchProviders() {
  * ({ tmdb_id, season, episode }). Providers missing a needed value are skipped.
  * Optional values.start (seconds): resume point, for providers with a start_param.
  */
-export function buildProviderLinks(providers, values, kind = 'movie') {
+export function buildProviderLinks(providers, rawValues, kind = 'movie') {
+  // {lang}: the app's language ("fr"), for players that take one (subtitles / interface)
+  const values = { lang: currentLanguage(), ...rawValues };
   return (providers || [])
     .map((p) => {
       const path = kind === 'episode' ? p.episode_path : p.movie_path;
@@ -176,13 +179,19 @@ export async function fetchEpisodesBySeasonId(titleId, seasonId) {
 // =====================================================================
 // C) factory
 // =====================================================================
+// Admin editing: the stored (English) texts, never the translated ones the app shows, or saving
+// the form would write a translation over the original (backend users/localize.py).
+const ORIGINAL = { headers: { 'X-Original-Content': '1' } };
+const listOriginalTitles = async (params = {}) => unwrapList((await API.get('/titles/', { params, ...ORIGINAL })).data);
+const getOriginalTitle = async (id) => (await API.get(`/titles/${id}/`, ORIGINAL)).data;
+
 export const makeTitlesApi = (mode = 'movie') => {
   const params = { type: mode === 'tv' ? API_TYPE_TV : API_TYPE_MOVIE };
   const createType = mode === 'tv' ? API_TYPE_TV : API_TYPE_MOVIE;
 
   return {
-    fetchAll: async () => listTitles(params),
-    fetchById: async (id) => getTitle(id),
+    fetchAll: async () => listOriginalTitles(params),
+    fetchById: async (id) => getOriginalTitle(id),
     create: async (data) => create({ type: createType, ...data }),
     update: async (id, data) => update(id, { type: createType, ...data }),
     remove: async (id) => remove(id),

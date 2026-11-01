@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "Tauruss – Películas y series en streaming HD"
+  },
+  "loading": "Cargando",
+  "checkingPermissions": "Comprobando permisos…",
+  "language": {
+    "label": "Idioma"
+  },
+  "actions": {
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "continue": "Continuar",
+    "delete": "Eliminar",
+    "done": "Listo",
+    "tryAgain": "Reintentar",
+    "goHome": "Ir al inicio",
+    "goBack": "Volver"
+  },
+  "kind": {
+    "movie": "Película",
+    "tv": "Serie"
+  },
+  "rating": {
+    "outOf10": "Valoración: {{value}} de 10"
+  },
+  "errors": {
+    "notFound": "No encontramos esta página. Puede que se haya eliminado.",
+    "notFound_page": "No encontramos esta página. Puede que se haya eliminado.",
+    "notFound_title": "No encontramos este título. Puede que se haya eliminado.",
+    "notFound_movie": "No encontramos esta película. Puede que se haya eliminado.",
+    "notFound_show": "No encontramos esta serie. Puede que se haya eliminado.",
+    "notFound_movies": "No encontramos estas películas. Puede que se hayan eliminado.",
+    "notFound_shows": "No encontramos estas series. Puede que se hayan eliminado.",
+    "notFound_actor": "No encontramos a este actor.",
+    "notFound_account": "No encontramos tu cuenta.",
+    "notFound_profiles": "No encontramos tus perfiles.",
+    "notFound_results": "No encontramos resultados.",
+    "sessionExpired": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+    "server": "Nuestro servidor tiene problemas ahora mismo. Inténtalo de nuevo en un momento.",
+    "offline": "Parece que no tienes conexión. Compruébala e inténtalo de nuevo.",
+    "generic": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "text": "Esta página no existe o se ha movido."
+  },
+  "footer": {
+    "dmca": "Aviso DMCA",
+    "contact": "Contacto",
+    "copyright": "© {{year}} Tauruss. Todos los derechos reservados."
+  },
+  "nav": {
+    "main": "Navegación principal",
+    "home": "Inicio",
+    "movies": "Películas",
+    "tv": "Series",
+    "myList": "Mi lista",
+    "adminUsers": "Admin usuarios",
+    "adminMovies": "Admin títulos",
+    "search": "Buscar",
+    "searchPlaceholder": "Películas y series",
+    "searchLabel": "Buscar películas y series",
+    "seeAllResults": "Ver todos los resultados de «{{query}}»",
+    "share": "Compartir sitio",
+    "shareHint": "Compartir tauruss.top (Ctrl+D para añadir a marcadores)",
+    "shareText": "Echa un vistazo a Taurus",
+    "shareApp": "Compartir Tauruss",
+    "linkCopied": "¡Enlace copiado!",
+    "shared": "¡Compartido!",
+    "profileMenu": "Perfiles y cuenta",
+    "profiles": "Perfiles",
+    "noProfiles": "No hay perfiles",
+    "manageProfiles": "Administrar perfiles",
+    "install": "Instalar la app",
+    "installIos": "Toca el botón Compartir en Safari y luego «Añadir a pantalla de inicio».",
+    "account": "Ajustes de la cuenta",
+    "signOut": "Cerrar sesión",
+    "signIn": "Iniciar sesión"
+  }
+}

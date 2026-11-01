@@ -1,0 +1,43 @@
+{
+  "title": "Cuenta",
+  "memberSince": "Miembro desde el {{date}}",
+  "notYours": "No es tu cuenta",
+  "notYoursText": "Solo puedes administrar la cuenta con la que has iniciado sesión.",
+  "loadError": "No se pudo cargar tu cuenta",
+  "change": "Cambiar",
+  "email": {
+    "title": "Cambiar tu correo",
+    "intro": "Enviaremos un enlace de confirmación a la nueva dirección. Tu correo cambiará cuando lo abras.",
+    "current": "Correo actual",
+    "new": "Nuevo correo",
+    "placeholder": "nombre@ejemplo.com",
+    "send": "Enviar confirmación",
+    "invalid": "Escribe una dirección de correo válida.",
+    "same": "Este ya es tu correo.",
+    "sent": "Enlace de confirmación enviado a {{email}}"
+  },
+  "password": {
+    "title": "Cambiar tu contraseña",
+    "intro": "Enviaremos un enlace a <strong>{{email}}</strong> para elegir una nueva contraseña. El enlace solo funciona una vez.",
+    "send": "Enviar enlace",
+    "sent": "Enlace para restablecer enviado a {{email}}",
+    "failed": "No se pudo enviar el enlace. Inténtalo de nuevo."
+  },
+  "profiles": {
+    "title": "Perfiles",
+    "count_one": "{{count}} de {{max}}",
+    "count_many": "{{count}} de {{max}}",
+    "count_other": "{{count}} de {{max}}",
+    "edit": "Editar",
+    "addHint_one": "Uno por persona, hasta {{count}}",
+    "addHint_many": "Uno por persona, hasta {{count}}",
+    "addHint_other": "Uno por persona, hasta {{count}}"
+  },
+  "signOut": {
+    "label": "Cerrar sesión",
+    "title": "¿Cerrar sesión?",
+    "signedInAs": "Sesión iniciada como {{email}}",
+    "text": "Necesitarás tu correo y tu contraseña para volver a iniciar sesión en este dispositivo.",
+    "stay": "Mantener la sesión"
+  }
+}

@@ -5,11 +5,15 @@
 // size: number (px) or CSS length; page: centered on the whole screen; label: for screen readers
 // (and shown under the mark when showLabel).
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { EMBLEM_PATHS, EMBLEM_VIEWBOX } from './brandMark';
 
 const CYCLE_MS = 2600; // --loader-cycle in components.css
 
-export default function BrandLoader({ size = 72, label = 'Loading', showLabel = false, page = false, className = '' }) {
+export default function BrandLoader({ size = 72, label: labelProp, showLabel = false, page = false, className = '' }) {
+  // useSuspense false: this is also the fallback shown while a language's texts download
+  const { t, ready } = useTranslation('common', { useSuspense: false });
+  const label = labelProp || (ready ? t('loading') : 'Loading');
   const uid = React.useId().replace(/:/g, '');
   const width = typeof size === 'number' ? `${size}px` : size;
   // every part starts on the page clock: the drawing, the fill and the light stay in step, and

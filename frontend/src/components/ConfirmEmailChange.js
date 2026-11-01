@@ -3,12 +3,14 @@
 // Link formats: /confirm-email-change/:userId/:token or ?u=...&t=...
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { confirmEmailChange } from '../api/userApi';
 import { BrandLoader, Button } from '../design';
 import { AuthAlert, AuthLayout } from './auth/AuthLayout';
 
 export default function ConfirmEmailChange() {
   const navigate = useNavigate();
+  const { t } = useTranslation('auth');
   const { userId: userIdFromPath, token: tokenFromPath } = useParams();
   const [searchParams] = useSearchParams();
   const userId = userIdFromPath || searchParams.get('u') || searchParams.get('userId');
@@ -19,7 +21,7 @@ export default function ConfirmEmailChange() {
   useEffect(() => {
     let alive = true;
     if (!userId || !token) {
-      setState({ status: 'error', message: 'This confirmation link is incomplete. Open it again from the email.' });
+      setState({ status: 'error', message: t('emailChange.incomplete') });
       return undefined;
     }
     confirmEmailChange(userId, token)
@@ -27,18 +29,18 @@ export default function ConfirmEmailChange() {
       .catch((e) => {
         if (!alive) return;
         const reason = e?.response?.data?.error;
-        setState({ status: 'error', message: reason ? String(reason) : "We couldn't update your email. The link may have expired." });
+        setState({ status: 'error', message: reason ? String(reason) : t('emailChange.failed') });
       });
     return () => {
       alive = false;
     };
-  }, [userId, token]);
+  }, [userId, token]); // eslint-disable-line react-hooks/exhaustive-deps -- t: messages are picked once
 
   if (state.status === 'working') {
     return (
-      <AuthLayout title="Updating your email">
+      <AuthLayout title={t('emailChange.working')}>
         <div style={{ display: 'grid', placeItems: 'center', padding: 'var(--space-6) 0' }}>
-          <BrandLoader size="3.5rem" label="Updating your email" />
+          <BrandLoader size="3.5rem" label={t('emailChange.working')} />
         </div>
       </AuthLayout>
     );
@@ -46,13 +48,13 @@ export default function ConfirmEmailChange() {
 
   return (
     <AuthLayout
-      title={state.status === 'done' ? 'Email updated' : "Email not updated"}
-      subtitle={state.status === 'done' ? 'Sign in with your new email from now on.' : null}
+      title={state.status === 'done' ? t('emailChange.doneTitle') : t('emailChange.errorTitle')}
+      subtitle={state.status === 'done' ? t('emailChange.doneText') : null}
     >
       <div className="auth__form">
         {state.status === 'error' ? <AuthAlert>{state.message}</AuthAlert> : null}
         <Button variant="primary" size="lg" block onClick={() => navigate('/login', { replace: true })} data-tv-start="">
-          Go to sign in
+          {t('emailChange.goToSignIn')}
         </Button>
       </div>
     </AuthLayout>

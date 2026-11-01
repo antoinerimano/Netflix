@@ -4,6 +4,7 @@
 // failed save went unnoticed) and becomes the active profile.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { createProfile } from '../api/userApi';
 import ProfileForm, { EMPTY_PROFILE } from './profiles/ProfileForm';
 import { setActiveProfile } from '../utils/activeProfile';
@@ -11,6 +12,7 @@ import './profiles/profiles.css';
 
 const CreateProfile = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('profiles');
   const userId = localStorage.getItem('userId');
 
   const save = async (values) => {
@@ -26,12 +28,12 @@ const CreateProfile = () => {
       </header>
       <main className="profiles__main profiles__main--form">
         <div className="profiles__intro">
-          <p className="profiles__step">Step 2 of 2</p>
-          <h1 className="profiles__title">Create your profile</h1>
-          <p className="profiles__subtitle">You can add up to 4 profiles later, one for each person.</p>
+          <p className="profiles__step">{t('auth:step', { current: 2, total: 2 })}</p>
+          <h1 className="profiles__title">{t('create.title')}</h1>
+          <p className="profiles__subtitle">{t('create.subtitle', { count: 4 })}</p>
         </div>
         <div className="profiles__card">
-          <ProfileForm initial={{ ...EMPTY_PROFILE, user: userId }} submitLabel="Continue" onSubmit={save} />
+          <ProfileForm initial={{ ...EMPTY_PROFILE, user: userId }} submitLabel={t('actions.continue')} onSubmit={save} />
         </div>
       </main>
     </div>
