@@ -1,16 +1,20 @@
-Django>=5.0
-gunicorn>=21.2
-mysqlclient>=2.2
-django-environ
-django-cors-headers
-djangorestframework
-djangorestframework-simplejwt
-django-sslserver
-drf-nested-routers
-numpy
-yt-dlp
-requests
-lightgbm
-scikit-learn
-python-dotenv
-sentence-transformers
+# Pinned to the minor version the tests run on (CI installs exactly this file): patch releases
+# (security fixes) come in, a new major / minor only through a deliberate change + green CI.
+# Django 5.2 LTS (supported until April 2028). Django 6.x needs MySQL 8.4+, docker-compose runs 8.0.
+Django~=5.2.0
+gunicorn~=23.0
+mysqlclient~=2.2.4
+django-environ~=0.12.0
+django-cors-headers~=4.4
+djangorestframework~=3.15.2
+djangorestframework-simplejwt~=5.3.1
+django-sslserver~=0.22
+drf-nested-routers~=0.94.1
+numpy~=2.3.3
+# follows the video sites: keep it current
+yt-dlp>=2025.9.26
+requests~=2.32.3
+lightgbm~=4.6.0
+scikit-learn~=1.8.0
+python-dotenv~=1.1.1
+sentence-transformers~=5.2.0
