@@ -201,6 +201,10 @@ LANGUAGES = [
     ("it", "Italiano"),
     ("ja", "日本語"),
     ("zh-hans", "中文"),
+    ("hi", "हिन्दी"),
+    ("pt-br", "Português"),
+    ("ru", "Русский"),
+    ("bn", "বাংলা"),
 ]
 LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"

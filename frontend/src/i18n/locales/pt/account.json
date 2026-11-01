@@ -1,0 +1,43 @@
+{
+  "title": "Conta",
+  "memberSince": "Membro desde {{date}}",
+  "notYours": "Esta não é a sua conta",
+  "notYoursText": "Você só pode gerenciar a conta com a qual entrou.",
+  "loadError": "Não foi possível carregar sua conta",
+  "change": "Alterar",
+  "email": {
+    "title": "Alterar seu e-mail",
+    "intro": "Vamos enviar um link de confirmação para o novo endereço. Seu e-mail muda assim que você abrir o link.",
+    "current": "E-mail atual",
+    "new": "Novo e-mail",
+    "placeholder": "nome@exemplo.com",
+    "send": "Enviar confirmação",
+    "invalid": "Digite um endereço de e-mail válido.",
+    "same": "Este já é o seu e-mail.",
+    "sent": "Link de confirmação enviado para {{email}}"
+  },
+  "password": {
+    "title": "Alterar sua senha",
+    "intro": "Vamos enviar para <strong>{{email}}</strong> um link para escolher uma nova senha. O link funciona uma única vez.",
+    "send": "Enviar link de redefinição",
+    "sent": "Link de redefinição enviado para {{email}}",
+    "failed": "Não foi possível enviar o link. Tente de novo."
+  },
+  "profiles": {
+    "title": "Perfis",
+    "count_one": "{{count}} de {{max}}",
+    "count_many": "{{count}} de {{max}}",
+    "count_other": "{{count}} de {{max}}",
+    "edit": "Editar",
+    "addHint_one": "Um para cada pessoa, até {{count}}",
+    "addHint_many": "Um para cada pessoa, até {{count}}",
+    "addHint_other": "Um para cada pessoa, até {{count}}"
+  },
+  "signOut": {
+    "label": "Sair",
+    "title": "Sair?",
+    "signedInAs": "Conectado como {{email}}",
+    "text": "Você vai precisar do seu e-mail e da sua senha para entrar de novo neste aparelho.",
+    "stay": "Continuar conectado"
+  }
+}

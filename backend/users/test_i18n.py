@@ -16,10 +16,27 @@ class LanguageCodeTests(TestCase):
         self.assertEqual(to_app_language("jp"), "ja")
         self.assertEqual(to_app_language("zh-Hans"), "zh")
         self.assertEqual(to_app_language("ZH_tw"), "zh")
-        self.assertIsNone(to_app_language("pt"))
+        self.assertIsNone(to_app_language("ko"))
+        self.assertEqual(to_app_language("pt-BR"), "pt")
+        self.assertEqual(to_django_language("pt"), "pt-br")
         self.assertEqual(to_app_language("", "en"), "en")
         self.assertEqual(to_django_language("zh"), "zh-hans")
         self.assertEqual(to_django_language("xx"), "en")
+
+
+class EveryLanguageTests(TestCase):
+    def test_every_app_language_has_its_messages(self):
+        # a language added to APP_LANGUAGES without its locale/<lang>/django.po (compiled) answers
+        # in English: caught here
+        from django.utils.translation import gettext
+        from .i18n import APP_LANGUAGES, language_of
+        for lang in APP_LANGUAGES:
+            with language_of(lang):
+                text = gettext("Invalid credentials.")
+            if lang == "en":
+                self.assertEqual(text, "Invalid credentials.")
+            else:
+                self.assertNotEqual(text, "Invalid credentials.", f"{lang}: no translation")
 
 
 class CatalogTextsTests(TestCase):

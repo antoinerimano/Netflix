@@ -1,0 +1,50 @@
+{
+  "loadFailed": "এই টাইটেল লোড করা যায়নি।",
+  "cantPlay": "এই টাইটেল চালানো যাচ্ছে না",
+  "seasonEpisode": "সিজন {{season}} · পর্ব {{episode}}",
+  "back": "ফিরে যান",
+  "nextEpisode": "পরের পর্ব",
+  "fullscreen": "ফুল স্ক্রিন",
+  "fullscreenHint": "ফুল স্ক্রিন (F)",
+  "player": {
+    "label": "প্লেয়ার",
+    "tileLabel": "প্লেয়ার: ফুল স্ক্রিনে নিয়ন্ত্রণ করতে OK চাপুন",
+    "chooseTitle": "উৎস বেছে নিন",
+    "chooseText": "নিচ থেকে একটি উৎস বেছে নিন, বা নিজের লিংক পেস্ট করুন।",
+    "loadingSource": "উৎস লোড হচ্ছে…",
+    "loadingNamed": "{{source}} লোড হচ্ছে",
+    "notPlayable": "এই লিংক চালানো যাবে বলে মনে হচ্ছে না। অন্য উৎস চেষ্টা করুন।",
+    "noFullscreen": "এখানে ফুল স্ক্রিন পাওয়া যাচ্ছে না। প্লেয়ারের নিজস্ব বোতাম ব্যবহার করুন, বা অন্য উৎস চেষ্টা করুন।"
+  },
+  "keys": {
+    "control": "<key>OK</key> প্লেয়ার নিয়ন্ত্রণ",
+    "playPause": "<key>OK</key> / <key>স্পেস</key> চালান · থামান",
+    "seek": "<key>◀</key> <key>▶</key> পিছনে · সামনে",
+    "exit": "<key>ফিরে</key> ফুল স্ক্রিন থেকে বের হন",
+    "volume": "<key>▲</key> <key>▼</key> শব্দ"
+  },
+  "sources": {
+    "label": "উৎস",
+    "title": "উৎস",
+    "help": "ভিডিও চালু হচ্ছে না? অন্য উৎস চেষ্টা করুন।",
+    "choose": "উৎস বেছে নিন",
+    "loadFailed": "উৎস লোড করা যায়নি।",
+    "switched": "{{from}} লোড হয়নি, {{to}}-এ বদলানো হয়েছে।",
+    "notPlaying": "{{source}}-এ চলছে না?",
+    "try": "{{source}} চেষ্টা করুন",
+    "down": "অফলাইন?",
+    "downHint": "আমাদের শেষ পরীক্ষায় এই উৎসে পৌঁছানো যায়নি",
+    "custom": "আপনার লিংক",
+    "customLabel": "আপনার ভিডিও লিংক",
+    "customPlaceholder": "ভিডিও বা প্লেয়ারের লিংক পেস্ট করুন (https://…)"
+  },
+  "info": {
+    "about": "বিবরণ",
+    "seasonEpisodes": "সিজন {{number}}-এর পর্ব",
+    "episodeNamed": "পর্ব {{number}}: {{name}}",
+    "playing": "চলছে",
+    "playingNow": "চলছে",
+    "soon": "শিগগির",
+    "comingSoon": "শিগগির আসছে"
+  }
+}

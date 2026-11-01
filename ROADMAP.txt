@@ -129,7 +129,8 @@ Status: [ ] todo   [~] in progress   [x] done
 
 5. LANGUAGES
 ------------
-[x] 5.1 The app in the user's language: English, French, Spanish, German, Italian, Japanese, Chinese
+[x] 5.1 The app in the user's language: English, French, Spanish, German, Italian, Japanese, Chinese,
+        Hindi, Portuguese (Brazil), Russian, Bengali (Arabic / Urdu next: they need right-to-left layouts)
         Frontend: i18next / react-i18next, one JSON file per language and area (src/i18n/locales),
         English bundled and every other language downloaded on first use (its own chunks), CLDR
         plurals, numbers / dates / durations / language and country names through Intl, <html

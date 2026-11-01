@@ -14,15 +14,16 @@ from contextlib import contextmanager
 from django.conf import settings
 from django.utils import translation
 
-APP_LANGUAGES = ("en", "fr", "es", "de", "it", "ja", "zh")
+APP_LANGUAGES = ("en", "fr", "es", "de", "it", "ja", "zh", "hi", "pt", "ru", "bn")
 DEFAULT_LANGUAGE = "en"
 
 # older profiles / other conventions -> ours
-_ALIASES = {"jp": "ja", "cn": "zh", "zh-hans": "zh", "zh-cn": "zh", "zh-sg": "zh", "zh-hant": "zh", "zh-tw": "zh", "zh-hk": "zh"}
+_ALIASES = {"jp": "ja", "pt-br": "pt", "pt-pt": "pt", "cn": "zh", "zh-hans": "zh", "zh-cn": "zh", "zh-sg": "zh", "zh-hant": "zh", "zh-tw": "zh", "zh-hk": "zh"}
 # ours -> Django's (settings.LANGUAGES / locale/<dir>)
-_DJANGO_CODES = {"zh": "zh-hans"}
+_DJANGO_CODES = {"zh": "zh-hans", "pt": "pt-br"}  # Brazilian Portuguese: most speakers
 # ours -> TMDB's language parameter / translation iso codes
-TMDB_CODES = {"en": "en-US", "fr": "fr-FR", "es": "es-ES", "de": "de-DE", "it": "it-IT", "ja": "ja-JP", "zh": "zh-CN"}
+TMDB_CODES = {"en": "en-US", "fr": "fr-FR", "es": "es-ES", "de": "de-DE", "it": "it-IT", "ja": "ja-JP", "zh": "zh-CN",
+              "hi": "hi-IN", "pt": "pt-BR", "ru": "ru-RU", "bn": "bn-BD"}
 
 
 def to_app_language(code, default=None):

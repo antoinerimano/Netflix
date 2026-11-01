@@ -1,0 +1,229 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-01 17:58-0500\n"
+"Language: hi\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\reco\management\commands\notify_new_episodes.py:98
+#, python-format
+msgid "New episode of %(show)s"
+msgstr "%(show)s का नया एपिसोड"
+
+#: .\reco\management\commands\notify_new_episodes.py:101
+#, python-format
+msgid "%(count)d new episode of shows you follow"
+msgid_plural "%(count)d new episodes of shows you follow"
+msgstr[0] "आपके फ़ॉलो किए शो का %(count)d नया एपिसोड"
+msgstr[1] "आपके फ़ॉलो किए शो के %(count)d नए एपिसोड"
+
+#: .\users\templates\emails\_button.html:11
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "अगर बटन काम न करे, तो यह लिंक अपने ब्राउज़र में कॉपी करें:"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "नमस्ते %(name)s,"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+msgid "Hello,"
+msgstr "नमस्ते,"
+
+#: .\users\templates\emails\base.html:27
+#: .\users\templates\emails\email_change.txt:12
+#: .\users\templates\emails\new_episodes.txt:12
+#: .\users\templates\emails\password_reset.txt:12
+#, python-format
+msgid "This email was sent by %(company)s. For help, contact"
+msgstr "यह ईमेल %(company)s ने भेजा है। मदद के लिए संपर्क करें"
+
+#: .\users\templates\emails\email_change.html:3
+#: .\users\templates\emails\email_change.html:4 .\users\views.py:266
+msgid "Confirm your new email address"
+msgstr "अपने नए ईमेल पते की पुष्टि करें"
+
+#: .\users\templates\emails\email_change.html:6
+#, python-format
+msgid ""
+"We received a request to change your account email to <strong>%(new_email)s</"
+"strong>. Click the button below to confirm:"
+msgstr ""
+"हमें आपके खाते का ईमेल <strong>%(new_email)s</strong> में बदलने का अनुरोध मिला है। "
+"पुष्टि के लिए नीचे दिए बटन पर क्लिक करें:"
+
+#: .\users\templates\emails\email_change.html:7
+msgid "Confirm email change"
+msgstr "ईमेल बदलने की पुष्टि करें"
+
+#: .\users\templates\emails\email_change.html:9
+#: .\users\templates\emails\email_change.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: nothing will change."
+msgstr "अगर आपने यह अनुरोध नहीं किया, तो इस ईमेल को अनदेखा करें: कुछ नहीं बदलेगा।"
+
+#: .\users\templates\emails\email_change.txt:4
+#, python-format
+msgid "We received a request to change your account email to %(new_email)s."
+msgstr "हमें आपके खाते का ईमेल %(new_email)s में बदलने का अनुरोध मिला है।"
+
+#: .\users\templates\emails\email_change.txt:5
+msgid "Open this link to confirm:"
+msgstr "पुष्टि के लिए यह लिंक खोलें:"
+
+#: .\users\templates\emails\new_episodes.html:3
+#: .\users\templates\emails\new_episodes.html:4
+msgid "New episodes are out"
+msgstr "नए एपिसोड आ गए हैं"
+
+#: .\users\templates\emails\new_episodes.html:6
+#: .\users\templates\emails\new_episodes.txt:4
+#, python-format
+msgid "Shows you follow on %(company)s have new episodes:"
+msgstr "%(company)s पर आपके फ़ॉलो किए शो में नए एपिसोड हैं:"
+
+#: .\users\templates\emails\new_episodes.html:12
+#: .\users\templates\emails\new_episodes.txt:6
+#, python-format
+msgid "Season %(season)s, episode %(episode)s"
+msgstr "सीज़न %(season)s, एपिसोड %(episode)s"
+
+#: .\users\templates\emails\new_episodes.html:16
+msgid "Watch"
+msgstr "देखें"
+
+#: .\users\templates\emails\new_episodes.html:22
+#: .\users\templates\emails\new_episodes.txt:9
+msgid ""
+"You get this email because you clicked “Notify me” on these shows. Click it "
+"again on a show's page to stop."
+msgstr ""
+"आपको यह ईमेल इसलिए मिला क्योंकि आपने इन शो पर “सूचना दें” चुना था। बंद करने के लिए शो के "
+"पेज पर इसे फिर से दबाएँ।"
+
+#: .\users\templates\emails\password_reset.html:3 .\users\views.py:440
+msgid "Reset your password"
+msgstr "अपना पासवर्ड रीसेट करें"
+
+#: .\users\templates\emails\password_reset.html:4
+msgid "Password reset request"
+msgstr "पासवर्ड रीसेट अनुरोध"
+
+#: .\users\templates\emails\password_reset.html:6
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account. "
+"Click the button below to choose a new one:"
+msgstr ""
+"हमें आपके %(company)s खाते का पासवर्ड रीसेट करने का अनुरोध मिला है। नया पासवर्ड चुनने के "
+"लिए नीचे दिए बटन पर क्लिक करें:"
+
+#: .\users\templates\emails\password_reset.html:7
+msgid "Reset password"
+msgstr "पासवर्ड रीसेट करें"
+
+#: .\users\templates\emails\password_reset.html:9
+#: .\users\templates\emails\password_reset.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: your account is safe."
+msgstr "अगर आपने यह अनुरोध नहीं किया, तो इस ईमेल को अनदेखा करें: आपका खाता सुरक्षित है।"
+
+#: .\users\templates\emails\password_reset.txt:4
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account."
+msgstr "हमें आपके %(company)s खाते का पासवर्ड रीसेट करने का अनुरोध मिला है।"
+
+#: .\users\templates\emails\password_reset.txt:5
+msgid "Open this link to choose a new one:"
+msgstr "नया पासवर्ड चुनने के लिए यह लिंक खोलें:"
+
+#: .\users\views.py:139 .\users\views.py:425
+msgid "Email is required."
+msgstr "ईमेल ज़रूरी है।"
+
+#: .\users\views.py:141
+msgid "Password is required."
+msgstr "पासवर्ड ज़रूरी है।"
+
+#: .\users\views.py:143
+msgid "This email is already registered."
+msgstr "यह ईमेल पहले से पंजीकृत है।"
+
+#: .\users\views.py:174
+#, python-format
+msgid "You already have an active %(plan)s subscription."
+msgstr "आपकी पहले से एक सक्रिय %(plan)s सदस्यता है।"
+
+#: .\users\views.py:208
+#, python-format
+msgid "%(plan)s subscription created!"
+msgstr "%(plan)s सदस्यता बन गई!"
+
+#: .\users\views.py:222
+msgid "Invalid credentials."
+msgstr "गलत लॉगिन जानकारी।"
+
+#: .\users\views.py:254
+msgid "New email is required."
+msgstr "नया ईमेल ज़रूरी है।"
+
+#: .\users\views.py:257 .\users\views.py:295
+msgid "This email is already in use."
+msgstr "यह ईमेल पहले से इस्तेमाल में है।"
+
+#: .\users\views.py:272
+msgid "Confirmation email sent."
+msgstr "पुष्टि ईमेल भेज दिया गया।"
+
+#: .\users\views.py:284
+msgid "This confirmation link is incomplete."
+msgstr "यह पुष्टि लिंक अधूरा है।"
+
+#: .\users\views.py:289
+msgid "This confirmation link has expired."
+msgstr "यह पुष्टि लिंक समाप्त हो गया है।"
+
+#: .\users\views.py:291
+msgid "This confirmation link is not valid."
+msgstr "यह पुष्टि लिंक मान्य नहीं है।"
+
+#: .\users\views.py:299
+msgid "Email updated."
+msgstr "ईमेल अपडेट हो गया।"
+
+#: .\users\views.py:343
+msgid "This subscription is already canceled."
+msgstr "यह सदस्यता पहले ही रद्द हो चुकी है।"
+
+#: .\users\views.py:410
+msgid "Refresh token is required."
+msgstr "रीफ़्रेश टोकन ज़रूरी है।"
+
+#: .\users\views.py:429
+msgid "If an account exists for this email, a reset link has been sent."
+msgstr "अगर इस ईमेल का कोई खाता है, तो रीसेट लिंक भेज दिया गया है।"
+
+#: .\users\views.py:453
+msgid "All fields are required."
+msgstr "सभी फ़ील्ड ज़रूरी हैं।"
+
+#: .\users\views.py:459
+msgid "This reset link is not valid."
+msgstr "यह रीसेट लिंक मान्य नहीं है।"
+
+#: .\users\views.py:462
+msgid "This reset link has expired or was already used."
+msgstr "यह रीसेट लिंक समाप्त हो गया है या पहले इस्तेमाल हो चुका है।"
+
+#: .\users\views.py:471
+msgid "Your password has been changed."
+msgstr "आपका पासवर्ड बदल गया है।"

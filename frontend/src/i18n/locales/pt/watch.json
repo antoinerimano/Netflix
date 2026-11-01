@@ -1,0 +1,50 @@
+{
+  "loadFailed": "Não foi possível carregar este título.",
+  "cantPlay": "Não é possível reproduzir este título",
+  "seasonEpisode": "Temporada {{season}} · Episódio {{episode}}",
+  "back": "Voltar",
+  "nextEpisode": "Próximo episódio",
+  "fullscreen": "Tela cheia",
+  "fullscreenHint": "Tela cheia (F)",
+  "player": {
+    "label": "Player",
+    "tileLabel": "Player: aperte OK para controlá-lo em tela cheia",
+    "chooseTitle": "Escolha uma fonte",
+    "chooseText": "Escolha uma fonte abaixo ou cole seu próprio link.",
+    "loadingSource": "Carregando a fonte…",
+    "loadingNamed": "Carregando {{source}}",
+    "notPlayable": "Este link não parece reproduzível. Tente outra fonte.",
+    "noFullscreen": "A tela cheia não está disponível aqui. Use os controles do próprio player ou tente outra fonte."
+  },
+  "keys": {
+    "control": "<key>OK</key> Controlar o player",
+    "playPause": "<key>OK</key> / <key>Espaço</key> Reproduzir · Pausar",
+    "seek": "<key>◀</key> <key>▶</key> Voltar · Avançar",
+    "exit": "<key>Voltar</key> Sair da tela cheia",
+    "volume": "<key>▲</key> <key>▼</key> Volume"
+  },
+  "sources": {
+    "label": "Fontes",
+    "title": "Fonte",
+    "help": "O vídeo não começa? Tente outra fonte.",
+    "choose": "Escolher uma fonte",
+    "loadFailed": "Não foi possível carregar as fontes.",
+    "switched": "{{from}} não carregou, mudamos para {{to}}.",
+    "notPlaying": "Não está tocando no {{source}}?",
+    "try": "Tentar {{source}}",
+    "down": "fora do ar?",
+    "downHint": "Nossa última verificação não conseguiu acessar esta fonte",
+    "custom": "Seu link",
+    "customLabel": "Seu link de vídeo",
+    "customPlaceholder": "Cole um link de vídeo ou de player (https://…)"
+  },
+  "info": {
+    "about": "Sobre",
+    "seasonEpisodes": "Episódios da temporada {{number}}",
+    "episodeNamed": "Episódio {{number}}: {{name}}",
+    "playing": "Reproduzindo",
+    "playingNow": "reproduzindo",
+    "soon": "Em breve",
+    "comingSoon": "em breve"
+  }
+}

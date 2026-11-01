@@ -30,6 +30,10 @@ export const SUPPORTED_LANGUAGES = {
   it: 'Italiano',
   ja: '日本語',
   zh: '中文',
+  hi: 'हिन्दी',
+  pt: 'Português',
+  ru: 'Русский',
+  bn: 'বাংলা',
 };
 export const LANGUAGE_CODES = Object.keys(SUPPORTED_LANGUAGES);
 export const DEFAULT_LANGUAGE = 'en';
