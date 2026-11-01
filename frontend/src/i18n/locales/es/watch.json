@@ -1,0 +1,50 @@
+{
+  "loadFailed": "No se pudo cargar este título.",
+  "cantPlay": "No se puede reproducir este título",
+  "seasonEpisode": "Temporada {{season}} · Episodio {{episode}}",
+  "back": "Volver",
+  "nextEpisode": "Siguiente episodio",
+  "fullscreen": "Pantalla completa",
+  "fullscreenHint": "Pantalla completa (F)",
+  "player": {
+    "label": "Reproductor",
+    "tileLabel": "Reproductor: pulsa OK para controlarlo a pantalla completa",
+    "chooseTitle": "Elige una fuente",
+    "chooseText": "Elige una fuente abajo o pega tu propio enlace.",
+    "loadingSource": "Cargando la fuente…",
+    "loadingNamed": "Cargando {{source}}",
+    "notPlayable": "Este enlace no parece reproducible. Prueba otra fuente.",
+    "noFullscreen": "La pantalla completa no está disponible aquí. Usa los controles del reproductor o prueba otra fuente."
+  },
+  "keys": {
+    "control": "<key>OK</key> Controlar el reproductor",
+    "playPause": "<key>OK</key> / <key>Espacio</key> Reproducir · Pausa",
+    "seek": "<key>◀</key> <key>▶</key> Retroceder · Avanzar",
+    "exit": "<key>Atrás</key> Salir de pantalla completa",
+    "volume": "<key>▲</key> <key>▼</key> Volumen"
+  },
+  "sources": {
+    "label": "Fuentes",
+    "title": "Fuente",
+    "help": "¿El vídeo no empieza? Prueba otra fuente.",
+    "choose": "Elegir una fuente",
+    "loadFailed": "No se pudieron cargar las fuentes.",
+    "switched": "{{from}} no cargó, se cambió a {{to}}.",
+    "notPlaying": "¿No se reproduce en {{source}}?",
+    "try": "Probar {{source}}",
+    "down": "¿sin conexión?",
+    "downHint": "Nuestra última comprobación no pudo conectar con esta fuente",
+    "custom": "Tu enlace",
+    "customLabel": "Tu enlace de vídeo",
+    "customPlaceholder": "Pega un enlace de vídeo o de reproductor (https://…)"
+  },
+  "info": {
+    "about": "Información",
+    "seasonEpisodes": "Episodios de la temporada {{number}}",
+    "episodeNamed": "Episodio {{number}}: {{name}}",
+    "playing": "Reproduciendo",
+    "playingNow": "reproduciendo",
+    "soon": "Pronto",
+    "comingSoon": "próximamente"
+  }
+}

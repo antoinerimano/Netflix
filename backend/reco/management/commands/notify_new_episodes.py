@@ -7,7 +7,11 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from reco.models import Notification, ShowFollow
+from django.utils.translation import gettext, ngettext
+
 from users.emails import send_templated_email
+from users.i18n import language_of, to_app_language
+from users.localize import title_names
 from users.models import Episode
 from users.jobs import tracked
 
@@ -72,6 +76,9 @@ class Command(BaseCommand):
         sent = 0
         for user, notes in by_user.items():
             if user.email and user.is_active:
+                # the account's email in the language of the profile that follows these shows
+                lang = to_app_language(notes[0].profile.language_preference, "en")
+                names = title_names([n.title_id for n in notes], lang)
                 episodes = []
                 seen = set()  # two profiles of one account following the same show: list it once
                 for n in notes:
@@ -80,16 +87,23 @@ class Command(BaseCommand):
                         continue
                     seen.add(key)
                     episodes.append({
-                        "show": n.title.title,
+                        "show": names.get(n.title_id) or n.title.title,
                         "season": n.season_number,
                         "episode": n.episode_number,
                         "link": f"{settings.FRONTEND_URL.rstrip('/')}/watch/{n.title_id}"
                                 f"?season={n.season_number}&episode={n.episode_number}",
                     })
-                subject = (f"New episode of {episodes[0]['show']}" if len(episodes) == 1
-                           else f"{len(episodes)} new episodes of shows you follow")
+                with language_of(lang):
+                    if len(episodes) == 1:
+                        subject = gettext("New episode of %(show)s") % {"show": episodes[0]["show"]}
+                    else:
+                        subject = ngettext(
+                            "%(count)d new episode of shows you follow",
+                            "%(count)d new episodes of shows you follow",
+                            len(episodes),
+                        ) % {"count": len(episodes)}
                 try:
-                    send_templated_email(subject, "new_episodes", {"user": user, "episodes": episodes}, [user.email])
+                    send_templated_email(subject, "new_episodes", {"user": user, "episodes": episodes}, [user.email], language=lang)
                     sent += 1
                 except Exception as exc:  # keep going; these stay pending for the next run
                     self.stderr.write(f"email to {user.email} failed: {exc}")

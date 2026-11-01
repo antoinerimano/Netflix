@@ -374,3 +374,38 @@ class JobRun(models.Model):
     @property
     def duration(self):
         return (self.finished_at - self.started_at) if self.finished_at else None
+
+
+# ============ Catalog translations (users/localize.py, sync_tmdb_translations) ============
+# The Title / Episode rows hold the English texts (TMDB en-US). Other languages live here, one
+# row per (item, language), filled from TMDB's translations; the API swaps them in for the
+# language of the request. A missing row (or an empty field) falls back to English.
+
+class TitleTranslation(models.Model):
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="translations")
+    language = models.CharField(max_length=8)  # app code: fr, es, de, it, ja, zh
+    name = models.CharField(max_length=255, blank=True, default="")  # movie title / show name
+    overview = models.TextField(blank=True, default="")
+    tagline = models.CharField(max_length=255, blank=True, default="")
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["title", "language"], name="uniq_title_translation")]
+        indexes = [models.Index(fields=["language", "name"])]  # search by translated name
+
+    def __str__(self):
+        return f"{self.title_id} [{self.language}] {self.name}"
+
+
+class EpisodeTranslation(models.Model):
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE, related_name="translations")
+    language = models.CharField(max_length=8)
+    name = models.CharField(max_length=300, blank=True, default="")
+    overview = models.TextField(blank=True, default="")
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["episode", "language"], name="uniq_episode_translation")]
+
+    def __str__(self):
+        return f"{self.episode_id} [{self.language}] {self.name}"

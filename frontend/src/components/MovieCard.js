@@ -4,6 +4,8 @@
 // onRemove (My List): adds "Remove from My List" to the options.
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { formatNumber } from '../i18n/format';
 import { logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { tmdbImage, tmdbSrcSet, IMG } from '../utils/tmdbImage';
 import { MoreIcon, StarIcon } from '../design/icons';
@@ -16,6 +18,7 @@ const yearOf = (t) =>
 
 // note: an extra line under the title (actor page: the character played)
 const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note = '' }) => {
+  const { t, i18n } = useTranslation('catalog');
   const navigate = useNavigate();
   const { open, setOpen, cardProps, guardClick } = useCardOptions();
   const [artFailed, setArtFailed] = useState(false);
@@ -25,6 +28,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note
   const year = yearOf(movie);
   const rating = Number(movie?.rating ?? movie?.vote_average);
   const art = movie.poster || '';
+  const score = Number.isFinite(rating) && rating > 0 ? formatNumber(rating, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, i18n.resolvedLanguage) : '';
 
   const logClick = () => {
     if (!movie?.id) return;
@@ -48,7 +52,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note
         className="poster-card"
         tabIndex={0}
         role="button"
-        aria-label={[movie.title, year, Number.isFinite(rating) && rating > 0 ? `rated ${rating.toFixed(1)}` : '']
+        aria-label={[movie.title, year, score ? t('card.rated', { value: score }) : '']
           .filter(Boolean)
           .join(', ')}
         onClick={guardClick(handleRootClick)}
@@ -72,8 +76,8 @@ const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note
             type="button"
             tabIndex={-1}
             className="poster-card__more"
-            aria-label={`Options for ${movie.title}`}
-            title="Options"
+            aria-label={t('options.for', { title: movie.title })}
+            title={t('options.title')}
             onClick={(e) => {
               e.stopPropagation();
               setOpen(true);
@@ -89,7 +93,7 @@ const MovieCard = ({ movie, onRemove, onClick, analytics, priority = false, note
             {Number.isFinite(rating) && rating > 0 ? (
               <span className="poster-card__rating">
                 <StarIcon />
-                {rating.toFixed(1)}
+                {score}
               </span>
             ) : null}
           </span>

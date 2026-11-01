@@ -10,6 +10,7 @@ import re
 from django.db.models import Q
 from django.db import models
 from django.conf import settings
+from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -35,6 +36,8 @@ from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .maturity import allowed_titles_q, request_profile
 from .emails import send_templated_email
 from .search import search_titles
+from .i18n import current_language
+from .localize import title_names
 from .serializers import (
     UserSerializer, SubscriptionSerializer,
     ProfileSerializer, PaymentHistorySerializer, TitleSerializer,
@@ -133,16 +136,17 @@ class UserViewSet(viewsets.ModelViewSet):
         password = data.get('password')
 
         if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': _('Email is required.'), 'code': 'email_required'}, status=status.HTTP_400_BAD_REQUEST)
         if not password:
-            return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': _('Password is required.'), 'code': 'password_required'}, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(email=email).exists():
-            return Response({'error': 'This email is already registered'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': _('This email is already registered.'), 'code': 'email_taken'}, status=status.HTTP_400_BAD_REQUEST)
         # same rules as a password reset (settings.AUTH_PASSWORD_VALIDATORS)
         try:
             validate_password(password, User(email=email))
         except ValidationError as e:
-            return Response({'error': ' '.join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+            # Django's validators answer in the request's language already
+            return Response({'error': ' '.join(e.messages), 'code': 'password_invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -167,7 +171,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Optional policy: prevent duplicate active for same type
         if Subscription.objects.filter(user=user, plan_type=plan_type, status="Active").exists():
-            return Response({'error': f'You already have an active {plan_type} subscription.'},
+            return Response({'error': _('You already have an active %(plan)s subscription.') % {'plan': plan_type}},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Create subscription
@@ -201,7 +205,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         return Response(
-            {'message': f'{plan_type} subscription created!', 'subscription_id': sub.id},
+            {'message': _('%(plan)s subscription created!') % {'plan': plan_type}, 'subscription_id': sub.id},
             status=status.HTTP_201_CREATED
         )
 
@@ -215,7 +219,7 @@ class UserViewSet(viewsets.ModelViewSet):
         # so the endpoint can't be used to find out who has an account
         user = User.objects.filter(email=email).first()
         if not user or not user.is_active or not check_password(password, user.password):
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Invalid credentials."), "code": "invalid_credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         user.last_login = timezone.now()
         user.save(update_fields=["last_login"])    
@@ -247,10 +251,10 @@ class UserViewSet(viewsets.ModelViewSet):
         new_email = request.data.get("new_email")
 
         if not new_email:
-            return Response({"error": "New email is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("New email is required."), "code": "email_required"}, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(email=new_email).exists():
-            return Response({"error": "Email already in use"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("This email is already in use."), "code": "email_taken"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Generate a signed token link
        
@@ -259,13 +263,13 @@ class UserViewSet(viewsets.ModelViewSet):
         confirm_url = f"{settings.FRONTEND_URL}/confirm-email-change/{user.id}/{token}"
 
         send_templated_email(
-            "Confirm your new email address",
+            _("Confirm your new email address"),
             "email_change",
             {"user": user, "new_email": new_email, "confirm_url": confirm_url},
             [new_email],
         )
 
-        return Response({"message": "Confirmation email sent"}, status=status.HTTP_200_OK)
+        return Response({"message": _("Confirmation email sent.")}, status=status.HTTP_200_OK)
 
     @action(
     detail=True,
@@ -277,22 +281,22 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, id=id)  # lookup by UUID, not via self.get_object()
         token = (request.data.get("token") or "").strip()
         if not token:
-            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("This confirmation link is incomplete."), "code": "invalid_link"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             new_email = signer.unsign(token, max_age=60*60*24)  # 24h validity
         except SignatureExpired:
-            return Response({"error": "Token expired"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("This confirmation link has expired."), "code": "link_expired"}, status=status.HTTP_400_BAD_REQUEST)
         except BadSignature:
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("This confirmation link is not valid."), "code": "invalid_link"}, status=status.HTTP_400_BAD_REQUEST)
 
         # prevent collisions
         if User.objects.filter(email=new_email).exclude(id=user.id).exists():
-            return Response({"error": "Email already taken"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("This email is already in use."), "code": "email_taken"}, status=status.HTTP_400_BAD_REQUEST)
 
         user.email = new_email
         user.save(update_fields=["email"])
-        return Response({"message": "Email updated successfully"}, status=status.HTTP_200_OK)    
+        return Response({"message": _("Email updated.")}, status=status.HTTP_200_OK)    
 
 
 # ------------------ Subscriptions ------------------
@@ -336,7 +340,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     def cancel(self, request, user_id=None, pk=None):
         sub = self.get_object()
         if sub.status == 'Canceled':
-            return Response({"error": "Subscription already canceled"}, status=400)
+            return Response({"error": _("This subscription is already canceled.")}, status=400)
         sub.status = 'Canceled'
         sub.renewal_date = timezone.now()
         sub.save()
@@ -403,7 +407,7 @@ class LogoutView(APIView):
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Refresh token is required.")}, status=status.HTTP_400_BAD_REQUEST)
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
@@ -418,11 +422,11 @@ class LogoutView(APIView):
 def request_password_reset(request):
     email = request.data.get('email')
     if not email:
-        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': _('Email is required.'), 'code': 'email_required'}, status=status.HTTP_400_BAD_REQUEST)
 
     # always answer the same way so the endpoint doesn't reveal which emails exist
     sent_response = Response(
-        {'message': 'If an account exists for this email, a reset link has been sent'},
+        {'message': _('If an account exists for this email, a reset link has been sent.')},
         status=status.HTTP_200_OK,
     )
     user = User.objects.filter(email=email, is_active=True).first()
@@ -433,7 +437,7 @@ def request_password_reset(request):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
-    send_templated_email("Reset your password", "password_reset", {"user": user, "reset_link": reset_link}, [email])
+    send_templated_email(_("Reset your password"), "password_reset", {"user": user, "reset_link": reset_link}, [email])
     return sent_response
 
 
@@ -446,25 +450,25 @@ def confirm_password_reset(request):
     new_password = request.data.get('new_password')
 
     if not uidb64 or not token or not new_password:
-        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': _('All fields are required.')}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (User.DoesNotExist, ValueError):
-        return Response({'error': 'Invalid reset link'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': _('This reset link is not valid.'), 'code': 'invalid_link'}, status=status.HTTP_400_BAD_REQUEST)
 
     if not default_token_generator.check_token(user, token):
-        return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': _('This reset link has expired or was already used.'), 'code': 'invalid_link'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         validate_password(new_password, user)
     except ValidationError as e:
-        return Response({'error': ' '.join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': ' '.join(e.messages), 'code': 'password_invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
     user.save()
-    return Response({'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+    return Response({'message': _('Your password has been changed.')}, status=status.HTTP_200_OK)
 
 
 # ------------------ Movies/TV content ------------------
@@ -640,10 +644,20 @@ class TitleViewSet(viewsets.ModelViewSet):
         if not q:
             return Response([])
 
-        results = search_titles(q, profile=request_profile(request), kind=t, limit=limit)
-        titles = [title for title, _ in results]
+        lang = current_language()
+        results = search_titles(q, profile=request_profile(request), kind=t, limit=limit, language=lang)
+        titles = [title for title, _r, _k in results]
         data = TitleListSerializer(titles, many=True, context=self.get_serializer_context()).data
-        return Response([{**item, "match": reason} for item, (_, reason) in zip(data, results)])
+        # "match": English sentence (older clients); "match_key": the reason as data, worded by the
+        # app in its language. A title named in it ("like X") in the request's language.
+        named = {k["title_id"] for _t, _r, k in results if k and k.get("title_id")}
+        names = title_names(named, lang)
+        out = []
+        for item, (_t, reason, key) in zip(data, results):
+            if key and key.get("title_id") in names:
+                key = {**key, "title": names[key["title_id"]]}
+            out.append({**item, "match": reason, "match_key": key})
+        return Response(out)
     
 class SeasonViewSet(viewsets.ModelViewSet):
     serializer_class = SeasonSerializer

@@ -23,11 +23,18 @@ import NotFound from './pages/NotFound';
 import ProfilesPage from './components/profiles/ProfilesPage';
 import SearchPage from './pages/SearchPage';
 import { restorePlace } from './tv/spatialNavigation';
+import { useTranslation } from 'react-i18next';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
 
 function App() {
+  // the browser tab / installed app title in the app's language
+  const { t } = useTranslation();
+  useEffect(() => {
+    document.title = t('meta.title');
+  }, [t]);
+
   // a profile switch remounts every page for the new profile (its home, list, age limit...)
   // instead of reloading the whole app
   const [profileKey, setProfileKey] = useState(() => localStorage.getItem('activeProfileId') || '');

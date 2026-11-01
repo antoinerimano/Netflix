@@ -7,10 +7,13 @@ import "./HomePage.css";
 import Row from "../components/Row";
 import Footer from "../components/Footer";
 import { fetchHomeRecoRows } from "../api/recoApi";
+import { useTranslation } from "react-i18next";
+import { rowTitle } from "../i18n/catalogText";
 
 const ROW_SIZE = 18;
 
 const HomePage = () => {
+  const { t, i18n } = useTranslation("catalog");
   const [loading, setLoading] = useState(true);
   const [heroPick, setHeroPick] = useState(null);
 
@@ -101,7 +104,8 @@ const HomePage = () => {
     return () => {
       alive = false;
     };
-  }, [profileId]);
+    // the language too: row titles, "why" lines, titles and synopses come back translated
+  }, [profileId, i18n.resolvedLanguage]);
 
   // --- Dedup global: un titre apparait une seule fois sur TOUTE la page ---
   const dedupedRows = useMemo(() => {
@@ -138,7 +142,7 @@ const HomePage = () => {
     return (
       <div className="homepage">
         <Navbar />
-        <div className="home-skeleton" aria-busy="true" aria-label="Loading">
+        <div className="home-skeleton" aria-busy="true" aria-label={t("common:loading")}>
           <div className="home-skeleton__hero">
             <Skeleton variant="text" width="9rem" />
             <Skeleton width="min(28rem, 70%)" height="3.5rem" />
@@ -172,7 +176,8 @@ const HomePage = () => {
       {dedupedRows.map((row, idx) => (
         <Row
           key={`${row.row_type || "row"}-${idx}`}
-          title={row.title || "Recommended"}
+          title={rowTitle(row)}
+          analyticsTitle={row.analytics_title || row.title || "Recommended"}
           movies={row.items || []}
         />
       ))}

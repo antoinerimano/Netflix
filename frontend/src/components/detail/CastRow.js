@@ -3,6 +3,7 @@
 // the actor's page. Class names movie-detail-cast-* are kept: tv/focus.css styles their focus.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SectionTitle } from '../../design';
 
 const FALLBACK_ACTOR_IMG = '/actor-default.png';
@@ -25,11 +26,12 @@ export function castObjects(cast, { byPopularity = false } = {}) {
 
 export default function CastRow({ cast, limit = 20 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation('catalog');
   if (!cast?.length) return null;
 
   return (
     <section className="detail-section">
-      <SectionTitle>Cast</SectionTitle>
+      <SectionTitle>{t('detail.cast')}</SectionTitle>
       <ul className="detail-cast">
         {cast.slice(0, limit).map((a, idx) => {
           const name = a?.name || a?.english_name || '';

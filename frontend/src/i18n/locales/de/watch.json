@@ -1,0 +1,50 @@
+{
+  "loadFailed": "Dieser Titel konnte nicht geladen werden.",
+  "cantPlay": "Dieser Titel kann nicht abgespielt werden",
+  "seasonEpisode": "Staffel {{season}} · Folge {{episode}}",
+  "back": "Zurück",
+  "nextEpisode": "Nächste Folge",
+  "fullscreen": "Vollbild",
+  "fullscreenHint": "Vollbild (F)",
+  "player": {
+    "label": "Player",
+    "tileLabel": "Player: Drücke OK, um ihn im Vollbild zu steuern",
+    "chooseTitle": "Quelle wählen",
+    "chooseText": "Wähle unten eine Quelle oder füge deinen eigenen Link ein.",
+    "loadingSource": "Quelle wird geladen…",
+    "loadingNamed": "{{source}} wird geladen",
+    "notPlayable": "Dieser Link scheint nicht abspielbar zu sein. Versuche eine andere Quelle.",
+    "noFullscreen": "Vollbild ist hier nicht verfügbar. Nutze die Steuerung des Players oder versuche eine andere Quelle."
+  },
+  "keys": {
+    "control": "<key>OK</key> Player steuern",
+    "playPause": "<key>OK</key> / <key>Leertaste</key> Abspielen · Pause",
+    "seek": "<key>◀</key> <key>▶</key> Zurück · Vor",
+    "exit": "<key>Zurück</key> Vollbild beenden",
+    "volume": "<key>▲</key> <key>▼</key> Lautstärke"
+  },
+  "sources": {
+    "label": "Quellen",
+    "title": "Quelle",
+    "help": "Das Video startet nicht? Versuche eine andere Quelle.",
+    "choose": "Quelle wählen",
+    "loadFailed": "Quellen konnten nicht geladen werden.",
+    "switched": "{{from}} hat nicht geladen, gewechselt zu {{to}}.",
+    "notPlaying": "Läuft nichts bei {{source}}?",
+    "try": "{{source}} versuchen",
+    "down": "offline?",
+    "downHint": "Bei unserer letzten Prüfung war diese Quelle nicht erreichbar",
+    "custom": "Dein Link",
+    "customLabel": "Dein Videolink",
+    "customPlaceholder": "Video- oder Player-Link einfügen (https://…)"
+  },
+  "info": {
+    "about": "Über",
+    "seasonEpisodes": "Folgen der Staffel {{number}}",
+    "episodeNamed": "Folge {{number}}: {{name}}",
+    "playing": "Läuft",
+    "playingNow": "läuft gerade",
+    "soon": "Bald",
+    "comingSoon": "demnächst"
+  }
+}

@@ -3,6 +3,7 @@
 // character played), most popular first.
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import MovieCard from './MovieCard';
@@ -18,21 +19,21 @@ const photoUrl = (path, size = 'h632') => {
   return `https://image.tmdb.org/t/p/${size}${String(path).startsWith('/') ? path : `/${path}`}`;
 };
 const isTv = (t) => String(t?.type || '').toLowerCase() === 'tv';
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-
-function TitleGrid({ title, items, surface }) {
+// title: shown; analyticsTitle: the same in every language
+function TitleGrid({ title, analyticsTitle, items, surface }) {
+  const { t } = useTranslation('catalog');
   if (!items.length) return null;
   return (
     <section className="actor__section">
       <SectionTitle>{title}</SectionTitle>
       <div className="poster-grid actor__grid">
-        {items.map((t, idx) => (
+        {items.map((item, idx) => (
           <MovieCard
-            key={t.id}
-            movie={t}
-            note={t.character ? `as ${t.character}` : ''}
+            key={item.id}
+            movie={item}
+            note={item.character ? t('actor.as', { character: item.character }) : ''}
             priority={idx < 8}
-            analytics={{ surface, position: idx, row_title: title }}
+            analytics={{ surface, position: idx, row_title: analyticsTitle }}
           />
         ))}
       </div>
@@ -41,6 +42,7 @@ function TitleGrid({ title, items, surface }) {
 }
 
 export default function ActorDetail() {
+  const { t, i18n } = useTranslation('catalog');
   const { tmdbId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -58,10 +60,10 @@ export default function ActorDetail() {
     return () => {
       alive = false;
     };
-  }, [tmdbId]);
+  }, [tmdbId, i18n.resolvedLanguage]);
 
   const items = useMemo(() => data?.results || [], [data]);
-  const movies = useMemo(() => items.filter((t) => !isTv(t)), [items]);
+  const movies = useMemo(() => items.filter((x) => !isTv(x)), [items]);
   const shows = useMemo(() => items.filter(isTv), [items]);
   const actor = data?.actor;
   const name = actor?.name || '';
@@ -90,10 +92,10 @@ export default function ActorDetail() {
       <EmptyState
         page
         tone={error ? 'error' : 'empty'}
-        title={error ? "Couldn't load this page" : 'Nothing to watch here yet'}
-        actions={<Button variant="ghost" onClick={() => navigate(-1)}>Go back</Button>}
+        title={error ? t('actor.loadError') : t('actor.emptyTitle')}
+        actions={<Button variant="ghost" onClick={() => navigate(-1)}>{t('actions.goBack')}</Button>}
       >
-        {error ? friendlyError(error, 'this actor') : `We don't have any titles with ${name || 'this actor'} yet.`}
+        {error ? friendlyError(error, 'actor') : name ? t('actor.emptyText', { name }) : t('actor.emptyTextUnknown')}
       </EmptyState>
     );
   } else {
@@ -110,10 +112,10 @@ export default function ActorDetail() {
             }}
           />
           <div className="actor__intro">
-            <p className="actor__kicker">Actor</p>
-            <h1 className="actor__name">{name || 'Unknown actor'}</h1>
+            <p className="actor__kicker">{t('actor.kicker')}</p>
+            <h1 className="actor__name">{name || t('actor.unknown')}</h1>
             <p className="actor__stats">
-              {[movies.length ? plural(movies.length, 'movie', 'movies') : '', shows.length ? plural(shows.length, 'show', 'shows') : '']
+              {[movies.length ? t('actor.movieCount', { count: movies.length }) : '', shows.length ? t('actor.showCount', { count: shows.length }) : '']
                 .filter(Boolean)
                 .join(' · ')}
             </p>
@@ -121,20 +123,20 @@ export default function ActorDetail() {
               <div className="ui-actions actor__actions">
                 {movies.length ? (
                   <Button variant="glass" size="sm" to={`/movies?actor=${encodeURIComponent(name)}`}>
-                    Browse movies with {name.split(' ')[0]}
+                    {t('actor.browseMovies', { name: name.split(' ')[0] })}
                   </Button>
                 ) : null}
                 {shows.length ? (
                   <Button variant="glass" size="sm" to={`/tv?actor=${encodeURIComponent(name)}`}>
-                    Browse shows with {name.split(' ')[0]}
+                    {t('actor.browseShows', { name: name.split(' ')[0] })}
                   </Button>
                 ) : null}
               </div>
             ) : null}
           </div>
         </header>
-        <TitleGrid title="Movies" items={movies} surface="actor_movies" />
-        <TitleGrid title="TV Shows" items={shows} surface="actor_shows" />
+        <TitleGrid title={t('common:nav.movies')} analyticsTitle="Movies" items={movies} surface="actor_movies" />
+        <TitleGrid title={t('common:nav.tv')} analyticsTitle="TV Shows" items={shows} surface="actor_shows" />
       </>
     );
   }

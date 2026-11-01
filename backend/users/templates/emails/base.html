@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+{% load i18n %}<!DOCTYPE html>
+<html lang="{{ lang|default:'en' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,14 +17,14 @@
           <tr>
             <td style="padding:28px 28px 8px 28px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; color:#222222;">
               <h1 style="margin:0 0 16px 0; font-size:22px; line-height:28px; color:#e50914;">{% block heading %}{% endblock %}</h1>
-              <p style="margin:0 0 16px 0;">Hello{% if user.name %} {{ user.name }}{% endif %},</p>
+              <p style="margin:0 0 16px 0;">{% if user.name %}{% blocktranslate with name=user.name %}Hello {{ name }},{% endblocktranslate %}{% else %}{% translate "Hello," %}{% endif %}</p>
               {% block content %}{% endblock %}
             </td>
           </tr>
           <tr>
             <td style="padding:8px 28px 28px 28px; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:#777777; border-top:1px solid #eeeeee;">
               {% block footer_note %}{% endblock %}
-              This email was sent by {{ company_name }}. For help, contact
+              {% blocktranslate with company=company_name %}This email was sent by {{ company }}. For help, contact{% endblocktranslate %}
               <a href="mailto:{{ support_email }}" style="color:#777777;">{{ support_email }}</a>.
             </td>
           </tr>

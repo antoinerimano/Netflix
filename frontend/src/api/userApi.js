@@ -1,5 +1,6 @@
 // userApi.js
 import http from "./http";
+import i18n from "../i18n";
 
 // ---------- User + Account ----------
 export const fetchUserData = async (userId) => {
@@ -88,12 +89,14 @@ export const registerUser = async (name, email, password) => {
     const data = error?.response?.data;
     const status = error?.response?.status;
 
-    if (status === 400 && data?.error === "This email is already registered") {
-      throw new Error("This email is already registered");
+    // code: what happened (stable); error: the server's sentence, in the user's language
+    const fail = (code, message) => Object.assign(new Error(message || code), { code });
+    if (status === 400 && (data?.code === "email_taken" || data?.error === "This email is already registered")) {
+      throw fail("email_taken", data.error);
     }
     // the server's own reason (password too short / too common...), else a generic one
-    if (status === 400 && typeof data?.error === "string") throw new Error(data.error);
-    throw new Error("Failed to register user");
+    if (status === 400 && typeof data?.error === "string") throw fail("server_reason", data.error);
+    throw fail("register_failed");
   }
 };
 
@@ -123,9 +126,9 @@ export const requestEmailChange = async (userId, newEmail) => {
   } catch (error) {
     console.error("Error requesting email change:", error?.response?.data || error.message);
     if (error?.response) {
-      return { error: error.response.data?.error || "An unknown error occurred" };
+      return { error: error.response.data?.error || i18n.t("common:errors.generic") };
     }
-    return { error: "Network error. Please try again." };
+    return { error: i18n.t("common:errors.offline") };
   }
 };
 

@@ -3,6 +3,8 @@
 // photo), Kids switch, age limit, language. Used by "Who's watching?", the sign-up step and the
 // account page. Backend rules for the age limit: users/maturity.py (Kids never above PG).
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n, { currentLanguage, normalizeLanguage, SUPPORTED_LANGUAGES } from '../../i18n';
 import { Avatar, Button, Chip, Field, Switch } from '../../design';
 import AvatarBuilder from './AvatarBuilder';
 import { isBuiltAvatar } from '../../design/avatarArt';
@@ -13,43 +15,43 @@ const PHOTOS = ['/avatars/male.webp', '/avatars/female.webp', '/avatars/kid.webp
 const LETTER_COLORS = ['#e50914', '#f5a524', '#2bb673', '#1f8bff', '#8b5cf6', '#ec4899', '#14b8a6', '#3a3a44'];
 const isLetter = (src) => typeof src === 'string' && src.startsWith('color:');
 
+// labels: profiles:age.<key> (translated when shown)
 const AGE_LIMITS = [
-  { value: 'G', label: 'All ages', hint: 'G' },
-  { value: 'PG', label: '7+', hint: 'PG' },
-  { value: 'PG-13', label: '13+', hint: 'PG-13' },
-  { value: 'R', label: '16+', hint: 'R' },
-  { value: 'NC-17', label: 'No limit', hint: 'Everything' },
+  { value: 'G', key: 'all', hint: 'G' },
+  { value: 'PG', key: '7', hint: 'PG' },
+  { value: 'PG-13', key: '13', hint: 'PG-13' },
+  { value: 'R', key: '16', hint: 'R' },
+  { value: 'NC-17', key: 'none', hint: null },
 ];
 const KIDS_LIMITS = ['G', 'PG'];
-const LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'fr', label: 'Français' },
-  { value: 'es', label: 'Español' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'zh', label: '中文' },
-];
+const ageLabel = (a) => i18n.t(`profiles:age.${a.key}`);
 
 export const EMPTY_PROFILE = {
   name: '',
   avatar_url: `color:${LETTER_COLORS[0]}`,
   is_kids: false,
   age_restriction: 'NC-17',
-  language_preference: 'en',
+  language_preference: '', // '' = the language the app is in when the form opens
 };
 
 /** "Kids · All ages", "13+", "No limit": a profile's limit in a few words */
 export function ageSummary(profile) {
   const opt = AGE_LIMITS.find((a) => a.value === profile?.age_restriction) || AGE_LIMITS[AGE_LIMITS.length - 1];
-  const label = profile?.is_kids && !KIDS_LIMITS.includes(opt.value) ? 'All ages' : opt.label;
-  return profile?.is_kids ? `Kids · ${label}` : label;
+  const label = profile?.is_kids && !KIDS_LIMITS.includes(opt.value) ? ageLabel(AGE_LIMITS[0]) : ageLabel(opt);
+  return profile?.is_kids ? i18n.t('profiles:age.kidsSummary', { limit: label }) : label;
 }
 
 /**
  * initial: profile to edit (or EMPTY_PROFILE); onSubmit(values) -> Promise; onCancel optional;
  * extraActions: node shown left of the buttons (e.g. Delete).
  */
-export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Save', onSubmit, onCancel, extraActions }) {
-  const [values, setValues] = useState({ ...EMPTY_PROFILE, ...initial });
+export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel, onSubmit, onCancel, extraActions }) {
+  const { t } = useTranslation('profiles');
+  const [values, setValues] = useState(() => {
+    const v = { ...EMPTY_PROFILE, ...initial };
+    // old codes ("jp") and empty -> a supported language
+    return { ...v, language_preference: normalizeLanguage(v.language_preference) || currentLanguage() };
+  });
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -67,7 +69,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
     e.preventDefault();
     const name = values.name.trim();
     if (!name) {
-      setNameError('Give the profile a name.');
+      setNameError(t('form.nameRequired'));
       document.getElementById('profile-name')?.focus();
       return;
     }
@@ -77,7 +79,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
     try {
       await onSubmit({ ...values, name, age_restriction: age });
     } catch (err) {
-      setError(err?.message || 'Could not save the profile. Please try again.');
+      setError(err?.response?.data?.error || err?.message || t('form.saveFailed'));
     }
     setSaving(false);
   };
@@ -88,7 +90,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
         <div className="profile-form__preview" aria-hidden="true">
           <Avatar src={pic} name={values.name} size="100%" />
         </div>
-        <Field label="Name" htmlFor="profile-name" error={nameError} className="profile-form__name">
+        <Field label={t('form.name')} htmlFor="profile-name" error={nameError} className="profile-form__name">
           <input
             id="profile-name"
             className="ui-input"
@@ -96,21 +98,21 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
             value={values.name}
             maxLength={30}
             autoComplete="off"
-            placeholder="e.g. Sam"
+            placeholder={t('form.namePlaceholder')}
             onChange={(e) => set({ name: e.target.value })}
           />
         </Field>
       </div>
 
-      <Field label="Picture">
-        <div className="profile-form__pictures" role="radiogroup" aria-label="Profile picture">
+      <Field label={t('form.picture')}>
+        <div className="profile-form__pictures" role="radiogroup" aria-label={t('form.pictureGroup')}>
           {/* your own character: create it, or edit the one you made */}
           {ownAvatar ? (
             <button
               type="button"
               role="radio"
               aria-checked={pic === ownAvatar}
-              aria-label={pic === ownAvatar ? 'Your avatar: edit it' : 'Your avatar'}
+              aria-label={pic === ownAvatar ? t('form.ownAvatarEdit') : t('form.ownAvatar')}
               className={`profile-form__pic profile-form__pic--own${pic === ownAvatar ? ' is-selected' : ''}`}
               onClick={() => (pic === ownAvatar ? setBuilderOpen(true) : set({ avatar_url: ownAvatar }))}
             >
@@ -123,11 +125,11 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
             <button
               type="button"
               className="profile-form__pic profile-form__pic--create"
-              aria-label="Create your own avatar"
+              aria-label={t('form.createAvatar')}
               onClick={() => setBuilderOpen(true)}
             >
               <WandIcon />
-              <span>Create</span>
+              <span>{t('form.create')}</span>
             </button>
           )}
 
@@ -136,7 +138,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
             type="button"
             role="radio"
             aria-checked={isLetter(pic)}
-            aria-label="Letter"
+            aria-label={t('form.letter')}
             className={`profile-form__pic${isLetter(pic) ? ' is-selected' : ''}`}
             onClick={() => set({ avatar_url: letterColor })}
           >
@@ -149,7 +151,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
               type="button"
               role="radio"
               aria-checked={pic === src}
-              aria-label={`Picture ${i + 1}`}
+              aria-label={t('form.photo', { number: i + 1 })}
               className={`profile-form__pic${pic === src ? ' is-selected' : ''}`}
               onClick={() => set({ avatar_url: src })}
             >
@@ -159,7 +161,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
         </div>
 
         {isLetter(pic) ? (
-          <div className="ui-scroller profile-form__letter-colors" role="radiogroup" aria-label="Letter color">
+          <div className="ui-scroller profile-form__letter-colors" role="radiogroup" aria-label={t('form.letterColor')}>
             {LETTER_COLORS.map((c) => {
               const code = `color:${c}`;
               const selected = pic === code;
@@ -169,7 +171,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  aria-label={`Color ${c}`}
+                  aria-label={t('form.color', { color: c })}
                   className={`profile-form__color${selected ? ' is-selected' : ''}`}
                   style={{ background: c }}
                   onClick={() => {
@@ -200,33 +202,33 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
 
       <Switch
         checked={!!values.is_kids}
-        label="Kids profile"
-        description="Only titles rated for children, a simpler home page."
+        label={t('form.kids')}
+        description={t('form.kidsHint')}
         onChange={(on) =>
           set({ is_kids: on, age_restriction: on && !KIDS_LIMITS.includes(values.age_restriction) ? 'G' : values.age_restriction })
         }
       />
 
-      <Field label="Age limit" hint={values.is_kids ? 'Kids profiles go up to 7+ (PG).' : 'Titles rated above this are hidden.'}>
-        <div className="profile-form__chips" role="radiogroup" aria-label="Age limit">
+      <Field label={t('form.ageLimit')} hint={values.is_kids ? t('form.ageLimitKidsHint') : t('form.ageLimitHint')}>
+        <div className="profile-form__chips" role="radiogroup" aria-label={t('form.ageLimit')}>
           {limits.map((a) => (
-            <Chip key={a.value} role="radio" aria-checked={age === a.value} selected={age === a.value} onClick={() => set({ age_restriction: a.value })} title={a.hint}>
-              {a.label}
+            <Chip key={a.value} role="radio" aria-checked={age === a.value} selected={age === a.value} onClick={() => set({ age_restriction: a.value })} title={a.hint || t('age.everything')}>
+              {ageLabel(a)}
             </Chip>
           ))}
         </div>
       </Field>
 
-      <Field label="Language" htmlFor="profile-language">
+      <Field label={t('form.language')} htmlFor="profile-language" hint={t('form.languageHint')}>
         <select
           id="profile-language"
           className="ui-select"
-          value={values.language_preference || 'en'}
+          value={values.language_preference}
           onChange={(e) => set({ language_preference: e.target.value })}
         >
-          {LANGUAGES.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
+          {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+            <option key={code} value={code} lang={code}>
+              {name}
             </option>
           ))}
         </select>
@@ -242,11 +244,11 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
         {extraActions ? <div className="profile-form__extra">{extraActions}</div> : null}
         {onCancel ? (
           <Button variant="ghost" onClick={onCancel} disabled={saving}>
-            Cancel
+            {t('actions.cancel')}
           </Button>
         ) : null}
         <Button variant="primary" type="submit" loading={saving}>
-          {submitLabel}
+          {submitLabel || t('actions.save')}
         </Button>
       </div>
     </form>

@@ -5,6 +5,8 @@
 // navbar's search icon; desktop gets here from "See all results" / Enter in the navbar field.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { matchText } from '../i18n/catalogText';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MovieCard from '../components/MovieCard';
@@ -15,11 +17,8 @@ import '../components/PosterCard.css';
 import '../components/browse/browse.css';
 import './SearchPage.css';
 
-const TYPES = [
-  { value: 'all', label: 'All' },
-  { value: 'movie', label: 'Movies' },
-  { value: 'tv', label: 'TV Shows' },
-];
+// labels: catalog:search.types.<value>
+const TYPES = [{ value: 'all' }, { value: 'movie' }, { value: 'tv' }];
 const MAX_RECENT = 8;
 const recentKey = () => `recentSearches:${localStorage.getItem('activeProfileId') || ''}`;
 const readRecent = () => {
@@ -39,8 +38,9 @@ const writeRecent = (list) => {
 };
 
 function PosterSkeletons({ count = 12 }) {
+  const { t } = useTranslation();
   return (
-    <div className="poster-grid" aria-busy="true" aria-label="Loading">
+    <div className="poster-grid" aria-busy="true" aria-label={t('loading')}>
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="browse__skeleton">
           <Skeleton style={{ aspectRatio: '2 / 3' }} />
@@ -52,11 +52,13 @@ function PosterSkeletons({ count = 12 }) {
 }
 
 export default function SearchPage() {
+  const { t, i18n } = useTranslation('catalog');
+  const lng = i18n.resolvedLanguage;
   const location = useLocation();
   const navigate = useNavigate();
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const urlQuery = params.get('q') || '';
-  const type = TYPES.some((t) => t.value === params.get('type')) ? params.get('type') : 'all';
+  const type = TYPES.some((x) => x.value === params.get('type')) ? params.get('type') : 'all';
 
   const [query, setQuery] = useState(urlQuery);
   const [results, setResults] = useState(null); // null: nothing searched yet
@@ -80,8 +82,8 @@ export default function SearchPage() {
   useEffect(() => setQuery(urlQuery), [urlQuery]);
   useEffect(() => {
     if (query.trim() === urlQuery) return undefined;
-    const t = setTimeout(() => setUrl({ q: query.trim() }), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setUrl({ q: query.trim() }), 300);
+    return () => clearTimeout(timer);
   }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -101,9 +103,10 @@ export default function SearchPage() {
     return () => {
       alive = false;
     };
-  }, [urlQuery, type]);
+  }, [urlQuery, type, lng]); // lng: titles and "why it matched" come back in the app's language
 
-  // before typing: popular titles (cached by the server)
+  // before typing: popular titles (cached by the server); again in a new language
+  useEffect(() => setPopular(null), [lng]);
   useEffect(() => {
     if (popular) return undefined;
     let alive = true;
@@ -147,16 +150,16 @@ export default function SearchPage() {
         {recent.length ? (
           <section className="search__section">
             <div className="search__section-head">
-              <SectionTitle as="h2">Recent searches</SectionTitle>
+              <SectionTitle as="h2">{t('search.recent')}</SectionTitle>
               <button type="button" className="search__clear-all" onClick={clearRecent}>
-                Clear
+                {t('search.clear')}
               </button>
             </div>
             <ul className="search__recent">
               {recent.map((term) => (
                 <li key={term}>
                   <Chip onClick={() => setUrl({ q: term })}>{term}</Chip>
-                  <button type="button" className="search__forget" aria-label={`Remove ${term}`} onClick={() => forget(term)}>
+                  <button type="button" className="search__forget" aria-label={t('search.remove', { term })} onClick={() => forget(term)}>
                     <CloseIcon />
                   </button>
                 </li>
@@ -165,13 +168,13 @@ export default function SearchPage() {
           </section>
         ) : null}
         <section className="search__section">
-          <SectionTitle as="h2">Popular right now</SectionTitle>
+          <SectionTitle as="h2">{t('search.popular')}</SectionTitle>
           {popular === null ? (
             <PosterSkeletons />
           ) : (
             <div className="poster-grid search__grid">
-              {popular.map((t, idx) => (
-                <MovieCard key={t.id} movie={t} analytics={{ surface: 'search_popular', position: idx, row_title: 'Popular' }} />
+              {popular.map((item, idx) => (
+                <MovieCard key={item.id} movie={item} analytics={{ surface: 'search_popular', position: idx, row_title: 'Popular' }} />
               ))}
             </div>
           )}
@@ -182,32 +185,32 @@ export default function SearchPage() {
     body = <PosterSkeletons />;
   } else if (error) {
     body = (
-      <EmptyState tone="error" title="Search isn't working right now" actions={<Button variant="primary" onClick={() => setUrl({ q: urlQuery })}>Try again</Button>}>
+      <EmptyState tone="error" title={t('search.error')} actions={<Button variant="primary" onClick={() => setUrl({ q: urlQuery })}>{t('actions.tryAgain')}</Button>}>
         {friendlyError(error, 'results')}
       </EmptyState>
     );
   } else if (results && !results.length) {
     body = (
-      <EmptyState icon={<SearchIcon />} title={`No results for “${urlQuery}”`}>
-        Try a title, an actor, a director, a genre or a year - or describe it: “90s crime shows like CSI”.
+      <EmptyState icon={<SearchIcon />} title={t('search.noResults', { query: urlQuery })}>
+        {t('search.noResultsHint')}
       </EmptyState>
     );
   } else if (results) {
     body = (
       <section className="search__section" aria-live="polite">
         <p className="search__count">
-          {results.length >= 60 ? 'Top 60 results' : `${results.length} result${results.length === 1 ? '' : 's'}`} for “{urlQuery}”
+          {results.length >= 60 ? t('search.top', { count: 60, query: urlQuery }) : t('search.count', { count: results.length, query: urlQuery })}
         </p>
         <div className={`poster-grid search__grid${loading ? ' is-stale' : ''}`}>
-          {results.map((t, idx) => (
+          {results.map((item, idx) => (
             <MovieCard
-              key={`${t.type}-${t.id}`}
-              movie={t}
-              note={t.match || ''}
+              key={`${item.type}-${item.id}`}
+              movie={item}
+              note={matchText(item)}
               priority={idx < 12}
               onClick={() => {
                 remember(urlQuery);
-                navigate(`/${String(t.type).toLowerCase() === 'tv' ? 'tv' : 'movies'}/${t.id}`);
+                navigate(`/${String(item.type).toLowerCase() === 'tv' ? 'tv' : 'movies'}/${item.id}`);
               }}
               analytics={{ surface: 'search_page', position: idx, row_title: `search:${urlQuery}` }}
             />
@@ -228,8 +231,8 @@ export default function SearchPage() {
               ref={inputRef}
               type="search"
               value={query}
-              placeholder="Titles, people, genres…"
-              aria-label="Search movies and TV shows"
+              placeholder={t('search.placeholder')}
+              aria-label={t('common:nav.searchLabel')}
               autoComplete="off"
               enterKeyHint="search"
               // phones / desktop: ready to type; TV remotes open their keyboard with OK instead
@@ -240,7 +243,7 @@ export default function SearchPage() {
               <button
                 type="button"
                 className="search__clear"
-                aria-label="Clear search"
+                aria-label={t('browse.clearSearch')}
                 onClick={() => {
                   setQuery('');
                   setUrl({ q: '' });
@@ -251,10 +254,10 @@ export default function SearchPage() {
               </button>
             ) : null}
           </label>
-          <div className="ui-scroller search__types" role="group" aria-label="Type">
-            {TYPES.map((t) => (
-              <Chip key={t.value} selected={type === t.value} onClick={() => setUrl({ type: t.value })}>
-                {t.label}
+          <div className="ui-scroller search__types" role="group" aria-label={t('search.type')}>
+            {TYPES.map((x) => (
+              <Chip key={x.value} selected={type === x.value} onClick={() => setUrl({ type: x.value })}>
+                {t(`search.types.${x.value}`)}
               </Chip>
             ))}
           </div>

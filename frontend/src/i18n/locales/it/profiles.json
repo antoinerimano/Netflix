@@ -1,0 +1,208 @@
+{
+  "kids": "Bambini",
+  "create": {
+    "title": "Crea il tuo profilo",
+    "subtitle_one": "In seguito potrai aggiungere fino a {{count}} profilo, uno per persona.",
+    "subtitle_many": "In seguito potrai aggiungere fino a {{count}} profili, uno per persona.",
+    "subtitle_other": "In seguito potrai aggiungere fino a {{count}} profili, uno per persona."
+  },
+  "who": {
+    "title": "Chi sta guardando?",
+    "loadError": "Impossibile caricare i tuoi profili",
+    "watchAs": "Guarda come {{name}}"
+  },
+  "manage": {
+    "title": "Gestisci profili",
+    "subtitle": "Scegli un profilo per modificarlo.",
+    "edit": "Modifica {{name}}"
+  },
+  "add": {
+    "title": "Aggiungi un profilo",
+    "submit": "Aggiungi profilo"
+  },
+  "edit": {
+    "title": "Modifica profilo",
+    "confirmDelete": "Eliminare {{name}}?",
+    "keep": "Mantieni",
+    "delete": "Elimina profilo"
+  },
+  "toast": {
+    "added": "{{name}} aggiunto",
+    "saved": "{{name}} salvato",
+    "deleted": "{{name}} eliminato"
+  },
+  "age": {
+    "all": "Per tutti",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "Nessun limite",
+    "everything": "Tutto",
+    "kidsSummary": "Bambini · {{limit}}"
+  },
+  "form": {
+    "name": "Nome",
+    "namePlaceholder": "es. Sam",
+    "nameRequired": "Dai un nome al profilo.",
+    "saveFailed": "Impossibile salvare il profilo. Riprova.",
+    "picture": "Immagine",
+    "pictureGroup": "Immagine del profilo",
+    "ownAvatar": "Il tuo avatar",
+    "ownAvatarEdit": "Il tuo avatar: modificalo",
+    "createAvatar": "Crea il tuo avatar",
+    "create": "Crea",
+    "letter": "Lettera",
+    "photo": "Immagine {{number}}",
+    "letterColor": "Colore della lettera",
+    "color": "Colore {{color}}",
+    "kids": "Profilo bambini",
+    "kidsHint": "Solo titoli adatti ai bambini e una home più semplice.",
+    "ageLimit": "Limite di età",
+    "ageLimitHint": "I titoli con una classificazione superiore vengono nascosti.",
+    "ageLimitKidsHint": "I profili bambini arrivano fino a 7+ (PG).",
+    "language": "Lingua",
+    "languageHint": "L'app, i titoli e le trame vengono mostrati in questa lingua."
+  },
+  "avatar": {
+    "title": "Crea il tuo avatar",
+    "use": "Usa questo avatar",
+    "surprise": "Sorprendimi",
+    "undo": "Annulla",
+    "partsLabel": "Parti dell'avatar",
+    "style": "Stile",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Capelli",
+      "hat": "Cappelli",
+      "eyes": "Occhi",
+      "brows": "Sopracciglia",
+      "mouth": "Bocca",
+      "beard": "Barba",
+      "extras": "Extra",
+      "face": "Viso",
+      "top": "Maglia",
+      "scene": "Sfondo"
+    },
+    "colors": {
+      "hc": "Colore dei capelli",
+      "hwc": "Colore del cappello",
+      "sk": "Pelle",
+      "sh": "Colore",
+      "bg": "Colori"
+    },
+    "parts": {
+      "bg": "Sfondo",
+      "pt": "Motivo",
+      "fc": "Forma del viso",
+      "sk": "Pelle",
+      "ey": "Occhi",
+      "eb": "Sopracciglia",
+      "mo": "Bocca",
+      "hr": "Capelli",
+      "hc": "Colore dei capelli",
+      "hw": "Cappello",
+      "hwc": "Colore del cappello",
+      "bd": "Barba",
+      "ex": "Extra",
+      "sh": "Colore della maglia",
+      "ts": "Maglia"
+    },
+    "names": {
+      "pt": [
+        "Nessuno",
+        "Pois",
+        "Righe",
+        "Onde",
+        "Stelle",
+        "Griglia",
+        "Coriandoli"
+      ],
+      "fc": [
+        "Rotondo",
+        "Squadrato",
+        "Ovale",
+        "Largo"
+      ],
+      "ey": [
+        "Puntini",
+        "Luccicanti",
+        "Felici",
+        "Occhiolino",
+        "Assonnati",
+        "Stelle",
+        "Occhiali da sole",
+        "Grandi",
+        "Ciglia",
+        "Cuori"
+      ],
+      "eb": [
+        "Nessuna",
+        "Morbide",
+        "Folte",
+        "Alzate",
+        "Arrabbiate",
+        "Preoccupate",
+        "Monociglio"
+      ],
+      "mo": [
+        "Sorriso",
+        "Sorrisone",
+        "Sorpresa",
+        "Neutra",
+        "Linguaccia",
+        "Sorrisetto",
+        "Risata",
+        "Rossetto"
+      ],
+      "hr": [
+        "Nessuno",
+        "Corti",
+        "A punta",
+        "Ricci",
+        "Lunghi",
+        "Chignon",
+        "Cresta",
+        "Afro",
+        "Riga laterale",
+        "Rasati",
+        "Coda",
+        "Codini"
+      ],
+      "hw": [
+        "Nessuno",
+        "Berretto con visiera",
+        "Cuffia",
+        "Corona",
+        "Cuffie",
+        "Bandana",
+        "Cilindro",
+        "Fiori",
+        "Aureola",
+        "Orecchie da gatto"
+      ],
+      "bd": [
+        "Nessuna",
+        "Accennata",
+        "Folta",
+        "Pizzetto",
+        "Baffi",
+        "Baffi a manubrio"
+      ],
+      "ex": [
+        "Nessuno",
+        "Fard",
+        "Lentiggini",
+        "Occhiali tondi",
+        "Occhiali squadrati",
+        "Orecchini",
+        "Neo"
+      ],
+      "ts": [
+        "T-shirt",
+        "Felpa",
+        "Colletto",
+        "Dolcevita"
+      ]
+    }
+  }
+}

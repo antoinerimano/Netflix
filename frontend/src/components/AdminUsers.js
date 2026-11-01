@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "../i18n/format";
 import {
   requestPasswordReset,
   requestEmailChange,
@@ -16,6 +18,7 @@ const getAuthHeader = () => {
 };
 
 const AdminUsers = () => {
+  const { t } = useTranslation("admin");
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({});
   const [editingId, setEditingId] = useState(null);
@@ -55,7 +58,7 @@ const AdminUsers = () => {
       ) {
         setIsAuthorized(false);
       } else {
-        alert("Failed to fetch users");
+        alert(t("users.fetchFailed"));
       }
     }
     setLoading(false);
@@ -67,7 +70,7 @@ const AdminUsers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    if (window.confirm(t("users.confirmDelete"))) {
       try {
         setLoading(true);
         await axios.delete(`${API_BASE_URL}/users/${id}/`, {
@@ -79,7 +82,7 @@ const AdminUsers = () => {
           setEditingId(null);
         }
       } catch (error) {
-        alert("Failed to delete user");
+        alert(t("users.deleteFailed"));
       } finally {
         setLoading(false);
       }
@@ -89,7 +92,7 @@ const AdminUsers = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) {
-      alert("Name and email are required");
+      alert(t("users.required"));
       return;
     }
     try {
@@ -105,7 +108,7 @@ const AdminUsers = () => {
       setForm({});
       setEditingId(null);
     } catch (error) {
-      alert("Failed to update user");
+      alert(t("users.updateFailed"));
     } finally {
       setLoading(false);
     }
@@ -117,38 +120,28 @@ const AdminUsers = () => {
 
   // Handler for admin-triggered password reset
   const handleResetPassword = async (email) => {
-    if (!window.confirm(`Send password reset link to ${email}?`)) return;
+    if (!window.confirm(t("users.confirmReset", { email }))) return;
     try {
       await requestPasswordReset(email);
-      alert(`Password reset email sent to ${email}`);
+      alert(t("users.resetSent", { email }));
     } catch (error) {
-      alert(
-        "Failed to send password reset: " +
-          (error?.response?.data?.error || error.message)
-      );
+      alert(t("users.resetFailed", { reason: error?.response?.data?.error || error.message }));
     }
   };
 
   // Handler for admin-triggered email reset (asks for new email)
   const handleResetEmail = async (user) => {
-    const newEmail = prompt(
-      `Enter new email for ${user.name} (${user.email}):`
-    );
+    const newEmail = prompt(t("users.promptEmail", { name: user.name, email: user.email }));
     if (!newEmail) return;
     try {
       const result = await requestEmailChange(user.id, newEmail);
       if (result.error) {
-        alert("Failed to request email change: " + result.error);
+        alert(t("users.emailFailed", { reason: result.error }));
       } else {
-        alert(
-          "Verification link sent to new email address. The user must check their email to confirm."
-        );
+        alert(t("users.emailSent"));
       }
     } catch (error) {
-      alert(
-        "Failed to send email change request: " +
-          (error?.response?.data?.error || error.message)
-      );
+      alert(t("users.emailFailed", { reason: error?.response?.data?.error || error.message }));
     }
   };
 
@@ -156,21 +149,17 @@ const AdminUsers = () => {
     if (
       !user.subscription ||
       !user.subscription.id ||
-      !window.confirm(
-        `Are you sure you want to cancel the subscription for ${user.email}?`
-      )
+      !window.confirm(t("users.confirmCancelSub", { email: user.email }))
     ) {
       return;
     }
     try {
       setLoading(true);
       await cancelSubscription(user.id, user.subscription.id);
-      alert("Subscription canceled.");
+      alert(t("users.subCanceled"));
       fetchUsers(); // reload and update table, button will disappear
     } catch (error) {
-      alert(
-        "Failed to cancel subscription: " + (error?.message || "Unknown error")
-      );
+      alert(t("users.subCancelFailed", { reason: error?.message || "" }));
     } finally {
       setLoading(false);
     }
@@ -179,8 +168,8 @@ const AdminUsers = () => {
   if (!isAuthorized) {
     return (
       <div className={styles["admin-panel"]}>
-        <h2>Unauthorized</h2>
-        <p>You are not authorized to view this page.</p>
+        <h2>{t("unauthorized")}</h2>
+        <p>{t("unauthorizedText")}</p>
       </div>
     );
   }
@@ -192,11 +181,11 @@ const AdminUsers = () => {
 
   return (
     <div className={styles["admin-panel"]}>
-      <h2>Admin Users</h2>
+      <h2>{t("common:nav.adminUsers")}</h2>
       {/* --- SEARCH BAR --- */}
       <input
         type="text"
-        placeholder="Search by email..."
+        placeholder={t("users.search")}
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{
@@ -213,18 +202,18 @@ const AdminUsers = () => {
         <form onSubmit={handleSubmit} style={{ marginBottom: "24px" }}>
           <input
             name="name"
-            placeholder="Name"
+            placeholder={t("auth:fields.name")}
             value={form.name || ""}
             onChange={handleChange}
           />
           <input
             name="email"
-            placeholder="Email"
+            placeholder={t("auth:fields.email")}
             value={form.email || ""}
             onChange={handleChange}
             type="email"
           />
-          <button type="submit">Update User</button>
+          <button type="submit">{t("users.update")}</button>
           <button
             type="button"
             onClick={() => {
@@ -232,24 +221,24 @@ const AdminUsers = () => {
               setEditingId(null);
             }}
           >
-            Cancel
+            {t("actions.cancel")}
           </button>
         </form>
       )}
 
       {loading ? (
-        <p>Loading users...</p>
+        <p>{t("users.loading")}</p>
       ) : (
         <div className={styles["admin-table-wrapper"]}>
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Staff</th>
-                <th>Active</th>
-                <th>Joined</th>
-                <th>Actions</th>
+                <th>{t("auth:fields.name")}</th>
+                <th>{t("auth:fields.email")}</th>
+                <th>{t("users.staff")}</th>
+                <th>{t("users.active")}</th>
+                <th>{t("users.joined")}</th>
+                <th>{t("users.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -257,37 +246,37 @@ const AdminUsers = () => {
                 <tr key={u.id}>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
-                  <td>{u.is_staff ? "Yes" : "No"}</td>
-                  <td>{u.is_active ? "Yes" : "No"}</td>
-                  <td>{u.created_at ? u.created_at.split("T")[0] : ""}</td>
+                  <td>{u.is_staff ? t("yes") : t("no")}</td>
+                  <td>{u.is_active ? t("yes") : t("no")}</td>
+                  <td>{u.created_at ? formatDate(u.created_at) : ""}</td>
                   <td>
                     <button
                       className={styles["edit-btn"]}
                       onClick={() => handleEdit(u)}
                       disabled={loading}
                     >
-                      Edit
+                      {t("users.edit")}
                     </button>
                     <button
                       className={styles["delete-btn"]}
                       onClick={() => handleDelete(u.id)}
                       disabled={loading}
                     >
-                      Delete
+                      {t("actions.delete")}
                     </button>
                     <button
                       className={styles["reset-btn"]}
                       onClick={() => handleResetPassword(u.email)}
                       disabled={loading}
                     >
-                      Reset Password
+                      {t("users.resetPassword")}
                     </button>
                     <button
                       className={styles["reset-btn"]}
                       onClick={() => handleResetEmail(u)}
                       disabled={loading}
                     >
-                      Reset Email
+                      {t("users.resetEmail")}
                     </button>
                     {/* ---- SHOW ONLY FOR ACTIVE PREMIUM ---- */}
                     {u.subscription &&
@@ -298,10 +287,10 @@ const AdminUsers = () => {
                           className={styles["delete-btn"]}
                           style={{ background: "#fd7676" }}
                           onClick={() => handleDeleteSubscription(u)}
-                          title="Delete Subscription"
+                          title={t("users.deleteSub")}
                           disabled={loading}
                         >
-                          Delete Subscription
+                          {t("users.deleteSub")}
                         </button>
                       )}
                   </td>

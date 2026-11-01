@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { fetchUserData } from "./api/userApi"; // ⬅️ use your API wrapper
 import { BrandLoader } from "./design";
+import i18n from './i18n';
 
 function getToken()      { return localStorage.getItem("access") || null; }
 function getUserId()     { return localStorage.getItem("userId") || null; }
@@ -50,7 +51,7 @@ export default function ProtectedStaffRoute({ children, fallback = null }) {
   }, []);
 
   if (status === "checking") {
-    return fallback ?? <BrandLoader page size={80} label="Checking permissions…" showLabel />;
+    return fallback ?? <BrandLoader page size={80} label={i18n.t('common:checkingPermissions')} showLabel />;
   }
   if (status === "blocked") {
     // Send them to login and remember where they were going

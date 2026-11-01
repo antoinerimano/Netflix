@@ -4,6 +4,7 @@
 // Opened by holding OK on a TV remote, the remote's menu key, a right click, a long press on
 // touch screens or the card's "⋯" button (see Row.js, tv/spatialNavigation.js).
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Rating } from '../design';
 import {
   PlayIcon, InfoIcon, PlusIcon, CheckIcon, ThumbUpIcon, ThumbDownIcon, BanIcon, CloseIcon,
@@ -40,6 +41,7 @@ function MenuItem({ icon, label, onClick, active, tone, autoFocus }) {
 export default function TitleOptions({
   title, open, onClose, onPlay, onInfo, onRemoveResume, onNotInterested, onRemoveFromList, surface = 'options',
 }) {
+  const { t } = useTranslation('catalog');
   const profileId = localStorage.getItem('activeProfileId');
   const [inList, setInList] = useState(null); // null: not known yet
   const [rating, setRatingState] = useState(null);
@@ -96,7 +98,7 @@ export default function TitleOptions({
           <span className="title-options__text">
             <span className="title-options__name">{title.title}</span>
             <span className="title-options__meta">
-              {isTv ? 'Series' : 'Film'}
+              {isTv ? t('common:kind.tv') : t('common:kind.movie')}
               {year ? ` · ${year}` : ''}
               {Number(title.rating) > 0 ? <Rating value={title.rating} /> : null}
             </span>
@@ -104,38 +106,38 @@ export default function TitleOptions({
         </span>
       }
     >
-      <ul className="ui-menu" aria-label={`Options for ${title.title}`}>
+      <ul className="ui-menu" aria-label={t('options.for', { title: title.title })}>
         <MenuItem
           autoFocus
           tone="primary"
           icon={<PlayIcon />}
-          label={resume ? (resume.season ? `Resume S${resume.season} · E${resume.episode}` : 'Resume') : 'Play'}
+          label={resume ? (resume.season ? t('options.resumeEpisode', { season: resume.season, episode: resume.episode }) : t('options.resume')) : t('options.play')}
           onClick={then(onPlay)}
         />
-        <MenuItem icon={<InfoIcon />} label={isTv ? 'Episodes & info' : 'More info'} onClick={then(onInfo)} />
+        <MenuItem icon={<InfoIcon />} label={isTv ? t('options.episodesInfo') : t('options.moreInfo')} onClick={then(onInfo)} />
         {profileId ? (
           <>
             {onRemoveFromList ? null : (
               <MenuItem
                 icon={inList ? <CheckIcon /> : <PlusIcon />}
-                label={inList ? 'In My List' : 'Add to My List'}
+                label={inList ? t('options.inList') : t('options.addToList')}
                 active={!!inList}
                 onClick={toggleList}
               />
             )}
-            <MenuItem icon={<ThumbUpIcon />} label="I like this" active={rating === 'like'} onClick={() => rate('like')} />
-            <MenuItem icon={<ThumbDownIcon />} label="Not for me" active={rating === 'dislike'} onClick={() => rate('dislike')} />
+            <MenuItem icon={<ThumbUpIcon />} label={t('rate.like')} active={rating === 'like'} onClick={() => rate('like')} />
+            <MenuItem icon={<ThumbDownIcon />} label={t('rate.dislike')} active={rating === 'dislike'} onClick={() => rate('dislike')} />
           </>
         ) : null}
         {onRemoveResume || onNotInterested || onRemoveFromList ? <li className="ui-menu__sep" role="separator" /> : null}
         {onRemoveFromList ? (
-          <MenuItem icon={<CloseIcon />} label="Remove from My List" onClick={then(onRemoveFromList)} />
+          <MenuItem icon={<CloseIcon />} label={t('options.removeFromList')} onClick={then(onRemoveFromList)} />
         ) : null}
         {onRemoveResume ? (
-          <MenuItem icon={<CloseIcon />} label="Remove from Continue watching" onClick={then(onRemoveResume)} />
+          <MenuItem icon={<CloseIcon />} label={t('options.removeResume')} onClick={then(onRemoveResume)} />
         ) : null}
         {onNotInterested ? (
-          <MenuItem tone="danger" icon={<BanIcon />} label="Not interested" onClick={then(onNotInterested)} />
+          <MenuItem tone="danger" icon={<BanIcon />} label={t('options.notInterested')} onClick={then(onNotInterested)} />
         ) : null}
       </ul>
     </Modal>

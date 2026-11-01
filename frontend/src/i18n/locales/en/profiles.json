@@ -1,0 +1,122 @@
+{
+  "kids": "Kids",
+  "create": {
+    "title": "Create your profile",
+    "subtitle_one": "You can add up to {{count}} profile later, one for each person.",
+    "subtitle_other": "You can add up to {{count}} profiles later, one for each person."
+  },
+  "who": {
+    "title": "Who's watching?",
+    "loadError": "Couldn't load your profiles",
+    "watchAs": "Watch as {{name}}"
+  },
+  "manage": {
+    "title": "Manage profiles",
+    "subtitle": "Choose a profile to edit it.",
+    "edit": "Edit {{name}}"
+  },
+  "add": {
+    "title": "Add a profile",
+    "submit": "Add profile"
+  },
+  "edit": {
+    "title": "Edit profile",
+    "confirmDelete": "Delete {{name}}?",
+    "keep": "Keep",
+    "delete": "Delete profile"
+  },
+  "toast": {
+    "added": "{{name}} added",
+    "saved": "{{name}} saved",
+    "deleted": "{{name}} deleted"
+  },
+  "age": {
+    "all": "All ages",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "No limit",
+    "everything": "Everything",
+    "kidsSummary": "Kids · {{limit}}"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Sam",
+    "nameRequired": "Give the profile a name.",
+    "saveFailed": "Could not save the profile. Please try again.",
+    "picture": "Picture",
+    "pictureGroup": "Profile picture",
+    "ownAvatar": "Your avatar",
+    "ownAvatarEdit": "Your avatar: edit it",
+    "createAvatar": "Create your own avatar",
+    "create": "Create",
+    "letter": "Letter",
+    "photo": "Picture {{number}}",
+    "letterColor": "Letter color",
+    "color": "Color {{color}}",
+    "kids": "Kids profile",
+    "kidsHint": "Only titles rated for children, a simpler home page.",
+    "ageLimit": "Age limit",
+    "ageLimitHint": "Titles rated above this are hidden.",
+    "ageLimitKidsHint": "Kids profiles go up to 7+ (PG).",
+    "language": "Language",
+    "languageHint": "The app, titles and synopses are shown in this language."
+  },
+  "avatar": {
+    "title": "Create your avatar",
+    "use": "Use this avatar",
+    "surprise": "Surprise me",
+    "undo": "Undo",
+    "partsLabel": "Avatar parts",
+    "style": "Style",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Hair",
+      "hat": "Hats",
+      "eyes": "Eyes",
+      "brows": "Brows",
+      "mouth": "Mouth",
+      "beard": "Beard",
+      "extras": "Extras",
+      "face": "Face",
+      "top": "Top",
+      "scene": "Background"
+    },
+    "colors": {
+      "hc": "Hair color",
+      "hwc": "Hat color",
+      "sk": "Skin",
+      "sh": "Color",
+      "bg": "Colors"
+    },
+    "parts": {
+      "bg": "Background",
+      "pt": "Pattern",
+      "fc": "Face shape",
+      "sk": "Skin",
+      "ey": "Eyes",
+      "eb": "Eyebrows",
+      "mo": "Mouth",
+      "hr": "Hair",
+      "hc": "Hair color",
+      "hw": "Hat",
+      "hwc": "Hat color",
+      "bd": "Beard",
+      "ex": "Extras",
+      "sh": "Top color",
+      "ts": "Top"
+    },
+    "names": {
+      "pt": ["None", "Dots", "Stripes", "Waves", "Stars", "Grid", "Confetti"],
+      "fc": ["Round", "Square", "Oval", "Wide"],
+      "ey": ["Dots", "Shiny", "Happy", "Wink", "Sleepy", "Stars", "Shades", "Big", "Lashes", "Hearts"],
+      "eb": ["None", "Soft", "Thick", "Raised", "Angry", "Worried", "Unibrow"],
+      "mo": ["Smile", "Grin", "Surprised", "Neutral", "Tongue", "Smirk", "Laugh", "Lipstick"],
+      "hr": ["None", "Short", "Spiky", "Curly", "Long", "Bun", "Mohawk", "Afro", "Side part", "Buzz", "Ponytail", "Pigtails"],
+      "hw": ["None", "Cap", "Beanie", "Crown", "Headphones", "Bandana", "Top hat", "Flowers", "Halo", "Cat ears"],
+      "bd": ["None", "Stubble", "Full", "Goatee", "Mustache", "Handlebar"],
+      "ex": ["None", "Blush", "Freckles", "Round glasses", "Square glasses", "Earrings", "Beauty mark"],
+      "ts": ["T-shirt", "Hoodie", "Collar", "Turtleneck"]
+    }
+  }
+}

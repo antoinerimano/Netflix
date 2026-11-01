@@ -2,6 +2,7 @@
 // The add / edit profile dialog (ProfileForm in a Modal) with its saving, deleting (two steps)
 // and the active-profile bookkeeping. Used by "Who's watching?" and the account page.
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createProfile, updateProfile, deleteProfile } from '../../api/userApi';
 import { Button, Modal } from '../../design';
 import ProfileForm, { EMPTY_PROFILE } from './ProfileForm';
@@ -13,6 +14,7 @@ import './profiles.css';
  * onDone({ type: 'added' | 'saved' | 'deleted', profile }) after the server confirmed.
  */
 export default function ProfileEditor({ editing, onClose, onDone, canDelete = true }) {
+  const { t } = useTranslation('profiles');
   const userId = localStorage.getItem('userId');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -51,29 +53,29 @@ export default function ProfileEditor({ editing, onClose, onDone, canDelete = tr
   };
 
   return (
-    <Modal open={!!editing} onClose={close} title={isNew ? 'Add a profile' : 'Edit profile'} size="md" scrollable={false} initialFocus="#profile-name">
+    <Modal open={!!editing} onClose={close} title={isNew ? t('add.title') : t('edit.title')} size="md" scrollable={false} initialFocus="#profile-name">
       {editing ? (
         <ProfileForm
           key={isNew ? 'new' : editing.id}
           initial={isNew ? EMPTY_PROFILE : editing}
-          submitLabel={isNew ? 'Add profile' : 'Save'}
+          submitLabel={isNew ? t('add.submit') : t('actions.save')}
           onSubmit={save}
           onCancel={close}
           extraActions={
             !isNew && canDelete ? (
               confirmDelete ? (
                 <span className="profiles__confirm" role="alert">
-                  Delete {editing.name}?{' '}
+                  {t('edit.confirmDelete', { name: editing.name })}{' '}
                   <Button variant="danger" size="sm" loading={deleting} onClick={remove}>
-                    Delete
+                    {t('actions.delete')}
                   </Button>{' '}
                   <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
-                    Keep
+                    {t('edit.keep')}
                   </Button>
                 </span>
               ) : (
                 <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-                  Delete profile
+                  {t('edit.delete')}
                 </Button>
               )
             ) : null

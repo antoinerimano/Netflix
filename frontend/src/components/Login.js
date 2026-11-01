@@ -4,20 +4,24 @@
 // user was sent away from). "Forgot password?" sends the reset link without leaving the page.
 import React, { useState, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { loginUser, fetchUserProfiles, requestPasswordReset } from '../api/userApi';
 import { AuthContext } from './AuthContext';
 import { Button, Field, Modal, friendlyError } from '../design';
 import { MailIcon } from '../design/icons';
 import { AuthAlert, AuthLayout, EMAIL_RE, PasswordField } from './auth/AuthLayout';
+import { setActiveProfile } from '../utils/activeProfile';
 
 function signInError(err) {
   const status = err?.response?.status;
-  if (status === 400 || status === 401) return "That email and password don't match. Check them and try again.";
-  if (status === 429) return 'Too many attempts. Wait a minute, then try again.';
+  if (status === 400 || status === 401) return i18n.t('auth:signIn.wrongCredentials');
+  if (status === 429) return i18n.t('auth:signIn.tooManyAttempts');
   return friendlyError(err);
 }
 
 function ForgotPassword({ open, onClose, initialEmail }) {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -40,7 +44,7 @@ function ForgotPassword({ open, onClose, initialEmail }) {
     e?.preventDefault();
     const value = email.trim();
     if (!EMAIL_RE.test(value)) {
-      setError('Enter the email you signed up with.');
+      setError(t('forgot.enterEmail'));
       return;
     }
     setBusy(true);
@@ -49,7 +53,7 @@ function ForgotPassword({ open, onClose, initialEmail }) {
       await requestPasswordReset(value);
       setSentTo(value);
     } catch (err) {
-      setError(err?.response?.status === 429 ? 'Too many requests. Wait a few minutes, then try again.' : friendlyError(err));
+      setError(err?.response?.status === 429 ? t('tooManyRequests') : friendlyError(err));
     } finally {
       setBusy(false);
     }
@@ -59,22 +63,22 @@ function ForgotPassword({ open, onClose, initialEmail }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Reset your password"
+      title={t('forgot.title')}
       size="sm"
       scrollable={false}
       initialFocus={sentTo ? '.ui-modal__footer .ui-btn' : '#forgot-email'}
       footer={
         sentTo ? (
           <Button variant="primary" onClick={onClose}>
-            Back to sign in
+            {t('forgot.backToSignIn')}
           </Button>
         ) : (
           <>
             <Button variant="ghost" onClick={onClose}>
-              Cancel
+              {t('actions.cancel')}
             </Button>
             <Button variant="primary" loading={busy} onClick={send}>
-              Send link
+              {t('forgot.send')}
             </Button>
           </>
         )
@@ -84,16 +88,15 @@ function ForgotPassword({ open, onClose, initialEmail }) {
         <div className="auth__sent">
           <MailIcon />
           <p>
-            If an account exists for <strong>{sentTo}</strong>, a link to choose a new password is on its way.
-            Check your spam folder if it doesn't arrive in a few minutes.
+            <Trans t={t} i18nKey="forgot.sent" values={{ email: sentTo }} components={{ strong: <strong /> }} />
           </p>
         </div>
       ) : (
         <form className="auth__form" onSubmit={send} noValidate>
           <p className="ui-field__hint" style={{ fontSize: 'var(--text-sm)' }}>
-            We'll email you a link to choose a new password.
+            {t('forgot.intro')}
           </p>
-          <Field label="Email" htmlFor="forgot-email" error={error}>
+          <Field label={t('fields.email')} htmlFor="forgot-email" error={error}>
             <input
               id="forgot-email"
               className="ui-input"
@@ -111,6 +114,7 @@ function ForgotPassword({ open, onClose, initialEmail }) {
 }
 
 const Login = () => {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -124,7 +128,7 @@ const Login = () => {
     e.preventDefault();
     if (loading) return; // no double submit
     if (!EMAIL_RE.test(email.trim()) || !password) {
-      setError(!password && EMAIL_RE.test(email.trim()) ? 'Enter your password.' : 'Enter your email and password.');
+      setError(!password && EMAIL_RE.test(email.trim()) ? t('signIn.enterPassword') : t('signIn.enterBoth'));
       return;
     }
     setLoading(true);
@@ -158,8 +162,12 @@ const Login = () => {
       }
 
       if (profileId) {
-        localStorage.setItem('activeProfileId', profileId);
-        window.dispatchEvent(new Event('activeProfileChanged'));
+        const chosen = profiles.find((p) => String(p.id) === profileId);
+        if (chosen) setActiveProfile(chosen); // also switches to the profile's language
+        else {
+          localStorage.setItem('activeProfileId', profileId);
+          window.dispatchEvent(new Event('activeProfileChanged'));
+        }
       } else {
         localStorage.removeItem('activeProfileId');
         localStorage.removeItem('activeProfile');
@@ -182,17 +190,13 @@ const Login = () => {
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to keep watching."
-      footer={
-        <>
-          New to Tauruss? <Link to="/register">Create an account</Link>
-        </>
-      }
+      title={t('signIn.title')}
+      subtitle={t('signIn.subtitle')}
+      footer={<Trans t={t} i18nKey="signIn.footer" components={{ action: <Link to="/register" /> }} />}
     >
       <form className="auth__form" onSubmit={handleSubmit} noValidate>
         <AuthAlert>{error}</AuthAlert>
-        <Field label="Email" htmlFor="login-email">
+        <Field label={t('fields.email')} htmlFor="login-email">
           <input
             id="login-email"
             className="ui-input"
@@ -206,14 +210,14 @@ const Login = () => {
             data-tv-start=""
           />
         </Field>
-        <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
+        <PasswordField label={t('fields.password')} value={password} onChange={setPassword} autoComplete="current-password" />
         <div className="auth__row">
           <button type="button" className="auth__link" onClick={() => setForgotOpen(true)}>
-            Forgot password?
+            {t('signIn.forgot')}
           </button>
         </div>
         <Button type="submit" variant="primary" size="lg" block loading={loading}>
-          Sign in
+          {t('signIn.submit')}
         </Button>
       </form>
       <ForgotPassword open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={email.trim()} />

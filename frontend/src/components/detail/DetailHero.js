@@ -3,6 +3,8 @@
 // phones), type, title, meta line, genres, description (expandable), credits, actions.
 // Shared by MovieDetail and TVShowDetail so both pages look like one product.
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { Badge, Rating } from '../../design';
 import { tmdbImage, tmdbSrcSet, IMG } from '../../utils/tmdbImage';
 import './detail.css';
@@ -18,7 +20,27 @@ export function splitGenres(genre) {
     .filter(Boolean);
 }
 
+/**
+ * A genre from the catalog (TMDB's English names: "Science Fiction", "Sci-Fi & Fantasy") in the
+ * app's language: catalog:genres.<slug>, the name itself when not in the list.
+ */
+const GENRE_ALIASES = { action_adventure: 'action_and_adventure', sci_fi: 'science_fiction', scifi: 'science_fiction' };
+export function genreSlug(name) {
+  const slug = String(name || '')
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+  return GENRE_ALIASES[slug] || slug;
+}
+export function genreName(name) {
+  if (!name) return '';
+  const shown = String(name).replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  return i18n.t(`catalog:genres.${genreSlug(name)}`, { defaultValue: shown });
+}
+
 export default function DetailHero({ title, kind, meta = [], credits = [], actions }) {
+  const { t } = useTranslation('catalog');
   const [imageLoaded, setImageLoaded] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -27,7 +49,7 @@ export default function DetailHero({ title, kind, meta = [], credits = [], actio
   const art = wide || poster;
   const description = (title.description || '').trim();
   const isLong = description.length > LONG_DESCRIPTION;
-  const genres = splitGenres(title.genre || title.genres).slice(0, 4);
+  const genres = splitGenres(title.genre || title.genres).slice(0, 4).map((g) => genreName(g));
   const rating = Number(title.rating ?? title.vote_average);
 
   return (
@@ -59,7 +81,7 @@ export default function DetailHero({ title, kind, meta = [], credits = [], actio
 
       <div className="detail-hero__content">
         <div className="detail-hero__kicker">
-          <Badge tone="brand">{kind === 'tv' ? 'Series' : 'Film'}</Badge>
+          <Badge tone="brand">{kind === 'tv' ? t('common:kind.tv') : t('common:kind.movie')}</Badge>
         </div>
 
         <h1 id="detail-title" className="detail-hero__title">
@@ -74,7 +96,7 @@ export default function DetailHero({ title, kind, meta = [], credits = [], actio
         </div>
 
         {genres.length ? (
-          <ul className="detail-hero__genres" aria-label="Genres">
+          <ul className="detail-hero__genres" aria-label={t('detail.genres')}>
             {genres.map((g) => (
               <li key={g}>{g}</li>
             ))}
@@ -88,7 +110,7 @@ export default function DetailHero({ title, kind, meta = [], credits = [], actio
             <p className={isLong && !expanded ? 'is-clamped' : undefined}>{description}</p>
             {isLong ? (
               <button type="button" className="detail-hero__more" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>
-                {expanded ? 'Less' : 'More'}
+                {expanded ? t('detail.less') : t('detail.more')}
               </button>
             ) : null}
           </div>

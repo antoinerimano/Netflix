@@ -2,10 +2,12 @@
 // "Notify me" on a TV show: new episodes show up in the navbar bell and by email.
 import React, { useEffect, useState } from "react";
 import { fetchFollow, setFollow } from "../api/recoApi";
+import { useTranslation } from "react-i18next";
 import { Button } from "../design";
 import { BellIcon } from "../design/icons";
 
 export default function FollowButton({ titleId, variant = "glass" }) {
+  const { t } = useTranslation("catalog");
   const profileId = localStorage.getItem("activeProfileId");
   const [following, setFollowing] = useState(false);
 
@@ -33,8 +35,8 @@ export default function FollowButton({ titleId, variant = "glass" }) {
       variant={variant}
       icon={<BellIcon />}
       pressed={following}
-      label={following ? "Following new episodes" : "Notify me of new episodes"}
-      title={following ? "Stop new episode alerts" : "Get an alert (bell + email) when a new episode is out"}
+      label={following ? t("follow.following") : t("follow.notify")}
+      title={following ? t("follow.stopHint") : t("follow.notifyHint")}
       onClick={toggle}
     />
   );

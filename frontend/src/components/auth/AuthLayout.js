@@ -3,15 +3,20 @@
 // (logo, step, big title, one card), so the whole sign-up reads as one flow.
 // PasswordField: a labeled password input with a show / hide button.
 import React, { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { EyeIcon, EyeOffIcon } from '../../design/icons';
+import LanguagePicker from '../LanguagePicker';
 import '../profiles/profiles.css';
 import './auth.css';
 
 export function AuthLayout({ step, title, subtitle, children, footer }) {
   return (
     <div className="profile-gate auth">
-      <header className="profiles__top">
+      <header className="profiles__top auth__top">
         <img src="/logo/navbar-logo.svg" alt="Taurus" className="profiles__logo" width="927" height="108" />
+        {/* signed out: no profile language yet, so the language can be picked here */}
+        <LanguagePicker compact className="auth__language" />
       </header>
       <main className="profiles__main profiles__main--form auth__main">
         <div className="profiles__intro">
@@ -37,6 +42,7 @@ export function AuthAlert({ tone = 'error', children }) {
 }
 
 export function PasswordField({ label, value, onChange, autoComplete, hint, error, ok, ...rest }) {
+  const { t } = useTranslation('auth');
   const id = useId();
   const [shown, setShown] = useState(false);
   return (
@@ -60,7 +66,7 @@ export function PasswordField({ label, value, onChange, autoComplete, hint, erro
           type="button"
           className="auth__reveal"
           onClick={() => setShown((s) => !s)}
-          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-label={shown ? t('password.hide') : t('password.show')}
           aria-pressed={shown}
         >
           {shown ? <EyeOffIcon /> : <EyeIcon />}
@@ -81,10 +87,10 @@ export function PasswordField({ label, value, onChange, autoComplete, hint, erro
 
 // The server's rules (Django's AUTH_PASSWORD_VALIDATORS): checked here first so the user sees
 // them while typing; the server still decides (too common / too close to the email).
-export const PASSWORD_HINT = 'At least 8 characters, not only numbers.';
+export const passwordHint = () => i18n.t('auth:password.hint', { count: 8 });
 export function passwordProblem(pw) {
-  if (pw.length < 8) return 'Use at least 8 characters.';
-  if (/^\d+$/.test(pw)) return "A password can't be only numbers.";
+  if (pw.length < 8) return i18n.t('auth:password.tooShort', { count: 8 });
+  if (/^\d+$/.test(pw)) return i18n.t('auth:password.onlyNumbers');
   return null;
 }
 

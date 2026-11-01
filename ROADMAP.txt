@@ -126,3 +126,20 @@ Status: [ ] todo   [~] in progress   [x] done
          Server: sign up now checks passwords with the same rules as a reset
 [x] 4.22 Hide /choose-subscription (old plans feature, set aside for now): sign up is 2 steps,
          the page stays in the code for later
+
+5. LANGUAGES
+------------
+[x] 5.1 The app in the user's language: English, French, Spanish, German, Italian, Japanese, Chinese
+        Frontend: i18next / react-i18next, one JSON file per language and area (src/i18n/locales),
+        English bundled and every other language downloaded on first use (its own chunks), CLDR
+        plurals, numbers / dates / durations / language and country names through Intl, <html
+        lang> + page title follow the language, `npm run i18n:check` (same keys, plural forms and
+        placeholders in every language; keys used in the code exist).
+        Language = the active profile's language (profile form), else the picker on signed-out
+        pages / footer, else the browser's. The API gets it as Accept-Language.
+        Backend: LocaleMiddleware + gettext (locale/<lang>/django.po): API messages (with stable
+        codes), password reset / email change / new episode emails (in the profile's language).
+        Catalog: TitleTranslation / EpisodeTranslation from TMDB (sync_tmdb_translations, in the
+        3-hourly cron), swapped into every API response by the JSON renderer (users/localize.py);
+        search also matches translated names. Home rows / "why" lines / search reasons are sent
+        as data and worded by the app. Profiles saved as "jp" became "ja".

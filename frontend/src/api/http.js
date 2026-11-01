@@ -1,5 +1,6 @@
 // src/api/http.js
 import axios from "axios";
+import { currentLanguage } from "../i18n";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -12,6 +13,9 @@ const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const url = config.url || "";
+
+  // the server answers in the app's language: messages, emails, titles and synopses
+  config.headers["Accept-Language"] = currentLanguage();
 
   const isPublic =
     url.includes("/users/login/") ||

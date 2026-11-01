@@ -17,6 +17,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from users.i18n import current_language, to_app_language
+from users.localize import title_names
 from users.models import (
     Title, Profile, TVShowExtras, Episode, Provider,
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
@@ -517,11 +519,34 @@ def _short_count(n):
     return str(n)
 
 
-def _explain(row_type, t, similar_to=None):
-    """Card reason, only where the row title doesn't already say it ("" = none)."""
+def _explain_key(row_type, t, similar_to=None):
+    """
+    The card's reason as data, for the app to word in its language (frontend catalog:
+    home.why.<key>): {"key": "similarTo", "title_id": 12, "title": "Heat", "liked": true},
+    {"key": "ratedBy", "rating": 8.1, "votes": 21000}, {"key": "newRelease", "date": "2026-10"}...
+    None = no reason (the row title already says it).
+    """
     kind = row_type.split(":")[0]
     if kind == "for_you" and similar_to:
-        name, liked = similar_to
+        name, liked, seed_id = (*similar_to, None)[:3]
+        return {"key": "similarTo", "title": name, "title_id": seed_id, "liked": bool(liked)}
+    if kind == "top_rated" and t.vote_average and t.vote_count:
+        return {"key": "ratedBy", "rating": round(float(t.vote_average), 1), "votes": int(t.vote_count)}
+    if kind == "hidden_gems" and t.vote_average:
+        return {"key": "hiddenGem", "rating": round(float(t.vote_average), 1)}
+    if kind == "tv_hits":
+        return {"key": "popularNow"}
+    if kind in ("new_movies", "fresh_for_you"):
+        d = _parse_date(t.release_date) or _parse_date(t.first_air_date)
+        return {"key": "newRelease", "date": d.strftime("%Y-%m")} if d else None
+    return None
+
+
+def _explain(row_type, t, similar_to=None):
+    """Card reason in English, only where the row title doesn't already say it ("" = none)."""
+    kind = row_type.split(":")[0]
+    if kind == "for_you" and similar_to:
+        name, liked = similar_to[:2]
         return f"Similar to {name}" + (", which you liked" if liked else "")
     if kind == "top_rated" and t.vote_average and t.vote_count:
         return f"Rated {t.vote_average:.1f}/10 by {_short_count(t.vote_count)} people"
@@ -552,15 +577,22 @@ def _for_you_reasons(profile_id, seed_ids, picked_ids):
         TitleRating.objects.filter(profile_id=profile_id, value=TitleRating.LIKE, title_id__in=seed_ids)
         .values_list("title_id", flat=True)
     )
-    return {sim: (names[seed], seed in liked) for sim, (seed, _) in best.items() if seed in names}
+    return {sim: (names[seed], seed in liked, seed) for sim, (seed, _) in best.items() if seed in names}
 
 
 def _row_items(row_type, objs, similar_to=None):
     """Serialized cards of a row, each with its "why" when there is one."""
     items = []
     for t, data in zip(objs, TitleHomeSerializer(objs, many=True).data):
-        why = _explain(row_type, t, (similar_to or {}).get(t.id))
-        items.append({**data, "why": why} if why else dict(data))
+        reason = (similar_to or {}).get(t.id)
+        why = _explain(row_type, t, reason)
+        why_key = _explain_key(row_type, t, reason)
+        item = dict(data)
+        if why:
+            item["why"] = why  # English (older clients); the app words why_key itself
+        if why_key:
+            item["why_key"] = why_key
+        items.append(item)
     return items
 
 
@@ -1101,6 +1133,56 @@ def _drop_rejected(payload, profile):
     return {**payload, "rows": rows}
 
 
+def _row_params(row_type, profile):
+    """
+    What the app needs to word a row's title in its language (frontend catalog:
+    home.rows.<kind>): "genre:comedy" -> {"genre": "comedy"}, "in_lang" -> {"language": "fr"}...
+    The English title stays in "title" (fallback) and "analytics_title" (same in every language).
+    """
+    kind, _, arg = row_type.partition(":")
+    if kind in ("in_lang", "lang_trending"):
+        return {"language": to_app_language(profile.language_preference, "") or profile.language_preference or ""}
+    if kind == "because" and arg.isdigit():
+        return {"title_id": int(arg)}
+    if kind == "genre":
+        return {"genre": arg}
+    if kind in ("studio", "network", "actor"):
+        return {"name": str(arg).title()}
+    if kind == "country":
+        return {"country": str(arg).upper()}
+    if kind == "kw":
+        return {"keyword": arg}
+    return {}
+
+
+def _describe_rows(payload, profile):
+    """Every row gets its params, cards their reason; titles named in them in the request's language."""
+    lang = current_language()
+    rows = []
+    named = set()
+    for row in payload.get("rows") or []:
+        params = _row_params(row.get("row_type") or "", profile)
+        if "title_id" in params:
+            named.add(params["title_id"])
+        for item in row.get("items") or []:
+            why_key = item.get("why_key")
+            if why_key and why_key.get("title_id"):
+                named.add(why_key["title_id"])
+        rows.append({**row, "params": params, "analytics_title": row.get("analytics_title") or row.get("title") or ""})
+    if named:
+        english = dict(Title.objects.filter(id__in=named).values_list("id", "title"))
+        names = {**english, **title_names(named, lang)}
+        for row in rows:
+            tid = row["params"].get("title_id")
+            if tid:
+                row["params"]["title"] = names.get(tid, "")
+            for item in row.get("items") or []:
+                why_key = item.get("why_key")
+                if why_key and why_key.get("title_id") in names:
+                    item["why_key"] = {**why_key, "title": names[why_key["title_id"]]}
+    return {**payload, "rows": rows}
+
+
 def _with_live_rows(payload, profile):
     """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
     rows = list(payload.get("rows") or [])
@@ -1110,7 +1192,7 @@ def _with_live_rows(payload, profile):
     cont = _continue_watching_row(profile)
     if cont["items"]:
         rows.insert(0, cont)
-    return _apply_age_limit(_drop_rejected({**payload, "rows": rows}, profile), profile)
+    return _describe_rows(_apply_age_limit(_drop_rejected({**payload, "rows": rows}, profile), profile), profile)
 
 
 class RecoHomeView(APIView):

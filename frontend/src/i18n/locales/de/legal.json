@@ -1,0 +1,18 @@
+{
+  "dmca": {
+    "intro": "Gemäß dem Digital Millennium Copyright Act von 1998 reagiert Tauruss zügig auf Meldungen über Urheberrechtsverletzungen, die dem unten genannten Urheberrechtsbeauftragten gemeldet werden.",
+    "liability": "Nach Abschnitt 512(f) kann haftbar gemacht werden, wer wissentlich und wesentlich falsch angibt, dass ein Inhalt oder eine Handlung eine Rechtsverletzung darstellt. Tauruss behält sich das Recht vor, nach eigenem Ermessen Inhalte zu entfernen und Konten von Nutzern zu schließen, die geistiges Eigentum oder andere Rechte Dritter verletzen oder zu verletzen scheinen.",
+    "filingTitle": "Eine Meldung einreichen",
+    "filingText": "Wenn du glaubst, dass dein urheberrechtlich geschütztes Werk auf eine rechtsverletzende Weise kopiert wurde, sende unserem Urheberrechtsbeauftragten bitte:",
+    "noticeItems": [
+      "Eine physische oder elektronische Unterschrift einer Person, die berechtigt ist, im Namen des Inhabers des angeblich verletzten ausschließlichen Rechts zu handeln.",
+      "Die Angabe des urheberrechtlich geschützten Werks, das angeblich verletzt wurde (oder eine repräsentative Liste, wenn eine Meldung mehrere Werke betrifft).",
+      "Die Angabe des angeblich rechtsverletzenden Materials mit ausreichenden Informationen, damit wir es finden können.",
+      "Deine Kontaktdaten: Name, Adresse, Telefonnummer und, falls vorhanden, eine E-Mail-Adresse.",
+      "Eine Erklärung, dass du in gutem Glauben davon ausgehst, dass die Nutzung weder vom Rechteinhaber noch von seinem Vertreter oder vom Gesetz erlaubt ist.",
+      "Eine Erklärung, dass die Angaben in der Meldung richtig sind und dass du, unter Strafandrohung für Meineid, berechtigt bist, im Namen des Inhabers des ausschließlichen Rechts zu handeln."
+    ],
+    "contactTitle": "Kontakt für Urheberrechtsfragen",
+    "contactText": "E-Mail: <mail>{{email}}</mail>. Wir entschuldigen uns für jeden Missbrauch unseres Dienstes und tun unser Bestes, rechtsverletzende Dateien zu finden und zu entfernen."
+  }
+}

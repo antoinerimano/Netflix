@@ -1,0 +1,207 @@
+{
+  "kids": "Kinder",
+  "create": {
+    "title": "Profil erstellen",
+    "subtitle_one": "Du kannst später bis zu {{count}} Profil hinzufügen, eines pro Person.",
+    "subtitle_other": "Du kannst später bis zu {{count}} Profile hinzufügen, eines pro Person."
+  },
+  "who": {
+    "title": "Wer schaut gerade?",
+    "loadError": "Deine Profile konnten nicht geladen werden",
+    "watchAs": "Als {{name}} schauen"
+  },
+  "manage": {
+    "title": "Profile verwalten",
+    "subtitle": "Wähle ein Profil aus, um es zu bearbeiten.",
+    "edit": "{{name}} bearbeiten"
+  },
+  "add": {
+    "title": "Profil hinzufügen",
+    "submit": "Profil hinzufügen"
+  },
+  "edit": {
+    "title": "Profil bearbeiten",
+    "confirmDelete": "{{name}} löschen?",
+    "keep": "Behalten",
+    "delete": "Profil löschen"
+  },
+  "toast": {
+    "added": "{{name}} hinzugefügt",
+    "saved": "{{name}} gespeichert",
+    "deleted": "{{name}} gelöscht"
+  },
+  "age": {
+    "all": "Alle Altersstufen",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "Keine Grenze",
+    "everything": "Alles",
+    "kidsSummary": "Kinder · {{limit}}"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "z. B. Sam",
+    "nameRequired": "Gib dem Profil einen Namen.",
+    "saveFailed": "Das Profil konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "picture": "Bild",
+    "pictureGroup": "Profilbild",
+    "ownAvatar": "Dein Avatar",
+    "ownAvatarEdit": "Dein Avatar: bearbeiten",
+    "createAvatar": "Eigenen Avatar erstellen",
+    "create": "Erstellen",
+    "letter": "Buchstabe",
+    "photo": "Bild {{number}}",
+    "letterColor": "Buchstabenfarbe",
+    "color": "Farbe {{color}}",
+    "kids": "Kinderprofil",
+    "kidsHint": "Nur Titel, die für Kinder freigegeben sind, und eine einfachere Startseite.",
+    "ageLimit": "Altersgrenze",
+    "ageLimitHint": "Titel mit einer höheren Freigabe werden ausgeblendet.",
+    "ageLimitKidsHint": "Kinderprofile gehen bis 7+ (PG).",
+    "language": "Sprache",
+    "languageHint": "App, Titel und Inhaltsangaben werden in dieser Sprache angezeigt."
+  },
+  "avatar": {
+    "title": "Avatar erstellen",
+    "use": "Diesen Avatar verwenden",
+    "surprise": "Überrasch mich",
+    "undo": "Rückgängig",
+    "partsLabel": "Avatar-Teile",
+    "style": "Stil",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Haare",
+      "hat": "Hüte",
+      "eyes": "Augen",
+      "brows": "Brauen",
+      "mouth": "Mund",
+      "beard": "Bart",
+      "extras": "Extras",
+      "face": "Gesicht",
+      "top": "Oberteil",
+      "scene": "Hintergrund"
+    },
+    "colors": {
+      "hc": "Haarfarbe",
+      "hwc": "Hutfarbe",
+      "sk": "Haut",
+      "sh": "Farbe",
+      "bg": "Farben"
+    },
+    "parts": {
+      "bg": "Hintergrund",
+      "pt": "Muster",
+      "fc": "Gesichtsform",
+      "sk": "Haut",
+      "ey": "Augen",
+      "eb": "Augenbrauen",
+      "mo": "Mund",
+      "hr": "Haare",
+      "hc": "Haarfarbe",
+      "hw": "Hut",
+      "hwc": "Hutfarbe",
+      "bd": "Bart",
+      "ex": "Extras",
+      "sh": "Farbe des Oberteils",
+      "ts": "Oberteil"
+    },
+    "names": {
+      "pt": [
+        "Keins",
+        "Punkte",
+        "Streifen",
+        "Wellen",
+        "Sterne",
+        "Gitter",
+        "Konfetti"
+      ],
+      "fc": [
+        "Rund",
+        "Eckig",
+        "Oval",
+        "Breit"
+      ],
+      "ey": [
+        "Punkte",
+        "Glänzend",
+        "Fröhlich",
+        "Zwinkern",
+        "Müde",
+        "Sterne",
+        "Sonnenbrille",
+        "Groß",
+        "Wimpern",
+        "Herzen"
+      ],
+      "eb": [
+        "Keine",
+        "Sanft",
+        "Buschig",
+        "Hochgezogen",
+        "Wütend",
+        "Besorgt",
+        "Monobraue"
+      ],
+      "mo": [
+        "Lächeln",
+        "Grinsen",
+        "Überrascht",
+        "Neutral",
+        "Zunge",
+        "Schmunzeln",
+        "Lachen",
+        "Lippenstift"
+      ],
+      "hr": [
+        "Keine",
+        "Kurz",
+        "Stachelig",
+        "Lockig",
+        "Lang",
+        "Dutt",
+        "Irokese",
+        "Afro",
+        "Seitenscheitel",
+        "Kurzhaarschnitt",
+        "Pferdeschwanz",
+        "Zöpfe"
+      ],
+      "hw": [
+        "Keiner",
+        "Cap",
+        "Mütze",
+        "Krone",
+        "Kopfhörer",
+        "Bandana",
+        "Zylinder",
+        "Blumen",
+        "Heiligenschein",
+        "Katzenohren"
+      ],
+      "bd": [
+        "Keiner",
+        "Stoppeln",
+        "Vollbart",
+        "Ziegenbart",
+        "Schnurrbart",
+        "Lenkerbart"
+      ],
+      "ex": [
+        "Keine",
+        "Rouge",
+        "Sommersprossen",
+        "Runde Brille",
+        "Eckige Brille",
+        "Ohrringe",
+        "Schönheitsfleck"
+      ],
+      "ts": [
+        "T-Shirt",
+        "Hoodie",
+        "Kragen",
+        "Rollkragen"
+      ]
+    }
+  }
+}

@@ -3,6 +3,7 @@
 // shows, the episodes of the season (season chips + a scrolling row, the one playing marked;
 // choosing one plays it). Filled the empty space under the sources on phones.
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Chip, SectionTitle } from '../../design';
 import { PlayIcon } from '../../design/icons';
 import { tmdbImage, IMG } from '../../utils/tmdbImage';
@@ -12,6 +13,7 @@ const stillUrl = (path) => (path ? `https://image.tmdb.org/t/p/w300/${String(pat
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function WatchInfo({ title, isTV, seasonNumber, episodeNumber, onPlayEpisode }) {
+  const { t } = useTranslation('watch');
   const seasons = useMemo(
     () =>
       (Array.isArray(title?.seasons) ? [...title.seasons] : [])
@@ -32,14 +34,15 @@ export default function WatchInfo({ title, isTV, seasonNumber, episodeNumber, on
     : null;
 
   const heading = isTV
-    ? `S${seasonNumber} · E${episodeNumber}${playing?.name ? ` · ${playing.name}` : ''}`
+    ? `${t('catalog:episodeShort', { season: seasonNumber, episode: episodeNumber })}${playing?.name ? ` · ${playing.name}` : ''}`
     : title?.title;
   const text = (isTV ? playing?.overview : '') || title?.description || '';
   const art = title?.landscape_image || title?.poster || '';
 
   return (
     <div className="watch-info">
-      <section className="watch-info__about" aria-label="About">
+      {/* focusable: a remote can scroll down to read it (nothing else to land on) */}
+      <section className="watch-info__about" aria-label={t('info.about')} tabIndex={0}>
         <h2 className="watch-info__title">{heading}</h2>
         {text ? <p className="watch-info__text">{text}</p> : null}
       </section>
@@ -48,23 +51,23 @@ export default function WatchInfo({ title, isTV, seasonNumber, episodeNumber, on
         <section className="watch-info__episodes" aria-labelledby="watch-episodes-title">
           <div className="watch-info__head">
             <SectionTitle as="h2" id="watch-episodes-title">
-              Episodes
+              {t('catalog:detail.episodes')}
             </SectionTitle>
             {seasons.length > 1 ? (
-              <div className="ui-scroller watch-info__seasons" role="group" aria-label="Season">
+              <div className="ui-scroller watch-info__seasons" role="group" aria-label={t('catalog:detail.season')}>
                 {seasons.map((s) => (
                   <Chip
                     key={s.season_number}
                     selected={Number(s.season_number) === Number(season?.season_number)}
                     onClick={() => setShownSeason(s.season_number)}
                   >
-                    {s.season_number === 0 ? 'Specials' : `Season ${s.season_number}`}
+                    {s.season_number === 0 ? t('catalog:detail.specials') : t('catalog:detail.seasonNumber', { number: s.season_number })}
                   </Chip>
                 ))}
               </div>
             ) : null}
           </div>
-          <ul className="ui-scroller watch-info__row" aria-label={`Season ${season?.season_number} episodes`}>
+          <ul className="ui-scroller watch-info__row" aria-label={t('info.seasonEpisodes', { number: season?.season_number })}>
             {episodes.map((ep) => {
               const isPlaying =
                 Number(season?.season_number) === Number(seasonNumber) && Number(ep.episode_number) === Number(episodeNumber);
@@ -78,14 +81,18 @@ export default function WatchInfo({ title, isTV, seasonNumber, episodeNumber, on
                     aria-current={isPlaying ? 'true' : undefined}
                     disabled={notAired}
                     onClick={() => !isPlaying && onPlayEpisode(season.season_number, ep.episode_number)}
-                    aria-label={`Episode ${ep.episode_number}${ep.name ? `: ${ep.name}` : ''}${isPlaying ? ' (playing)' : ''}${notAired ? ' (coming soon)' : ''}`}
+                    aria-label={[
+                      ep.name ? t('info.episodeNamed', { number: ep.episode_number, name: ep.name }) : t('catalog:detail.episodeNumber', { number: ep.episode_number }),
+                      isPlaying ? t('info.playingNow') : '',
+                      notAired ? t('info.comingSoon') : '',
+                    ].filter(Boolean).join(', ')}
                   >
                     <span className={`watch-ep__still${ep.still_path ? '' : ' is-fallback'}`} style={img ? { backgroundImage: `url(${img})` } : undefined}>
                       {!ep.still_path ? <span className="watch-ep__num">{ep.episode_number}</span> : null}
                       {isPlaying ? (
-                        <span className="watch-ep__playing">Playing</span>
+                        <span className="watch-ep__playing">{t('info.playing')}</span>
                       ) : notAired ? (
-                        <span className="watch-ep__playing watch-ep__playing--soon">Soon</span>
+                        <span className="watch-ep__playing watch-ep__playing--soon">{t('info.soon')}</span>
                       ) : (
                         <span className="watch-ep__play" aria-hidden="true">
                           <PlayIcon />
@@ -93,7 +100,7 @@ export default function WatchInfo({ title, isTV, seasonNumber, episodeNumber, on
                       )}
                     </span>
                     <span className="watch-ep__title">
-                      {ep.episode_number}. {ep.name || `Episode ${ep.episode_number}`}
+                      {ep.episode_number}. {ep.name || t('catalog:detail.episodeNumber', { number: ep.episode_number })}
                     </span>
                   </button>
                 </li>

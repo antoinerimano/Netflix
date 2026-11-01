@@ -4,6 +4,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
+import { formatNumber } from "../i18n/format";
 import { AlertIcon, CheckIcon, CloseIcon, FilmIcon, StarIcon } from "./icons";
 import { AvatarArt, isBuiltAvatar, parseAvatar } from "./avatarArt";
 import BrandLoader from "./BrandLoader";
@@ -100,12 +103,14 @@ export function Badge({ tone = "default", className, children, ...rest }) {
 
 /** ★ 7.4 */
 export function Rating({ value, className }) {
+  const { t, i18n: { resolvedLanguage } } = useTranslation();
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
+  const shown = formatNumber(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, resolvedLanguage);
   return (
-    <Badge tone="rating" className={className} aria-label={`Rated ${n.toFixed(1)} out of 10`}>
+    <Badge tone="rating" className={className} aria-label={t("rating.outOf10", { value: shown })}>
       <StarIcon className="ui-badge__star" width="1em" height="1em" />
-      {n.toFixed(1)}
+      {shown}
     </Badge>
   );
 }
@@ -122,7 +127,7 @@ export function Skeleton({ variant = "block", width, height, radius, className, 
 }
 
 /** Loading indicator: the animated Taurus emblem (BrandLoader). size in px. */
-export function Spinner({ className, label = "Loading", size = 56 }) {
+export function Spinner({ className, label, size = 56 }) {
   return <BrandLoader size={size} label={label} className={className} />;
 }
 
@@ -151,16 +156,20 @@ export function SectionTitle({ as: Tag = "h2", className, children, ...rest }) {
   );
 }
 
-/** Turns API errors into a sentence people can read (no "Request failed with status code 404") */
-export function friendlyError(err, what = "this page") {
+/**
+ * Turns API errors into a sentence people can read (no "Request failed with status code 404"),
+ * in the app's language. what: "page" | "title" | "movie" | "show" | "actor" | "episode"
+ * (errors.what.* in locales/<lang>/common.json).
+ */
+export function friendlyError(err, what = "page") {
   const status = err?.response?.status ?? err?.status;
-  if (status === 404) return `We couldn't find ${what}. It may have been removed.`;
-  if (status === 401 || status === 403) return "Your session has expired. Please sign in again.";
-  if (status >= 500) return "Our server is having trouble right now. Please try again in a moment.";
+  if (status === 404) return i18n.t("common:errors.notFound", { context: what });
+  if (status === 401 || status === 403) return i18n.t("common:errors.sessionExpired");
+  if (status >= 500) return i18n.t("common:errors.server");
   if (err?.message === "Network Error" || (typeof navigator !== "undefined" && navigator.onLine === false)) {
-    return "You seem to be offline. Check your connection and try again.";
+    return i18n.t("common:errors.offline");
   }
-  return "Something went wrong. Please try again.";
+  return i18n.t("common:errors.generic");
 }
 
 /**
@@ -181,6 +190,7 @@ export function Modal({
   initialFocus = ".ui-modal__close", // selector inside the dialog focused when it opens
   scrollable = true, // long text: the body itself can take the focus and scroll with the arrows
 }) {
+  const { t } = useTranslation();
   const cardRef = React.useRef(null);
   const openerRef = React.useRef(null);
   const titleId = React.useId();
@@ -240,7 +250,7 @@ export function Modal({
           ) : (
             <span />
           )}
-          <button type="button" className="ui-btn ui-btn--ghost ui-btn--icon ui-btn--sm ui-modal__close" aria-label="Close" onClick={onClose}>
+          <button type="button" className="ui-btn ui-btn--ghost ui-btn--icon ui-btn--sm ui-modal__close" aria-label={t("actions.close")} onClick={onClose}>
             <span className="ui-btn__icon">
               <CloseIcon />
             </span>

@@ -3,11 +3,13 @@
 // Same rules as sign up (the server's AUTH_PASSWORD_VALIDATORS decide); then back to sign in.
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
 import { confirmPasswordReset } from '../api/userApi';
 import { Button, friendlyError } from '../design';
-import { AuthAlert, AuthLayout, PASSWORD_HINT, PasswordField, passwordProblem } from './auth/AuthLayout';
+import { AuthAlert, AuthLayout, passwordHint, PasswordField, passwordProblem } from './auth/AuthLayout';
 
 const ConfirmPasswordReset = () => {
+  const { t } = useTranslation('auth');
   const { uid, token } = useParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -21,9 +23,9 @@ const ConfirmPasswordReset = () => {
   const mismatch = confirm && confirm !== password;
   const confirmError =
     mismatch && (touched.confirm || confirm.length >= password.length)
-      ? "Passwords don't match."
+      ? t('password.mismatch')
       : touched.confirm && !confirm
-        ? 'Type your new password again.'
+        ? t('password.typeNewAgain')
         : null;
 
   const submit = async (e) => {
@@ -38,7 +40,8 @@ const ConfirmPasswordReset = () => {
       setDone(true);
     } catch (err) {
       const reason = err?.response?.data?.error;
-      if (/token|link/i.test(reason || '')) setError('This link has expired or was already used. Ask for a new one from the sign-in page.');
+      const code = err?.response?.data?.code;
+      if (code === 'invalid_link' || (!code && /token|link/i.test(reason || ''))) setError(t('reset.expired'));
       else setError(err?.response?.status === 400 && reason ? reason : friendlyError(err));
     } finally {
       setBusy(false);
@@ -47,9 +50,9 @@ const ConfirmPasswordReset = () => {
 
   if (done) {
     return (
-      <AuthLayout title="Password changed" subtitle="You can now sign in with your new password.">
+      <AuthLayout title={t('reset.doneTitle')} subtitle={t('reset.doneText')}>
         <Button variant="primary" size="lg" block onClick={() => navigate('/login', { replace: true })} data-tv-start="">
-          Sign in
+          {t('signIn.submit')}
         </Button>
       </AuthLayout>
     );
@@ -57,36 +60,32 @@ const ConfirmPasswordReset = () => {
 
   return (
     <AuthLayout
-      title="Choose a new password"
-      footer={
-        <>
-          Remembered it? <Link to="/login">Sign in</Link>
-        </>
-      }
+      title={t('reset.title')}
+      footer={<Trans t={t} i18nKey="reset.footer" components={{ action: <Link to="/login" /> }} />}
     >
       <form className="auth__form" onSubmit={submit} noValidate>
         <AuthAlert>{error}</AuthAlert>
         <PasswordField
-          label="New password"
+          label={t('fields.newPassword')}
           value={password}
           onChange={setPassword}
-          onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+          onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
           autoComplete="new-password"
-          hint={PASSWORD_HINT}
+          hint={passwordHint()}
           error={touched.password ? pwProblem : null}
           data-tv-start=""
         />
         <PasswordField
-          label="Confirm new password"
+          label={t('fields.confirmNewPassword')}
           value={confirm}
           onChange={setConfirm}
-          onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+          onBlur={() => setTouched((prev) => ({ ...prev, confirm: true }))}
           autoComplete="new-password"
           error={confirmError}
-          ok={confirm && !mismatch && !pwProblem ? 'Passwords match.' : null}
+          ok={confirm && !mismatch && !pwProblem ? t('password.match') : null}
         />
         <Button type="submit" variant="primary" size="lg" block loading={busy}>
-          Save password
+          {t('reset.submit')}
         </Button>
       </form>
     </AuthLayout>

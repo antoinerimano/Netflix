@@ -1,6 +1,7 @@
 // List.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Navbar from './Navbar';
 import MovieCard from './MovieCard';
 import Footer from './Footer';
@@ -12,6 +13,7 @@ import { Button, EmptyState, Skeleton } from '../design';
 import { PlusIcon } from '../design/icons';
 
 const List = () => {
+  const { t, i18n } = useTranslation('catalog');
   const navigate = useNavigate();
 
   const [activeProfileId, setActiveProfileId] = useState(() =>
@@ -39,12 +41,12 @@ const List = () => {
     setLoading(true);
     fetchMyList(activeProfileId)
       .then((items) => alive && setList(items))
-      .catch(() => alive && setError('Could not load your list.'))
+      .catch(() => alive && setError(t('list.loadErrorText')))
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [activeProfileId]);
+  }, [activeProfileId, i18n.resolvedLanguage]); // eslint-disable-line react-hooks/exhaustive-deps -- t follows the language
 
   const getDetailPath = (item) => {
     const isTv =
@@ -78,9 +80,9 @@ const List = () => {
       {!loading && !error && list.length > 0 ? (
         <header className="browse__head">
           <div className="browse__titles">
-            <h1 className="browse__title">My List</h1>
+            <h1 className="browse__title">{t('common:nav.myList')}</h1>
             <span className="browse__count">
-              {list.length} {list.length === 1 ? 'title' : 'titles'}
+              {t('list.count', { count: list.length })}
             </span>
           </div>
         </header>
@@ -90,8 +92,8 @@ const List = () => {
           <EmptyState
             page
             tone="error"
-            title="Couldn't load your list"
-            actions={<Button variant="primary" onClick={() => window.location.reload()}>Try again</Button>}
+            title={t('list.loadError')}
+            actions={<Button variant="primary" onClick={() => window.location.reload()}>{t('actions.tryAgain')}</Button>}
           >
             {error}
           </EmptyState>
@@ -99,15 +101,15 @@ const List = () => {
           <EmptyState
             page
             icon={<PlusIcon />}
-            title="Your list is empty"
+            title={t('list.emptyTitle')}
             actions={
               <>
-                <Button variant="primary" to="/movies">Browse movies</Button>
-                <Button variant="glass" to="/tv">Browse TV shows</Button>
+                <Button variant="primary" to="/movies">{t('detail.browseMovies')}</Button>
+                <Button variant="glass" to="/tv">{t('notifications.browse')}</Button>
               </>
             }
           >
-            Add movies and shows with the + button to find them here later.
+            {t('list.emptyText')}
           </EmptyState>
         )
       ) : (

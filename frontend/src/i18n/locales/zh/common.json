@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "Tauruss – 高清在线观看电影和剧集"
+  },
+  "loading": "加载中",
+  "checkingPermissions": "正在检查权限…",
+  "language": {
+    "label": "语言"
+  },
+  "actions": {
+    "close": "关闭",
+    "cancel": "取消",
+    "save": "保存",
+    "continue": "继续",
+    "delete": "删除",
+    "done": "完成",
+    "tryAgain": "重试",
+    "goHome": "返回首页",
+    "goBack": "返回"
+  },
+  "kind": {
+    "movie": "电影",
+    "tv": "剧集"
+  },
+  "rating": {
+    "outOf10": "评分 {{value}}/10"
+  },
+  "errors": {
+    "notFound": "找不到此页面，它可能已被删除。",
+    "notFound_page": "找不到此页面，它可能已被删除。",
+    "notFound_title": "找不到此作品，它可能已被删除。",
+    "notFound_movie": "找不到这部电影，它可能已被删除。",
+    "notFound_show": "找不到这部剧集，它可能已被删除。",
+    "notFound_movies": "找不到这些电影，它们可能已被删除。",
+    "notFound_shows": "找不到这些剧集，它们可能已被删除。",
+    "notFound_actor": "找不到这位演员。",
+    "notFound_account": "找不到你的账户。",
+    "notFound_profiles": "找不到你的个人资料。",
+    "notFound_results": "没有找到结果。",
+    "sessionExpired": "你的会话已过期，请重新登录。",
+    "server": "服务器暂时出现问题，请稍后再试。",
+    "offline": "你似乎处于离线状态。请检查网络连接后重试。",
+    "generic": "出了点问题，请重试。"
+  },
+  "notFound": {
+    "title": "找不到页面",
+    "text": "此页面不存在或已被移动。"
+  },
+  "footer": {
+    "dmca": "DMCA 声明",
+    "contact": "联系我们",
+    "copyright": "© {{year}} Tauruss。保留所有权利。"
+  },
+  "nav": {
+    "main": "主导航",
+    "home": "首页",
+    "movies": "电影",
+    "tv": "剧集",
+    "myList": "我的片单",
+    "adminUsers": "管理：用户",
+    "adminMovies": "管理：作品",
+    "search": "搜索",
+    "searchPlaceholder": "搜索电影和剧集",
+    "searchLabel": "搜索电影和剧集",
+    "seeAllResults": "查看“{{query}}”的全部结果",
+    "share": "分享网站",
+    "shareHint": "分享 tauruss.top（按 Ctrl+D 添加书签）",
+    "shareText": "来看看 Taurus",
+    "shareApp": "分享 Tauruss",
+    "linkCopied": "链接已复制！",
+    "shared": "已分享！",
+    "profileMenu": "个人资料和账户",
+    "profiles": "个人资料",
+    "noProfiles": "没有个人资料",
+    "manageProfiles": "管理个人资料",
+    "install": "安装应用",
+    "installIos": "在 Safari 中点按“分享”按钮，然后选择“添加到主屏幕”。",
+    "account": "账户设置",
+    "signOut": "退出登录",
+    "signIn": "登录"
+  }
+}

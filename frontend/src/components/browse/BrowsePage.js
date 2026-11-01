@@ -6,6 +6,10 @@
 // coming back from a title.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+import { formatNumber } from '../../i18n/format';
+import { genreName } from '../detail/DetailHero';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import MovieCard from '../MovieCard';
@@ -18,50 +22,47 @@ import './browse.css';
 const PAGE_SIZE = 48; // divisible by 2, 3, 4, 6 and 8 columns
 const FILTER_KEYS = ['query', 'genre', 'sort', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor'];
 
+// labels: catalog:browse.sort.<key>
 const SORTS = [
-  { value: '', label: 'Popular' },
-  { value: 'rating', label: 'Top rated' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'title', label: 'A–Z' },
+  { value: '', key: 'popular' },
+  { value: 'rating', key: 'rating' },
+  { value: 'newest', key: 'newest' },
+  { value: 'title', key: 'title' },
 ];
-const RATINGS = [
-  { value: '', label: 'Any' },
-  { value: '6', label: '6+' },
-  { value: '7', label: '7+' },
-  { value: '8', label: '8+' },
-];
+const RATINGS = ['', '6', '7', '8'];
 const THIS_YEAR = new Date().getFullYear();
 const DECADES = [
-  { label: 'Any', min: '', max: '' },
-  { label: `${THIS_YEAR - 1}–${THIS_YEAR}`, min: String(THIS_YEAR - 1), max: '' },
-  { label: '2020s', min: '2020', max: '2029' },
-  { label: '2010s', min: '2010', max: '2019' },
-  { label: '2000s', min: '2000', max: '2009' },
-  { label: '1990s', min: '1990', max: '1999' },
-  { label: '1980s', min: '1980', max: '1989' },
-  { label: 'Before 1980', min: '', max: '1979' },
+  { min: '', max: '' },
+  { min: String(THIS_YEAR - 1), max: '' },
+  { min: '2020', max: '2029' },
+  { min: '2010', max: '2019' },
+  { min: '2000', max: '2009' },
+  { min: '1990', max: '1999' },
+  { min: '1980', max: '1989' },
+  { min: '', max: '1979' },
 ];
-
-const COPY = {
-  movie: { title: 'Movies', noun: 'movies', one: 'movie', search: 'Search movies' },
-  tv: { title: 'TV Shows', noun: 'shows', one: 'show', search: 'Search shows' },
-};
 
 const readFilters = (search) => {
   const sp = new URLSearchParams(search);
   return Object.fromEntries(FILTER_KEYS.map((k) => [k, sp.get(k) || '']));
 };
 
+/** "Any", "2024–2025", "2010s", "Before 1980", "From 1995" in the app's language */
 function decadeLabel(min, max) {
-  const d = DECADES.find((x) => x.min === (min || '') && x.max === (max || ''));
-  if (d) return d.label;
-  if (min && max) return `${min}–${max}`;
-  if (min) return `From ${min}`;
-  return `Until ${max}`;
+  const years = (key, opts) => i18n.t(`catalog:browse.years.${key}`, opts);
+  if (!min && !max) return years('any');
+  if (min === String(THIS_YEAR - 1) && !max) return years('range', { from: min, to: THIS_YEAR });
+  if (min && max && Number(max) - Number(min) === 9 && min.endsWith('0')) return years('decade', { decade: min });
+  if (min && max) return years('range', { from: min, to: max });
+  if (min) return years('from', { year: min });
+  return Number(max) % 10 === 9 ? years('before', { year: Number(max) + 1 }) : years('until', { year: max });
 }
 
 export default function BrowsePage({ kind = 'movie' }) {
-  const copy = COPY[kind];
+  const { t, i18n: instance } = useTranslation('catalog');
+  const lng = instance.resolvedLanguage;
+  // "movie" / "tv" texts: catalog:browse.<kind>.*
+  const copy = { title: t(`browse.${kind}.title`), search: t(`browse.${kind}.search`) };
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -111,8 +112,8 @@ export default function BrowsePage({ kind = 'movie' }) {
   useEffect(() => setQuery(filters.query), [filters.query]);
   useEffect(() => {
     if (query === filters.query) return undefined;
-    const t = setTimeout(() => applyFilters({ query: query.trim() }), 350);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => applyFilters({ query: query.trim() }), 350);
+    return () => clearTimeout(timer);
   }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // filters changed (or first visit): load pages 1..page of the URL at once (Back restores them)
@@ -127,7 +128,7 @@ export default function BrowsePage({ kind = 'movie' }) {
       .then((results) => {
         if (!alive) return;
         const seen = new Set();
-        const all = results.flatMap((r) => r.items || []).filter((t) => !seen.has(t.id) && seen.add(t.id));
+        const all = results.flatMap((r) => r.items || []).filter((x) => !seen.has(x.id) && seen.add(x.id));
         setItems(all);
         setCount(results[0]?.count ?? all.length);
         setPage(urlPage);
@@ -143,7 +144,8 @@ export default function BrowsePage({ kind = 'movie' }) {
     return () => {
       alive = false;
     };
-  }, [filtersKey, kind]); // eslint-disable-line react-hooks/exhaustive-deps -- urlPage: only on first load
+    // lng: titles come back in the app's language
+  }, [filtersKey, kind, lng]); // eslint-disable-line react-hooks/exhaustive-deps -- urlPage: only on first load
 
   // back from a title: same scroll position as when the user left
   useEffect(() => {
@@ -158,10 +160,10 @@ export default function BrowsePage({ kind = 'movie' }) {
     if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
   }, [loading, scrollKey]);
   useEffect(() => {
-    let t = null;
+    let timer = null;
     const onScroll = () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
         try {
           sessionStorage.setItem(scrollKey, String(Math.round(window.scrollY)));
         } catch {
@@ -171,7 +173,7 @@ export default function BrowsePage({ kind = 'movie' }) {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
-      clearTimeout(t);
+      clearTimeout(timer);
       window.removeEventListener('scroll', onScroll);
     };
   }, [scrollKey]);
@@ -183,8 +185,8 @@ export default function BrowsePage({ kind = 'movie' }) {
       const next = page + 1;
       const res = await fetchTitlesPage({ type: kind, page: next, pageSize: PAGE_SIZE, ...filters });
       setItems((prev) => {
-        const seen = new Set(prev.map((t) => t.id));
-        return [...prev, ...(res.items || []).filter((t) => !seen.has(t.id))];
+        const seen = new Set(prev.map((x) => x.id));
+        return [...prev, ...(res.items || []).filter((x) => !seen.has(x.id))];
       });
       setPage(next);
       setHasMore(Boolean(res.next));
@@ -212,14 +214,14 @@ export default function BrowsePage({ kind = 'movie' }) {
   };
   const advancedCount = ['ratingMin', 'yearMin', 'yearMax', 'director', 'actor'].filter((k) => filters[k]).length;
   const pills = [
-    filters.ratingMin && { key: 'ratingMin', label: `★ ${filters.ratingMin}+`, clear: { ratingMin: '' } },
+    filters.ratingMin && { key: 'ratingMin', label: t('browse.ratingAtLeast', { value: filters.ratingMin }), clear: { ratingMin: '' } },
     (filters.yearMin || filters.yearMax) && {
       key: 'years',
       label: decadeLabel(filters.yearMin, filters.yearMax),
       clear: { yearMin: '', yearMax: '' },
     },
-    filters.director && { key: 'director', label: `Director: ${filters.director}`, clear: { director: '' } },
-    filters.actor && { key: 'actor', label: `With ${filters.actor}`, clear: { actor: '' } },
+    filters.director && { key: 'director', label: t('browse.pillDirector', { name: filters.director }), clear: { director: '' } },
+    filters.actor && { key: 'actor', label: t('browse.pillActor', { name: filters.actor }), clear: { actor: '' } },
   ].filter(Boolean);
   const anyFilter = FILTER_KEYS.some((k) => k !== 'sort' && filters[k]);
   const clearAll = () => {
@@ -230,7 +232,7 @@ export default function BrowsePage({ kind = 'movie' }) {
   let body;
   if (loading) {
     body = (
-      <div className="poster-grid" aria-busy="true" aria-label="Loading">
+      <div className="poster-grid" aria-busy="true" aria-label={t('common:loading')}>
         {Array.from({ length: 18 }, (_, i) => (
           <div key={i} className="browse__skeleton">
             <Skeleton style={{ aspectRatio: '2 / 3' }} />
@@ -244,42 +246,42 @@ export default function BrowsePage({ kind = 'movie' }) {
     body = (
       <EmptyState
         tone="error"
-        title={`Couldn't load ${copy.noun}`}
-        actions={<Button variant="primary" onClick={() => applyFilters({})}>Try again</Button>}
+        title={t(`browse.${kind}.loadError`)}
+        actions={<Button variant="primary" onClick={() => applyFilters({})}>{t('actions.tryAgain')}</Button>}
       >
-        {friendlyError(error, `these ${copy.noun}`)}
+        {friendlyError(error, kind === 'tv' ? 'shows' : 'movies')}
       </EmptyState>
     );
   } else if (!items.length) {
     body = (
       <EmptyState
         icon={<SearchIcon />}
-        title={`No ${copy.noun} found`}
-        actions={anyFilter ? <Button variant="secondary" onClick={clearAll}>Clear filters</Button> : null}
+        title={t(`browse.${kind}.none`)}
+        actions={anyFilter ? <Button variant="secondary" onClick={clearAll}>{t('browse.clearFilters')}</Button> : null}
       >
-        {filters.query ? `Nothing starts with “${filters.query}”. ` : ''}Try another genre or fewer filters.
+        {filters.query ? `${t('browse.nothingStartsWith', { query: filters.query })} ` : ''}{t('browse.tryOther')}
       </EmptyState>
     );
   } else {
     body = (
       <>
         <div className="poster-grid">
-          {items.map((t, idx) => (
+          {items.map((item, idx) => (
             <MovieCard
-              key={t.id}
-              movie={{ ...t, type: t.type || kind }}
+              key={item.id}
+              movie={{ ...item, type: item.type || kind }}
               priority={idx < 12}
-              analytics={{ surface: kind === 'tv' ? 'tv_grid' : 'movies_grid', position: idx, row_title: copy.title }}
+              analytics={{ surface: kind === 'tv' ? 'tv_grid' : 'movies_grid', position: idx, row_title: kind === 'tv' ? 'TV Shows' : 'Movies' }}
             />
           ))}
         </div>
         <div ref={sentinelRef} className="browse__more">
           {hasMore ? (
             <Button variant="glass" loading={loadingMore} onClick={loadMore}>
-              Show more {copy.noun}
+              {t(`browse.${kind}.more`)}
             </Button>
           ) : items.length > PAGE_SIZE ? (
-            <p className="browse__end">You've reached the end.</p>
+            <p className="browse__end">{t('browse.end')}</p>
           ) : null}
         </div>
       </>
@@ -292,10 +294,10 @@ export default function BrowsePage({ kind = 'movie' }) {
 
       <header className="browse__head">
         <div className="browse__titles">
-          <h1 className="browse__title">{filters.genre || copy.title}</h1>
+          <h1 className="browse__title">{filters.genre ? genreName(filters.genre) : copy.title}</h1>
           {count != null && !loading ? (
             <span className="browse__count">
-              {count.toLocaleString()} {count === 1 ? copy.one : copy.noun}
+              {t(`browse.${kind}.count`, { count, formatted: formatNumber(count, undefined, lng) })}
             </span>
           ) : null}
         </div>
@@ -309,7 +311,7 @@ export default function BrowsePage({ kind = 'movie' }) {
             onChange={(e) => setQuery(e.target.value)}
           />
           {query ? (
-            <button type="button" className="browse__search-clear" aria-label="Clear search" onClick={() => setQuery('')}>
+            <button type="button" className="browse__search-clear" aria-label={t('browse.clearSearch')} onClick={() => setQuery('')}>
               <CloseIcon />
             </button>
           ) : null}
@@ -317,43 +319,43 @@ export default function BrowsePage({ kind = 'movie' }) {
       </header>
 
       <div className="browse__bar">
-        <div className="ui-scroller browse__genres" role="group" aria-label="Genre">
+        <div className="ui-scroller browse__genres" role="group" aria-label={t('browse.genre')}>
           <Chip selected={!filters.genre} onClick={() => applyFilters({ genre: '' })}>
-            All
+            {t('browse.all')}
           </Chip>
           {genres.map((g) => (
             <Chip key={g} selected={filters.genre === g} onClick={() => applyFilters({ genre: filters.genre === g ? '' : g })}>
-              {g}
+              {genreName(g)}
             </Chip>
           ))}
         </div>
         <div className="browse__controls">
           <label className="browse__sort">
-            <span className="sr-only">Sort by</span>
+            <span className="sr-only">{t('browse.sortBy')}</span>
             <select value={filters.sort} onChange={(e) => applyFilters({ sort: e.target.value })}>
               {SORTS.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(`browse.sort.${s.key}`)}
                 </option>
               ))}
             </select>
           </label>
           <Button variant="glass" size="sm" onClick={openFilters} className="browse__filters-btn">
-            Filters{advancedCount ? <span className="browse__badge">{advancedCount}</span> : null}
+            {t('browse.filters')}{advancedCount ? <span className="browse__badge">{advancedCount}</span> : null}
           </Button>
         </div>
       </div>
 
       {pills.length ? (
-        <div className="browse__pills" aria-label="Active filters">
+        <div className="browse__pills" aria-label={t('browse.activeFilters')}>
           {pills.map((p) => (
-            <button key={p.key} type="button" className="browse__pill" onClick={() => applyFilters(p.clear)} aria-label={`Remove filter ${p.label}`}>
+            <button key={p.key} type="button" className="browse__pill" onClick={() => applyFilters(p.clear)} aria-label={t('browse.removeFilter', { label: p.label })}>
               {p.label}
               <CloseIcon aria-hidden="true" />
             </button>
           ))}
           <button type="button" className="browse__pill browse__pill--clear" onClick={clearAll}>
-            Clear all
+            {t('browse.clearAll')}
           </button>
         </div>
       ) : null}
@@ -365,7 +367,7 @@ export default function BrowsePage({ kind = 'movie' }) {
       <Modal
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
-        title="Filters"
+        title={t('browse.filters')}
         size="md"
         scrollable={false}
         initialFocus=".browse-filters .ui-chip.is-selected"
@@ -375,7 +377,7 @@ export default function BrowsePage({ kind = 'movie' }) {
               variant="ghost"
               onClick={() => setDraft((d) => ({ ...d, ratingMin: '', yearMin: '', yearMax: '', director: '', actor: '' }))}
             >
-              Reset
+              {t('browse.reset')}
             </Button>
             <Button
               variant="primary"
@@ -390,33 +392,33 @@ export default function BrowsePage({ kind = 'movie' }) {
                 });
               }}
             >
-              Show results
+              {t('browse.showResults')}
             </Button>
           </>
         }
       >
         <div className="browse-filters">
           <fieldset>
-            <legend>Rating</legend>
+            <legend>{t('browse.rating')}</legend>
             <div className="browse-filters__chips">
               {RATINGS.map((r) => (
-                <Chip key={r.label} selected={draft.ratingMin === r.value} onClick={() => setDraft((d) => ({ ...d, ratingMin: r.value }))}>
-                  {r.value ? `★ ${r.label}` : r.label}
+                <Chip key={r || 'any'} selected={draft.ratingMin === r} onClick={() => setDraft((d) => ({ ...d, ratingMin: r }))}>
+                  {r ? t('browse.ratingAtLeast', { value: r }) : t('browse.years.any')}
                 </Chip>
               ))}
             </div>
           </fieldset>
 
           <fieldset>
-            <legend>{kind === 'tv' ? 'First aired' : 'Released'}</legend>
+            <legend>{kind === 'tv' ? t('detail.firstAired') : t('detail.released')}</legend>
             <div className="browse-filters__chips">
               {DECADES.map((d) => (
                 <Chip
-                  key={d.label}
+                  key={`${d.min}-${d.max}`}
                   selected={draft.yearMin === d.min && draft.yearMax === d.max}
                   onClick={() => setDraft((x) => ({ ...x, yearMin: d.min, yearMax: d.max }))}
                 >
-                  {d.label}
+                  {decadeLabel(d.min, d.max)}
                 </Chip>
               ))}
             </div>
@@ -425,21 +427,21 @@ export default function BrowsePage({ kind = 'movie' }) {
           <div className="browse-filters__fields">
             {kind === 'movie' ? (
               <label className="browse-filters__field">
-                <span>Director</span>
+                <span>{t('detail.director')}</span>
                 <input
                   type="text"
                   value={draft.director}
-                  placeholder="e.g. Christopher Nolan"
+                  placeholder={t('browse.directorPlaceholder')}
                   onChange={(e) => setDraft((d) => ({ ...d, director: e.target.value }))}
                 />
               </label>
             ) : null}
             <label className="browse-filters__field">
-              <span>Actor</span>
+              <span>{t('browse.actor')}</span>
               <input
                 type="text"
                 value={draft.actor}
-                placeholder="e.g. Zendaya"
+                placeholder={t('browse.actorPlaceholder')}
                 onChange={(e) => setDraft((d) => ({ ...d, actor: e.target.value }))}
               />
             </label>

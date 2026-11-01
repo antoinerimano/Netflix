@@ -4,6 +4,8 @@ from django.db.models import Count
 from .models import User, Subscription, Profile, PaymentHistory, Title, TVShowExtras, Season, Episode, Actor
 import time
 
+from .i18n import DEFAULT_LANGUAGE, to_app_language
+
 class UserSerializer(serializers.ModelSerializer):
     subscription = serializers.SerializerMethodField()
 
@@ -38,6 +40,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         read_only_fields = ['user']
 
 class ProfileSerializer(serializers.ModelSerializer):
+    def validate_language_preference(self, value):
+        # one code per language, the app's (users/i18n.py): "fr-FR" -> "fr", "jp" -> "ja"
+        return to_app_language(value, DEFAULT_LANGUAGE)
+
     class Meta:
         model = Profile
         fields = '__all__'

@@ -3,6 +3,8 @@
 // new-episode alerts, then Episodes (season chips + episode cards), Cast and Details.
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useFormat, formatDate } from '../i18n/format';
 import {
   fetchTitleById,
   fetchSeasons,
@@ -14,10 +16,10 @@ import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import DetailHero, { splitGenres } from './detail/DetailHero';
+import DetailHero, { splitGenres, genreName } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
 import MoreLikeThis from './detail/MoreLikeThis';
-import { DetailSkeleton, languageName } from './MovieDetail';
+import { DetailSkeleton } from './MovieDetail';
 import { Button, Chip, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import { PlayIcon, PlusIcon, CheckIcon, ChevronRightIcon } from '../design/icons';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
@@ -30,15 +32,12 @@ const toYear = (s) => (s ? String(s).slice(0, 4) : '');
 const getStillUrl = (still_path) =>
   still_path ? `https://image.tmdb.org/t/p/w780/${String(still_path).replace(/^\//, '')}` : '';
 
-const formatAirDate = (d) => {
-  if (!d) return '';
-  const date = new Date(`${d}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? d
-    : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-};
+const formatAirDate = (d, lng) => (d ? formatDate(String(d).slice(0, 10), { dateStyle: 'medium' }, lng) || d : '');
 
 export default function TVShowDetail() {
+  const { t, i18n } = useTranslation('catalog');
+  const fmt = useFormat();
+  const lng = i18n.resolvedLanguage;
   const { id } = useParams();
   const tvId = useMemo(() => Number(id), [id]);
 
@@ -94,11 +93,11 @@ export default function TVShowDetail() {
           setActiveSeasonNumber(first.season_number);
         }
       })
-      .catch((e) => setErr(friendlyError(e, 'this show')))
+      .catch((e) => setErr(friendlyError(e, 'show')))
       .finally(() => alive && setLoading(false));
 
     return () => { alive = false; };
-  }, [tvId]);
+  }, [tvId, lng]); // the title, synopsis and season names come back in the app's language
 
   // Load episodes
   const loadEpisodes = useCallback(async (titleId, seasonNumber) => {
@@ -126,7 +125,7 @@ export default function TVShowDetail() {
       if (cancelled) return;
     })();
     return () => { cancelled = true; };
-  }, [tvId, activeSeasonNumber, loadEpisodes]);
+  }, [tvId, activeSeasonNumber, loadEpisodes, lng]);
 
   // My List (saved on the server, per profile)
   useEffect(() => {
@@ -172,15 +171,15 @@ export default function TVShowDetail() {
         <EmptyState
           page
           tone="error"
-          title="Show unavailable"
+          title={t('detail.showUnavailable')}
           actions={
             <>
-              <Button variant="primary" to="/tv">Browse TV shows</Button>
-              <Button variant="ghost" onClick={() => navigate(-1)}>Go back</Button>
+              <Button variant="primary" to="/tv">{t('notifications.browse')}</Button>
+              <Button variant="ghost" onClick={() => navigate(-1)}>{t('actions.goBack')}</Button>
             </>
           }
         >
-          {err || friendlyError({ status: 404 }, 'this show')}
+          {err || friendlyError({ status: 404 }, 'show')}
         </EmptyState>
       </div>
     );
@@ -188,9 +187,9 @@ export default function TVShowDetail() {
 
   const year = toYear(title.first_air_date);
   const seasonCount = seasons.length;
-  const language = languageName(title.original_language);
-  const genres = splitGenres(title.genre);
-  const starring = cast.slice(0, 3).map((a) => a.name || a.english_name).join(', ');
+  const language = fmt.languageName(title.original_language);
+  const genres = splitGenres(title.genre).map((g) => genreName(g));
+  const starring = fmt.formatList(cast.slice(0, 3).map((a) => a.name || a.english_name));
   const artwork = title.landscape_image || title.poster || '';
 
   // internal player page; season / episode only when one is chosen
@@ -213,10 +212,10 @@ export default function TVShowDetail() {
         kind="tv"
         meta={[
           year,
-          seasonCount ? `${seasonCount} season${seasonCount > 1 ? 's' : ''}` : '',
+          seasonCount ? t('detail.seasonCount', { count: seasonCount }) : '',
           language,
         ]}
-        credits={[{ label: 'Starring', value: starring }]}
+        credits={[{ label: t('detail.starring'), value: starring }]}
         actions={
           <>
             <Button
@@ -225,13 +224,13 @@ export default function TVShowDetail() {
               icon={<PlayIcon />}
               onClick={() => go(watchBaseUrl, 'tv_detail', 'watch_page')}
             >
-              Watch
+              {t('detail.watch')}
             </Button>
             <Button
               variant="glass"
               icon={isInList ? <CheckIcon /> : <PlusIcon />}
               pressed={isInList}
-              label={isInList ? 'In My List' : 'Add to My List'}
+              label={isInList ? t('options.inList') : t('options.addToList')}
               onClick={handleToggleList}
             />
             <RatingButtons titleId={title.id} />
@@ -245,21 +244,21 @@ export default function TVShowDetail() {
         {seasons.length || specials.length ? (
           <section className="detail-section" aria-labelledby="detail-episodes-title">
             <div className="detail-section__head">
-              <SectionTitle id="detail-episodes-title">Episodes</SectionTitle>
+              <SectionTitle id="detail-episodes-title">{t('detail.episodes')}</SectionTitle>
               {/* seasons have no id in the API: compared by number */}
-              <div className="detail-scroller tvd-seasons__chips" role="group" aria-label="Season">
+              <div className="detail-scroller tvd-seasons__chips" role="group" aria-label={t('detail.season')}>
                 {seasons.map((s) => (
                   <Chip
                     key={s.season_number}
                     selected={activeSeasonNumber === s.season_number}
                     onClick={() => setActiveSeasonNumber(s.season_number)}
                   >
-                    Season {s.season_number}
+                    {t('detail.seasonNumber', { number: s.season_number })}
                   </Chip>
                 ))}
                 {specials.length > 0 && (
                   <Chip key="specials" selected={activeSeasonNumber === 0} onClick={() => setActiveSeasonNumber(0)}>
-                    Specials
+                    {t('detail.specials')}
                   </Chip>
                 )}
               </div>
@@ -275,13 +274,13 @@ export default function TVShowDetail() {
                 ))}
               </div>
             ) : episodes.length === 0 ? (
-              <EmptyState title="No episodes yet">This season has no episodes available yet.</EmptyState>
+              <EmptyState title={t('detail.noEpisodesTitle')}>{t('detail.noEpisodesText')}</EmptyState>
             ) : (
               <div key={activeSeasonNumber} className="detail-episodes" data-season={activeSeasonNumber}>
                 {episodes.map((ep) => {
                   const url = buildWatchUrl(activeSeasonNumber, ep.episode_number);
                   const still = getStillUrl(ep.still_path);
-                  const meta = [ep.runtime ? `${ep.runtime} min` : '', formatAirDate(ep.air_date)]
+                  const meta = [fmt.formatRuntime(ep.runtime), formatAirDate(ep.air_date, lng)]
                     .filter(Boolean)
                     .join(' · ');
                   let stillBackground;
@@ -294,7 +293,7 @@ export default function TVShowDetail() {
                       className="tvd-ep-card"
                       tabIndex={0}
                       role="button"
-                      aria-label={`Watch season ${activeSeasonNumber} episode ${ep.episode_number}: ${ep.name || ''}`}
+                      aria-label={t('detail.watchEpisode', { season: activeSeasonNumber, episode: ep.episode_number, name: ep.name || '' })}
                       onClick={() =>
                         go(url, 'tv_episode', `watch_page_s${activeSeasonNumber}_e${ep.episode_number}`)
                       }
@@ -309,7 +308,7 @@ export default function TVShowDetail() {
                             <PlayIcon />
                           </span>
                         </div>
-                        {ep.runtime ? <span className="tvd-ep-card__runtime">{ep.runtime}m</span> : null}
+                        {ep.runtime ? <span className="tvd-ep-card__runtime">{fmt.formatRuntime(ep.runtime)}</span> : null}
                         {/* mouse / remote: the full synopsis over the image after resting on
                             the episode a moment (touch screens: the "Synopsis" toggle below) */}
                         {ep.overview ? (
@@ -319,7 +318,7 @@ export default function TVShowDetail() {
                         ) : null}
                       </div>
                       <div className="tvd-ep-card__title">
-                        {ep.episode_number}. {ep.name || `Episode ${ep.episode_number}`}
+                        {ep.episode_number}. {ep.name || t('detail.episodeNumber', { number: ep.episode_number })}
                       </div>
                       {meta ? <div className="tvd-ep-card__meta">{meta}</div> : null}
                     </div>
@@ -332,7 +331,7 @@ export default function TVShowDetail() {
                           aria-controls={`ep-synopsis-${ep.id}`}
                           onClick={() => toggleSynopsis(ep.id)}
                         >
-                          {synopsisOpen ? 'Hide synopsis' : 'Synopsis'}
+                          {synopsisOpen ? t('detail.hideSynopsis') : t('detail.synopsis')}
                           <ChevronRightIcon aria-hidden="true" />
                         </button>
                         {synopsisOpen ? (
@@ -355,29 +354,29 @@ export default function TVShowDetail() {
         <CastRow cast={cast} />
 
         <section className="detail-section">
-          <SectionTitle>Details</SectionTitle>
+          <SectionTitle>{t('detail.details')}</SectionTitle>
           <dl className="detail-facts">
             {genres.length ? (
               <div>
-                <dt>Genres</dt>
-                <dd>{genres.join(', ')}</dd>
+                <dt>{t('detail.genres')}</dt>
+                <dd>{fmt.formatList(genres, 'unit')}</dd>
               </div>
             ) : null}
             {title.first_air_date ? (
               <div>
-                <dt>First aired</dt>
-                <dd>{formatAirDate(title.first_air_date)}</dd>
+                <dt>{t('detail.firstAired')}</dt>
+                <dd>{fmt.formatDate(title.first_air_date, { dateStyle: 'long' }) || title.first_air_date}</dd>
               </div>
             ) : null}
             {seasonCount ? (
               <div>
-                <dt>Seasons</dt>
-                <dd>{seasonCount}</dd>
+                <dt>{t('detail.seasons')}</dt>
+                <dd>{fmt.formatNumber(seasonCount)}</dd>
               </div>
             ) : null}
             {language ? (
               <div>
-                <dt>Original language</dt>
+                <dt>{t('detail.originalLanguage')}</dt>
                 <dd>{language}</dd>
               </div>
             ) : null}

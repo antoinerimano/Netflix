@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
+import { formatNumber } from "../i18n/format";
+import { genreName, splitGenres } from "./detail/DetailHero";
 import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
@@ -9,6 +12,7 @@ import { tmdbBackground, IMG } from "../utils/tmdbImage";
 import { Button, Chip, EmptyState, Skeleton, Spinner } from "../design";
 import { ArrowLeftIcon, ChevronRightIcon, MaximizeIcon, LinkIcon } from "../design/icons";
 import WatchInfo from "./watch/WatchInfo";
+import { usePlayerRemote } from "./watch/playerRemote";
 
 // sources saved by older versions used the DB column names
 const LEGACY_SOURCE_KEYS = {
@@ -111,6 +115,8 @@ function readPositiveInt(search, key, fallback) {
 
 
 export default function WatchPage() {
+  const { t, i18n } = useTranslation("watch");
+  const lng = i18n.resolvedLanguage;
   const { id } = useParams();
   const titleId = Number(id);
   const navigate = useNavigate();
@@ -191,7 +197,7 @@ export default function WatchPage() {
         setTitle(data || null);
       } catch (e) {
         if (!alive) return;
-        setErr(e?.message || "Failed to load title");
+        setErr(t("loadFailed"));
       } finally {
         alive && setLoading(false);
       }
@@ -199,13 +205,13 @@ export default function WatchPage() {
     return () => {
       alive = false;
     };
-  }, [titleId]);
+  }, [titleId, lng]); // eslint-disable-line react-hooks/exhaustive-deps -- lng: title + synopses in the app's language
 
   // --- NEW: detect TV show ---
   const isTV = useMemo(() => {
-    const t = String(title?.type || title?.kind || "").toLowerCase();
+    const kind = String(title?.type || title?.kind || "").toLowerCase();
     // common patterns: "tv", "tvshow", "show"
-    return t === "tv" || t === "tvshow" || t === "show";
+    return kind === "tv" || kind === "tvshow" || kind === "show";
   }, [title]);
 
   // Load stream providers
@@ -213,11 +219,11 @@ export default function WatchPage() {
     let alive = true;
     fetchProviders()
       .then((list) => alive && setProviderDefs(list))
-      .catch(() => alive && setProvidersError("Failed to load sources."));
+      .catch(() => alive && setProvidersError(t("sources.loadFailed")));
     return () => {
       alive = false;
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // Continue watching: remember what this profile opened (movie, or season/episode)
@@ -272,26 +278,52 @@ export default function WatchPage() {
     }
   }, [navigate, isTV, titleId]);
 
-  // Full screen + hand the TV remote / keyboard to the player (OK = play / pause there)
-  const goFullscreen = useCallback(() => {
+  // Players with a remote API (CineSrc): OK / arrows are sent to them, the remote stays here
+  const { hasRemote } = usePlayerRemote({ url: resolvedUrl, iframeRef, wrapRef: playerWrapRef });
+
+  // Full screen, then the TV remote / keyboard for the player (OK = play / pause there).
+  // An embedded player (cross-origin iframe) gets the focus only once the browser is in full
+  // screen: Back / Escape then leave full screen (the browser does it, even inside the player)
+  // and the page takes the focus back. Without full screen nothing could bring the remote back
+  // out of the player, so the remote stays on the page and the player keeps its own controls.
+  const goFullscreen = useCallback(async () => {
     const wrap = playerWrapRef.current;
     if (!wrap) return;
-    const request = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
-    request?.call(wrap)?.catch?.(() => {});
-    enterPlayer(iframeRef.current || videoRef.current);
+    const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!isFullscreen()) {
+      const request = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      try {
+        await request?.call(wrap);
+      } catch {
+        /* refused: checked below */
+      }
+      // webkitRequestFullscreen returns nothing: give it a moment
+      if (!isFullscreen()) await new Promise((r) => setTimeout(r, 400));
+    }
+    if (!isFullscreen()) {
+      setBanner({ text: t("player.noFullscreen") });
+      return;
+    }
+    if (hasRemote || !iframeRef.current) {
+      // our own <video> or a player we drive: the remote stays on the page (the tile)
+      if (videoRef.current) enterPlayer(videoRef.current);
+      else wrap.focus({ preventScroll: true });
+    } else {
+      enterPlayer(iframeRef.current);
+    }
     setPlayerKeysHint(true);
-  }, []);
+  }, [hasRemote, t]);
 
   useEffect(() => {
     if (!playerKeysHint) return;
-    const t = setTimeout(() => setPlayerKeysHint(false), 5000);
+    const timer = setTimeout(() => setPlayerKeysHint(false), 5000);
     const onChange = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) setPlayerKeysHint(false);
     };
     document.addEventListener("fullscreenchange", onChange);
     document.addEventListener("webkitfullscreenchange", onChange);
     return () => {
-      clearTimeout(t);
+      clearTimeout(timer);
       document.removeEventListener("fullscreenchange", onChange);
       document.removeEventListener("webkitfullscreenchange", onChange);
     };
@@ -429,9 +461,9 @@ export default function WatchPage() {
     if (!resolvedUrl) return;
     if (selectedKey === "custom") return;
 
-    showHint("Loading source…");
+    showHint(t("player.loadingSource"));
 
-  }, [resolvedUrl, selectedKey, showHint]);
+  }, [resolvedUrl, selectedKey, showHint]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!resolvedUrl) {
@@ -443,8 +475,8 @@ export default function WatchPage() {
     setSourceLoading(true);
     setIsPulsing(true);
 
-    const t = setTimeout(() => setIsPulsing(false), 650); // matches wpPulse duration
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setIsPulsing(false), 650); // matches wpPulse duration
+    return () => clearTimeout(timer);
   }, [resolvedUrl]);
 
   // Keyboard shortcuts
@@ -485,10 +517,11 @@ export default function WatchPage() {
   const backdrop = title?.landscape_image || title?.landscape_url || "";
   const metaLine = useMemo(() => {
     const year = title?.release_year || (title?.release_date ? String(title.release_date).slice(0, 4) : "");
-    const vote = typeof title?.vote_average === "number" ? title.vote_average.toFixed(1) : title?.rating;
-    const genre = title?.genre || "";
+    const voteNumber = typeof title?.vote_average === "number" ? title.vote_average : parseFloat(title?.rating);
+    const vote = Number.isFinite(voteNumber) && voteNumber > 0 ? formatNumber(voteNumber, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, lng) : "";
+    const genre = splitGenres(title?.genre).map((g) => genreName(g)).join(", ");
     return [year, vote ? `★ ${vote}` : "", genre].filter(Boolean).join(" · ");
-  }, [title]);
+  }, [title, lng]);
 
   const sourceType = useMemo(() => {
     if (!resolvedUrl) return "none";
@@ -538,7 +571,7 @@ export default function WatchPage() {
         attempt.report(false);
         autoFailedRef.current.add(p.key);
         userPickedRef.current = true;
-        setBanner({ text: `${p.label} didn't load, switched to ${next.label}.` });
+        setBanner({ text: t("sources.switched", { from: p.label, to: next.label }) });
         setSelectedKey(next.key);
       }, SOURCE_LOAD_TIMEOUT_MS),
       // loaded but silent: only for players that report playback, offer the next source
@@ -546,7 +579,7 @@ export default function WatchPage() {
         setTimeout(() => {
           if (attempt.playing) return;
           const next = nextSource();
-          if (next) setBanner({ text: `Not playing on ${p.label}?`, nextKey: next.key, nextLabel: next.label });
+          if (next) setBanner({ text: t("sources.notPlaying", { source: p.label }), nextKey: next.key, nextLabel: next.label });
         }, SOURCE_SILENT_TIMEOUT_MS),
       // still on it after a while: it works (the only signal for players that report nothing)
       setTimeout(() => {
@@ -558,13 +591,13 @@ export default function WatchPage() {
       timers.forEach(clearTimeout);
       window.removeEventListener("message", onMessage);
     };
-  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers]);
+  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers]); // eslint-disable-line react-hooks/exhaustive-deps -- t: only the banner text, a new language must not restart the source
 
   // "switched to X" notices go away by themselves; "Not playing?" offers stay until used
   useEffect(() => {
     if (!banner || banner.nextKey) return;
-    const t = setTimeout(() => setBanner(null), 8000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setBanner(null), 8000);
+    return () => clearTimeout(timer);
   }, [banner]);
 
   // Every source change made by the viewer goes through here
@@ -639,8 +672,8 @@ export default function WatchPage() {
       return (
         <div className="watchpage__empty">
           <div className="watchpage__emptyCard">
-            <div className="watchpage__emptyTitle">Choose a source</div>
-            <div className="watchpage__emptyDesc">Pick a source below, or paste your own link.</div>
+            <div className="watchpage__emptyTitle">{t("player.chooseTitle")}</div>
+            <div className="watchpage__emptyDesc">{t("player.chooseText")}</div>
             {providersError ? (
               <div style={{ marginTop: 10, opacity: 0.8, fontSize: 13 }}>
                 {providersError}
@@ -662,7 +695,7 @@ export default function WatchPage() {
           onCanPlay={() => setSourceLoading(false)}
           onError={() => {
             setSourceLoading(false);
-            setHint("This link doesn’t seem playable. Try another source.");
+            setHint(t("player.notPlayable"));
           }}
         />
       );
@@ -673,7 +706,7 @@ export default function WatchPage() {
         ref={iframeRef}
         className="watchpage__iframe"
         src={resolvedUrl}
-        title="Player"
+        title={t("player.label")}
         allow="autoplay; fullscreen *; picture-in-picture; encrypted-media"
         allowFullScreen
         webkitallowfullscreen="true"
@@ -686,7 +719,7 @@ export default function WatchPage() {
         }}
       />
     );
-  }, [resolvedUrl, sourceType, providersError]);
+  }, [resolvedUrl, sourceType, providersError, t]);
 
   if (loading) {
     return (
@@ -711,29 +744,29 @@ export default function WatchPage() {
         <EmptyState
           page
           tone="error"
-          title="Can't play this title"
+          title={t("cantPlay")}
           actions={
             <>
-              <Button variant="primary" to="/">Go home</Button>
-              <Button variant="ghost" onClick={goBack}>Go back</Button>
+              <Button variant="primary" to="/">{t("actions.goHome")}</Button>
+              <Button variant="ghost" onClick={goBack}>{t("actions.goBack")}</Button>
             </>
           }
         >
-          {err || "We couldn't find this title. It may have been removed."}
+          {err || t("common:errors.notFound", { context: "title" })}
         </EmptyState>
       </div>
     );
   }
 
   const selectedProvider = providers.find((x) => x.key === selectedKey);
-  const subtitle = [isTV ? `Season ${seasonNumber} · Episode ${episodeNumber}` : "", metaLine].filter(Boolean).join(" · ");
+  const subtitle = [isTV ? t("seasonEpisode", { season: seasonNumber, episode: episodeNumber }) : "", metaLine].filter(Boolean).join(" · ");
 
   return (
     <div className="watchpage">
       <div className="watchpage__bg" aria-hidden="true" style={{ backgroundImage: tmdbBackground(backdrop, IMG.blurredBackground) }} />
 
       <header className="watchpage__top">
-        <Button variant="glass" icon={<ArrowLeftIcon />} label="Back" onClick={goBack} className="watchpage__back" />
+        <Button variant="glass" icon={<ArrowLeftIcon />} label={t("back")} onClick={goBack} className="watchpage__back" />
 
         <div className="watchpage__titles">
           <h1 className="watchpage__title">{title.title}</h1>
@@ -747,9 +780,9 @@ export default function WatchPage() {
               size="sm"
               iconRight={<ChevronRightIcon />}
               onClick={goToNextEpisode}
-              title={`Season ${nextEpisode.season}, episode ${nextEpisode.episode}`}
+              title={t("seasonEpisode", { season: nextEpisode.season, episode: nextEpisode.episode })}
             >
-              Next episode
+              {t("nextEpisode")}
             </Button>
           ) : null}
           {sourceType !== "none" ? (
@@ -758,10 +791,10 @@ export default function WatchPage() {
               size="sm"
               icon={<MaximizeIcon />}
               onClick={goFullscreen}
-              title="Full screen (F)"
+              title={t("fullscreenHint")}
               className="watchpage__fullscreenBtn"
             >
-              <span className="watchpage__actionLabel">Full screen</span>
+              <span className="watchpage__actionLabel">{t("fullscreen")}</span>
             </Button>
           ) : null}
         </div>
@@ -774,7 +807,7 @@ export default function WatchPage() {
           // TV remote / keyboard: the player is a tile, OK = full screen with the remote
           // handed to the player (play / pause, seek...); Back leaves it
           tabIndex={sourceType !== "none" ? 0 : -1}
-          aria-label="Player: press OK to control it in full screen"
+          aria-label={t("player.tileLabel")}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.target === e.currentTarget && sourceType !== "none") {
               e.preventDefault();
@@ -788,21 +821,24 @@ export default function WatchPage() {
 
           {sourceLoading && sourceType === "iframe" ? (
             <div className="watchpage__loading" aria-live="polite">
-              <Spinner label={`Loading ${selectedProvider?.label || "source"}`} />
+              <Spinner label={selectedProvider?.label ? t("player.loadingNamed", { source: selectedProvider.label }) : t("player.loadingSource")} />
             </div>
           ) : null}
 
           {sourceType !== "none" ? (
             <div className="watchpage__playerFocusHint" aria-hidden="true">
-              <span className="watchpage__key">OK</span> Control the player
+              <Trans t={t} i18nKey="keys.control" components={{ key: <span className="watchpage__key" /> }} />
             </div>
           ) : null}
 
           {playerKeysHint ? (
             <div className="watchpage__playerKeys" aria-hidden="true">
-              <span><span className="watchpage__key">OK</span> / <span className="watchpage__key">Space</span> Play · Pause</span>
-              <span><span className="watchpage__key">◀</span> <span className="watchpage__key">▶</span> Rewind · Forward</span>
-              <span><span className="watchpage__key">Back</span> Exit full screen</span>
+              <span><Trans t={t} i18nKey="keys.playPause" components={{ key: <span className="watchpage__key" /> }} /></span>
+              <span><Trans t={t} i18nKey="keys.seek" components={{ key: <span className="watchpage__key" /> }} /></span>
+              {hasRemote ? (
+                <span><Trans t={t} i18nKey="keys.volume" components={{ key: <span className="watchpage__key" /> }} /></span>
+              ) : null}
+              <span><Trans t={t} i18nKey="keys.exit" components={{ key: <span className="watchpage__key" /> }} /></span>
             </div>
           ) : null}
 
@@ -811,7 +847,7 @@ export default function WatchPage() {
               <div className="watchpage__softHintText">{banner.text}</div>
               {banner.nextKey ? (
                 <Button variant="secondary" size="sm" className="watchpage__softHintBtn" onClick={() => switchSource(banner.nextKey)}>
-                  Try {banner.nextLabel}
+                  {t("sources.try", { source: banner.nextLabel })}
                 </Button>
               ) : null}
             </div>
@@ -823,27 +859,27 @@ export default function WatchPage() {
         </div>
 
         {/* SOURCES: under the player, one row of chips (a blank player = try the next one) */}
-        <section className="watchpage__sources" aria-label="Sources">
+        <section className="watchpage__sources" aria-label={t("sources.label")}>
           <div className="watchpage__sourcesHead">
-            <h2 className="watchpage__sourcesTitle">Source</h2>
-            <p className="watchpage__sourcesHelp">Video not starting? Try another source.</p>
+            <h2 className="watchpage__sourcesTitle">{t("sources.title")}</h2>
+            <p className="watchpage__sourcesHelp">{t("sources.help")}</p>
           </div>
-          <div className="ui-scroller watchpage__providerRow" role="group" aria-label="Choose a source">
+          <div className="ui-scroller watchpage__providerRow" role="group" aria-label={t("sources.choose")}>
             {providers.map((p) => (
               <Chip
                 key={p.key}
                 className="watchpage__chip"
                 selected={selectedKey === p.key}
                 onClick={() => switchSource(p.key)} // also stops the auto-reset to the first provider
-                title={p.down ? "Our last check could not reach this source" : undefined}
+                title={p.down ? t("sources.downHint") : undefined}
               >
                 {p.label}
-                {p.down ? <span className="watchpage__chipNote">offline?</span> : null}
+                {p.down ? <span className="watchpage__chipNote">{t("sources.down")}</span> : null}
               </Chip>
             ))}
             <Chip className="watchpage__chip" selected={selectedKey === "custom"} onClick={() => switchSource("custom")}>
               <LinkIcon className="watchpage__chipIcon" aria-hidden="true" />
-              Your link
+              {t("sources.custom")}
             </Chip>
           </div>
 
@@ -854,13 +890,13 @@ export default function WatchPage() {
                 type="url"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                placeholder="Paste a video or player link (https://…)"
-                aria-label="Your video link"
+                placeholder={t("sources.customPlaceholder")}
+                aria-label={t("sources.customLabel")}
                 spellCheck={false}
               />
               {customUrl ? (
                 <Button variant="ghost" size="sm" onClick={() => setCustomUrl("")}>
-                  Clear
+                  {t("catalog:search.clear")}
                 </Button>
               ) : null}
             </div>

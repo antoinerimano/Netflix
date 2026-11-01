@@ -1,0 +1,39 @@
+{
+  "title": "账户",
+  "memberSince": "自 {{date}} 起成为会员",
+  "notYours": "这不是你的账户",
+  "notYoursText": "你只能管理当前登录的账户。",
+  "loadError": "无法加载你的账户",
+  "change": "更改",
+  "email": {
+    "title": "更改邮箱",
+    "intro": "我们会向新地址发送确认链接。打开链接后，你的邮箱即会更改。",
+    "current": "当前邮箱",
+    "new": "新邮箱",
+    "placeholder": "name@example.com",
+    "send": "发送确认邮件",
+    "invalid": "请输入有效的邮箱地址。",
+    "same": "这已经是你的邮箱。",
+    "sent": "确认链接已发送至 {{email}}"
+  },
+  "password": {
+    "title": "更改密码",
+    "intro": "我们会向 <strong>{{email}}</strong> 发送一个设置新密码的链接。该链接只能使用一次。",
+    "send": "发送重置链接",
+    "sent": "重置链接已发送至 {{email}}",
+    "failed": "无法发送链接，请重试。"
+  },
+  "profiles": {
+    "title": "个人资料",
+    "count_other": "{{count}}/{{max}}",
+    "edit": "编辑",
+    "addHint_other": "每人一个，最多 {{count}} 个"
+  },
+  "signOut": {
+    "label": "退出登录",
+    "title": "退出登录？",
+    "signedInAs": "当前登录：{{email}}",
+    "text": "在此设备上重新登录时需要输入邮箱和密码。",
+    "stay": "保持登录"
+  }
+}

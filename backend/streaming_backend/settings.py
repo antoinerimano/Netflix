@@ -52,6 +52,8 @@ if DEBUG:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # the request's language (Accept-Language sent by the app): messages, emails, catalog texts
+    "django.middleware.locale.LocaleMiddleware",
 
     "corsheaders.middleware.CorsMiddleware",
 
@@ -109,6 +111,11 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "DEFAULT_PAGINATION_CLASS": "users.pagination.StandardResultsSetPagination",
+    # JSON + titles / synopses in the request's language (users/localize.py)
+    "DEFAULT_RENDERER_CLASSES": (
+        "users.localize.LocalizedJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ),
     # rate limits for login / register / password reset (see users/throttles.py)
     "DEFAULT_THROTTLE_RATES": {
         "auth": env("THROTTLE_AUTH_RATE", default="10/min"),
@@ -141,7 +148,7 @@ CORS_ALLOWED_ORIGINS = env.list(
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
 # X-Profile-Id: active profile, used to apply its age limit (users/maturity.py)
-CORS_ALLOW_HEADERS = (*default_cors_headers, "x-profile-id")
+CORS_ALLOW_HEADERS = (*default_cors_headers, "x-profile-id", "x-original-content")
 
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
@@ -179,7 +186,20 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ---- i18n ----
-LANGUAGE_CODE = "en-us"
+# The app's languages (users/i18n.py, frontend src/i18n). The client sends its language as
+# Accept-Language; LocaleMiddleware activates it. Messages: locale/<lang>/LC_MESSAGES/django.po
+# (python manage.py makemessages -a / compilemessages). Catalog texts: users/localize.py.
+LANGUAGE_CODE = "en"
+LANGUAGES = [
+    ("en", "English"),
+    ("fr", "Français"),
+    ("es", "Español"),
+    ("de", "Deutsch"),
+    ("it", "Italiano"),
+    ("ja", "日本語"),
+    ("zh-hans", "中文"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True

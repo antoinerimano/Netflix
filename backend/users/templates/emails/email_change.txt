@@ -1,13 +1,13 @@
-{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
-Hello{% if user.name %} {{ user.name }}{% endif %},
+{% load i18n %}{% autoescape off %}{# plain text: no HTML escaping, or links break (& -> &amp;) #}
+{% if user.name %}{% blocktranslate with name=user.name %}Hello {{ name }},{% endblocktranslate %}{% else %}{% translate "Hello," %}{% endif %}
 
-We received a request to change your account email to {{ new_email }}.
-Open this link to confirm:
+{% blocktranslate %}We received a request to change your account email to {{ new_email }}.{% endblocktranslate %}
+{% translate "Open this link to confirm:" %}
 
 {{ confirm_url }}
 
-If you didn't ask for this, you can ignore this email: nothing will change.
+{% translate "If you didn't ask for this, you can ignore this email: nothing will change." %}
 
 --
-This email was sent by {{ company_name }}. For help, contact {{ support_email }}.
+{% blocktranslate with company=company_name %}This email was sent by {{ company }}. For help, contact{% endblocktranslate %} {{ support_email }}.
 {% endautoescape %}

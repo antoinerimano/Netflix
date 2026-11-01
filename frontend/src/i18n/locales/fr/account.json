@@ -1,0 +1,43 @@
+{
+  "title": "Compte",
+  "memberSince": "Membre depuis le {{date}}",
+  "notYours": "Ce n'est pas votre compte",
+  "notYoursText": "Vous ne pouvez gérer que le compte avec lequel vous êtes connecté.",
+  "loadError": "Impossible de charger votre compte",
+  "change": "Modifier",
+  "email": {
+    "title": "Modifier votre e-mail",
+    "intro": "Nous enverrons un lien de confirmation à la nouvelle adresse. Votre e-mail change dès que vous l'ouvrez.",
+    "current": "E-mail actuel",
+    "new": "Nouvel e-mail",
+    "placeholder": "nom@exemple.com",
+    "send": "Envoyer la confirmation",
+    "invalid": "Saisissez une adresse e-mail valide.",
+    "same": "C'est déjà votre e-mail.",
+    "sent": "Lien de confirmation envoyé à {{email}}"
+  },
+  "password": {
+    "title": "Modifier votre mot de passe",
+    "intro": "Nous enverrons un lien à <strong>{{email}}</strong> pour choisir un nouveau mot de passe. Le lien ne fonctionne qu'une fois.",
+    "send": "Envoyer le lien",
+    "sent": "Lien de réinitialisation envoyé à {{email}}",
+    "failed": "Impossible d'envoyer le lien. Veuillez réessayer."
+  },
+  "profiles": {
+    "title": "Profils",
+    "count_one": "{{count}} sur {{max}}",
+    "count_many": "{{count}} sur {{max}}",
+    "count_other": "{{count}} sur {{max}}",
+    "edit": "Modifier",
+    "addHint_one": "Un par personne, jusqu'à {{count}}",
+    "addHint_many": "Un par personne, jusqu'à {{count}}",
+    "addHint_other": "Un par personne, jusqu'à {{count}}"
+  },
+  "signOut": {
+    "label": "Se déconnecter",
+    "title": "Se déconnecter ?",
+    "signedInAs": "Connecté en tant que {{email}}",
+    "text": "Vous aurez besoin de votre e-mail et de votre mot de passe pour vous reconnecter sur cet appareil.",
+    "stay": "Rester connecté"
+  }
+}

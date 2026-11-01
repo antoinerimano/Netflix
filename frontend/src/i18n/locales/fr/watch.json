@@ -1,0 +1,50 @@
+{
+  "loadFailed": "Impossible de charger ce titre.",
+  "cantPlay": "Impossible de lire ce titre",
+  "seasonEpisode": "Saison {{season}} · Épisode {{episode}}",
+  "back": "Retour",
+  "nextEpisode": "Épisode suivant",
+  "fullscreen": "Plein écran",
+  "fullscreenHint": "Plein écran (F)",
+  "player": {
+    "label": "Lecteur",
+    "tileLabel": "Lecteur : appuyez sur OK pour le contrôler en plein écran",
+    "chooseTitle": "Choisissez une source",
+    "chooseText": "Choisissez une source ci-dessous ou collez votre propre lien.",
+    "loadingSource": "Chargement de la source…",
+    "loadingNamed": "Chargement de {{source}}",
+    "notPlayable": "Ce lien ne semble pas lisible. Essayez une autre source.",
+    "noFullscreen": "Le plein écran n'est pas disponible ici. Utilisez les commandes du lecteur ou essayez une autre source."
+  },
+  "keys": {
+    "control": "<key>OK</key> Contrôler le lecteur",
+    "playPause": "<key>OK</key> / <key>Espace</key> Lecture · Pause",
+    "seek": "<key>◀</key> <key>▶</key> Reculer · Avancer",
+    "exit": "<key>Retour</key> Quitter le plein écran",
+    "volume": "<key>▲</key> <key>▼</key> Volume"
+  },
+  "sources": {
+    "label": "Sources",
+    "title": "Source",
+    "help": "La vidéo ne démarre pas ? Essayez une autre source.",
+    "choose": "Choisir une source",
+    "loadFailed": "Impossible de charger les sources.",
+    "switched": "{{from}} n'a pas chargé, passage à {{to}}.",
+    "notPlaying": "Rien ne se lance sur {{source}} ?",
+    "try": "Essayer {{source}}",
+    "down": "hors ligne ?",
+    "downHint": "Notre dernière vérification n'a pas pu joindre cette source",
+    "custom": "Votre lien",
+    "customLabel": "Votre lien vidéo",
+    "customPlaceholder": "Collez un lien vidéo ou de lecteur (https://…)"
+  },
+  "info": {
+    "about": "À propos",
+    "seasonEpisodes": "Épisodes de la saison {{number}}",
+    "episodeNamed": "Épisode {{number}} : {{name}}",
+    "playing": "En cours",
+    "playingNow": "en cours de lecture",
+    "soon": "Bientôt",
+    "comingSoon": "bientôt disponible"
+  }
+}

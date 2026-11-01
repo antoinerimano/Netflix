@@ -1,0 +1,208 @@
+{
+  "kids": "Niños",
+  "create": {
+    "title": "Crea tu perfil",
+    "subtitle_one": "Más adelante podrás añadir hasta {{count}} perfil, uno por persona.",
+    "subtitle_many": "Más adelante podrás añadir hasta {{count}} perfiles, uno por persona.",
+    "subtitle_other": "Más adelante podrás añadir hasta {{count}} perfiles, uno por persona."
+  },
+  "who": {
+    "title": "¿Quién está viendo?",
+    "loadError": "No se pudieron cargar tus perfiles",
+    "watchAs": "Ver como {{name}}"
+  },
+  "manage": {
+    "title": "Administrar perfiles",
+    "subtitle": "Elige un perfil para editarlo.",
+    "edit": "Editar a {{name}}"
+  },
+  "add": {
+    "title": "Añadir un perfil",
+    "submit": "Añadir perfil"
+  },
+  "edit": {
+    "title": "Editar perfil",
+    "confirmDelete": "¿Eliminar a {{name}}?",
+    "keep": "Conservar",
+    "delete": "Eliminar perfil"
+  },
+  "toast": {
+    "added": "{{name}} añadido",
+    "saved": "{{name}} guardado",
+    "deleted": "{{name}} eliminado"
+  },
+  "age": {
+    "all": "Todos los públicos",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "Sin límite",
+    "everything": "Todo",
+    "kidsSummary": "Niños · {{limit}}"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "p. ej. Sam",
+    "nameRequired": "Ponle un nombre al perfil.",
+    "saveFailed": "No se pudo guardar el perfil. Inténtalo de nuevo.",
+    "picture": "Imagen",
+    "pictureGroup": "Imagen del perfil",
+    "ownAvatar": "Tu avatar",
+    "ownAvatarEdit": "Tu avatar: editarlo",
+    "createAvatar": "Crea tu propio avatar",
+    "create": "Crear",
+    "letter": "Letra",
+    "photo": "Imagen {{number}}",
+    "letterColor": "Color de la letra",
+    "color": "Color {{color}}",
+    "kids": "Perfil infantil",
+    "kidsHint": "Solo títulos aptos para niños y un inicio más sencillo.",
+    "ageLimit": "Límite de edad",
+    "ageLimitHint": "Los títulos por encima de este límite se ocultan.",
+    "ageLimitKidsHint": "Los perfiles infantiles llegan hasta 7+ (PG).",
+    "language": "Idioma",
+    "languageHint": "La app, los títulos y las sinopsis se muestran en este idioma."
+  },
+  "avatar": {
+    "title": "Crea tu avatar",
+    "use": "Usar este avatar",
+    "surprise": "Sorpréndeme",
+    "undo": "Deshacer",
+    "partsLabel": "Partes del avatar",
+    "style": "Estilo",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Pelo",
+      "hat": "Sombreros",
+      "eyes": "Ojos",
+      "brows": "Cejas",
+      "mouth": "Boca",
+      "beard": "Barba",
+      "extras": "Extras",
+      "face": "Cara",
+      "top": "Parte de arriba",
+      "scene": "Fondo"
+    },
+    "colors": {
+      "hc": "Color del pelo",
+      "hwc": "Color del sombrero",
+      "sk": "Piel",
+      "sh": "Color",
+      "bg": "Colores"
+    },
+    "parts": {
+      "bg": "Fondo",
+      "pt": "Estampado",
+      "fc": "Forma de la cara",
+      "sk": "Piel",
+      "ey": "Ojos",
+      "eb": "Cejas",
+      "mo": "Boca",
+      "hr": "Pelo",
+      "hc": "Color del pelo",
+      "hw": "Sombrero",
+      "hwc": "Color del sombrero",
+      "bd": "Barba",
+      "ex": "Extras",
+      "sh": "Color de la prenda",
+      "ts": "Prenda"
+    },
+    "names": {
+      "pt": [
+        "Ninguno",
+        "Lunares",
+        "Rayas",
+        "Ondas",
+        "Estrellas",
+        "Cuadrícula",
+        "Confeti"
+      ],
+      "fc": [
+        "Redonda",
+        "Cuadrada",
+        "Ovalada",
+        "Ancha"
+      ],
+      "ey": [
+        "Puntos",
+        "Brillantes",
+        "Felices",
+        "Guiño",
+        "Somnolientos",
+        "Estrellas",
+        "Gafas de sol",
+        "Grandes",
+        "Pestañas",
+        "Corazones"
+      ],
+      "eb": [
+        "Ninguna",
+        "Suaves",
+        "Gruesas",
+        "Levantadas",
+        "Enfadadas",
+        "Preocupadas",
+        "Uniceja"
+      ],
+      "mo": [
+        "Sonrisa",
+        "Sonrisa amplia",
+        "Sorpresa",
+        "Neutral",
+        "Lengua",
+        "Sonrisa pícara",
+        "Risa",
+        "Pintalabios"
+      ],
+      "hr": [
+        "Ninguno",
+        "Corto",
+        "De punta",
+        "Rizado",
+        "Largo",
+        "Moño",
+        "Cresta",
+        "Afro",
+        "Raya al lado",
+        "Rapado",
+        "Coleta",
+        "Coletas"
+      ],
+      "hw": [
+        "Ninguno",
+        "Gorra",
+        "Gorro",
+        "Corona",
+        "Auriculares",
+        "Bandana",
+        "Sombrero de copa",
+        "Flores",
+        "Aureola",
+        "Orejas de gato"
+      ],
+      "bd": [
+        "Ninguna",
+        "De tres días",
+        "Completa",
+        "Perilla",
+        "Bigote",
+        "Bigote manillar"
+      ],
+      "ex": [
+        "Ninguno",
+        "Rubor",
+        "Pecas",
+        "Gafas redondas",
+        "Gafas cuadradas",
+        "Pendientes",
+        "Lunar"
+      ],
+      "ts": [
+        "Camiseta",
+        "Sudadera",
+        "Cuello",
+        "Cuello alto"
+      ]
+    }
+  }
+}
