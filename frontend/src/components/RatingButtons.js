@@ -1,7 +1,7 @@
 // src/components/RatingButtons.js
 // 👍 / 👎 on a title for the active profile. Clicking the active thumb again clears it.
 // Recommendations: like = strong interest, dislike = never recommended + similar titles go down.
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { fetchRating, setRating } from "../api/recoApi";
 import { useTranslation } from "react-i18next";
 import { Button } from "../design";
@@ -11,12 +11,14 @@ export default function RatingButtons({ titleId, variant = "glass" }) {
   const { t } = useTranslation("catalog");
   const profileId = localStorage.getItem("activeProfileId");
   const [rating, setRatingState] = useState(null); // "like" | "dislike" | null
+  const touched = useRef(false); // clicked before the server answered: its answer is stale
 
   useEffect(() => {
     if (!titleId || !profileId) return;
     let alive = true;
+    touched.current = false;
     fetchRating({ profileId, titleId })
-      .then((r) => alive && setRatingState(r))
+      .then((r) => alive && !touched.current && setRatingState(r))
       .catch(() => {});
     return () => {
       alive = false;
@@ -28,6 +30,7 @@ export default function RatingButtons({ titleId, variant = "glass" }) {
   const choose = (value) => {
     const previous = rating;
     const next = rating === value ? null : value;
+    touched.current = true;
     setRatingState(next); // instant feedback, undone if the server refuses
     setRating({ profileId, titleId, rating: next }).catch(() => setRatingState(previous));
   };

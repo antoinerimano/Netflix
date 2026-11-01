@@ -1,7 +1,7 @@
 // src/components/TVShowDetail.js
 // Show page: shared detail template (components/detail): hero with Watch / My List / ratings /
 // new-episode alerts, then Episodes (season chips + episode cards), Cast and Details.
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFormat, formatDate } from '../i18n/format';
@@ -51,6 +51,7 @@ export default function TVShowDetail() {
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [activeProfileId, setActiveProfileId] = useState(() => localStorage.getItem('activeProfileId'));
   const [isInList, setIsInList] = useState(false);
+  const listTouched = useRef(false); // the user toggled My List: the server's first answer is stale
   // episodes whose synopsis is open (hidden by default: a 2-line cut was never enough)
   const [openSynopsis, setOpenSynopsis] = useState(() => new Set());
   const toggleSynopsis = (id) =>
@@ -131,8 +132,10 @@ export default function TVShowDetail() {
   useEffect(() => {
     if (!title?.id || !activeProfileId) return;
     let alive = true;
+    listTouched.current = false;
     fetchMyList(activeProfileId)
-      .then((items) => alive && setIsInList(items.some((it) => it.id === title.id)))
+      // a click made before this answer arrived wins (the answer predates it)
+      .then((items) => alive && !listTouched.current && setIsInList(items.some((it) => it.id === title.id)))
       .catch(() => {});
     return () => {
       alive = false;
@@ -151,6 +154,7 @@ export default function TVShowDetail() {
       provider: nextIsAdd ? 'add' : 'remove',
     });
 
+    listTouched.current = true;
     setIsInList(nextIsAdd); // instant feedback, undone if the server refuses
     setInMyList(activeProfileId, title.id, nextIsAdd).catch(() => setIsInList(!nextIsAdd));
   }, [title, isInList, activeProfileId]);

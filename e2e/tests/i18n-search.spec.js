@@ -44,10 +44,27 @@ test('browse filters by genre', async ({ page }) => {
 });
 
 test('my list: add from the details, find it in My List', async ({ page }) => {
-  await signInAs(page, 'Alex', '/search?q=Toy Story');
-  await page.locator('.poster-card', { hasText: 'Toy Story' }).first().click();
+  const { session, profile } = await signInAs(page, 'Alex', '/');
+  const api = 'http://localhost:8101/api';
+  const auth = { Authorization: `Bearer ${session.access}` };
+  const toy = (await (await page.request.get(`${api}/titles/search/?q=Toy%20Story`, { headers: auth })).json())[0];
+  // start from a known state (a retry may find it already added)
+  await page.request.delete(`${api}/my-list/${toy.id}/?profileId=${profile.id}`, { headers: auth });
+
+  // the worst timing: the page's "is it in My List?" answer arrives after the click
+  // (regression: that late answer turned the button back to "Add to My List")
+  await page.route('**/api/my-list/?*', async (route) => {
+    const answer = await route.fetch(); // read by the server now, before the click...
+    await new Promise((r) => setTimeout(r, 2000));
+    await route.fulfill({ response: answer }); // ...delivered after it
+  });
+  await page.goto(`/movies/${toy.id}`);
   await page.getByRole('button', { name: 'Add to My List' }).click();
   await expect(page.getByRole('button', { name: 'In My List' })).toBeVisible();
+  await page.waitForTimeout(2500); // the late answer has arrived
+  await expect(page.getByRole('button', { name: 'In My List' })).toBeVisible();
+  await page.unroute('**/api/my-list/?*');
+
   await page.goto('/list');
   await expect(page.locator('.poster-card', { hasText: 'Toy Story' })).toBeVisible();
 });
