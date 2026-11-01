@@ -628,7 +628,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         limit = request.query_params.get("limit") or "15"
 
         try:
-            limit = max(1, min(int(limit), 30))
+            limit = max(1, min(int(limit), 60))  # 60: the search results page; the navbar asks 15
         except ValueError:
             limit = 15
 

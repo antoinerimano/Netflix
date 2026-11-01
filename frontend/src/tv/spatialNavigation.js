@@ -117,7 +117,7 @@ function center(r) {
 /** Nearest candidate in a direction; elements in the same row / column win over diagonal ones. */
 // Areas that scroll by themselves: what's scrolled out of view inside them is further down /
 // up than the buttons fixed around them (a dialog's footer), but comes first
-const SCROLL_AREAS = ".ui-modal__body, .search-results, .notif__panel, .profile-dropdown";
+const SCROLL_AREAS = ".ui-modal__body, .search-results, .notif__lists, .profile-dropdown";
 
 function nearest(from, dir, list) {
   const a = from.getBoundingClientRect();
@@ -342,7 +342,7 @@ function focusElement(el) {
   revealHorizontally(el);
   // scroll the page vertically only: scrolling horizontally would break the row sliders
   const r = el.getBoundingClientRect();
-  const panel = el.closest(".search-results, .notif__panel, .profile-dropdown, .ui-modal__body");
+  const panel = el.closest(".search-results, .notif__lists, .profile-dropdown, .ui-modal__body");
   if (panel) {
     // inside a dropdown / dialog: scroll it, vertically only (scrollIntoView could also scroll the
     // page sideways), keeping a margin and staying clear of a header pinned inside it

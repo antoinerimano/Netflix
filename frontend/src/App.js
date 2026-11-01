@@ -22,6 +22,7 @@ import ProtectedRoute from './ProtectedRoute';
 import DesignSystemPage from './design/DesignSystemPage';
 import NotFound from './pages/NotFound';
 import ProfilesPage from './components/profiles/ProfilesPage';
+import SearchPage from './pages/SearchPage';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
@@ -58,6 +59,16 @@ function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Search: every result, recent searches, popular */}
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchPage />
             </ProtectedRoute>
           }
         />

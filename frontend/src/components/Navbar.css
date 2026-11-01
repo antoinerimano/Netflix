@@ -440,53 +440,12 @@
     display: flex;
   }
 
-  /* search: an icon; tapped, the field covers the whole bar */
+  /* search: an icon opening the search page */
   .navbar__search-toggle {
     display: inline-flex;
   }
   .search-profile {
     display: none;
-  }
-  .navbar--searching .search-profile {
-    position: absolute;
-    inset: env(safe-area-inset-top, 0px) 0 0 0;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    width: auto;
-    height: var(--nav-height);
-    padding: 0 var(--page-gutter);
-    background: var(--color-bg);
-  }
-  .navbar--searching .search-profile input {
-    position: static;
-    flex: 1;
-    width: auto;
-    height: 2.5rem;
-    font-size: var(--text-md); /* 16px: iOS doesn't zoom the page on focus */
-  }
-  .navbar--searching .search-profile:focus-within input {
-    width: auto;
-  }
-  .navbar--searching .search-profile__icon,
-  .navbar--searching .search-profile:focus-within .search-profile__icon {
-    left: calc(var(--page-gutter) + var(--space-3));
-    right: auto;
-  }
-  .navbar--searching .search-profile__close {
-    display: inline-flex;
-    flex: none;
-    margin-left: var(--space-2);
-  }
-  .navbar--searching .search-results {
-    position: fixed;
-    top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
-    left: 0;
-    right: 0;
-    width: auto;
-    max-height: calc(100vh - var(--nav-height) - 4.5rem);
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    border-width: 1px 0;
   }
 
   .tabbar {
@@ -556,4 +515,41 @@
   width: 100%;
   height: 100%;
   border-radius: var(--radius-md);
+}
+
+/* "See all results" at the bottom of the dropdown -> the search page */
+.search-results__all {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-1);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+.search-results__all svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-secondary);
+}
+.search-results__all:hover {
+  background: var(--color-surface-2);
+}
+.search-results__all:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+/* the search page has its own field */
+.search-profile.is-hidden {
+  visibility: hidden;
+}
+.navbar__search-toggle[aria-current="page"] {
+  color: var(--color-brand);
 }

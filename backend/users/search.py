@@ -267,8 +267,9 @@ def search_titles(q, profile=None, kind=None, limit=15):
             keep = set(base.filter(id__in=fuzzy).values_list("id", flat=True))
             add([i for i in fuzzy if i in keep], 45, "Close match")
 
-    # only filters ("90s crime shows"): best known matching titles
-    if not scores and p.has_filters and not p.like and not p.starring:
+    # only filters ("90s crime shows"): best known matching titles. Not when there is text that
+    # matched nothing ("qqzzxxw" with the TV Shows filter returned the 60 most popular shows).
+    if not scores and not text and p.has_filters and not p.like and not p.starring:
         add(list(base.order_by("-popularity").values_list("id", flat=True)[:limit]), 30, filters_label)
 
     if not scores:

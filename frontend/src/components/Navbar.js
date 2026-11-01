@@ -11,7 +11,7 @@ import { setActiveProfile } from '../utils/activeProfile';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 import {
-  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, SearchIcon, ShareIcon, CloseIcon, CheckIcon,
+  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, SearchIcon, ShareIcon, CheckIcon,
 } from '../design/icons';
 
 const SITE_URL = 'https://tauruss.top/';
@@ -24,7 +24,6 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]); // [{id,title,poster,description,kind:'movie'|'tv'}]
-  const [searchOpen, setSearchOpen] = useState(false); // phones: full-width search over the bar
   const [shareStatus, setShareStatus] = useState(''); // '', 'copied', 'shared'
   const [showIosInstall, setShowIosInstall] = useState(false);
   const installApp = useInstallApp();
@@ -163,7 +162,6 @@ const Navbar = () => {
 
     setResults([]);
     setQuery('');
-    setSearchOpen(false);
   };
 
   const handleShare = async () => {
@@ -212,15 +210,16 @@ const Navbar = () => {
     };
   }, [isProfileDropdownOpen]);
   useEffect(() => setIsProfileDropdownOpen(false), [pathname]);
-  const openSearch = () => {
-    setSearchOpen(true);
-    setTimeout(() => searchRef.current?.querySelector('input')?.focus(), 0);
-  };
-  const closeSearch = () => {
-    setSearchOpen(false);
-    setQuery('');
+  // phones: the search page (full screen results); desktop: the field in the bar
+  const openSearch = () => navigate('/search');
+  const seeAllResults = () => {
+    const q = query.trim();
     setResults([]);
+    setQuery('');
+    searchRef.current?.querySelector('input')?.blur();
+    navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
   };
+  const onSearchPage = pathname === '/search';
   const handleLogout = () => {
     logout();
     localStorage.removeItem('userId');
@@ -237,7 +236,7 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}${searchOpen ? ' navbar--searching' : ''}`}>
+    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}`}>
       <div className="logo" tabIndex={0} role="button" aria-label="Home" onClick={handleNavigateHome}>
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
@@ -268,11 +267,18 @@ const Navbar = () => {
       </ul>
 
       <div className="navbar__actions">
-        {/* SEARCH: a field on desktop, an icon opening a full-width field on phones */}
-        <button type="button" className="navbar__icon-btn navbar__search-toggle" aria-label="Search" onClick={openSearch}>
+        {/* SEARCH: a field on desktop (results below, "See all" -> the search page), an icon
+            opening the search page on phones; hidden on the search page itself */}
+        <button
+          type="button"
+          className="navbar__icon-btn navbar__search-toggle"
+          aria-label="Search"
+          aria-current={onSearchPage ? 'page' : undefined}
+          onClick={openSearch}
+        >
           <SearchIcon />
         </button>
-        <div className="search-profile" ref={searchRef}>
+        <div className={`search-profile${onSearchPage ? ' is-hidden' : ''}`} ref={searchRef}>
           <SearchIcon className="search-profile__icon" aria-hidden="true" />
           <input
             type="search"
@@ -281,14 +287,12 @@ const Navbar = () => {
             value={query}
             onChange={handleInputChange}
             onKeyDown={(e) => {
-              if (e.key === 'Escape' && searchOpen && !query) closeSearch();
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                seeAllResults(); // every result on the search page
+              }
             }}
           />
-          {searchOpen ? (
-            <button type="button" className="navbar__icon-btn search-profile__close" aria-label="Close search" onClick={closeSearch}>
-              <CloseIcon />
-            </button>
-          ) : null}
 
           {results.length > 0 && (
             <div
@@ -325,6 +329,10 @@ const Navbar = () => {
                   </li>
                 ))}
               </ul>
+              <button type="button" className="search-results__all" onClick={seeAllResults}>
+                <SearchIcon aria-hidden="true" />
+                See all results for “{query.trim()}”
+              </button>
             </div>
           )}
         </div>
