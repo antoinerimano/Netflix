@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { fetchUserProfiles } from '../../api/userApi';
-import { Avatar, BrandLogo, Button, EmptyState, Skeleton, Toast, friendlyError } from '../../design';
+import { Avatar, Button, EmptyState, Skeleton, Toast, friendlyError } from '../../design';
 import { PlusIcon } from '../../design/icons';
 import { ageSummary } from './ProfileForm';
 import ProfileEditor from './ProfileEditor';
@@ -137,7 +137,7 @@ export default function ProfilesPage() {
   return (
     <div className="profile-gate">
       <header className="profiles__top">
-        <BrandLogo className="profiles__logo" />
+        <img src="/logo/navbar-logo.svg" alt="Taurus" className="profiles__logo" width="927" height="108" />
       </header>
 
       <main className="profiles__main">

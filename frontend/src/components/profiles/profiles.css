@@ -15,7 +15,9 @@
   padding: max(var(--space-6), env(safe-area-inset-top, 0px)) var(--page-gutter) 0;
 }
 .profiles__logo {
-  --logo-height: clamp(1.3rem, 2.2vw, 1.8rem);
+  display: block;
+  width: auto;
+  height: clamp(1.2rem, 2vw, 1.6rem);
 }
 .profiles__main {
   display: flex;

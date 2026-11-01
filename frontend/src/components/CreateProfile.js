@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { createProfile } from '../api/userApi';
 import ProfileForm, { EMPTY_PROFILE } from './profiles/ProfileForm';
 import { setActiveProfile } from '../utils/activeProfile';
-import { BrandLogo } from '../design';
 import './profiles/profiles.css';
 
 const CreateProfile = () => {
@@ -23,7 +22,7 @@ const CreateProfile = () => {
   return (
     <div className="profile-gate">
       <header className="profiles__top">
-        <BrandLogo className="profiles__logo" />
+        <img src="/logo/navbar-logo.svg" alt="Taurus" className="profiles__logo" width="927" height="108" />
       </header>
       <main className="profiles__main profiles__main--form">
         <div className="profiles__intro">
