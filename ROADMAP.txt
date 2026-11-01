@@ -121,7 +121,7 @@ Status: [ ] todo   [~] in progress   [x] done
          left / right no longer move through the profile menu
 [x] 4.21 Sign in / Sign up / reset password on the design system: same card layout as "Create your
          profile" with the original logo, labeled fields, show password, live "passwords match"
-         check, "Forgot password?" (sends the reset email), "Step 1 of 3" on sign up, in-app links
+         check, "Forgot password?" (sends the reset email), "Step 1 of 2" on sign up, in-app links
          (no full reload), own background (not an outside image), phones + remote checked.
          Server: sign up now checks passwords with the same rules as a reset
 [x] 4.22 Hide /choose-subscription (old plans feature, set aside for now): sign up is 2 steps,
