@@ -92,6 +92,7 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel = 'Sa
           <input
             id="profile-name"
             className="ui-input"
+            data-tv-start=""
             value={values.name}
             maxLength={30}
             autoComplete="off"

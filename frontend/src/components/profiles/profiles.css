@@ -345,6 +345,21 @@
 .profile-form__color.is-selected {
   box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
 }
+/* remote focus on a picture / color, selected or not: ring + halo + lift (the selected ring alone
+   looked the same focused or not) */
+.profile-form__pic:focus-visible,
+.profile-form__color:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 9px var(--focus-halo);
+}
+.profile-form__pic:focus-visible {
+  transform: translateY(-3px) scale(1.04);
+}
+.profile-form__pic:focus-visible .ui-avatar {
+  opacity: 1;
+}
+.profile-form__color:focus-visible {
+  transform: scale(1.15);
+}
 .profile-form__color svg {
   width: 1rem;
   height: 1rem;

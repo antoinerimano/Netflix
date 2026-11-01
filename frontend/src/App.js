@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import Movies from './components/Movies';
@@ -23,6 +23,7 @@ import DesignSystemPage from './design/DesignSystemPage';
 import NotFound from './pages/NotFound';
 import ProfilesPage from './components/profiles/ProfilesPage';
 import SearchPage from './pages/SearchPage';
+import { restorePlace } from './tv/spatialNavigation';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
@@ -41,8 +42,14 @@ function App() {
   // Back / Forward keep their place (the browse pages restore theirs)
   const location = useLocation();
   const navigationType = useNavigationType();
+  // a new page starts at the top (Back keeps the place). Only when the page itself changes: a
+  // page updating its own URL (browse filters, "load more") must not jump back to the top.
+  const lastPath = useRef(location.pathname);
   useLayoutEffect(() => {
+    if (lastPath.current === location.pathname) return;
+    lastPath.current = location.pathname;
     if (navigationType !== 'POP') window.scrollTo(0, 0);
+    else restorePlace(); // Back: the remote lands on the item it was on
   }, [location.pathname, navigationType]);
 
   return (

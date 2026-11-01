@@ -170,8 +170,10 @@ function nearest(from, dir, list) {
   return pick(best.in) || pick(best.out);
 }
 
-// The page's main action, then its content, when nothing is focused yet
+// The page's main action, then its content, when nothing is focused yet. A form starts on its
+// first field instead (data-tv-start), not on its Save / Continue button.
 const START_SELECTORS = [
+  "[data-tv-start]",
   ".profile-tile, .ui-btn--primary, .hero-button, .movie-detail-play-button, .tvd-play, .watchpage__playerWrap[tabindex='0']", // Play / Watch
   ".movie-card, .poster-card, .tvd-ep-card", // cards
 ];
@@ -192,10 +194,11 @@ function usable(el) {
 // End of a line in a group that wraps (chips, color / style grids): right continues with the next
 // item of the group, left with the previous one, like TV grids. (Without it, the items on the
 // next line could be unreachable: nothing is aligned with them from the end of the line above.)
-// Rows that slide (home rows) stop at their ends instead.
+// Rows that slide (home rows) stop at their ends instead, and so does the profile menu (a single
+// column: left / right moving up and down its list was confusing).
 function wrapInGroup(from, dir, list) {
   const group = from.closest(GROUPS);
-  if (!group || group.matches(".row")) return null;
+  if (!group || group.matches(".row, .profile-dropdown")) return null;
   const items = list.filter((el) => group.contains(el) && el.closest(GROUPS) === group);
   const i = items.indexOf(from);
   if (i < 0) return null;
@@ -539,6 +542,39 @@ function onKeyDown(e) {
 }
 
 let started = false;
+// Back to a page: the remote lands on the item it was on (the card you opened), not on nothing.
+// Remembered per history entry (react-router keeps a key in history.state); the page's content
+// loads after the route changes, so restorePlace() waits for the item to appear.
+const placeByEntry = new Map();
+const entryKey = () => window.history.state?.key || `${window.location.pathname}${window.location.search}`;
+function placeOf(el) {
+  const section = el.closest("section, .row, [role='group']");
+  return {
+    label: (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 80),
+    cls: String(el.className || "").split(" ")[0],
+    section: (section?.querySelector("h1, h2, h3")?.textContent || "").trim(),
+  };
+}
+const samePlace = (a, b) => a.label === b.label && a.cls === b.cls && a.section === b.section;
+let restoring = 0;
+
+/** After Back (a POP navigation): focus the item the remote was on when this page was left. */
+export function restorePlace() {
+  const want = placeByEntry.get(entryKey());
+  const run = ++restoring;
+  if (!want || !keyboardMode) return;
+  const started = Date.now();
+  const attempt = () => {
+    if (run !== restoring) return; // another navigation since
+    const active = document.activeElement;
+    if (active && active !== document.body) return; // the user (or the page) already moved on
+    const el = candidates().find((c) => samePlace(placeOf(c), want));
+    if (el) focusElement(el);
+    else if (Date.now() - started < 4000) setTimeout(attempt, 120);
+  };
+  setTimeout(attempt, 60);
+}
+
 export function startSpatialNavigation() {
   if (started || typeof window === "undefined") return;
   started = true;
@@ -546,6 +582,7 @@ export function startSpatialNavigation() {
   window.addEventListener("keyup", onKeyUp);
   document.addEventListener("focusin", (e) => {
     lastFocused = e.target;
+    if (keyboardMode && e.target?.matches?.(FOCUSABLE)) placeByEntry.set(entryKey(), placeOf(e.target));
     const group = e.target.closest?.(GROUPS);
     if (group) lastInGroup.set(group, e.target);
   });

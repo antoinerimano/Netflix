@@ -114,3 +114,8 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 4.17 Page transitions: new page fades in, scroll goes to the top (Back keeps your place)
 [x] 4.18 Watch page: about (episode or movie) + the season's episodes under the sources, remote-friendly
 [x] 4.19 Logo: vector emblem in brand red + light TAURUS wordmark (design/BrandLogo), sharp on TV
+[x] 4.20 Remote walkthrough of every page at 1920x1080 (every control reachable, focus never hidden,
+         clipped or lost; menus / dialogs trapped, Back closes one layer). Fixed: browse jumping
+         to the top while loading more, Back now lands on the card you opened (same scroll),
+         forms start on their first field, focused + selected avatar choices look focused,
+         left / right no longer move through the profile menu
