@@ -8,6 +8,7 @@ import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbBackground, IMG } from "../utils/tmdbImage";
 import { Button, Chip, EmptyState, Skeleton, Spinner } from "../design";
 import { ArrowLeftIcon, ChevronRightIcon, MaximizeIcon, LinkIcon } from "../design/icons";
+import WatchInfo from "./watch/WatchInfo";
 
 // sources saved by older versions used the DB column names
 const LEGACY_SOURCE_KEYS = {
@@ -866,6 +867,19 @@ export default function WatchPage() {
           ) : null}
           {providersError ? <p className="watchpage__sourcesHelp">{providersError}</p> : null}
         </section>
+
+        <div className="watchpage__info">
+          <WatchInfo
+            title={title}
+            isTV={isTV}
+            seasonNumber={seasonNumber}
+            episodeNumber={episodeNumber}
+            onPlayEpisode={(season, episode) => {
+              navigate(`/watch/${titleId}?season=${season}&episode=${episode}`, { replace: true });
+              window.scrollTo({ top: 0, behavior: "smooth" }); // back to the player
+            }}
+          />
+        </div>
       </main>
     </div>
   );

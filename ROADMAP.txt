@@ -111,6 +111,6 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 4.16 Loading: page-shaped skeletons everywhere content loads, and a brand loader (the Taurus
          emblem traced to vector, drawing itself, filling, a light sweep, a red glow) for the
          start-up splash (index.html), a video source loading, permission checks and redirects
-[ ] 4.17 Page transitions (fade between pages, shared hero image)
-[ ] 4.18 Watch page on phones: description / episodes under the sources
-[ ] 4.19 Logo: lighter version (dark red on near-black is hard to read, mostly on TV)
+[x] 4.17 Page transitions: new page fades in, scroll goes to the top (Back keeps your place)
+[x] 4.18 Watch page: about (episode or movie) + the season's episodes under the sources, remote-friendly
+[x] 4.19 Logo: vector emblem in brand red + light TAURUS wordmark (design/BrandLogo), sharp on TV

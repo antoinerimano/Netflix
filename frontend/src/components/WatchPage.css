@@ -251,6 +251,14 @@
   box-shadow: 0 0 0 2px var(--color-brand);
 }
 
+/* what's playing + the season's episodes (components/watch) */
+.watchpage__info {
+  width: min(100%, calc((100vh - 15rem) * 16 / 9));
+  width: min(100%, calc((100dvh - 15rem) * 16 / 9));
+  min-width: min(100%, 36rem);
+  margin-top: var(--space-4);
+}
+
 /* ---------- Phones: edge-to-edge player, compact bar ---------- */
 @media (max-width: 768px) {
   .watchpage__top {
@@ -279,6 +287,11 @@
     box-shadow: none;
   }
   .watchpage__sources {
+    padding: 0 var(--page-gutter);
+  }
+  .watchpage__info {
+    width: 100%;
+    min-width: 0;
     padding: 0 var(--page-gutter);
   }
   .watchpage__providerRow {

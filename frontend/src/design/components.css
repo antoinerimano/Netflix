@@ -897,3 +897,29 @@
     }
   }
 }
+
+/* ---------- Logo (vector emblem + wordmark) ---------- */
+.ui-logo {
+  --logo-height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--logo-height) * 0.42);
+  height: var(--logo-height);
+  line-height: 1;
+  white-space: nowrap;
+}
+.ui-logo__mark {
+  display: block;
+  width: auto;
+  height: 100%;
+  fill: var(--color-brand);
+  filter: drop-shadow(0 0 calc(var(--logo-height) * 0.18) rgba(229, 9, 20, 0.35));
+}
+.ui-logo__word {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: calc(var(--logo-height) * 0.66);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.34em;
+  margin-right: -0.34em; /* the spacing after the last letter */
+}

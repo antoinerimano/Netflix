@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import Movies from './components/Movies';
 import MovieDetail from './components/MovieDetail';
@@ -37,11 +37,22 @@ function App() {
     return () => window.removeEventListener('activeProfileChanged', onChange);
   }, []);
 
+  // a new page starts at the top (a title opened from far down a row opened half-scrolled);
+  // Back / Forward keep their place (the browse pages restore theirs)
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  useLayoutEffect(() => {
+    if (navigationType !== 'POP') window.scrollTo(0, 0);
+  }, [location.pathname, navigationType]);
+
   return (
     <>
       {/* ✅ charge le script 1 seule fois pour toute l'app */}
       <AdManagerLoader />
 
+      {/* each page fades in (design/base.css .page-enter): keyed on the path only, so filters /
+          search in the URL don't replay it */}
+      <div className="page-enter" key={location.pathname}>
       <Routes key={profileKey}>
         {/* "Who's watching?": signed in, no profile needed yet */}
         <Route
@@ -121,6 +132,7 @@ function App() {
         {/* unknown address: a real "not found" page (was a blank screen) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </div>
     </>
   );
 }

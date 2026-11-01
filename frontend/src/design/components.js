@@ -354,3 +354,4 @@ export function Toast({ message, onDone, duration = 2600, tone = "success" }) {
 }
 
 export { default as BrandLoader } from "./BrandLoader";
+export { default as BrandLogo } from "./BrandLogo";
