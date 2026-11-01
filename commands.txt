@@ -68,3 +68,18 @@ tests / CI / CD (.github/workflows/ci-cd.yml):
       variables DEPLOY_ENABLED=true, DEPLOY_PATH (default /opt/taurus = a git clone with the .env files),
                 HEALTHCHECK_URL (optional, e.g. https://tauruss.top/api/providers/)
     the server then does: git merge --ff-only origin/main, docker compose up -d --build backend frontend, migrate
+
+end-to-end tests (e2e/, Playwright: the real app in Chromium, keyboard = TV remote):
+  first time: cd e2e && npm ci && npx playwright install chromium
+  run:        cd e2e && npm test          (headed: npm run test:headed, report: npm run report)
+  needs MySQL running; uses its own database taurus_e2e (reset at every run by manage.py e2e_prepare,
+  which refuses any database whose name doesn't contain "e2e"), ports 8101 / 3101
+  new feature = new test in e2e/tests/ (one file per area: auth, tv-remote, watch, i18n-search)
+
+protect main (GitHub > Settings > Branches > Add branch ruleset / protection rule for "main"):
+  - Require a pull request before merging
+  - Require status checks to pass: "Backend (Django tests)", "Frontend (tests, translations, build)",
+    "End-to-end (Playwright, real app, TV remote)"
+  - Require branches to be up to date before merging
+  - Block force pushes
+  => no commit reaches main (or the server) without every test passing

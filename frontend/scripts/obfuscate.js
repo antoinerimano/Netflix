@@ -2,7 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const JavaScriptObfuscator = require("javascript-obfuscator");
 
-const buildPath = path.join(__dirname, "../build/static/js");
+// BUILD_PATH: same variable react-scripts build uses (the e2e tests build into build-e2e)
+const buildPath = path.resolve(__dirname, "..", process.env.BUILD_PATH || "build", "static/js");
 
 fs.readdirSync(buildPath).forEach(file => {
   if (!file.endsWith(".js")) return;
