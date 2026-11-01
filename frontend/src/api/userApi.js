@@ -91,6 +91,8 @@ export const registerUser = async (name, email, password) => {
     if (status === 400 && data?.error === "This email is already registered") {
       throw new Error("This email is already registered");
     }
+    // the server's own reason (password too short / too common...), else a generic one
+    if (status === 400 && typeof data?.error === "string") throw new Error(data.error);
     throw new Error("Failed to register user");
   }
 };

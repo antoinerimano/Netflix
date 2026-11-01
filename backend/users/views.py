@@ -138,6 +138,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(email=email).exists():
             return Response({'error': 'This email is already registered'}, status=status.HTTP_400_BAD_REQUEST)
+        # same rules as a password reset (settings.AUTH_PASSWORD_VALIDATORS)
+        try:
+            validate_password(password, User(email=email))
+        except ValidationError as e:
+            return Response({'error': ' '.join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)

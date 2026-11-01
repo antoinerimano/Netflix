@@ -140,6 +140,7 @@
 
 .navbar .login-button {
   min-height: 2.5rem;
+  font-size: var(--text-sm);
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-md);
@@ -147,6 +148,10 @@
   color: var(--color-text-on-brand);
   font-weight: var(--weight-semibold);
   cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+.navbar .login-button:hover {
+  background: var(--color-brand-hover);
 }
 
 /* ---------- Search ---------- */

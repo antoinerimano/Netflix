@@ -10,7 +10,6 @@ import AccountManagement from './components/AccountManagement';
 import Register from './components/Register';
 import Login from './components/Login';
 import CreateProfile from './components/CreateProfile';
-import ChooseSubscription from './components/ChooseSubscription';
 import ConfirmPasswordReset from './components/ConfirmPasswordReset';
 import ConfirmEmailChange from './components/ConfirmEmailChange';
 import AdminMovies from './components/AdminMovies';
@@ -105,7 +104,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create-profile" element={<CreateProfile />} />
-        <Route path="/choose-subscription" element={<ChooseSubscription />} />
+        {/* plans are set aside for now (ROADMAP 4.22): the page stays in the code for later */}
+        <Route path="/choose-subscription" element={<Navigate to="/" replace />} />
         <Route path="/reset-password/:uid/:token" element={<ConfirmPasswordReset />} />
         <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
         <Route path="/confirm-email-change/:userId/:token" element={<ConfirmEmailChange />} />

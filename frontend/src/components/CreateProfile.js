@@ -1,5 +1,5 @@
 // src/components/CreateProfile.js
-// Sign-up step 2: the first profile (then the plan). Same form as "Who's watching?" -> Add.
+// Sign-up step 2 of 2: the first profile, then home (the plan step is set aside for now). Same form as "Who's watching?" -> Add.
 // The profile is saved before moving on (the old page left before the request finished, so a
 // failed save went unnoticed) and becomes the active profile.
 import React from 'react';
@@ -16,7 +16,7 @@ const CreateProfile = () => {
   const save = async (values) => {
     const created = await createProfile(userId, { ...values, user: userId });
     if (created?.id) setActiveProfile(created);
-    navigate('/choose-subscription');
+    navigate('/', { replace: true });
   };
 
   return (
@@ -26,7 +26,7 @@ const CreateProfile = () => {
       </header>
       <main className="profiles__main profiles__main--form">
         <div className="profiles__intro">
-          <p className="profiles__step">Step 2 of 3</p>
+          <p className="profiles__step">Step 2 of 2</p>
           <h1 className="profiles__title">Create your profile</h1>
           <p className="profiles__subtitle">You can add up to 4 profiles later, one for each person.</p>
         </div>
