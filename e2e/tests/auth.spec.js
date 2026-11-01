@@ -37,6 +37,13 @@ test('signed out pages can change language', async ({ page }) => {
   await page.locator('.language-picker__select').selectOption('fr');
   await expect(page.getByRole('heading', { name: 'Bon retour parmi nous' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+
+  // other scripts too (Devanagari, Cyrillic)
+  await page.locator('.language-picker__select').selectOption('hi');
+  await expect(page.getByRole('heading', { name: 'फिर से स्वागत है' })).toBeVisible();
+  await page.locator('.language-picker__select').selectOption('ru');
+  await expect(page.getByRole('heading', { name: 'С возвращением' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
 });
 
 test('pages need a signed-in user', async ({ page }) => {

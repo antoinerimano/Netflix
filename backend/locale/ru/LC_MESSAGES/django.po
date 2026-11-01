@@ -1,0 +1,238 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-01 17:58-0500\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: .\reco\management\commands\notify_new_episodes.py:98
+#, python-format
+msgid "New episode of %(show)s"
+msgstr "Новая серия: %(show)s"
+
+#: .\reco\management\commands\notify_new_episodes.py:101
+#, python-format
+msgid "%(count)d new episode of shows you follow"
+msgid_plural "%(count)d new episodes of shows you follow"
+msgstr[0] "%(count)d новая серия в сериалах, за которыми вы следите"
+msgstr[1] "%(count)d новые серии в сериалах, за которыми вы следите"
+msgstr[2] "%(count)d новых серий в сериалах, за которыми вы следите"
+
+#: .\users\templates\emails\_button.html:11
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "Если кнопка не работает, скопируйте эту ссылку в браузер:"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "Здравствуйте, %(name)s!"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+msgid "Hello,"
+msgstr "Здравствуйте!"
+
+#: .\users\templates\emails\base.html:27
+#: .\users\templates\emails\email_change.txt:12
+#: .\users\templates\emails\new_episodes.txt:12
+#: .\users\templates\emails\password_reset.txt:12
+#, python-format
+msgid "This email was sent by %(company)s. For help, contact"
+msgstr "Это письмо отправлено %(company)s. За помощью обращайтесь по адресу"
+
+#: .\users\templates\emails\email_change.html:3
+#: .\users\templates\emails\email_change.html:4 .\users\views.py:266
+msgid "Confirm your new email address"
+msgstr "Подтвердите новый адрес эл. почты"
+
+#: .\users\templates\emails\email_change.html:6
+#, python-format
+msgid ""
+"We received a request to change your account email to <strong>%(new_email)s</"
+"strong>. Click the button below to confirm:"
+msgstr ""
+"Мы получили запрос на смену адреса эл. почты вашего аккаунта на "
+"<strong>%(new_email)s</strong>. Нажмите кнопку ниже, чтобы подтвердить:"
+
+#: .\users\templates\emails\email_change.html:7
+msgid "Confirm email change"
+msgstr "Подтвердить смену адреса"
+
+#: .\users\templates\emails\email_change.html:9
+#: .\users\templates\emails\email_change.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: nothing will change."
+msgstr ""
+"Если вы этого не запрашивали, просто проигнорируйте письмо: ничего не "
+"изменится."
+
+#: .\users\templates\emails\email_change.txt:4
+#, python-format
+msgid "We received a request to change your account email to %(new_email)s."
+msgstr ""
+"Мы получили запрос на смену адреса эл. почты вашего аккаунта на "
+"%(new_email)s."
+
+#: .\users\templates\emails\email_change.txt:5
+msgid "Open this link to confirm:"
+msgstr "Откройте эту ссылку, чтобы подтвердить:"
+
+#: .\users\templates\emails\new_episodes.html:3
+#: .\users\templates\emails\new_episodes.html:4
+msgid "New episodes are out"
+msgstr "Вышли новые серии"
+
+#: .\users\templates\emails\new_episodes.html:6
+#: .\users\templates\emails\new_episodes.txt:4
+#, python-format
+msgid "Shows you follow on %(company)s have new episodes:"
+msgstr "В сериалах, за которыми вы следите в %(company)s, вышли новые серии:"
+
+#: .\users\templates\emails\new_episodes.html:12
+#: .\users\templates\emails\new_episodes.txt:6
+#, python-format
+msgid "Season %(season)s, episode %(episode)s"
+msgstr "Сезон %(season)s, серия %(episode)s"
+
+#: .\users\templates\emails\new_episodes.html:16
+msgid "Watch"
+msgstr "Смотреть"
+
+#: .\users\templates\emails\new_episodes.html:22
+#: .\users\templates\emails\new_episodes.txt:9
+msgid ""
+"You get this email because you clicked “Notify me” on these shows. Click it "
+"again on a show's page to stop."
+msgstr ""
+"Вы получили это письмо, потому что нажали «Сообщать» для этих сериалов. "
+"Нажмите ещё раз на странице сериала, чтобы отписаться."
+
+#: .\users\templates\emails\password_reset.html:3 .\users\views.py:440
+msgid "Reset your password"
+msgstr "Сброс пароля"
+
+#: .\users\templates\emails\password_reset.html:4
+msgid "Password reset request"
+msgstr "Запрос на сброс пароля"
+
+#: .\users\templates\emails\password_reset.html:6
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account. "
+"Click the button below to choose a new one:"
+msgstr ""
+"Мы получили запрос на сброс пароля вашего аккаунта %(company)s. Нажмите "
+"кнопку ниже, чтобы выбрать новый:"
+
+#: .\users\templates\emails\password_reset.html:7
+msgid "Reset password"
+msgstr "Сбросить пароль"
+
+#: .\users\templates\emails\password_reset.html:9
+#: .\users\templates\emails\password_reset.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: your account is safe."
+msgstr ""
+"Если вы этого не запрашивали, просто проигнорируйте письмо: ваш аккаунт в "
+"безопасности."
+
+#: .\users\templates\emails\password_reset.txt:4
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account."
+msgstr "Мы получили запрос на сброс пароля вашего аккаунта %(company)s."
+
+#: .\users\templates\emails\password_reset.txt:5
+msgid "Open this link to choose a new one:"
+msgstr "Откройте эту ссылку, чтобы выбрать новый:"
+
+#: .\users\views.py:139 .\users\views.py:425
+msgid "Email is required."
+msgstr "Укажите адрес эл. почты."
+
+#: .\users\views.py:141
+msgid "Password is required."
+msgstr "Укажите пароль."
+
+#: .\users\views.py:143
+msgid "This email is already registered."
+msgstr "Этот адрес уже зарегистрирован."
+
+#: .\users\views.py:174
+#, python-format
+msgid "You already have an active %(plan)s subscription."
+msgstr "У вас уже есть активная подписка %(plan)s."
+
+#: .\users\views.py:208
+#, python-format
+msgid "%(plan)s subscription created!"
+msgstr "Подписка %(plan)s оформлена!"
+
+#: .\users\views.py:222
+msgid "Invalid credentials."
+msgstr "Неверные данные для входа."
+
+#: .\users\views.py:254
+msgid "New email is required."
+msgstr "Укажите новый адрес эл. почты."
+
+#: .\users\views.py:257 .\users\views.py:295
+msgid "This email is already in use."
+msgstr "Этот адрес уже используется."
+
+#: .\users\views.py:272
+msgid "Confirmation email sent."
+msgstr "Письмо с подтверждением отправлено."
+
+#: .\users\views.py:284
+msgid "This confirmation link is incomplete."
+msgstr "Ссылка подтверждения неполная."
+
+#: .\users\views.py:289
+msgid "This confirmation link has expired."
+msgstr "Срок действия ссылки подтверждения истёк."
+
+#: .\users\views.py:291
+msgid "This confirmation link is not valid."
+msgstr "Ссылка подтверждения недействительна."
+
+#: .\users\views.py:299
+msgid "Email updated."
+msgstr "Адрес эл. почты обновлён."
+
+#: .\users\views.py:343
+msgid "This subscription is already canceled."
+msgstr "Эта подписка уже отменена."
+
+#: .\users\views.py:410
+msgid "Refresh token is required."
+msgstr "Укажите токен обновления."
+
+#: .\users\views.py:429
+msgid "If an account exists for this email, a reset link has been sent."
+msgstr ""
+"Если аккаунт с этим адресом существует, мы отправили ссылку для сброса."
+
+#: .\users\views.py:453
+msgid "All fields are required."
+msgstr "Заполните все поля."
+
+#: .\users\views.py:459
+msgid "This reset link is not valid."
+msgstr "Ссылка для сброса недействительна."
+
+#: .\users\views.py:462
+msgid "This reset link has expired or was already used."
+msgstr "Срок действия ссылки для сброса истёк, или она уже использована."
+
+#: .\users\views.py:471
+msgid "Your password has been changed."
+msgstr "Ваш пароль изменён."

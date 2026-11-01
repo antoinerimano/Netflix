@@ -14,7 +14,8 @@ describe('normalizeLanguage', () => {
     ['zh-TW', 'zh'],
     ['ZH_cn', 'zh'],
     ['de', 'de'],
-    ['pt-BR', null],
+    ['ko-KR', null],
+    ['pt-BR', 'pt'],
     ['', null],
   ])('%s -> %s', (input, expected) => {
     expect(normalizeLanguage(input)).toBe(expected);
@@ -33,6 +34,18 @@ test('switching language loads its texts and updates <html lang>', async () => {
   // plurals follow the language's rules
   expect(i18n.t('catalog:detail.seasonCount', { count: 1 })).toBe('1 saison');
   expect(i18n.t('catalog:detail.seasonCount', { count: 3 })).toBe('3 saisons');
+});
+
+test('every supported language has its own texts', async () => {
+  // a language listed in SUPPORTED_LANGUAGES without its locales/<lang> files would show English
+  const english = 'Welcome back';
+  for (const lng of LANGUAGE_CODES) {
+    await i18n.changeLanguage(lng);
+    await i18n.loadNamespaces('auth');
+    const title = i18n.getFixedT(lng, 'auth')('signIn.title');
+    if (lng === 'en') expect(title).toBe(english);
+    else expect([lng, title]).not.toEqual([lng, english]);
+  }
 });
 
 test('unsupported languages are ignored', async () => {

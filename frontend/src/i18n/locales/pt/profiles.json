@@ -1,0 +1,208 @@
+{
+  "kids": "Infantil",
+  "create": {
+    "title": "Crie seu perfil",
+    "subtitle_one": "Depois você pode adicionar até {{count}} perfil, um para cada pessoa.",
+    "subtitle_many": "Depois você pode adicionar até {{count}} perfis, um para cada pessoa.",
+    "subtitle_other": "Depois você pode adicionar até {{count}} perfis, um para cada pessoa."
+  },
+  "who": {
+    "title": "Quem está assistindo?",
+    "loadError": "Não foi possível carregar seus perfis",
+    "watchAs": "Assistir como {{name}}"
+  },
+  "manage": {
+    "title": "Gerenciar perfis",
+    "subtitle": "Escolha um perfil para editar.",
+    "edit": "Editar {{name}}"
+  },
+  "add": {
+    "title": "Adicionar perfil",
+    "submit": "Adicionar perfil"
+  },
+  "edit": {
+    "title": "Editar perfil",
+    "confirmDelete": "Excluir {{name}}?",
+    "keep": "Manter",
+    "delete": "Excluir perfil"
+  },
+  "toast": {
+    "added": "{{name}} adicionado",
+    "saved": "{{name}} salvo",
+    "deleted": "{{name}} excluído"
+  },
+  "age": {
+    "all": "Livre",
+    "7": "7+",
+    "13": "13+",
+    "16": "16+",
+    "none": "Sem limite",
+    "everything": "Tudo",
+    "kidsSummary": "Infantil · {{limit}}"
+  },
+  "form": {
+    "name": "Nome",
+    "namePlaceholder": "ex.: Sam",
+    "nameRequired": "Dê um nome ao perfil.",
+    "saveFailed": "Não foi possível salvar o perfil. Tente de novo.",
+    "picture": "Imagem",
+    "pictureGroup": "Imagem do perfil",
+    "ownAvatar": "Seu avatar",
+    "ownAvatarEdit": "Seu avatar: editar",
+    "createAvatar": "Criar seu próprio avatar",
+    "create": "Criar",
+    "letter": "Letra",
+    "photo": "Imagem {{number}}",
+    "letterColor": "Cor da letra",
+    "color": "Cor {{color}}",
+    "kids": "Perfil infantil",
+    "kidsHint": "Só títulos indicados para crianças e uma tela inicial mais simples.",
+    "ageLimit": "Classificação máxima",
+    "ageLimitHint": "Títulos acima desta classificação ficam ocultos.",
+    "ageLimitKidsHint": "Perfis infantis vão até 7+ (PG).",
+    "language": "Idioma",
+    "languageHint": "O app, os títulos e as sinopses aparecem neste idioma."
+  },
+  "avatar": {
+    "title": "Crie seu avatar",
+    "use": "Usar este avatar",
+    "surprise": "Me surpreenda",
+    "undo": "Desfazer",
+    "partsLabel": "Partes do avatar",
+    "style": "Estilo",
+    "numbered": "{{label}} {{number}}",
+    "tabs": {
+      "hair": "Cabelo",
+      "hat": "Chapéus",
+      "eyes": "Olhos",
+      "brows": "Sobrancelhas",
+      "mouth": "Boca",
+      "beard": "Barba",
+      "extras": "Extras",
+      "face": "Rosto",
+      "top": "Roupa",
+      "scene": "Fundo"
+    },
+    "colors": {
+      "hc": "Cor do cabelo",
+      "hwc": "Cor do chapéu",
+      "sk": "Pele",
+      "sh": "Cor",
+      "bg": "Cores"
+    },
+    "parts": {
+      "bg": "Fundo",
+      "pt": "Estampa",
+      "fc": "Formato do rosto",
+      "sk": "Pele",
+      "ey": "Olhos",
+      "eb": "Sobrancelhas",
+      "mo": "Boca",
+      "hr": "Cabelo",
+      "hc": "Cor do cabelo",
+      "hw": "Chapéu",
+      "hwc": "Cor do chapéu",
+      "bd": "Barba",
+      "ex": "Extras",
+      "sh": "Cor da roupa",
+      "ts": "Roupa"
+    },
+    "names": {
+      "pt": [
+        "Nenhum",
+        "Bolinhas",
+        "Listras",
+        "Ondas",
+        "Estrelas",
+        "Grade",
+        "Confete"
+      ],
+      "fc": [
+        "Redondo",
+        "Quadrado",
+        "Oval",
+        "Largo"
+      ],
+      "ey": [
+        "Pontos",
+        "Brilhantes",
+        "Felizes",
+        "Piscadinha",
+        "Sonolentos",
+        "Estrelas",
+        "Óculos escuros",
+        "Grandes",
+        "Cílios",
+        "Corações"
+      ],
+      "eb": [
+        "Nenhuma",
+        "Suaves",
+        "Grossas",
+        "Levantadas",
+        "Bravas",
+        "Preocupadas",
+        "Monocelha"
+      ],
+      "mo": [
+        "Sorriso",
+        "Sorrisão",
+        "Surpresa",
+        "Neutra",
+        "Língua",
+        "Sorriso de canto",
+        "Gargalhada",
+        "Batom"
+      ],
+      "hr": [
+        "Nenhum",
+        "Curto",
+        "Espetado",
+        "Cacheado",
+        "Longo",
+        "Coque",
+        "Moicano",
+        "Black power",
+        "Repartido de lado",
+        "Raspado",
+        "Rabo de cavalo",
+        "Maria-chiquinha"
+      ],
+      "hw": [
+        "Nenhum",
+        "Boné",
+        "Gorro",
+        "Coroa",
+        "Fones de ouvido",
+        "Bandana",
+        "Cartola",
+        "Flores",
+        "Auréola",
+        "Orelhas de gato"
+      ],
+      "bd": [
+        "Nenhuma",
+        "Por fazer",
+        "Cheia",
+        "Cavanhaque",
+        "Bigode",
+        "Bigode guidão"
+      ],
+      "ex": [
+        "Nenhum",
+        "Blush",
+        "Sardas",
+        "Óculos redondos",
+        "Óculos quadrados",
+        "Brincos",
+        "Pinta"
+      ],
+      "ts": [
+        "Camiseta",
+        "Moletom",
+        "Gola",
+        "Gola alta"
+      ]
+    }
+  }
+}

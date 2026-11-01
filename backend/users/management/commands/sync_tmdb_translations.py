@@ -38,6 +38,10 @@ REGIONS = {
     "it": ["IT", "CH"],
     "ja": ["JP"],
     "zh": ["CN", "SG"],
+    "hi": ["IN"],
+    "pt": ["BR", "PT"],
+    "ru": ["RU"],
+    "bn": ["BD", "IN"],
 }
 
 

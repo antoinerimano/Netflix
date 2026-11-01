@@ -1,0 +1,50 @@
+{
+  "loadFailed": "यह टाइटल लोड नहीं हो सका।",
+  "cantPlay": "यह टाइटल नहीं चल सकता",
+  "seasonEpisode": "सीज़न {{season}} · एपिसोड {{episode}}",
+  "back": "वापस",
+  "nextEpisode": "अगला एपिसोड",
+  "fullscreen": "फ़ुल स्क्रीन",
+  "fullscreenHint": "फ़ुल स्क्रीन (F)",
+  "player": {
+    "label": "प्लेयर",
+    "tileLabel": "प्लेयर: फ़ुल स्क्रीन में चलाने के लिए OK दबाएँ",
+    "chooseTitle": "स्रोत चुनें",
+    "chooseText": "नीचे से एक स्रोत चुनें, या अपना लिंक चिपकाएँ।",
+    "loadingSource": "स्रोत लोड हो रहा है…",
+    "loadingNamed": "{{source}} लोड हो रहा है",
+    "notPlayable": "यह लिंक चलने लायक नहीं लगता। कोई दूसरा स्रोत आज़माएँ।",
+    "noFullscreen": "यहाँ फ़ुल स्क्रीन उपलब्ध नहीं है। प्लेयर के अपने बटन इस्तेमाल करें, या कोई दूसरा स्रोत आज़माएँ।"
+  },
+  "keys": {
+    "control": "<key>OK</key> प्लेयर चलाएँ",
+    "playPause": "<key>OK</key> / <key>स्पेस</key> चलाएँ · रोकें",
+    "seek": "<key>◀</key> <key>▶</key> पीछे · आगे",
+    "exit": "<key>वापस</key> फ़ुल स्क्रीन से बाहर",
+    "volume": "<key>▲</key> <key>▼</key> आवाज़"
+  },
+  "sources": {
+    "label": "स्रोत",
+    "title": "स्रोत",
+    "help": "वीडियो शुरू नहीं हो रहा? कोई दूसरा स्रोत आज़माएँ।",
+    "choose": "स्रोत चुनें",
+    "loadFailed": "स्रोत लोड नहीं हो सके।",
+    "switched": "{{from}} लोड नहीं हुआ, {{to}} पर बदला गया।",
+    "notPlaying": "{{source}} पर नहीं चल रहा?",
+    "try": "{{source}} आज़माएँ",
+    "down": "ऑफ़लाइन?",
+    "downHint": "हमारी पिछली जाँच में यह स्रोत नहीं मिला",
+    "custom": "आपका लिंक",
+    "customLabel": "आपका वीडियो लिंक",
+    "customPlaceholder": "वीडियो या प्लेयर का लिंक चिपकाएँ (https://…)"
+  },
+  "info": {
+    "about": "जानकारी",
+    "seasonEpisodes": "सीज़न {{number}} के एपिसोड",
+    "episodeNamed": "एपिसोड {{number}}: {{name}}",
+    "playing": "चल रहा है",
+    "playingNow": "चल रहा है",
+    "soon": "जल्द",
+    "comingSoon": "जल्द आ रहा है"
+  }
+}
