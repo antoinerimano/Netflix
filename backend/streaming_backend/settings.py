@@ -96,6 +96,9 @@ DATABASES = {
         "PASSWORD": env("DB_PASSWORD", default=""),
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="3306"),
+        # the tables are utf8mb4; Django's default connection charset ("utf8" = 3 bytes) refused
+        # 4-byte characters (emoji, rare CJK) in TMDB texts: "Incorrect string value"
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 

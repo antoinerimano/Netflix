@@ -1,0 +1,14 @@
+{
+  "name": "taurus-e2e",
+  "private": true,
+  "description": "End-to-end tests: the real app (Django + React build) driven in Chromium, keyboard / TV remote included",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "serve": "^14.2.4"
+  }
+}

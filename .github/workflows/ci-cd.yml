@@ -1,5 +1,6 @@
 # CI / CD
-#   every push and pull request: backend tests (MySQL), frontend tests, translations, production build
+#   every push and pull request: backend tests (MySQL), frontend tests, translations, production build,
+#   end-to-end tests (the real app in Chromium, driven with the keyboard like a TV remote)
 #   push to main, once everything passed: deploy to the server over SSH (docker compose)
 #
 # Deploy setup (GitHub > Settings > Environments > "production"):
@@ -51,12 +52,12 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: System packages (mysqlclient build, gettext)
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev pkg-config gettext
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -88,9 +89,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "20" # same as frontend/Dockerfile
           cache: npm
@@ -111,9 +112,80 @@ jobs:
         env:
           CI: "true"
 
+  e2e:
+    name: End-to-end (Playwright, real app, TV remote)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      # the backend Playwright starts (e2e/playwright.config.js) uses these; the database
+      # taurus_e2e is created, migrated and filled by manage.py e2e_prepare
+      DJANGO_SECRET_KEY: ci-only-not-a-secret
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: System packages (mysqlclient build)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev pkg-config
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Backend dependencies
+        working-directory: backend
+        run: |
+          grep -v -i '^sentence-transformers' requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Playwright and Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Report (screenshots, videos and traces of what failed)
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 14
+
   deploy:
     name: Deploy
-    needs: [backend, frontend]
+    needs: [backend, frontend, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30

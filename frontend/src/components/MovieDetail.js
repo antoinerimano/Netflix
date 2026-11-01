@@ -1,7 +1,7 @@
 // src/components/MovieDetail.js
 // Movie page: shared detail template (components/detail): hero with Watch / My List / ratings,
 // then Trailer, Cast and Details sections.
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFormat, languageName as intlLanguageName } from '../i18n/format';
@@ -103,6 +103,7 @@ const MovieDetail = () => {
 
   const activeProfileId = localStorage.getItem('activeProfileId');
   const [isInList, setIsInList] = useState(false);
+  const listTouched = useRef(false); // the user toggled My List: the server's first answer is stale
 
   const cast = useMemo(() => castObjects(movie?.actors, { byPopularity: true }), [movie]);
   const countryList = useMemo(() => getNames(movie?.production_countries, fmt.regionName), [movie, fmt.lng]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -127,8 +128,10 @@ const MovieDetail = () => {
   useEffect(() => {
     if (!movie?.id || !activeProfileId) return;
     let alive = true;
+    listTouched.current = false;
     fetchMyList(activeProfileId)
-      .then((items) => alive && setIsInList(items.some((i) => i.id === movie.id)))
+      // a click made before this answer arrived wins (the answer predates it)
+      .then((items) => alive && !listTouched.current && setIsInList(items.some((i) => i.id === movie.id)))
       .catch(() => {});
     return () => {
       alive = false;
@@ -144,6 +147,7 @@ const MovieDetail = () => {
       surface: 'movie_detail',
       provider: nextIsAdd ? 'add' : 'remove',
     });
+    listTouched.current = true;
     setIsInList(nextIsAdd); // instant feedback, undone if the server refuses
     setInMyList(activeProfileId, movie.id, nextIsAdd).catch(() => setIsInList(!nextIsAdd));
   };

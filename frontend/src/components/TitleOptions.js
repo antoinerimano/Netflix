@@ -3,7 +3,7 @@
 // dislike, then the card's own actions (remove from Continue watching, not interested).
 // Opened by holding OK on a TV remote, the remote's menu key, a right click, a long press on
 // touch screens or the card's "⋯" button (see Row.js, tv/spatialNavigation.js).
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Rating } from '../design';
 import {
@@ -45,15 +45,18 @@ export default function TitleOptions({
   const profileId = localStorage.getItem('activeProfileId');
   const [inList, setInList] = useState(null); // null: not known yet
   const [rating, setRatingState] = useState(null);
+  const touched = useRef({ list: false, rating: false }); // clicked before the server answered
 
   useEffect(() => {
     if (!open || !title?.id || !profileId) return undefined;
     let alive = true;
+    touched.current = { list: false, rating: false };
     fetchMyList(profileId)
-      .then((items) => alive && setInList(items.some((i) => i.id === title.id)))
-      .catch(() => alive && setInList(false));
+      // a click made before this answer arrived wins (the answer predates it)
+      .then((items) => alive && !touched.current.list && setInList(items.some((i) => i.id === title.id)))
+      .catch(() => alive && !touched.current.list && setInList(false));
     fetchRating({ profileId, titleId: title.id })
-      .then((r) => alive && setRatingState(r))
+      .then((r) => alive && !touched.current.rating && setRatingState(r))
       .catch(() => {});
     return () => {
       alive = false;
@@ -64,6 +67,7 @@ export default function TitleOptions({
 
   const toggleList = () => {
     const next = !inList;
+    touched.current.list = true;
     setInList(next); // instant feedback, undone if the server refuses
     logActionBeacon({ title_id: title.id, action: 'add_to_list', surface, provider: next ? 'add' : 'remove' });
     setInMyList(profileId, title.id, next).catch(() => setInList(!next));
@@ -71,6 +75,7 @@ export default function TitleOptions({
   const rate = (value) => {
     const previous = rating;
     const next = rating === value ? null : value;
+    touched.current.rating = true;
     setRatingState(next);
     setRating({ profileId, titleId: title.id, rating: next }).catch(() => setRatingState(previous));
   };
