@@ -23,25 +23,33 @@ class Migration(migrations.Migration):
                 ('last_error', models.TextField(blank=True, default='')),
             ],
         ),
-        migrations.RemoveIndex(
-            model_name='titlesimilar',
-            name='reco_titles_title_i_1c953d_idx',
-        ),
-        migrations.AddIndex(
-            model_name='titleaction',
-            index=models.Index(fields=['profile', '-created_at'], name='reco_titlea_profile_acf144_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='titleaction',
-            index=models.Index(fields=['profile', 'title'], name='reco_titlea_profile_723c16_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='titlesimilar',
-            index=models.Index(fields=['model_name', 'title', '-score'], name='reco_titles_model_n_ec6621_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='titlesimilar',
-            index=models.Index(fields=['model_name', 'similar'], name='reco_titles_model_n_087cfc_idx'),
+        # 0005 already made these index changes in the database (idempotently, RunPython) without
+        # recording them: here they only update Django's state. Running them again failed on an
+        # empty database (CI, tests): "Can't DROP 'reco_titles_title_i_1c953d_idx'".
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RemoveIndex(
+                    model_name='titlesimilar',
+                    name='reco_titles_title_i_1c953d_idx',
+                ),
+                migrations.AddIndex(
+                    model_name='titleaction',
+                    index=models.Index(fields=['profile', '-created_at'], name='reco_titlea_profile_acf144_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='titleaction',
+                    index=models.Index(fields=['profile', 'title'], name='reco_titlea_profile_723c16_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='titlesimilar',
+                    index=models.Index(fields=['model_name', 'title', '-score'], name='reco_titles_model_n_ec6621_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='titlesimilar',
+                    index=models.Index(fields=['model_name', 'similar'], name='reco_titles_model_n_087cfc_idx'),
+                ),
+            ],
         ),
         migrations.AddField(
             model_name='recohomesnapshot',
