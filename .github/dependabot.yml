@@ -20,6 +20,13 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # 15.5.1+ requires TypeScript 5, react-scripts 5 installs 4: `npm ci` fails (ERESOLVE)
+      - dependency-name: "react-i18next"
+        versions: [">=15.5.1"]
+      # 0.31 ignores the responsive settings: home rows showed ~6 small cards instead of 4 at
+      # 1280 px (caught by e2e/tests/tv-remote.spec.js)
+      - dependency-name: "react-slick"
+        versions: [">=0.31.0"]
     groups:
       frontend:
         patterns: ["*"]
