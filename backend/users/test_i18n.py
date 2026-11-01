@@ -34,6 +34,13 @@ class CatalogTextsTests(TestCase):
         TitleTranslation.objects.create(title=self.show, language="fr", name="The Office (FR)", overview="Un faux documentaire.")
         EpisodeTranslation.objects.create(episode=self.ep, language="fr", name="Le pilote", overview="")
 
+    def test_four_byte_characters_are_stored(self):
+        # emoji / rare CJK in TMDB texts (regression: the sync crashed, "Incorrect string value")
+        text = "Un voyage 🚀 𠮷"
+        t = TitleTranslation.objects.create(title=self.show, language="ja", name="🎬", overview=text)
+        t.refresh_from_db()
+        self.assertEqual(t.overview, text)
+
     def test_payload_walker(self):
         data = {
             "rows": [{"title": "Row title", "items": [{"id": self.show.id, "title": "The Office", "type": "tv", "description": "A mockumentary."}]}],
