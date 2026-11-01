@@ -6,7 +6,7 @@ import { AuthContext } from './AuthContext';
 import { fetchUserProfiles } from '../api/userApi';
 import { logTitleClick } from '../api/analyticsApi';
 import NotificationBell from './NotificationBell';
-import { Avatar, BrandLogo } from '../design';
+import { Avatar } from '../design';
 import { setActiveProfile } from '../utils/activeProfile';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
@@ -238,7 +238,17 @@ const Navbar = () => {
     <>
     <nav className={`navbar${scrolled ? ' navbar--solid' : ''}`}>
       <div className="logo" tabIndex={0} role="button" aria-label="Home" onClick={handleNavigateHome}>
-        <BrandLogo variant={isMobile ? 'mark' : 'full'} />
+        {isMobile ? (
+          <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
+        ) : (
+          <img
+            src="/logo/navbar-logo.svg"
+            alt="Taurus"
+            width="927"
+            height="108"
+            className="logo-svg"
+          />
+        )}
       </div>
 
       {/* desktop / TV: links in the bar (phones: the tab bar at the bottom) */}

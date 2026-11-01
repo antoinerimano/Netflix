@@ -39,11 +39,15 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
 }
-.logo .ui-logo {
-  --logo-height: clamp(1.25rem, 1.7vw, 1.7rem);
+.logo .logo-svg {
+  display: block;
+  width: auto;
+  height: clamp(1.1rem, 1.6vw, 1.6rem);
 }
-.logo .ui-logo--mark {
-  --logo-height: 1.9rem;
+.logo .logo-img {
+  display: block;
+  width: auto;
+  height: 2rem;
 }
 
 /* ---------- Links (desktop) ---------- */
