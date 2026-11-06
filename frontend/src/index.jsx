@@ -32,7 +32,7 @@ reportWebVitals();
 
 // Installable app (PWA): public/service-worker.js. Production only, so `npm start` never gets
 // a worker in the way of hot reload.
-if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   });

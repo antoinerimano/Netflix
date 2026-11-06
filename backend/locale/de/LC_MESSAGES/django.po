@@ -242,3 +242,17 @@ msgstr ""
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "Dein Passwort wurde geändert."
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "%(name)s auf Tauruss ansehen."
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "Filme und Serien mit %(name)s."
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "Seite nicht gefunden"

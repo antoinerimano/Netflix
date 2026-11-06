@@ -144,3 +144,20 @@ Status: [ ] todo   [~] in progress   [x] done
         3-hourly cron), swapped into every API response by the JSON renderer (users/localize.py);
         search also matches translated names. Home rows / "why" lines / search reasons are sent
         as data and worded by the app. Profiles saved as "jp" became "ja".
+
+6. SEARCH ENGINES, SPEED, CODE HEALTH
+-------------------------------------
+[x] 6.1 Pages search engines can read
+        nginx sends app URLs that aren't files to Django (users/seo.py): index.html with the
+        page's own title, description, preview image, canonical + hreflang (?lng=) links and
+        JSON-LD (Movie / TVSeries / Person); unknown URLs are real 404s (noindex), backend down =
+        plain index.html. Sitemaps built live from the database (replaces the by-hand script).
+        Browser tab = "<title> | Tauruss" on title / actor pages.
+[x] 6.2 Faster loads
+        Create React App -> Vite (+ Vitest, ESLint 9); /static/ cached a year (hashed names),
+        index.html never; account / admin / watch / sign-up pages loaded on demand.
+        Main script 3.5 MB -> 0.9 MB (obfuscated), Node 20 (end of life) -> 22.
+[x] 6.3 Code health
+        WatchPage helpers in watch/playerEvents.js (+ tests), backend one-off scripts in
+        backend/tools, their lists in backend/data, notes in docs/; TMDB / Bunny keys out of the
+        code; MySQL password out of docker-compose.yml; CSP header (no script-src: the ad script).

@@ -228,3 +228,17 @@ msgstr "Este link de redefinição expirou ou já foi usado."
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "Sua senha foi alterada."
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Assista %(name)s no Tauruss."
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "Filmes e séries com %(name)s."
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "Página não encontrada"

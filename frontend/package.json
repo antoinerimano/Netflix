@@ -14,43 +14,29 @@
     "react-dom": "^18.3.1",
     "react-i18next": "15.5.0",
     "react-router-dom": "^6.30.6",
-    "react-scripts": "5.0.1",
     "react-slick": "0.30.3",
     "slick-carousel": "^1.8.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build && node scripts/obfuscate.js",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build && node scripts/obfuscate.js",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --max-warnings=0",
     "i18n:check": "node scripts/i18n-check.js"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "javascript-obfuscator": "^5.9.0"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^axios$": "axios/dist/node/axios.cjs"
-    }
+    "@eslint/js": "^9.39.5",
+    "@vitejs/plugin-react": "^6.2.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "javascript-obfuscator": "^5.9.0",
+    "jsdom": "^29.1.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }

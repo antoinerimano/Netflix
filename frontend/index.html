@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ===== Core ===== -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+
+  <!-- ===== Font (design system: Inter) ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+  <!-- ===== Primary SEO ===== -->
+  <title>Tauruss – Stream Movies & TV Shows Online in HD</title>
+  <meta name="description" content="Tauruss lets you stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere — on any device." />
+  <meta name="author" content="Tauruss" />
+  <link rel="canonical" href="https://tauruss.top/" />
+
+  <!-- ===== Crawler hints ===== -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow" />
+
+  <!-- ===== Open Graph (Facebook, LinkedIn, iMessage previews) ===== -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Tauruss" />
+  <meta property="og:title" content="Tauruss – Stream Movies & TV Shows Online in HD" />
+  <meta property="og:description" content="Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere." />
+  <meta property="og:url" content="https://tauruss.top/" />
+  <meta property="og:image" content="https://tauruss.top/logo/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Tauruss streaming platform" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- ===== Twitter / X ===== -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tauruss – Stream Movies & TV Shows Online in HD" />
+  <meta name="twitter:description" content="Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere." />
+  <meta name="twitter:image" content="https://tauruss.top/logo/og-image.jpg" />
+  <meta name="twitter:image:alt" content="Tauruss streaming platform" />
+
+  <!-- ===== Favicons / App Icons ===== -->
+  <link rel="shortcut icon" href="/logo/favicon.ico" />
+  <link rel="icon" type="image/x-icon" href="/logo/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/logo/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/logo/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/logo/favicon-48x48.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/logo/favicon-64x64.png" />
+  <link rel="icon" type="image/png" sizes="128x128" href="/logo/favicon-128x128.png" />
+  <link rel="icon" type="image/png" sizes="256x256" href="/logo/favicon-256x256.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo/favicon-180x180.png" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- ===== Installable app (PWA) ===== -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Tauruss" />
+
+  <!-- ===== Structured Data (JSON-LD) ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Tauruss",
+    "url": "https://tauruss.top/",
+    "description": "Stream thousands of movies and TV shows instantly in HD. Watch anytime, anywhere.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://tauruss.top/search?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Tauruss",
+    "url": "https://tauruss.top/",
+    "logo": "https://tauruss.top/logo/favicon-512x512.png"
+  }
+  </script>
+
+  <!-- ===== Start-up splash (shown while the app downloads; React replaces it) =====
+       Same animation as the BrandLoader component (src/design/BrandLoader.js, components.css) -->
+  <style>
+    html, body { background: #08080a; }
+    .boot { position: fixed; inset: 0; display: grid; place-items: center;
+      background: radial-gradient(60% 50% at 50% 45%, rgba(229, 9, 20, 0.1), transparent 70%), #08080a; }
+    .boot svg { width: 96px; height: auto; overflow: visible; animation: boot-glow 2.6s ease-in-out infinite; }
+    .boot path.p { fill: #e50914; fill-opacity: 0; stroke: #e50914; stroke-width: 7; stroke-linejoin: round;
+      stroke-dasharray: 1; stroke-dashoffset: 1; animation: boot-draw 2.6s cubic-bezier(.65, 0, .35, 1) infinite; }
+    .boot path.p2 { animation-name: boot-draw-late; }
+    .boot rect { animation: boot-shine 2.6s cubic-bezier(.45, 0, .55, 1) infinite; }
+    @keyframes boot-draw { 0% { stroke-dashoffset: 1; fill-opacity: 0; opacity: 1; } 34% { stroke-dashoffset: 0; fill-opacity: 0; }
+      50% { fill-opacity: 1; } 82% { stroke-dashoffset: 0; fill-opacity: 1; opacity: 1; } 100% { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; } }
+    @keyframes boot-draw-late { 0%, 10% { stroke-dashoffset: 1; fill-opacity: 0; opacity: 1; } 42% { stroke-dashoffset: 0; fill-opacity: 0; }
+      56% { fill-opacity: 1; } 82% { stroke-dashoffset: 0; fill-opacity: 1; opacity: 1; } 100% { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; } }
+    @keyframes boot-shine { 0%, 54% { transform: translateX(0); } 80%, 100% { transform: translateX(640px); } }
+    @keyframes boot-glow { 0%, 40% { filter: drop-shadow(0 0 0 rgba(229, 9, 20, 0)); }
+      62% { filter: drop-shadow(0 0 14px rgba(229, 9, 20, .55)); } 100% { filter: drop-shadow(0 0 0 rgba(229, 9, 20, 0)); } }
+    @media (prefers-reduced-motion: reduce) {
+      .boot svg, .boot path.p, .boot rect { animation: none; }
+      .boot path.p { fill-opacity: 1; stroke: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <noscript>
+    <h1>Tauruss – Stream Movies & TV Shows Online</h1>
+    <p>Tauruss is a streaming platform offering thousands of movies and TV shows in HD. Please enable JavaScript to use Tauruss.</p>
+  </noscript>
+  <div id="root"><div class="boot" role="status" aria-label="Loading Tauruss"><svg viewBox="0 0 459 286" aria-hidden="true"><defs><clipPath id="boot-clip"><path d="M3.7 0.0C5.7 2.1 9.4 22.7 12.3 30.3C15.3 38.0 17.4 40.6 21.3 46.0C25.3 51.4 30.6 58.0 36.0 63.0C41.4 68.0 45.2 71.1 53.7 76.0C62.2 80.9 68.8 86.6 87.0 92.7C105.2 98.8 144.9 107.6 162.7 112.7C180.4 117.7 182.5 118.4 193.3 123.0C204.2 127.6 216.2 140.2 227.7 140.3C239.2 140.5 250.9 128.6 262.3 124.0C273.7 119.4 283.1 116.2 296.0 112.7C308.9 109.1 327.5 105.9 339.7 102.7C351.8 99.4 358.0 97.8 369.0 93.3C380.0 88.8 397.3 80.3 405.7 75.7C414.1 71.0 414.0 70.5 419.3 65.3C424.7 60.2 433.3 50.3 437.7 44.7C442.0 39.0 442.7 37.9 445.3 31.3C448.0 24.8 451.4 7.1 453.7 5.3C455.9 3.6 457.8 16.7 458.7 20.7C459.5 24.6 460.1 23.1 458.7 29.0C457.3 34.9 453.0 49.6 450.3 56.3C447.7 63.1 445.7 65.0 442.7 69.3C439.6 73.7 438.2 77.0 432.0 82.3C425.8 87.7 414.1 96.6 405.3 101.3C396.6 106.1 398.2 105.7 379.7 111.0C361.1 116.3 314.9 126.6 294.0 133.0C273.1 139.4 265.3 144.1 254.3 149.3C243.4 154.6 235.3 163.9 228.3 164.7C221.3 165.4 220.3 157.9 212.3 153.7C204.4 149.4 194.4 144.1 180.7 139.0C166.9 133.9 147.1 127.7 130.0 123.0C112.9 118.3 91.3 114.9 78.0 111.0C64.7 107.1 56.8 103.0 50.0 99.7C43.2 96.3 42.4 95.7 37.0 91.0C31.6 86.3 22.6 78.4 17.3 71.7C12.1 64.9 8.6 57.5 5.7 50.7C2.8 43.8 0.9 36.1 0.0 30.7C-0.9 25.2 -0.6 23.1 0.0 18.0C0.6 12.9 1.6 -2.1 3.7 0.0Z"/><path d="M404.0 131.3C410.8 130.8 403.4 135.3 401.0 138.0C398.6 140.7 399.7 143.4 389.3 147.3C379.0 151.2 351.9 156.6 339.0 161.3C326.1 166.1 318.1 171.7 311.7 176.0C305.3 180.3 304.1 182.5 300.7 187.0C297.2 191.5 295.3 190.9 291.0 203.0C286.7 215.1 280.4 247.2 274.7 259.3C268.9 271.5 263.6 271.6 256.7 276.0C249.7 280.4 238.2 284.1 233.0 285.7C227.8 287.3 230.6 287.1 225.7 285.7C220.7 284.2 209.9 280.9 203.3 277.0C196.7 273.1 190.0 266.9 186.0 262.3C182.0 257.7 182.3 258.8 179.3 249.3C176.4 239.8 171.7 215.3 168.3 205.3C165.0 195.4 162.7 194.3 159.3 189.7C156.0 185.0 154.9 182.1 148.3 177.3C141.7 172.6 132.6 166.2 119.7 161.3C106.7 156.4 80.1 150.9 70.7 148.0C61.3 145.1 66.1 146.2 63.3 143.7C60.6 141.1 53.7 134.5 54.0 132.7C54.3 130.8 58.1 131.3 65.3 132.7C72.6 134.0 86.3 137.3 97.7 140.7C109.1 144.1 122.8 148.3 133.7 153.0C144.6 157.7 156.4 164.9 163.0 169.0C169.6 173.1 169.7 172.9 173.3 177.7C176.9 182.4 180.5 186.6 184.7 197.3C188.8 208.1 195.0 232.9 198.3 242.3C201.7 251.7 202.3 250.7 204.7 253.7C207.0 256.7 208.2 258.5 212.3 260.3C216.4 262.2 223.7 264.8 229.3 264.7C235.0 264.6 242.1 261.8 246.3 259.7C250.6 257.5 252.7 254.6 255.0 251.7C257.3 248.7 257.2 251.3 260.3 242.0C263.5 232.7 270.8 205.5 274.0 196.0C277.2 186.5 276.8 188.9 279.7 185.0C282.5 181.1 286.7 176.2 291.0 172.3C295.3 168.5 298.8 165.6 305.3 162.0C311.9 158.4 321.2 154.5 330.3 151.0C339.4 147.5 347.7 144.3 360.0 141.0C372.3 137.7 397.2 131.8 404.0 131.3Z"/></clipPath><linearGradient id="boot-shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path class="p" pathLength="1" d="M3.7 0.0C5.7 2.1 9.4 22.7 12.3 30.3C15.3 38.0 17.4 40.6 21.3 46.0C25.3 51.4 30.6 58.0 36.0 63.0C41.4 68.0 45.2 71.1 53.7 76.0C62.2 80.9 68.8 86.6 87.0 92.7C105.2 98.8 144.9 107.6 162.7 112.7C180.4 117.7 182.5 118.4 193.3 123.0C204.2 127.6 216.2 140.2 227.7 140.3C239.2 140.5 250.9 128.6 262.3 124.0C273.7 119.4 283.1 116.2 296.0 112.7C308.9 109.1 327.5 105.9 339.7 102.7C351.8 99.4 358.0 97.8 369.0 93.3C380.0 88.8 397.3 80.3 405.7 75.7C414.1 71.0 414.0 70.5 419.3 65.3C424.7 60.2 433.3 50.3 437.7 44.7C442.0 39.0 442.7 37.9 445.3 31.3C448.0 24.8 451.4 7.1 453.7 5.3C455.9 3.6 457.8 16.7 458.7 20.7C459.5 24.6 460.1 23.1 458.7 29.0C457.3 34.9 453.0 49.6 450.3 56.3C447.7 63.1 445.7 65.0 442.7 69.3C439.6 73.7 438.2 77.0 432.0 82.3C425.8 87.7 414.1 96.6 405.3 101.3C396.6 106.1 398.2 105.7 379.7 111.0C361.1 116.3 314.9 126.6 294.0 133.0C273.1 139.4 265.3 144.1 254.3 149.3C243.4 154.6 235.3 163.9 228.3 164.7C221.3 165.4 220.3 157.9 212.3 153.7C204.4 149.4 194.4 144.1 180.7 139.0C166.9 133.9 147.1 127.7 130.0 123.0C112.9 118.3 91.3 114.9 78.0 111.0C64.7 107.1 56.8 103.0 50.0 99.7C43.2 96.3 42.4 95.7 37.0 91.0C31.6 86.3 22.6 78.4 17.3 71.7C12.1 64.9 8.6 57.5 5.7 50.7C2.8 43.8 0.9 36.1 0.0 30.7C-0.9 25.2 -0.6 23.1 0.0 18.0C0.6 12.9 1.6 -2.1 3.7 0.0Z"/><path class="p p2" pathLength="1" d="M404.0 131.3C410.8 130.8 403.4 135.3 401.0 138.0C398.6 140.7 399.7 143.4 389.3 147.3C379.0 151.2 351.9 156.6 339.0 161.3C326.1 166.1 318.1 171.7 311.7 176.0C305.3 180.3 304.1 182.5 300.7 187.0C297.2 191.5 295.3 190.9 291.0 203.0C286.7 215.1 280.4 247.2 274.7 259.3C268.9 271.5 263.6 271.6 256.7 276.0C249.7 280.4 238.2 284.1 233.0 285.7C227.8 287.3 230.6 287.1 225.7 285.7C220.7 284.2 209.9 280.9 203.3 277.0C196.7 273.1 190.0 266.9 186.0 262.3C182.0 257.7 182.3 258.8 179.3 249.3C176.4 239.8 171.7 215.3 168.3 205.3C165.0 195.4 162.7 194.3 159.3 189.7C156.0 185.0 154.9 182.1 148.3 177.3C141.7 172.6 132.6 166.2 119.7 161.3C106.7 156.4 80.1 150.9 70.7 148.0C61.3 145.1 66.1 146.2 63.3 143.7C60.6 141.1 53.7 134.5 54.0 132.7C54.3 130.8 58.1 131.3 65.3 132.7C72.6 134.0 86.3 137.3 97.7 140.7C109.1 144.1 122.8 148.3 133.7 153.0C144.6 157.7 156.4 164.9 163.0 169.0C169.6 173.1 169.7 172.9 173.3 177.7C176.9 182.4 180.5 186.6 184.7 197.3C188.8 208.1 195.0 232.9 198.3 242.3C201.7 251.7 202.3 250.7 204.7 253.7C207.0 256.7 208.2 258.5 212.3 260.3C216.4 262.2 223.7 264.8 229.3 264.7C235.0 264.6 242.1 261.8 246.3 259.7C250.6 257.5 252.7 254.6 255.0 251.7C257.3 248.7 257.2 251.3 260.3 242.0C263.5 232.7 270.8 205.5 274.0 196.0C277.2 186.5 276.8 188.9 279.7 185.0C282.5 181.1 286.7 176.2 291.0 172.3C295.3 168.5 298.8 165.6 305.3 162.0C311.9 158.4 321.2 154.5 330.3 151.0C339.4 147.5 347.7 144.3 360.0 141.0C372.3 137.7 397.2 131.8 404.0 131.3Z"/><g clip-path="url(#boot-clip)"><rect x="-160" y="-20" width="140" height="340" fill="url(#boot-shine)"/></g></svg></div></div>
+  <script type="module" src="/src/index.jsx"></script>
+</body>
+
+</html>

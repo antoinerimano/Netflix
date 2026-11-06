@@ -1,13 +1,13 @@
 # Tests
 
-**90 automated tests** protect the app: 39 backend, 29 frontend, 22 end-to-end. GitHub runs
+**123 automated tests** protect the app: 54 backend, 47 frontend, 22 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 39 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Jest) | 29 | `frontend/src/**/*.test.js` | app modules and components in a simulated browser (jsdom) |
+| Backend (Django) | 54 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 47 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
 | End-to-end (Playwright) | 22 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
@@ -20,9 +20,10 @@ end-to-end tests check what a user does, from the first page to the last click.
 | What | Command | Needs |
 |---|---|---|
 | Backend | `cd backend && python manage.py test` | MySQL running (the test database `test_<DB_NAME>` is created and deleted) |
-| Frontend | `cd frontend && npm test -- --watchAll=false` | `npm ci` once |
+| Frontend | `cd frontend && npm test` (re-runs on save: `npm run test:watch`) | `npm ci` once |
+| Lint | `cd frontend && npm run lint` (a warning fails it) | |
 | Translations | `cd frontend && npm run i18n:check` | |
-| Production build | `cd frontend && npm run build` (the CI sets `CI=true`: a warning fails it) | |
+| Production build | `cd frontend && npm run build` (Vite, then `scripts/obfuscate.js`) | |
 | End-to-end | `cd e2e && npm test` (watch it: `npm run test:headed`, report: `npm run report`) | MySQL running, `npm ci && npx playwright install chromium` once |
 
 The end-to-end suite starts its own servers on ports 8101 / 3101 and its own database,
@@ -35,8 +36,8 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 39 tests | ~1 min 30 |
-| **Frontend** | translations check · 29 tests · production build, warnings fail it | ~1 min 10 |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 54 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 47 tests · production build | ~1 min 10 |
 | **End-to-end** | starts MySQL, the backend and the production frontend · 22 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
@@ -45,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (39)
+## Backend tests (54)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -111,9 +112,29 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `SearchTests.test_translated_name_and_reason_shape` | search finds a title by its translated name ("Le Parrain" → The Godfather) and says why it matched |
 | `SearchTests.test_typo_fallback_runs` | a misspelled search works (regression: the typo-tolerant pass crashed) |
 
+### Search engines and link previews: `backend/users/test_seo.py` (15)
+
+What `users/seo.py` answers for the app's pages (nginx sends it every URL that isn't a file) and the sitemaps.
+
+| Test | Verifies |
+|---|---|
+| `test_movie_page_has_its_own_tags` | a movie page has its own title, description, canonical link and preview image, the home page's ones are gone, the app's scripts are still there, the HTML is never cached |
+| `test_hreflang_for_every_language` | links to the page in each of the 11 languages (`?lng=fr`...) + `x-default` |
+| `test_translated_page` | `?lng=fr` gives the French title and synopsis, `<html lang="fr">`, `fr_FR` previews |
+| `test_json_ld` | structured data (Movie: name, director, genres, rating) for search results |
+| `test_show_page_and_canonical_follows_type` | a show opened as `/movies/<id>` points search engines at `/tv/<id>` |
+| `test_text_is_escaped` | a title containing HTML can't inject anything into the page |
+| `test_missing_title_is_404` | an unknown title answers 404 + `noindex` (the app still shows its "Page not found") |
+| `test_actor_page` | an actor page has the actor's name, photo and a translated description; an unknown actor is a 404 |
+| `test_translated_fallback_description` | a title without synopsis gets a description in the page's language |
+| `test_app_routes_200_unknown_404` | every app route answers 200; made-up addresses (`/wp-login.php`) answer 404 instead of a page that looks real |
+| `test_api_404_stays_json` | unknown API addresses are not turned into app pages |
+| `test_index_and_sections`, `test_unknown_parts_404`, `test_split_into_files` | `/sitemap.xml` lists the parts; each part lists its movies / shows / actors once; parts split at 40,000 addresses |
+| `test_revalidates_and_survives_outage` | `index.html` is re-checked with the frontend on every page (a deploy shows at once) and the last copy is used if the frontend is briefly down |
+
 ---
 
-## Frontend tests (29)
+## Frontend tests (47)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -150,7 +171,26 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | card reasons fall back to the English sentence only in English | "Similar to Heat"-type reasons are translated; an old English one never shows in another language |
 | search reasons | "With Bryan Cranston" / "Crime · 1990s · Series" are written from the server's data |
 
-### Sign-in page: `frontend/src/components/Login.test.js` (2)
+### Player events: `frontend/src/components/watch/playerEvents.test.js` (16)
+
+What each video player's messages mean (`watch/playerEvents.js`): they drive the progress bar, "Continue watching" and smart playback.
+
+| Test | Verifies |
+|---|---|
+| Videasy (6) | progress / duration / playing / paused / completed / episode, messages sent as text or as objects, empty numbers aren't read as 0 |
+| CineSrc (3) | time updates, play / pause / ended / next episode; unknown events ignored |
+| VidCore and others (2) | VidCore's text messages; anything else posted to the page (ads, extensions) is ignored |
+| URLs (2) | a bare domain gets `https://`; `.mp4` / `.m3u8` files play in the page's own player |
+| saved preferences and the address (3) | the saved source is per profile and title; old saved sources still work; `?season=` / `?episode=` / `?t=` only accept positive numbers |
+
+### Tab title: `frontend/src/utils/pageTitle.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| sets "<name> \| Tauruss" and restores the app title on leaving | a movie / show / actor page names the browser tab and history entry; leaving it gives back the app's title |
+| nothing while the name is still loading | no empty "| Tauruss" title while the page loads |
+
+### Sign-in page: `frontend/src/components/Login.test.jsx` (2)
 
 | Test | Verifies |
 |---|---|
@@ -217,7 +257,8 @@ profiles (Alex in English, Camille in French, Kids), see `backend/users/manageme
 | `npm run i18n:check` | a language misses a text, a plural form its grammar needs, a `{{placeholder}}` or a `<tag>`; a key used in the code doesn't exist; a translation uses a tag name that can't hold text (`<link>`) |
 | `makemigrations --check` | a model changed without its database migration |
 | `msgfmt --check` | a backend translation file is broken |
-| production build with `CI=true` | the frontend has a compile error or a code warning |
+| `npm run lint` | the frontend has a code warning (unused variable, hook rules, missing effect dependency...) |
+| production build | the frontend doesn't compile |
 | Dependabot (monthly) | proposes dependency updates as pull requests; they run all of the above before they can be merged |
 
 ---

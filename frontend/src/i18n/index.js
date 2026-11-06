@@ -57,8 +57,8 @@ export function normalizeLanguage(code) {
 i18n
   .use(
     resourcesToBackend((lng, ns) =>
-      // webpack makes one chunk per file; English common is already bundled (partialBundledLanguages)
-      import(/* webpackChunkName: "i18n-[request]" */ `./locales/${lng}/${ns}.json`)
+      // one chunk per file; English common is already bundled (partialBundledLanguages)
+      import(`./locales/${lng}/${ns}.json`)
     )
   )
   .use(LanguageDetector)

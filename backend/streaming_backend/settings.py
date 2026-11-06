@@ -163,6 +163,14 @@ CSRF_TRUSTED_ORIGINS = env.list(
 # list in front of a link made every email link unusable.
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000").split(",")[0].strip().rstrip("/")
 
+# ---- SEO (users/seo.py): page shells with per-title tags, sitemaps ----
+# Public address of the site in canonical / hreflang / sitemap links
+SITE_URL = env("SITE_URL", default=FRONTEND_URL).rstrip("/")
+# Where the frontend's index.html is read from (the frontend container in docker compose),
+# or a file path instead (FRONTEND_INDEX_FILE, e.g. frontend/build/index.html for a local run)
+FRONTEND_INDEX_URL = env("FRONTEND_INDEX_URL", default="http://frontend/index.html")
+FRONTEND_INDEX_FILE = env("FRONTEND_INDEX_FILE", default="")
+
 # ---- Email ----
 EMAIL_BACKEND = env(
     "EMAIL_BACKEND",

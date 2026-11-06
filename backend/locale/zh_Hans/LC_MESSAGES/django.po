@@ -224,3 +224,17 @@ msgstr "此重置链接已过期或已被使用。"
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "你的密码已更改。"
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "在 Tauruss 观看%(name)s。"
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "%(name)s 参演的电影和电视剧。"
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "找不到页面"

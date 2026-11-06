@@ -41,7 +41,7 @@ class Command(BaseCommand):
         parser.add_argument("--no-filelog", action="store_true", help="Disable file logging")
 
         # Persistent cache (file-based)
-        parser.add_argument("--cache-file", type=str, default="tmdb_actor_cache.txt", help="Persistent cache file (jsonl).")
+        parser.add_argument("--cache-file", type=str, default="data/tmdb_actor_cache.txt", help="Persistent cache file (jsonl).")
         parser.add_argument(
             "--cache-days",
             type=int,

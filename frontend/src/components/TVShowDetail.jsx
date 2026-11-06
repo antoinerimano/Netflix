@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../utils/pageTitle';
 import { useFormat, formatDate } from '../i18n/format';
 import {
   fetchTitleById,
@@ -44,6 +45,7 @@ export default function TVShowDetail() {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState(null);
   const [err, setErr] = useState('');
+  usePageTitle(title?.title);
   const [seasons, setSeasonsState] = useState([]);
   const [specials, setSpecials] = useState([]);
   const [activeSeasonNumber, setActiveSeasonNumber] = useState(null);

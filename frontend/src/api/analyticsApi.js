@@ -1,7 +1,7 @@
 // src/api/analyticsApi.js
 import http from "./http";
 
-const API_BASE = process.env.REACT_APP_API_BASE;
+const API_BASE = import.meta.env.REACT_APP_API_BASE;
 
 // src/api/analyticsConsts.js
 

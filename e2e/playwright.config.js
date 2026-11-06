@@ -55,9 +55,7 @@ module.exports = defineConfig({
       env: {
         REACT_APP_API_BASE: `http://localhost:${API_PORT}`,
         REACT_APP_DISABLE_ADS: 'true',
-        BUILD_PATH: 'build-e2e',
-        GENERATE_SOURCEMAP: 'false',
-        CI: 'false', // build warnings are the frontend job's business
+        BUILD_PATH: 'build-e2e', // vite.config.mjs
       },
     },
   ],

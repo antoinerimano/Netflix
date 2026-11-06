@@ -1,70 +1,39 @@
-# Getting Started with Create React App
+# Tauruss frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 18 app, built with [Vite](https://vite.dev) (`vite.config.mjs`), tested with
+[Vitest](https://vitest.dev).
 
-## Available Scripts
+## Commands
 
-In the project directory, you can run:
+| Command | What it does |
+| --- | --- |
+| `npm start` | dev server on http://localhost:3000, reloads on save |
+| `npm run build` | production build into `build/` (`BUILD_PATH` changes it), then `scripts/obfuscate.js` |
+| `npm run preview` | serve the production build locally |
+| `npm test` | unit tests once (`npm run test:watch`: re-run on save) |
+| `npm run lint` | ESLint (`eslint.config.mjs`); a warning fails it, like in CI |
+| `npm run i18n:check` | every language has every text, plural form and placeholder |
 
-### `npm start`
+## Settings
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+`.env` (see `.env.example`), or the environment at build time:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+| Variable | Meaning |
+| --- | --- |
+| `REACT_APP_API_BASE` | address of the Django API (`""` in production: same site, `/api`) |
+| `REACT_APP_DISABLE_ADS` | `true` turns the ad script off (local runs, end-to-end tests) |
 
-### `npm test`
+In the code they are `import.meta.env.REACT_APP_*` (`process.env` doesn't exist with Vite).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Layout
 
-### `npm run build`
+- `index.html`: the page shell (SEO tags for the home page, start-up splash). Django rewrites its
+  tags for title / actor pages (`backend/users/seo.py`), so keep the tag shapes it looks for.
+- `public/`: copied as is (icons, manifest, service worker, robots.txt).
+- `src/`: files containing JSX are `.jsx`, plain modules `.js`.
+- Built JS / CSS / images go to `build/static/` with a content hash in their names: nginx caches
+  `/static/` for a year, `index.html` never.
+- Rarely used pages (account, admin, watch, sign-up, email links) are separate files loaded on
+  demand (`React.lazy` in `src/App.jsx`).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+More on the tests: `docs/TESTING.md`.

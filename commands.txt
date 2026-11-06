@@ -2,7 +2,7 @@ docker compose exec backend python manage.py train_ranker
 docker compose exec backend python manage.py build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2
 docker compose exec backend python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
 docker compose exec backend python manage.py clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
-docker compose exec backend python /app/add_trailer_to_cdn.py
+docker compose exec backend python /app/tools/add_trailer_to_cdn.py
 docker compose exec backend python manage.py check_providers   (health-check stream providers, auto-switch dead/moved domains)
 docker compose exec backend python manage.py sync_tmdb_translations   (titles / synopses in fr es de it ja zh from TMDB; first run: whole catalog, then only new titles)
 docker compose exec backend python manage.py sync_tmdb_translations --episodes --latest-seasons 2 --limit 500   (+ episode names / synopses of the most popular shows)
@@ -61,7 +61,7 @@ in frontend change api base to "" in prod and "http://127.0.0.1:8000/" in dev
 in backend change DB_HOST to "db" in prod and "localhost" in dev
 tests / CI / CD (.github/workflows/ci-cd.yml):
   backend:  cd backend && python manage.py test            (needs a MySQL the DB user can create test_* databases on)
-  frontend: cd frontend && npm test -- --watchAll=false && npm run i18n:check && npm run build
+  frontend: cd frontend && npm run lint && npm test && npm run i18n:check && npm run build
   GitHub runs all of that on every push / pull request. Deploy (push to main, after the checks pass):
     GitHub > Settings > Environments > production:
       secrets SSH_HOST, SSH_USER, SSH_PRIVATE_KEY (+ SSH_PORT if not 22)

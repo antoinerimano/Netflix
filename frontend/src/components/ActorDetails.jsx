@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../utils/pageTitle';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import MovieCard from './MovieCard';
@@ -67,6 +68,7 @@ export default function ActorDetail() {
   const shows = useMemo(() => items.filter(isTv), [items]);
   const actor = data?.actor;
   const name = actor?.name || '';
+  usePageTitle(name);
 
   let content;
   if (loading) {

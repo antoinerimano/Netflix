@@ -236,3 +236,17 @@ msgstr "Questo link di reimpostazione è scaduto o è già stato usato."
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "La tua password è stata cambiata."
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Guarda %(name)s su Tauruss."
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "Film e serie TV con %(name)s."
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "Pagina non trovata"
