@@ -26,10 +26,7 @@
   "profiles": {
     "title": "Profile",
     "count_one": "{{count}} von {{max}}",
-    "count_other": "{{count}} von {{max}}",
-    "edit": "Bearbeiten",
-    "addHint_one": "Eines pro Person, bis zu {{count}}",
-    "addHint_other": "Eines pro Person, bis zu {{count}}"
+    "count_other": "{{count}} von {{max}}"
   },
   "signOut": {
     "label": "Abmelden",
@@ -37,5 +34,47 @@
     "signedInAs": "Angemeldet als {{email}}",
     "text": "Du brauchst deine E-Mail-Adresse und dein Passwort, um dich auf diesem Gerät wieder anzumelden.",
     "stay": "Angemeldet bleiben"
+  },
+  "import": {
+    "title": "Verlauf importieren",
+    "subtitle": "Bewertungen, gesehene Titel und Merkliste aus einem anderen Dienst kommen in das Profil von {{name}}, und die Empfehlungen bauen darauf auf.",
+    "sourcesLabel": "Woher?",
+    "importing": "Wird importiert…",
+    "choose": "Dateien auswählen",
+    "tvHint": "Auf einem Fernseher? Mit einer Fernbedienung lassen sich keine Dateien auswählen: Öffne {{url}} auf deinem Handy oder Computer, angemeldet mit diesem Konto.",
+    "entryTitle": "Dein Verlauf anderswo",
+    "entryLabel": "Letterboxd oder IMDb",
+    "entryValue": "Bring deine Bewertungen und gesehenen Titel mit, für bessere Empfehlungen.",
+    "entryAction": "Importieren",
+    "errors": {
+      "unknown_format": "Diese Datei konnten wir nicht lesen. Lade den Export von Letterboxd (.zip) oder IMDb (.csv) hoch.",
+      "too_big": "Diese Datei ist zu groß (höchstens 10 MB)."
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "Exportdatei (.zip)",
+      "step1": "Öffne auf letterboxd.com Settings, dann Data, und wähle Export your data.",
+      "step2": "Lade die .zip-Datei hier hoch, ohne sie zu entpacken."
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "Bewertungen und Merkliste (.csv)",
+      "step1": "Öffne auf imdb.com Deine Bewertungen, wähle ⋯ und dann Exportieren. IMDb meldet sich, wenn die Datei fertig ist.",
+      "step2": "Mach dasselbe mit deiner Watchlist, wenn du sie in Meiner Liste haben möchtest.",
+      "step3": "Lade die .csv-Dateien hier hoch (auch mehrere auf einmal)."
+    },
+    "done": {
+      "title": "Import abgeschlossen",
+      "nothingNew": "Nichts Neues: Alles war schon da.",
+      "liked": "Gefällt",
+      "disliked": "Gefällt nicht",
+      "watched": "Gesehen",
+      "listed": "Zu Meiner Liste hinzugefügt",
+      "notFound": "Noch nicht in unserem Katalog",
+      "showMissing": "Nicht gefundene Titel zeigen",
+      "hideMissing": "Nicht gefundene Titel ausblenden",
+      "home": "Zur Startseite",
+      "again": "Mehr importieren"
+    }
   }
 }

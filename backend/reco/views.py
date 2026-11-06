@@ -72,8 +72,8 @@ CLICK_EXCLUDE_DAYS = 14  # opened but not played: can come back after this
 TOP_RATED_MIN_VOTES = 1000
 
 # actions that say "I like this", with weights (keep in sync with train_ranker._profile_vec).
-# outbound = pressed Play (the only "watched" signal), click = opened the detail page.
-PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
+# outbound = pressed Play here, watched = seen elsewhere (imported history), click = opened the detail page.
+PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "watched": 3.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
 
 # Dislike: titles most similar to a disliked one are pushed down by this much in every row
 DISLIKE_NEIGHBORS = 30
@@ -729,11 +729,11 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
         planned_rows.append(("for_you", "For you", sim_ids, 30))
         _plan_mark("for_you_similars", seeds=len(seed_ids), sim=len(sim_ids), planned=len(planned_rows))
 
-        # "Because you watched X": only titles the profile pressed Play on (outbound),
-        # not titles it just opened (click) or added to its list
+        # "Because you watched X": only titles the profile pressed Play on (outbound) or saw
+        # elsewhere (imported "watched"), not titles it just opened (click) or added to its list
         watched_ids = list(
             TitleAction.objects
-            .filter(profile_id=profile.id, action="outbound")
+            .filter(profile_id=profile.id, action__in=["outbound", "watched"])
             .order_by("-created_at")
             .values_list("title_id", flat=True)[:50]
         )

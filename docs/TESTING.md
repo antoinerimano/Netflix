@@ -1,14 +1,14 @@
 # Tests
 
-**133 automated tests** protect the app: 60 backend, 49 frontend, 24 end-to-end. GitHub runs
+**155 automated tests** protect the app: 69 backend, 51 frontend, 35 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 60 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 49 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 24 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 69 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 51 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 35 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 60 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 49 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 24 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 69 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 51 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 35 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (60)
+## Backend tests (69)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -84,7 +84,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_title_list_constant_queries` | the catalog list takes exactly 2 database queries, however many titles (no "N+1" slowdown) |
 | `test_title_detail_constant_queries` | a show's page (seasons, episodes, cast) takes exactly 5 queries, however big the show |
 
-### Recommendations: `backend/reco/tests.py` (11)
+### Recommendations: `backend/reco/tests.py` (12)
 
 | Test | Verifies |
 |---|---|
@@ -98,7 +98,21 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_other_users_profile_is_refused` | nobody can see or save the picks of someone else's profile |
 | `test_picks_become_likes_and_the_home_is_rebuilt` | picks are saved as likes (unknown ids ignored), the home page is rebuilt at once, picked titles aren't offered again |
 | `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
+| `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### History import: `backend/reco/test_imports.py` (8)
+
+| Test | Verifies |
+|---|---|
+| `test_letterboxd_files_become_likes_dislikes_watched_and_my_list` | Letterboxd ratings / watchlist / hearts: 3.5 stars or more and hearts are likes, 2 or less dislikes, the rest watched, the watchlist goes to My List; matched by name + year (a same-name film from another year isn't), unknown titles reported; the home page is rebuilt |
+| `test_dates_are_kept` | likes and watched titles keep their date from the export, not the import day |
+| `test_letterboxd_zip_export` | the Letterboxd .zip works as is; its deleted/ folder and non-film files are ignored |
+| `test_imdb_ratings_match_by_imdb_id_and_skip_episodes` | IMDb ratings match by IMDb id, shows included, single episodes skipped |
+| `test_what_the_profile_did_here_wins` | an import never changes a thumb or My List entry made in the app |
+| `test_importing_twice_adds_nothing_twice` | the same file twice adds nothing the second time (and doesn't rebuild the home page) |
+| `test_unknown_or_missing_files_are_refused` | no file, or a file that isn't a Letterboxd / IMDb export, is refused with a reason |
+| `test_other_users_profile_is_refused` | nobody can import into someone else's profile |
 
 ### Languages: `backend/users/test_i18n.py` (13)
 
@@ -140,7 +154,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (49)
+## Frontend tests (51)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -210,9 +224,16 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### History import page: `frontend/src/components/import/ImportPage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| a file import: summary, focus on "Go to your home page", titles not found on demand | the summary appears with the focus on "Go to your home page"; the titles not found show on demand |
+| Letterboxd first, IMDb a press away, an unreadable file is explained | Letterboxd is selected first, IMDb can be chosen; a file that isn't an export gets a clear message |
+
 ---
 
-## End-to-end tests (24)
+## End-to-end tests (35)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -250,6 +271,29 @@ profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked 
 | OK on the player never traps the remote in it | after OK on the player (full screen or not), the remote always comes back to the app, never stuck inside the player |
 | CineSrc: the remote drives the player, the focus stays in the app | Play / Pause reach the CineSrc player as commands; the focus never leaves the app |
 | Back on the player returns to the title | Back leaves the player for the title's page |
+
+### Focus look never covers a neighbour: `e2e/tests/focus-overlap.spec.js` (10: 5 at 1280 × 720, the same 5 at 1920 × 1080)
+
+Every control on screen is focused the way the remote does; its focus look (the box after any
+lift / zoom, plus its ring) must keep at least 2px clear of every other control. Zoom clipped by
+its own card doesn't count, nor does what scrolls under a pinned bar, nor rows that touch at rest
+(menu lists). Each page is checked screen by screen, top to bottom.
+
+| Test | Pages |
+|---|---|
+| browsing pages | home, Movies, TV Shows, My List, search (empty and with results) |
+| title pages and the player | a movie, a show, the player (its "Continue watching" entry is removed after) |
+| signed out: sign in, sign up | sign in, sign up |
+| menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
+| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, account |
+
+To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### History import: `e2e/tests/import.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| import with the remote: sources, upload, summary, then home | the remote starts on the selected source, Right / OK switch to IMDb and back, Down reaches "Choose files"; after a Letterboxd file (uploaded like a phone would) the summary counts liked / watched / not found, the remote lands on "Go to your home page", the titles not found can be shown, and home opens with its rows |
 
 ### Taste picker: `e2e/tests/taste.spec.js` (2, remote only, at 1280 × 720)
 

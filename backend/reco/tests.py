@@ -139,6 +139,18 @@ class TasteOnboardingTests(TestCase):
         for body in ({}, {"title_ids": []}, {"title_ids": "1,2"}, {"title_ids": ["x"]}, {"title_ids": list(range(51))}):
             self.assertEqual(self.client.post(url, body, format="json").status_code, 400, body)
 
+    def test_an_empty_rebuild_never_replaces_the_home_page(self):
+        from unittest import mock
+        from .taste import rebuild_home
+        from .views import upsert_seed_snapshot
+
+        upsert_seed_snapshot(self.profile)
+        with mock.patch("reco.views.build_home_payload_exact", return_value={"rows": [{"row_type": "x", "items": []}]}):
+            self.assertFalse(rebuild_home(self.profile))
+        snap = RecoHomeSnapshot.objects.get(profile=self.profile)
+        self.assertEqual(snap.algo_version, "home_v1_seed")
+        self.assertTrue(any(row["items"] for row in snap.payload["rows"]))
+
     def test_home_says_when_the_profile_has_no_taste_yet(self):
         home = f"/api/reco/home/?profileId={self.profile.id}"
         self.assertTrue(self.client.get(home).data["needs_taste"])

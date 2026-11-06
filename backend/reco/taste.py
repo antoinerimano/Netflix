@@ -115,6 +115,11 @@ def rebuild_home(profile):
     except Exception:
         logger.exception("[taste] home rebuild failed for profile_id=%s", profile.id)
         return False
+    # nothing left to show (small catalog, everything already seen / rated): keep the page it has
+    # rather than replacing it with an empty one (one snapshot row per profile)
+    if not any(row.get("items") for row in payload.get("rows") or []):
+        logger.warning("[taste] rebuilt home is empty for profile_id=%s: kept the previous one", profile.id)
+        return False
     RecoHomeSnapshot.objects.update_or_create(
         profile_id=profile.id,
         defaults={

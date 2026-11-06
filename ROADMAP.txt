@@ -172,7 +172,18 @@ Status: [ ] todo   [~] in progress   [x] done
         rebuilt on the spot, so the first home page is already personal. Home: "Make this home page
         yours" banner while a profile has no like / list / play yet (needs_taste), closable.
         Backend: reco/taste.py (GET / POST /api/taste/).
-[ ] 7.2 Import from Trakt / Letterboxd / IMDb
+[x] 7.2 Import your history (/import, account page, link on the taste picker)
+        Letterboxd (.zip or .csv) and IMDb (ratings / watchlist .csv) export files, from a phone or
+        computer (a TV says so; Trakt was built then left out: too few users). High ratings + hearts ->
+        likes, low -> dislikes, watched -> TitleAction "watched" (new, weight 3, seeds "Because you
+        watched"), watchlist -> My List; dates kept; never overrides what was done in the app; matched
+        by IMDb id, else name + year. Home rebuilt after (never replaced by an empty one).
+        Backend: reco/imports.py.
+[x] 7.2b Account page: profiles are managed in one place ("Manage profiles", /profiles?manage); the
+        account page only links there ("Profiles · 3 of 4").
+[x] 7.2c Focus never covers a neighbour (TV remote): buttons / chips / pills get a ring without
+        growing (scale ate the 8-12px gaps), profile pictures and colors a thinner halo; measured on
+        every page, sheet and dialog by e2e/tests/focus-overlap.spec.js (2px clear at least).
 [ ] 7.3 Calendar of upcoming episodes (followed shows)
 [ ] 7.4 Watch history page (browse, remove, pause, export)
 [ ] 7.5 Personal stats / year in review

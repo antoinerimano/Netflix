@@ -221,6 +221,7 @@
     "building": "Creando tu página de inicio…",
     "loadError": "No se pudieron cargar los títulos",
     "none": "Ahora mismo no hay títulos para elegir",
-    "barLabel": "Tu selección"
+    "barLabel": "Tu selección",
+    "importLink": "¿Valoras títulos en Letterboxd o IMDb? Impórtalos"
   }
 }

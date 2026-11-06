@@ -60,6 +60,7 @@ class TitleAction(models.Model):
         ("add_to_list", "add_to_list"),
         ("not_interested", "not_interested"),
         ("search_click", "search_click"),
+        ("watched", "watched"),              # seen elsewhere: imported from Letterboxd / IMDb (reco/imports.py)
     ]
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)

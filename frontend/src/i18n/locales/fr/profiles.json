@@ -221,6 +221,7 @@
     "building": "Création de votre page d'accueil…",
     "loadError": "Impossible de charger les titres",
     "none": "Aucun titre à proposer pour le moment",
-    "barLabel": "Vos choix"
+    "barLabel": "Vos choix",
+    "importLink": "Vous notez des titres sur Letterboxd ou IMDb ? Importez-les"
   }
 }

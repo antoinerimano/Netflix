@@ -213,6 +213,7 @@
     "building": "ホーム画面を作成中…",
     "loadError": "作品を読み込めませんでした",
     "none": "現在選べる作品がありません",
-    "barLabel": "選んだ作品"
+    "barLabel": "選んだ作品",
+    "importLink": "Letterboxd や IMDb で評価していますか？インポートしましょう"
   }
 }

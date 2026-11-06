@@ -132,6 +132,7 @@
     "building": "Building your home page…",
     "loadError": "Couldn't load the titles",
     "none": "No titles to pick from right now",
-    "barLabel": "Your picks"
+    "barLabel": "Your picks",
+    "importLink": "Rate titles on Letterboxd or IMDb? Import them"
   }
 }

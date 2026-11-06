@@ -37,8 +37,11 @@ test('pick with OK, Continue with Down, then a personal home page', async ({ pag
   const cards = page.locator('.taste-card');
   await expect(cards.first()).toBeVisible();
 
+  await expect(cards.first()).toBeFocused(); // the remote starts on the first poster, no key needed
+  await remote(page, 'Up');
+  expect(await focused(page)).toMatch(/^A Rate titles on Letterboxd/); // the import link above
   await remote(page, 'Down');
-  await expect(cards.first()).toBeFocused(); // starts on the first poster
+  await expect(cards.first()).toBeFocused();
   await remote(page, 'OK Right OK Right OK');
   await expect(page.locator('.taste-card[aria-pressed="true"]')).toHaveCount(3);
 

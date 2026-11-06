@@ -49,6 +49,13 @@ export default function TastePage() {
     load();
   }, [load]);
 
+  // the remote starts on the first poster once they're here (otherwise the focus left behind by
+  // the profile dialog landed on the nearest thing on screen: the "Import" link)
+  const loaded = !!titles?.length;
+  useEffect(() => {
+    if (loaded) document.querySelector('.taste-card')?.focus({ preventScroll: true });
+  }, [loaded]);
+
   const toggle = (id) =>
     setPicked((prev) => {
       const next = new Set(prev);
@@ -153,6 +160,7 @@ export default function TastePage() {
         <div className="profiles__intro taste__intro">
           <h1 className="profiles__title">{t('taste.title')}</h1>
           <p className="taste__subtitle">{t('taste.subtitle', { count: minPicks })}</p>
+          <Button variant="glass" size="sm" to="/import" className="taste__import">{t('taste.importLink')}</Button>
         </div>
         {body}
       </main>

@@ -221,6 +221,7 @@
     "building": "Stiamo creando la tua home page…",
     "loadError": "Impossibile caricare i titoli",
     "none": "Al momento non ci sono titoli da scegliere",
-    "barLabel": "Le tue scelte"
+    "barLabel": "Le tue scelte",
+    "importLink": "Voti i titoli su Letterboxd o IMDb? Importali"
   }
 }

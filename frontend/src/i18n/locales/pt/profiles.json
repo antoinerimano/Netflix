@@ -221,6 +221,7 @@
     "building": "Montando sua página inicial…",
     "loadError": "Não foi possível carregar os títulos",
     "none": "Nenhum título para escolher no momento",
-    "barLabel": "Suas escolhas"
+    "barLabel": "Suas escolhas",
+    "importLink": "Você avalia títulos no Letterboxd ou IMDb? Importe-os"
   }
 }

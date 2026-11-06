@@ -27,11 +27,7 @@
     "title": "Profils",
     "count_one": "{{count}} sur {{max}}",
     "count_many": "{{count}} sur {{max}}",
-    "count_other": "{{count}} sur {{max}}",
-    "edit": "Modifier",
-    "addHint_one": "Un par personne, jusqu'à {{count}}",
-    "addHint_many": "Un par personne, jusqu'à {{count}}",
-    "addHint_other": "Un par personne, jusqu'à {{count}}"
+    "count_other": "{{count}} sur {{max}}"
   },
   "signOut": {
     "label": "Se déconnecter",
@@ -39,5 +35,47 @@
     "signedInAs": "Connecté en tant que {{email}}",
     "text": "Vous aurez besoin de votre e-mail et de votre mot de passe pour vous reconnecter sur cet appareil.",
     "stay": "Rester connecté"
+  },
+  "import": {
+    "title": "Importer votre historique",
+    "subtitle": "Les notes, les titres vus et la liste à voir d'un autre service vont dans le profil de {{name}}, et ses recommandations partent de là.",
+    "sourcesLabel": "D'où ?",
+    "importing": "Importation…",
+    "choose": "Choisir des fichiers",
+    "tvHint": "Sur une TV ? On ne peut pas choisir de fichier avec une télécommande : ouvrez {{url}} sur votre téléphone ou votre ordinateur, connecté à ce compte.",
+    "entryTitle": "Votre historique ailleurs",
+    "entryLabel": "Letterboxd ou IMDb",
+    "entryValue": "Apportez vos notes et vos titres vus pour de meilleures recommandations.",
+    "entryAction": "Importer",
+    "errors": {
+      "unknown_format": "Impossible de lire ce fichier. Envoyez l'export de Letterboxd (.zip) ou d'IMDb (.csv).",
+      "too_big": "Ce fichier est trop gros (10 Mo maximum)."
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "Fichier d'export (.zip)",
+      "step1": "Sur letterboxd.com, ouvrez Settings, puis Data, et sélectionnez Export your data.",
+      "step2": "Envoyez le fichier .zip ici, inutile de le décompresser."
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "Notes et liste à voir (.csv)",
+      "step1": "Sur imdb.com, ouvrez Vos notes, sélectionnez ⋯ puis Exporter. IMDb vous prévient quand le fichier est prêt.",
+      "step2": "Faites de même avec votre Watchlist si vous la voulez dans Ma liste.",
+      "step3": "Envoyez les fichiers .csv ici (plusieurs à la fois, c'est possible)."
+    },
+    "done": {
+      "title": "Importation terminée",
+      "nothingNew": "Rien de nouveau : tout était déjà là.",
+      "liked": "Aimés",
+      "disliked": "Pas aimés",
+      "watched": "Vus",
+      "listed": "Ajoutés à Ma liste",
+      "notFound": "Pas encore dans notre catalogue",
+      "showMissing": "Voir les titres introuvables",
+      "hideMissing": "Masquer les titres introuvables",
+      "home": "Aller à l'accueil",
+      "again": "Importer autre chose"
+    }
   }
 }

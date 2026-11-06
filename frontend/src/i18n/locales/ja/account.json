@@ -25,9 +25,7 @@
   },
   "profiles": {
     "title": "プロフィール",
-    "count_other": "{{count}} / {{max}}",
-    "edit": "編集",
-    "addHint_other": "1人に1つ、最大{{count}}つまで"
+    "count_other": "{{count}} / {{max}}"
   },
   "signOut": {
     "label": "ログアウト",
@@ -35,5 +33,47 @@
     "signedInAs": "{{email}} でログイン中",
     "text": "このデバイスで再びログインするには、メールアドレスとパスワードが必要です。",
     "stay": "ログインしたままにする"
+  },
+  "import": {
+    "title": "視聴履歴をインポート",
+    "subtitle": "ほかのサービスの評価、視聴済み作品、ウォッチリストを{{name}}のプロフィールに取り込み、そこからおすすめを作ります。",
+    "sourcesLabel": "インポート元",
+    "importing": "インポート中…",
+    "choose": "ファイルを選択",
+    "tvHint": "テレビをお使いですか？リモコンではファイルを選べません。このアカウントでログインしたスマートフォンかパソコンで {{url}} を開いてください。",
+    "entryTitle": "ほかのサービスの履歴",
+    "entryLabel": "Letterboxd、IMDb",
+    "entryValue": "評価や視聴済み作品を取り込むと、おすすめの精度が上がります。",
+    "entryAction": "インポート",
+    "errors": {
+      "unknown_format": "このファイルを読み込めませんでした。Letterboxd（.zip）または IMDb（.csv）のエクスポートをアップロードしてください。",
+      "too_big": "ファイルが大きすぎます（最大 10 MB）。"
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "エクスポートファイル（.zip）",
+      "step1": "letterboxd.com で Settings を開き、Data から Export your data を選びます。",
+      "step2": ".zip ファイルを解凍せずにここにアップロードします。"
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "評価とウォッチリスト（.csv）",
+      "step1": "imdb.com で「あなたの評価」を開き、⋯ から「エクスポート」を選びます。準備ができると IMDb から通知が届きます。",
+      "step2": "ウォッチリストもマイリストに入れたい場合は、同じ手順でエクスポートします。",
+      "step3": ".csv ファイルをここにアップロードします（複数まとめても大丈夫です）。"
+    },
+    "done": {
+      "title": "インポートが完了しました",
+      "nothingNew": "新しいものはありません。すべて取り込み済みです。",
+      "liked": "好き",
+      "disliked": "好きではない",
+      "watched": "視聴済み",
+      "listed": "マイリストに追加",
+      "notFound": "まだカタログにない作品",
+      "showMissing": "見つからなかった作品を表示",
+      "hideMissing": "見つからなかった作品を隠す",
+      "home": "ホームへ",
+      "again": "さらにインポート"
+    }
   }
 }

@@ -1,21 +1,17 @@
 // src/components/AccountManagement.js
-// Account page: account (name, email, password), profiles, sign out. (Plan / payment history
-// were removed: the subscription API stays for a possible return.)
+// Account page: account (name, email, password), a link to "Manage profiles", history import,
+// sign out. (Plan / payment history were removed: the subscription API stays for a possible return.)
 // Settings-style rows with one action each; changes happen in dialogs (design Modal) and are
-// confirmed with a toast. Profiles use the same editor as "Who's watching?".
+// confirmed with a toast. Profiles are added / edited on "Manage profiles" only (/profiles?manage).
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES, normalizeLanguage } from '../i18n';
 import { useFormat } from '../i18n/format';
 import { fetchAccount, requestPasswordReset, requestEmailChange } from '../api/userApi';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { AuthContext } from './AuthContext';
-import { Avatar, Button, EmptyState, Field, Modal, SectionTitle, Skeleton, Toast, friendlyError } from '../design';
-import { ChevronRightIcon, PlusIcon } from '../design/icons';
-import ProfileEditor from './profiles/ProfileEditor';
-import { ageSummary } from './profiles/ProfileForm';
+import { Button, EmptyState, Field, Modal, SectionTitle, Skeleton, Toast, friendlyError } from '../design';
 import { MAX_PROFILES } from '../utils/activeProfile';
 import './AccountManagement.css';
 
@@ -36,7 +32,7 @@ function Row({ label, value, children }) {
 
 export default function AccountManagement() {
   const { t } = useTranslation('account');
-  const { formatDate } = useFormat();
+  const { formatDate, formatList } = useFormat();
   const { userId } = useParams();
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
@@ -50,7 +46,6 @@ export default function AccountManagement() {
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [editing, setEditing] = useState(null); // profile | 'new' | null
 
   const load = useCallback(async () => {
     setError(null);
@@ -134,12 +129,6 @@ export default function AccountManagement() {
     navigate('/login');
   };
 
-  const onProfileEdited = async ({ type, profile }) => {
-    setEditing(null);
-    await load();
-    setToast({ message: t(`profiles:toast.${type}`, { name: profile.name }), tone: 'success' });
-  };
-
   let content;
   if (loading) {
     content = (
@@ -172,7 +161,6 @@ export default function AccountManagement() {
       </EmptyState>
     );
   } else {
-    const profiles = user.profiles;
     content = (
       <div className="account">
         <header className="account__head">
@@ -195,45 +183,26 @@ export default function AccountManagement() {
           </Row>
         </section>
 
+        {/* profiles are added / edited in one place: "Manage profiles" (/profiles?manage) */}
         <section className="account-card" aria-labelledby="account-profiles">
-          <div className="account-card__head">
-            <SectionTitle as="h2" id="account-profiles">{t('profiles.title')}</SectionTitle>
-            <span className="account-card__count">
-              {t('profiles.count', { count: profiles.length, max: MAX_PROFILES })}
-            </span>
-          </div>
-          <ul className="account-profiles">
-            {profiles.map((p) => (
-              <li key={p.id}>
-                <button type="button" className="account-profile" onClick={() => setEditing(p)} aria-label={t('profiles:manage.edit', { name: p.name })}>
-                  <Avatar src={p.avatar_url} name={p.name} size="3rem" />
-                  <span className="account-profile__text">
-                    <span className="account-profile__name">{p.name}</span>
-                    <span className="account-profile__meta">
-                      {ageSummary(p)} · {SUPPORTED_LANGUAGES[normalizeLanguage(p.language_preference) || 'en']}
-                    </span>
-                  </span>
-                  <span className="account-profile__edit" aria-hidden="true">
-                    {t('profiles.edit')}
-                    <ChevronRightIcon />
-                  </span>
-                </button>
-              </li>
-            ))}
-            {profiles.length < MAX_PROFILES ? (
-              <li>
-                <button type="button" className="account-profile account-profile--add" onClick={() => setEditing('new')}>
-                  <span className="account-profile__plus" aria-hidden="true">
-                    <PlusIcon />
-                  </span>
-                  <span className="account-profile__text">
-                    <span className="account-profile__name">{t('profiles:add.submit')}</span>
-                    <span className="account-profile__meta">{t('profiles.addHint', { count: MAX_PROFILES })}</span>
-                  </span>
-                </button>
-              </li>
-            ) : null}
-          </ul>
+          <SectionTitle as="h2" id="account-profiles">{t('profiles.title')}</SectionTitle>
+          <Row
+            label={t('profiles.count', { count: user.profiles.length, max: MAX_PROFILES })}
+            value={formatList(user.profiles.map((p) => p.name))}
+          >
+            <Button variant="glass" size="sm" to="/profiles?manage">
+              {t('profiles:manage.title')}
+            </Button>
+          </Row>
+        </section>
+
+        <section className="account-card" aria-labelledby="account-import">
+          <SectionTitle as="h2" id="account-import">{t('import.entryTitle')}</SectionTitle>
+          <Row label={t('import.entryLabel')} value={t('import.entryValue')}>
+            <Button variant="glass" size="sm" to="/import">
+              {t('import.entryAction')}
+            </Button>
+          </Row>
         </section>
 
         <section className="account-card account-card--quiet">
@@ -338,13 +307,6 @@ export default function AccountManagement() {
       >
         <p className="account-dialog__text">{t('signOut.text')}</p>
       </Modal>
-
-      <ProfileEditor
-        editing={editing}
-        canDelete={(user?.profiles?.length || 0) > 1}
-        onClose={() => setEditing(null)}
-        onDone={onProfileEdited}
-      />
 
       <Toast message={toast.message} tone={toast.tone} onDone={clearToast} />
     </div>

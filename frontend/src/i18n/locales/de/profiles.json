@@ -217,6 +217,7 @@
     "building": "Deine Startseite wird erstellt…",
     "loadError": "Die Titel konnten nicht geladen werden",
     "none": "Gerade gibt es keine Titel zur Auswahl",
-    "barLabel": "Deine Auswahl"
+    "barLabel": "Deine Auswahl",
+    "importLink": "Du bewertest Titel auf Letterboxd oder IMDb? Importiere sie"
   }
 }

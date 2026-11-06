@@ -325,7 +325,7 @@
 .profile-form__letter-colors {
   flex-wrap: nowrap; /* one scrolling line (.ui-scroller): every color reachable by the remote */
   gap: var(--space-2);
-  margin-top: calc(var(--space-1) - 10px);
+  margin-top: calc(var(--space-3) - 10px); /* room for the focus ring between pictures and colors */
   animation: ui-fade-in var(--duration-normal) var(--ease-standard);
 }
 .profile-form__color {
@@ -347,20 +347,18 @@
 .profile-form__color.is-selected {
   box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
 }
-/* remote focus on a picture / color, selected or not: ring + halo + lift (the selected ring alone
-   looked the same focused or not) */
-.profile-form__pic:focus-visible,
-.profile-form__color:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 9px var(--focus-halo);
-}
+/* remote focus on a picture / color, selected or not: ring + a thin halo (the selected ring alone
+   looked the same focused or not). No growth: pictures sit 12px apart, colors 8px, and a bigger
+   box + a 9px halo covered the neighbours (e2e/tests/focus-overlap.spec.js). */
 .profile-form__pic:focus-visible {
-  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+  transform: translateY(-3px);
+}
+.profile-form__color:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 5px var(--focus-halo);
 }
 .profile-form__pic:focus-visible .ui-avatar {
   opacity: 1;
-}
-.profile-form__color:focus-visible {
-  transform: scale(1.15);
 }
 .profile-form__color svg {
   width: 1rem;
@@ -635,6 +633,9 @@
   max-width: 36rem;
   margin: var(--space-3) auto 0;
   color: var(--color-text-secondary);
+}
+.taste__import {
+  margin-top: var(--space-4);
 }
 .taste__grid {
   margin: 0;

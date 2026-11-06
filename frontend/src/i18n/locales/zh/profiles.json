@@ -213,6 +213,7 @@
     "building": "正在生成你的首页…",
     "loadError": "无法加载作品",
     "none": "目前没有可选的作品",
-    "barLabel": "你的选择"
+    "barLabel": "你的选择",
+    "importLink": "在 Letterboxd 或 IMDb 上评过分？导入进来"
   }
 }

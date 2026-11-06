@@ -16,7 +16,10 @@
     background-color var(--focus-speed) ease, color var(--focus-speed) ease;
 }
 
-/* ---------- Buttons, pills, chips: ring + a small lift ---------- */
+/* ---------- Buttons, pills, chips: a ring, no growth ----------
+   They sit 8-12px apart: growing (scale) + a ring ate the whole gap and the focused button
+   covered or touched its neighbour (e2e/tests/focus-overlap.spec.js measures it on every page).
+   The ring alone reads clearly from the sofa. */
 .hero-button:focus-visible,
 .watchpage__pillBtn:focus-visible,
 .watchpage__chip:focus-visible,
@@ -31,7 +34,6 @@
 .movie-detail-add-button:focus-visible,
 .subscription-option:focus-visible,
 .login-button:focus-visible {
-  transform: scale(1.06);
   box-shadow: 0 0 0 3px var(--focus-ring), 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
@@ -39,7 +41,6 @@
    the page color, then white) that stays visible on white and red buttons alike ---------- */
 .ui-btn:focus-visible,
 .ui-chip:focus-visible {
-  transform: scale(1.06);
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 5px var(--focus-ring), 0 10px 26px rgba(0, 0, 0, 0.5);
 }
 
@@ -266,7 +267,7 @@ html.tv-keys .movie-detail-cast-card:hover:not(:focus-visible) .movie-detail-cas
 .share-button:focus-visible,
 .navbar__icon-btn:focus-visible {
   border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+  box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 4px var(--focus-halo); /* the search box is close */
 }
 /* the avatar is a rounded square: the ring follows its shape */
 .profile-icon:focus-visible {

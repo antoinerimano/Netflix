@@ -27,11 +27,7 @@
     "title": "Perfis",
     "count_one": "{{count}} de {{max}}",
     "count_many": "{{count}} de {{max}}",
-    "count_other": "{{count}} de {{max}}",
-    "edit": "Editar",
-    "addHint_one": "Um para cada pessoa, até {{count}}",
-    "addHint_many": "Um para cada pessoa, até {{count}}",
-    "addHint_other": "Um para cada pessoa, até {{count}}"
+    "count_other": "{{count}} de {{max}}"
   },
   "signOut": {
     "label": "Sair",
@@ -39,5 +35,47 @@
     "signedInAs": "Conectado como {{email}}",
     "text": "Você vai precisar do seu e-mail e da sua senha para entrar de novo neste aparelho.",
     "stay": "Continuar conectado"
+  },
+  "import": {
+    "title": "Importar seu histórico",
+    "subtitle": "Notas, títulos assistidos e lista para ver de outro serviço vão para o perfil de {{name}}, e as recomendações partem deles.",
+    "sourcesLabel": "De onde?",
+    "importing": "Importando…",
+    "choose": "Escolher arquivos",
+    "tvHint": "Numa TV? Não dá para escolher arquivos com o controle remoto: abra {{url}} no celular ou no computador, conectado a esta conta.",
+    "entryTitle": "Seu histórico em outros lugares",
+    "entryLabel": "Letterboxd ou IMDb",
+    "entryValue": "Traga suas notas e títulos assistidos para recomendações melhores.",
+    "entryAction": "Importar",
+    "errors": {
+      "unknown_format": "Não conseguimos ler esse arquivo. Envie a exportação do Letterboxd (.zip) ou do IMDb (.csv).",
+      "too_big": "Esse arquivo é grande demais (10 MB no máximo)."
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "Arquivo de exportação (.zip)",
+      "step1": "No letterboxd.com, abra Settings, depois Data, e selecione Export your data.",
+      "step2": "Envie o arquivo .zip aqui, sem precisar descompactar."
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "Notas e lista para ver (.csv)",
+      "step1": "No imdb.com, abra Suas avaliações, selecione ⋯ e depois Exportar. O IMDb avisa quando o arquivo estiver pronto.",
+      "step2": "Faça o mesmo com a sua Watchlist se quiser que ela vá para Minha lista.",
+      "step3": "Envie os arquivos .csv aqui (vários de uma vez, sem problema)."
+    },
+    "done": {
+      "title": "Importação concluída",
+      "nothingNew": "Nada novo: tudo já estava aqui.",
+      "liked": "Curtidos",
+      "disliked": "Não curtidos",
+      "watched": "Assistidos",
+      "listed": "Adicionados à Minha lista",
+      "notFound": "Ainda fora do nosso catálogo",
+      "showMissing": "Ver títulos não encontrados",
+      "hideMissing": "Ocultar títulos não encontrados",
+      "home": "Ir para o início",
+      "again": "Importar mais"
+    }
   }
 }

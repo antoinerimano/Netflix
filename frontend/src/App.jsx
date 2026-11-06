@@ -18,6 +18,7 @@ const AccountManagement = lazy(() => import('./components/AccountManagement'));
 const Register = lazy(() => import('./components/Register'));
 const CreateProfile = lazy(() => import('./components/CreateProfile'));
 const TastePage = lazy(() => import('./components/profiles/TastePage'));
+const ImportPage = lazy(() => import('./components/import/ImportPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -101,6 +102,16 @@ function App() {
           element={
             <ProtectedRoute>
               <TastePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Import your history": Letterboxd / IMDb files into the active profile (reco/imports.py) */}
+        <Route
+          path="/import"
+          element={
+            <ProtectedRoute>
+              <ImportPage />
             </ProtectedRoute>
           }
         />
