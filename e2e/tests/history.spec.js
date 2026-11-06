@@ -51,7 +51,8 @@ test('remove an entry, pause, clear: all with the remote', async ({ page }) => {
   await expect(page.getByRole('switch', { name: /Pause watch history/ })).toHaveAttribute('aria-checked', 'false');
 
   // clear: asks first, Cancel is where the focus lands
-  await remote(page, 'Down Right');
+  await remote(page, 'Down'); // the toolbar: Your year, Download, Clear history
+  for (let i = 0; i < 3 && (await focused(page)) !== 'BUTTON Clear history'; i += 1) await remote(page, 'Right');
   expect(await focused(page)).toBe('BUTTON Clear history');
   await remote(page, 'OK');
   await expect(page.locator('.ui-modal')).toBeVisible();

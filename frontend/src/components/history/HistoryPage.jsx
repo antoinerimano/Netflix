@@ -233,6 +233,7 @@ export default function HistoryPage() {
         <section className="account-card history-toolbar" aria-label={t('history.settings')}>
           <Switch checked={paused} onChange={togglePause} label={t('history.pause')} description={t('history.pauseHint')} />
           <div className="history-toolbar__actions">
+            <Button variant="glass" size="sm" to="/stats">{t('history.yourYear')}</Button>
             <Button variant="glass" size="sm" onClick={download} disabled={!items?.length}>{t('history.download')}</Button>
             <Button variant="danger" size="sm" onClick={() => setConfirmClear(true)} disabled={!items?.length}>{t('history.clear')}</Button>
           </div>

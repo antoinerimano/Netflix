@@ -201,7 +201,16 @@ Status: [ ] todo   [~] in progress   [x] done
         (confirmed), Pause (Profile.history_paused: no entry, progress, Play / open signal, impression
         or source result is saved), Download (.csv). Remote: rows, Right = remove, the focus moves
         to the next entry. Backend: reco/history.py.
-[ ] 7.5 Personal stats / year in review
+[x] 7.5 Your year (/stats, profile menu "Your year in review", "Your year" on the history page)
+        From the watch history: about N hours (runtimes: movie, episode, else the show's usual length),
+        titles / movies / shows / episodes / days, longest + current streak, first title of the year,
+        minutes per month (bar chart, one series in the brand red, validated on the card surface;
+        value on the busiest month, hover tooltip, table for screen readers), genres (time split
+        between a title's genres, bars scaled to the top one), most watched, actors you kept watching
+        (5 first-billed), years to switch. "Share my year": a 1080x1350 picture (share sheet, else
+        saved). Remote: every section takes the focus; Share under its text (at the right edge Down
+        skipped it). Navigation fix: Back to a page still loading no longer sends the focus to the
+        footer (recoverFocus waits for restorePlace). Backend: reco/stats.py.
 [ ] 7.6 Collections and watch order (franchises)
 [ ] 7.7 Public, shareable lists
 [ ] 7.8 "I have 90 minutes" / "Surprise me"

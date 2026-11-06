@@ -79,6 +79,7 @@
     "signOut": "退出登录",
     "signIn": "登录",
     "upcoming": "即将播出",
-    "history": "观看记录"
+    "history": "观看记录",
+    "stats": "年度回顾"
   }
 }

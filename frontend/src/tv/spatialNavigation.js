@@ -304,6 +304,9 @@ function closestTo(rect, list) {
 }
 function recoverFocus() {
   if (!keyboardMode || inPlayer) return;
+  // Back to a page still loading: restorePlace() is waiting for the card it left from; jumping to
+  // whatever is closest meanwhile (the footer, under a loading page) would make it give up
+  if (restorePending) return;
   const el = document.activeElement;
   if (el && el !== document.body) return;
   if (lastFocused?.isConnected && usable(lastFocused)) return; // only blurred: arrows continue from it
@@ -651,20 +654,32 @@ function placeOf(el) {
 }
 const samePlace = (a, b) => a.label === b.label && a.cls === b.cls && a.section === b.section;
 let restoring = 0;
+let restorePending = false;
 
 /** After Back (a POP navigation): focus the item the remote was on when this page was left. */
 export function restorePlace() {
   const want = placeByEntry.get(entryKey());
   const run = ++restoring;
+  restorePending = false;
   if (!want || !keyboardMode) return;
+  restorePending = true;
   const started = Date.now();
   const attempt = () => {
     if (run !== restoring) return; // another navigation since
     const active = document.activeElement;
-    if (active && active !== document.body) return; // the user (or the page) already moved on
+    if (active && active !== document.body) {
+      restorePending = false; // the user (or the page) already moved on
+      return;
+    }
     const el = candidates().find((c) => samePlace(placeOf(c), want));
-    if (el) focusElement(el);
-    else if (Date.now() - started < 4000) setTimeout(attempt, 120);
+    if (el) {
+      restorePending = false;
+      focusElement(el);
+    } else if (Date.now() - started < 4000) setTimeout(attempt, 120);
+    else {
+      restorePending = false; // not coming back: the usual recovery takes over
+      recoverFocus();
+    }
   };
   setTimeout(attempt, 60);
 }

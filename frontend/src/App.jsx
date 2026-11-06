@@ -21,6 +21,7 @@ const TastePage = lazy(() => import('./components/profiles/TastePage'));
 const ImportPage = lazy(() => import('./components/import/ImportPage'));
 const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
 const HistoryPage = lazy(() => import('./components/history/HistoryPage'));
+const StatsPage = lazy(() => import('./components/stats/StatsPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -134,6 +135,16 @@ function App() {
           element={
             <ProtectedRoute>
               <HistoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Your year": the active profile's watching in numbers, from its history (reco/stats.py) */}
+        <Route
+          path="/stats"
+          element={
+            <ProtectedRoute>
+              <StatsPage />
             </ProtectedRoute>
           }
         />

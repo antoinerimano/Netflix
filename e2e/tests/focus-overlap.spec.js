@@ -139,7 +139,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
       await page.locator('.profile-tile').first().click(); // the profile editor dialog
       await expect(page.locator('.ui-modal')).toBeVisible();
       pages['profile editor'] = await checkPage(page, { scope: '.ui-modal', screens: 1 });
-      for (const path of ['/taste', '/import', '/history', `/account/${session.user.id}`]) {
+      for (const path of ['/taste', '/import', '/history', '/stats', `/account/${session.user.id}`]) {
         await page.goto(path);
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);

@@ -115,3 +115,10 @@ export async function fetchCalendar(profileId) {
   const res = await api.get("/calendar/", { params: { profileId } });
   return res.data;
 }
+
+// ---------- your year (backend reco/stats.py) ----------
+// year: null = the latest year with history
+export async function fetchStats(profileId, year = null) {
+  const res = await api.get("/stats/", { params: { profileId, ...(year ? { year } : {}) } });
+  return res.data;
+}
