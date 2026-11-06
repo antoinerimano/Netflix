@@ -77,5 +77,25 @@
       "home": "Aller à l'accueil",
       "again": "Importer autre chose"
     }
+  },
+  "history": {
+    "title": "Historique de visionnage",
+    "subtitle": "Ce que {{name}} a regardé ici, du plus récent au plus ancien.",
+    "settings": "Réglages de l'historique",
+    "pause": "Mettre l'historique en pause",
+    "pauseHint": "Pendant la pause, ce que regarde ce profil n'est pas enregistré : ni ici, ni dans Reprendre, ni dans les recommandations.",
+    "download": "Télécharger (.csv)",
+    "clear": "Effacer l'historique",
+    "clearTitle": "Effacer tout l'historique ?",
+    "clearText": "Tout ce que {{name}} a regardé est supprimé, avec Reprendre et ce que cela a appris aux recommandations. Les « J'aime » et Ma liste restent.",
+    "cleared": "Historique effacé",
+    "removed": "{{title}} retiré de l'historique",
+    "remove": "Retirer {{title}} de l'historique",
+    "more": "Afficher plus",
+    "loadError": "Impossible de charger l'historique",
+    "emptyTitle": "Rien regardé pour l'instant",
+    "emptyText": "Les titres regardés sur ce profil apparaissent ici.",
+    "pausedTitle": "L'historique est en pause",
+    "pausedText": "Rien n'est enregistré pendant la pause. Réactivez-le ci-dessus quand vous voulez."
   }
 }

@@ -77,5 +77,25 @@
       "home": "Vai alla home",
       "again": "Importa altro"
     }
+  },
+  "history": {
+    "title": "Cronologia visione",
+    "subtitle": "Cosa ha guardato {{name}} qui, dal più recente.",
+    "settings": "Impostazioni della cronologia",
+    "pause": "Metti in pausa la cronologia",
+    "pauseHint": "Durante la pausa, ciò che guarda questo profilo non viene salvato: né qui, né in Continua a guardare, né nei consigli.",
+    "download": "Scarica (.csv)",
+    "clear": "Cancella cronologia",
+    "clearTitle": "Cancellare tutta la cronologia?",
+    "clearText": "Tutto ciò che {{name}} ha guardato viene rimosso, insieme a Continua a guardare e a ciò che hanno imparato i consigli. I «Mi piace» e la Mia lista restano.",
+    "cleared": "Cronologia cancellata",
+    "removed": "{{title}} rimosso dalla cronologia",
+    "remove": "Rimuovi {{title}} dalla cronologia",
+    "more": "Mostra altro",
+    "loadError": "Impossibile caricare la cronologia",
+    "emptyTitle": "Ancora niente di guardato",
+    "emptyText": "I titoli guardati con questo profilo compaiono qui.",
+    "pausedTitle": "La cronologia è in pausa",
+    "pausedText": "Durante la pausa non si salva nulla. Riattivala qui sopra quando vuoi."
   }
 }

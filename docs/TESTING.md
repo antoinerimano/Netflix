@@ -1,14 +1,14 @@
 # Tests
 
-**164 automated tests** protect the app: 74 backend, 54 frontend, 36 end-to-end. GitHub runs
+**175 automated tests** protect the app: 82 backend, 56 frontend, 37 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 74 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 54 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 36 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 82 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 56 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 37 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 74 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 54 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 36 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 82 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 56 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 37 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (74)
+## Backend tests (82)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -100,6 +100,19 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
 | `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### Watch history: `backend/reco/test_history.py` (8)
+
+| Test | Verifies |
+|---|---|
+| `test_opening_the_player_writes_one_entry_per_episode_and_day` | the watch page writes one entry per movie / episode per day (again the same day: the same entry), newest first, episodes with their name |
+| `test_pages_of_fifty` | 50 entries per page, then the next page |
+| `test_removing_the_last_entry_of_a_title_forgets_it` | removing an entry keeps the title's signals while another entry is left; removing the last one also clears Continue watching, Play / open signals, its sources and its "Because you watched" row; likes stay |
+| `test_clear_all` | Clear history empties it and Continue watching |
+| `test_paused_history_saves_nothing_about_watching` | paused: no entry, no Continue watching, no Play / open signal, no impression, no source result (a like still counts); back on, it records again |
+| `test_export_csv` | the CSV file: header, a movie line and an episode line with its name |
+| `test_kids_profile_list_respects_its_age_and_others_are_refused` | a kids profile's list follows its age limit; nobody reads or removes another account's history |
+| `test_backfill_from_what_was_recorded_before` | the migration builds the first history from Continue watching (with the episode) and Play presses (one per title and day) |
 
 ### Upcoming episodes: `backend/reco/test_calendar.py` (5)
 
@@ -164,7 +177,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (54)
+## Frontend tests (56)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -234,6 +247,13 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### Watch history page: `frontend/src/components/history/HistoryPage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| entries by day, episodes with their name, download | Today / Yesterday / a date, "S1 · E2 · <name>" for episodes, a remove button per entry, Download asks for the CSV |
+| paused and empty: says nothing is saved | a paused, empty history says so; the switch shows it; Clear is off |
+
 ### Upcoming page: `frontend/src/components/calendar/CalendarPage.test.jsx` (3)
 
 | Test | Verifies |
@@ -251,7 +271,7 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (36)
+## End-to-end tests (37)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -304,9 +324,15 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 | title pages and the player | a movie, a show, the player (its "Continue watching" entry is removed after) |
 | signed out: sign in, sign up | sign in, sign up |
 | menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
-| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, account |
+| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, account |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Watch history: `e2e/tests/history.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| remove an entry, pause, clear: all with the remote | Kids watches two titles; the remote reaches an entry, Right its remove button, OK removes it and the focus moves to the next one; the pause switch stops recording (a title opened meanwhile isn't added); Clear history opens a dialog on Cancel, Right + OK empties it |
 
 ### Upcoming: `e2e/tests/calendar.spec.js` (1, remote only, at 1280 × 720)
 

@@ -144,6 +144,30 @@ class WatchProgress(models.Model):
         ]
 
 
+class WatchEvent(models.Model):
+    """
+    Watch history (reco/history.py): this profile watched this movie / episode on this day.
+    One row per title + episode + day (watching again the same day updates it). season 0 /
+    episode 0: a movie, or a show whose episode isn't known (history from before this table).
+    """
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="watch_events")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    season_number = models.PositiveIntegerField(default=0)
+    episode_number = models.PositiveIntegerField(default=0)
+    watched_on = models.DateField()
+    watched_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "title", "season_number", "episode_number", "watched_on"], name="uniq_watch_event_day"
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["profile", "-watched_at"]),
+        ]
+
+
 class MyListItem(models.Model):
     """A title in a profile's "My List"."""
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="my_list")

@@ -76,5 +76,25 @@
       "home": "Go to your home page",
       "again": "Import more"
     }
+  },
+  "history": {
+    "title": "Watch history",
+    "subtitle": "What {{name}} watched here, newest first.",
+    "settings": "History settings",
+    "pause": "Pause watch history",
+    "pauseHint": "While it's paused, what this profile watches isn't saved: not here, not in Continue watching, not in recommendations.",
+    "download": "Download (.csv)",
+    "clear": "Clear history",
+    "clearTitle": "Clear the whole history?",
+    "clearText": "Everything {{name}} watched is removed, with Continue watching and what it taught the recommendations. Likes and My List stay.",
+    "cleared": "History cleared",
+    "removed": "{{title}} removed from history",
+    "remove": "Remove {{title}} from history",
+    "more": "Show more",
+    "loadError": "Couldn't load the history",
+    "emptyTitle": "Nothing watched yet",
+    "emptyText": "Titles watched on this profile show up here.",
+    "pausedTitle": "History is paused",
+    "pausedText": "Nothing is saved while it's paused. Turn it back on above whenever you like."
   }
 }

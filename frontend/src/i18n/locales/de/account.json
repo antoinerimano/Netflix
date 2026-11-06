@@ -76,5 +76,25 @@
       "home": "Zur Startseite",
       "again": "Mehr importieren"
     }
+  },
+  "history": {
+    "title": "Wiedergabeverlauf",
+    "subtitle": "Was {{name}} hier geschaut hat, das Neueste zuerst.",
+    "settings": "Verlaufseinstellungen",
+    "pause": "Verlauf pausieren",
+    "pauseHint": "Während der Pause wird nicht gespeichert, was dieses Profil schaut: nicht hier, nicht bei Weiterschauen, nicht in den Empfehlungen.",
+    "download": "Herunterladen (.csv)",
+    "clear": "Verlauf löschen",
+    "clearTitle": "Den ganzen Verlauf löschen?",
+    "clearText": "Alles, was {{name}} geschaut hat, wird entfernt, samt Weiterschauen und dem, was die Empfehlungen daraus gelernt haben. „Gefällt mir“ und Meine Liste bleiben.",
+    "cleared": "Verlauf gelöscht",
+    "removed": "{{title}} aus dem Verlauf entfernt",
+    "remove": "{{title}} aus dem Verlauf entfernen",
+    "more": "Mehr anzeigen",
+    "loadError": "Der Verlauf konnte nicht geladen werden",
+    "emptyTitle": "Noch nichts geschaut",
+    "emptyText": "Titel, die in diesem Profil geschaut werden, erscheinen hier.",
+    "pausedTitle": "Der Verlauf ist pausiert",
+    "pausedText": "Während der Pause wird nichts gespeichert. Schalte ihn oben wieder ein, wann du willst."
   }
 }

@@ -193,7 +193,14 @@ Status: [ ] todo   [~] in progress   [x] done
         (sync_tmdb_daily_episodes) now also refreshes every tracked show still on air (--no-tracked
         turns it off), so a show off TMDb's airing / trending lists keeps its dates.
         Backend: reco/calendar.py (GET /api/calendar/).
-[ ] 7.4 Watch history page (browse, remove, pause, export)
+[x] 7.4 Watch history (/history, profile menu "Watch history")
+        WatchEvent: one entry per movie / episode per day, written when the watch page opens; the
+        first history is built from Continue watching + Play presses (migration). By day, newest first,
+        50 per page. Remove an entry (the title's last one also clears Continue watching, Play / open
+        signals, its sources and its "Because you watched" row; likes / My List stay), Clear history
+        (confirmed), Pause (Profile.history_paused: no entry, progress, Play / open signal, impression
+        or source result is saved), Download (.csv). Remote: rows, Right = remove, the focus moves
+        to the next entry. Backend: reco/history.py.
 [ ] 7.5 Personal stats / year in review
 [ ] 7.6 Collections and watch order (franchises)
 [ ] 7.7 Public, shareable lists

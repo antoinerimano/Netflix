@@ -1,0 +1,120 @@
+/* src/components/history/history.css - "Watch history" (/history), on the account page layout */
+
+.history__subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+}
+.history__subtitle .ui-avatar {
+  flex: none;
+}
+
+/* pause / download / clear */
+.history-toolbar {
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+}
+.history-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* days */
+.history-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.history-day__title {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* an entry: the title (opens it) + its remove button, 8px apart */
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.history-item {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+.history-item:hover {
+  background: var(--color-surface-2);
+}
+.history-item:focus-visible {
+  background: var(--color-surface-2);
+}
+.history-item__art {
+  flex: none;
+  overflow: hidden;
+  width: 6.5rem;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+}
+.history-item__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.history-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.history-item__title {
+  overflow: hidden;
+  font-weight: var(--weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-item__sub {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-item__time {
+  color: var(--color-text-muted);
+}
+.history-row__remove {
+  flex: none;
+}
+.history-more {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .history-item__art {
+    width: 5rem;
+  }
+}

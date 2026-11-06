@@ -59,6 +59,8 @@ class Profile(models.Model):
     is_kids = models.BooleanField(default=False)  # Kids profile: capped at PG (users/maturity.py)
     avatar_url = models.CharField(max_length=255, blank=True, null=True)
     language_preference = models.CharField(max_length=10)
+    # "Pause watch history" (reco/history.py): nothing about what this profile watches is saved
+    history_paused = models.BooleanField(default=False)
 
 class PaymentHistory(models.Model):
     id = models.CharField(max_length=255, primary_key=True)

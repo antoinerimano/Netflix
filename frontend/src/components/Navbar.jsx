@@ -394,6 +394,9 @@ const Navbar = () => {
                 <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/profiles?manage')}>
                   {t('nav.manageProfiles')}
                 </div>
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/history')}>
+                  {t('nav.history')}
+                </div>
                 <div className="dropdown-divider"></div>
                 {isStaff && (
                   <>

@@ -77,5 +77,25 @@
       "home": "Ir al inicio",
       "again": "Importar más"
     }
+  },
+  "history": {
+    "title": "Historial de visualización",
+    "subtitle": "Lo que {{name}} vio aquí, de lo más reciente a lo más antiguo.",
+    "settings": "Ajustes del historial",
+    "pause": "Pausar el historial",
+    "pauseHint": "Mientras está en pausa, lo que ve este perfil no se guarda: ni aquí, ni en Seguir viendo, ni en las recomendaciones.",
+    "download": "Descargar (.csv)",
+    "clear": "Borrar historial",
+    "clearTitle": "¿Borrar todo el historial?",
+    "clearText": "Se elimina todo lo que {{name}} vio, junto con Seguir viendo y lo que aprendieron las recomendaciones. Los «Me gusta» y Mi lista se quedan.",
+    "cleared": "Historial borrado",
+    "removed": "{{title}} eliminado del historial",
+    "remove": "Eliminar {{title}} del historial",
+    "more": "Ver más",
+    "loadError": "No se pudo cargar el historial",
+    "emptyTitle": "Aún no has visto nada",
+    "emptyText": "Los títulos vistos en este perfil aparecen aquí.",
+    "pausedTitle": "El historial está en pausa",
+    "pausedText": "No se guarda nada mientras está en pausa. Reactívalo arriba cuando quieras."
   }
 }

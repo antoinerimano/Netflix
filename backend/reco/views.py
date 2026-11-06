@@ -33,6 +33,7 @@ from .models import (
     ShowFollow, Notification,
 )
 from .taste import has_taste_signal
+from .history import WATCH_SIGNALS, record_watch
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -1252,6 +1253,7 @@ class LogImpressionView(APIView):
         own_profile_ids = set(
             Profile.objects
             .filter(user=request.user, id__in={item["profile_id"] for item in items})
+            .filter(history_paused=False)  # paused watch history: nothing about it is saved
             .values_list("id", flat=True)
         )
         items = [item for item in items if item["profile_id"] in own_profile_ids]
@@ -1280,7 +1282,9 @@ class LogActionView(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        get_object_or_404(Profile, id=data["profile_id"], user=request.user)
+        profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
+        if profile.history_paused and data["action"] in WATCH_SIGNALS:
+            return Response({"ok": True, "paused": True})  # what it opens / plays isn't saved
         TitleAction.objects.create(
             profile_id=data["profile_id"],
             title_id=data["title_id"],
@@ -1322,10 +1326,13 @@ class WatchProgressView(APIView):
 
         profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
         title = get_object_or_404(Title.objects.only("id", "type"), id=data["title_id"])
+        if profile.history_paused:
+            return Response({"ok": True, "finished": False, "paused": True})  # nothing saved
         is_tv = title.type == "tv"
         season = data.get("season") if is_tv else None
         episode = data.get("episode") if is_tv else None
         position, duration = data.get("position"), data.get("duration")
+        record_watch(profile, title, season, episode)  # watch history: today's entry
 
         wp, _ = WatchProgress.objects.get_or_create(
             profile=profile, title=title, defaults={"season_number": season, "episode_number": episode}
@@ -1514,6 +1521,8 @@ class PlaybackView(APIView):
         key = str(request.data.get("provider") or "")
         if not Provider.objects.filter(key=key).exists():
             return Response({"detail": "unknown provider"}, status=400)
+        if profile.history_paused:
+            return Response({"ok": True, "paused": True})
         PlaybackOutcome.objects.create(profile=profile, title=title, provider_key=key, worked=bool(request.data.get("worked")))
         return Response({"ok": True})
 

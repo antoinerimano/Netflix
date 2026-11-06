@@ -77,5 +77,25 @@
       "home": "Ir para o início",
       "again": "Importar mais"
     }
+  },
+  "history": {
+    "title": "Histórico de exibição",
+    "subtitle": "O que {{name}} assistiu aqui, do mais recente ao mais antigo.",
+    "settings": "Configurações do histórico",
+    "pause": "Pausar o histórico",
+    "pauseHint": "Enquanto estiver pausado, o que este perfil assiste não é salvo: nem aqui, nem em Continuar assistindo, nem nas recomendações.",
+    "download": "Baixar (.csv)",
+    "clear": "Limpar histórico",
+    "clearTitle": "Limpar todo o histórico?",
+    "clearText": "Tudo o que {{name}} assistiu é removido, junto com Continuar assistindo e o que as recomendações aprenderam. As curtidas e a Minha lista ficam.",
+    "cleared": "Histórico limpo",
+    "removed": "{{title}} removido do histórico",
+    "remove": "Remover {{title}} do histórico",
+    "more": "Mostrar mais",
+    "loadError": "Não foi possível carregar o histórico",
+    "emptyTitle": "Nada assistido ainda",
+    "emptyText": "Os títulos assistidos neste perfil aparecem aqui.",
+    "pausedTitle": "O histórico está pausado",
+    "pausedText": "Nada é salvo enquanto estiver pausado. Reative acima quando quiser."
   }
 }
