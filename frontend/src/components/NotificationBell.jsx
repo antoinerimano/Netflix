@@ -179,6 +179,20 @@ export default function NotificationBell() {
               ) : null}
             </div>
           )}
+          {/* every coming episode of the profile's shows, day by day */}
+          <footer className="notif__foot">
+            <Button
+              variant="glass"
+              size="sm"
+              block
+              onClick={() => {
+                setOpen(false);
+                navigate('/calendar');
+              }}
+            >
+              {t('notifications.calendar')}
+            </Button>
+          </footer>
         </div>
       )}
     </div>

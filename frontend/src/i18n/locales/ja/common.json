@@ -77,6 +77,9 @@
     "installIos": "Safari の共有ボタンをタップし、「ホーム画面に追加」を選んでください。",
     "account": "アカウント設定",
     "signOut": "ログアウト",
-    "signIn": "ログイン"
+    "signIn": "ログイン",
+    "upcoming": "配信予定",
+    "history": "視聴履歴",
+    "stats": "1年のふりかえり"
   }
 }

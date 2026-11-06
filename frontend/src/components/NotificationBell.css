@@ -218,3 +218,9 @@
     max-height: calc(100vh - var(--nav-height) - 5.5rem);
   }
 }
+
+/* "See upcoming episodes" (/calendar), under the list */
+.notif__foot {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}

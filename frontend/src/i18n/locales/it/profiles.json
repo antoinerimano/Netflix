@@ -204,5 +204,24 @@
         "Dolcevita"
       ]
     }
+  },
+  "taste": {
+    "title": "Cosa ti piace guardare?",
+    "subtitle_one": "Scegli almeno {{count}} titolo che ti piace. La tua home page nasce da qui.",
+    "subtitle_many": "Scegli almeno {{count}} titoli che ti piacciono. La tua home page nasce da qui.",
+    "subtitle_other": "Scegli almeno {{count}} titoli che ti piacciono. La tua home page nasce da qui.",
+    "pickMore_one": "Scegline ancora {{count}}",
+    "pickMore_many": "Scegline ancora {{count}}",
+    "pickMore_other": "Scegline ancora {{count}}",
+    "picked_one": "{{count}} scelto",
+    "picked_many": "{{count}} scelti",
+    "picked_other": "{{count}} scelti",
+    "skip": "Salta per ora",
+    "showMore": "Mostra altri titoli",
+    "building": "Stiamo creando la tua home page…",
+    "loadError": "Impossibile caricare i titoli",
+    "none": "Al momento non ci sono titoli da scegliere",
+    "barLabel": "Le tue scelte",
+    "importLink": "Voti i titoli su Letterboxd o IMDb? Importali"
   }
 }

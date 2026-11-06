@@ -204,5 +204,24 @@
         "Gola alta"
       ]
     }
+  },
+  "taste": {
+    "title": "O que você gosta de assistir?",
+    "subtitle_one": "Escolha pelo menos {{count}} título de que você goste. Sua página inicial é montada a partir deles.",
+    "subtitle_many": "Escolha pelo menos {{count}} títulos de que você goste. Sua página inicial é montada a partir deles.",
+    "subtitle_other": "Escolha pelo menos {{count}} títulos de que você goste. Sua página inicial é montada a partir deles.",
+    "pickMore_one": "Escolha mais {{count}}",
+    "pickMore_many": "Escolha mais {{count}}",
+    "pickMore_other": "Escolha mais {{count}}",
+    "picked_one": "{{count}} escolhido",
+    "picked_many": "{{count}} escolhidos",
+    "picked_other": "{{count}} escolhidos",
+    "skip": "Pular por enquanto",
+    "showMore": "Mostrar mais títulos",
+    "building": "Montando sua página inicial…",
+    "loadError": "Não foi possível carregar os títulos",
+    "none": "Nenhum título para escolher no momento",
+    "barLabel": "Suas escolhas",
+    "importLink": "Você avalia títulos no Letterboxd ou IMDb? Importe-os"
   }
 }

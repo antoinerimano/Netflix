@@ -325,7 +325,7 @@
 .profile-form__letter-colors {
   flex-wrap: nowrap; /* one scrolling line (.ui-scroller): every color reachable by the remote */
   gap: var(--space-2);
-  margin-top: calc(var(--space-1) - 10px);
+  margin-top: calc(var(--space-3) - 10px); /* room for the focus ring between pictures and colors */
   animation: ui-fade-in var(--duration-normal) var(--ease-standard);
 }
 .profile-form__color {
@@ -336,7 +336,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  color: #fff;
+  color: var(--color-text-on-brand);
   cursor: pointer;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   transition: transform var(--duration-fast);
@@ -347,20 +347,18 @@
 .profile-form__color.is-selected {
   box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--color-text);
 }
-/* remote focus on a picture / color, selected or not: ring + halo + lift (the selected ring alone
-   looked the same focused or not) */
-.profile-form__pic:focus-visible,
-.profile-form__color:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 9px var(--focus-halo);
-}
+/* remote focus on a picture / color, selected or not: ring + a thin halo (the selected ring alone
+   looked the same focused or not). No growth: pictures sit 12px apart, colors 8px, and a bigger
+   box + a 9px halo covered the neighbours (e2e/tests/focus-overlap.spec.js). */
 .profile-form__pic:focus-visible {
-  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 6px var(--focus-halo);
+  transform: translateY(-3px);
+}
+.profile-form__color:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-surface-1), 0 0 0 4px var(--focus-ring), 0 0 0 5px var(--focus-halo);
 }
 .profile-form__pic:focus-visible .ui-avatar {
   opacity: 1;
-}
-.profile-form__color:focus-visible {
-  transform: scale(1.15);
 }
 .profile-form__color svg {
   width: 1rem;
@@ -616,4 +614,149 @@
     margin: 0 calc(-1 * var(--space-5)) calc(-1 * var(--space-6));
     padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* ================= What do you like to watch? (TastePage) ================= */
+.taste__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-8) 0 calc(var(--space-16) + 4.5rem); /* clear of the pinned bar */
+  animation: profiles-in var(--duration-slow) var(--ease-out) both;
+}
+.taste__intro {
+  padding: 0 var(--page-gutter);
+  text-align: center;
+}
+.taste__subtitle {
+  max-width: 36rem;
+  margin: var(--space-3) auto 0;
+  color: var(--color-text-secondary);
+}
+.taste__import {
+  margin-top: var(--space-4);
+}
+.taste__grid {
+  margin: 0;
+  list-style: none;
+}
+.taste__skeleton {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+}
+.taste__more {
+  display: flex;
+  justify-content: center;
+}
+
+/* a title to pick: a poster that toggles */
+.taste-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.taste-card .poster-card__art {
+  display: block;
+  width: 100%;
+}
+.taste-card .poster-card__art img {
+  transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+.taste-card__name {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.taste-card__year {
+  margin-top: calc(-1 * var(--space-1));
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+.taste-card__check {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+}
+.taste-card__check svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.taste-card.is-picked .poster-card__art {
+  box-shadow: 0 0 0 3px var(--color-brand), var(--shadow-md);
+}
+.taste-card.is-picked .poster-card__art img {
+  opacity: 0.55;
+}
+.taste-card.is-picked .taste-card__check {
+  opacity: 1;
+  transform: scale(1);
+}
+.taste-card.is-picked .taste-card__name {
+  color: var(--color-text);
+}
+@media (hover: hover) {
+  .taste-card:hover .poster-card__art img {
+    transform: scale(1.04);
+  }
+  .taste-card:hover .taste-card__name {
+    color: var(--color-text);
+  }
+}
+.taste-card:focus-visible {
+  box-shadow: none;
+}
+.taste-card:focus-visible .poster-card__art {
+  box-shadow: 0 0 0 3px var(--color-bg-deep), 0 0 0 6px var(--focus-ring), var(--shadow-lg);
+}
+
+/* pinned at the bottom: how many picked, Skip, Continue */
+.taste__bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--page-gutter) max(var(--space-4), env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+  background: rgba(10, 10, 12, 0.88);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.taste__count {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-medium);
+}
+.taste__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
 }

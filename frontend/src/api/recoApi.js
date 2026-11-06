@@ -95,3 +95,30 @@ export async function markNotificationsRead(profileId) {
   if (!profileId) return;
   await api.post("/notifications/read/", null, { params: { profileId } });
 }
+
+// ---------- taste onboarding (backend reco/taste.py) ----------
+// { titles: [{id, type, title, poster, release_year}], min_picks }: well-known titles to pick from
+export async function fetchTasteTitles(profileId) {
+  const res = await api.get("/taste/", { params: { profileId } });
+  return res.data;
+}
+
+// The picks become likes and the home page is rebuilt from them (a few seconds).
+export async function saveTaste(profileId, titleIds) {
+  const res = await api.post("/taste/", { title_ids: titleIds, session_id: getRecoSessionId() }, { params: { profileId } });
+  return res.data;
+}
+
+// ---------- upcoming episodes (backend reco/calendar.py) ----------
+// { today, tracked, recent: [episode], upcoming: [episode], suggestions: [show] }
+export async function fetchCalendar(profileId) {
+  const res = await api.get("/calendar/", { params: { profileId } });
+  return res.data;
+}
+
+// ---------- your year (backend reco/stats.py) ----------
+// year: null = the latest year with history
+export async function fetchStats(profileId, year = null) {
+  const res = await api.get("/stats/", { params: { profileId, ...(year ? { year } : {}) } });
+  return res.data;
+}

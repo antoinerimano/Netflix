@@ -1,5 +1,5 @@
 // src/components/CreateProfile.js
-// Sign-up step 2 of 2: the first profile, then home (the plan step is set aside for now). Same form as "Who's watching?" -> Add.
+// Sign-up step 2 of 2: the first profile, then "What do you like to watch?" (/taste), then home (the plan step is set aside for now). Same form as "Who's watching?" -> Add.
 // The profile is saved before moving on (the old page left before the request finished, so a
 // failed save went unnoticed) and becomes the active profile.
 import React from 'react';
@@ -18,7 +18,7 @@ const CreateProfile = () => {
   const save = async (values) => {
     const created = await createProfile(userId, { ...values, user: userId });
     if (created?.id) setActiveProfile(created);
-    navigate('/', { replace: true });
+    navigate(created?.id ? '/taste' : '/', { replace: true });
   };
 
   return (

@@ -145,6 +145,8 @@ class Command(BaseCommand):
         parser.add_argument("--no-airing-today", action="store_true", help="Disable /tv/airing_today pass.")
         parser.add_argument("--no-on-the-air", action="store_true", help="Disable /tv/on_the_air pass.")
         parser.add_argument("--no-trending", action="store_true", help="Disable /trending/tv/day pass.")
+        parser.add_argument("--no-tracked", action="store_true",
+                            help="Don't refresh the shows profiles follow / list / watch (their calendar, reco/calendar.py).")
 
         parser.add_argument("--sleep", type=float, default=0.2, help="Sleep between TMDb calls.")
         parser.add_argument("--verbose", action="store_true", help="Print more logs.")
@@ -451,6 +453,7 @@ class Command(BaseCommand):
         no_airing_today = bool(opts["no_airing_today"])
         no_on_the_air = bool(opts["no_on_the_air"])
         no_trending = bool(opts["no_trending"])
+        no_tracked = bool(opts["no_tracked"])
 
         sleep_s = float(opts["sleep"])
         verbose = bool(opts["verbose"])
@@ -475,6 +478,16 @@ class Command(BaseCommand):
 
         # Collect candidates
         candidates: List[Tuple[str, int]] = []
+
+        # the shows people follow / list / watch first: their calendar must stay right even when
+        # they're no longer on TMDb's airing / trending lists (and the vote filters don't apply)
+        tracked: Set[int] = set()
+        if not no_tracked:
+            from reco.calendar import tracked_tmdb_ids
+            tracked = set(tracked_tmdb_ids())
+            self._log(f"[tv] tracked by profiles: {len(tracked)}")
+            for tid in sorted(tracked):
+                candidates.append(("tracked", tid))
 
         if not no_airing_today:
             self._log("[tv] airing_today…")
@@ -514,7 +527,7 @@ class Command(BaseCommand):
 
                 vc = safe_int(full.get("vote_count"), 0) or 0
                 va = safe_float(full.get("vote_average"), 0.0) or 0.0
-                if (min_votes and vc < min_votes) or (min_rating and va < min_rating):
+                if tv_id not in tracked and ((min_votes and vc < min_votes) or (min_rating and va < min_rating)):
                     stats["skipped_filters"] += 1
                     continue
 

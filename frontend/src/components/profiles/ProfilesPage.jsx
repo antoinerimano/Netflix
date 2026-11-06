@@ -50,8 +50,12 @@ export default function ProfilesPage() {
     load();
   }, [userId, load, navigate]);
 
-  const choose = (p) => {
+  const choose = (p, { isNew = false } = {}) => {
     setActiveProfile(p);
+    if (isNew) {
+      navigate('/taste', { replace: true }); // its first likes before its first home page
+      return;
+    }
     const from = location.state?.from;
     const target = from?.pathname && from.pathname !== '/profiles' ? `${from.pathname}${from.search || ''}` : '/';
     navigate(target, { replace: true });
@@ -64,8 +68,8 @@ export default function ProfilesPage() {
     setEditing(null);
     await load();
     setToast(t(`toast.${type}`, { name: profile.name }));
-    // a new profile from "Who's watching?": start watching with it
-    if (type === 'added' && !manage && profile?.id) choose(profile);
+    // a new profile from "Who's watching?": pick what it likes, then start watching with it
+    if (type === 'added' && !manage && profile?.id) choose(profile, { isNew: true });
   };
 
   const canAdd = profiles && profiles.length < MAX_PROFILES;

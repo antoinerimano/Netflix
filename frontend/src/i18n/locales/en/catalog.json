@@ -30,6 +30,12 @@
       "hiddenGem": "Rated {{rating}}/10, but few people know it",
       "popularNow": "Popular right now",
       "newRelease": "New: out {{date}}"
+    },
+    "taste": {
+      "title": "Make this home page yours",
+      "body": "Pick a few titles you like and your recommendations start from them.",
+      "action": "Pick titles",
+      "dismiss": "Not now"
     }
   },
   "hero": {
@@ -119,7 +125,8 @@
     "newEpisode": "New episode · S{{season}} E{{episode}}",
     "emptyTitle": "No new episodes yet",
     "emptyText": "Tap the bell on a show's page to get an alert when a new episode is out.",
-    "browse": "Browse TV shows"
+    "browse": "Browse TV shows",
+    "calendar": "See upcoming episodes"
   },
   "browse": {
     "movie": {
@@ -254,5 +261,28 @@
     "soap": "Soap",
     "talk": "Talk",
     "war_and_politics": "War & Politics"
+  },
+  "calendar": {
+    "title": "Upcoming",
+    "subtitle": "New episodes of the shows you follow, have in My List or are watching.",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays_one": "In {{count}} day",
+    "inDays_other": "In {{count}} days",
+    "recent": "Out this past week",
+    "episodeLabel": "{{show}}, season {{season}}, episode {{episode}}",
+    "reason": {
+      "follow": "Following",
+      "list": "In My List",
+      "watching": "Watching"
+    },
+    "emptyTitle": "Your calendar is empty",
+    "emptyText": "Follow a show (Notify me on its page) or add it to My List: its new episodes show up here.",
+    "nothingSoon": "No new episodes for your shows in the next 30 days.",
+    "suggestTitle": "Coming back soon",
+    "suggestText": "Follow a show to add its episodes to your calendar",
+    "follow": "Follow",
+    "following": "Following",
+    "loadError": "Couldn't load your calendar"
   }
 }

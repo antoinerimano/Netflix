@@ -25,9 +25,7 @@
   },
   "profiles": {
     "title": "个人资料",
-    "count_other": "{{count}}/{{max}}",
-    "edit": "编辑",
-    "addHint_other": "每人一个，最多 {{count}} 个"
+    "count_other": "{{count}}/{{max}}"
   },
   "signOut": {
     "label": "退出登录",
@@ -35,5 +33,104 @@
     "signedInAs": "当前登录：{{email}}",
     "text": "在此设备上重新登录时需要输入邮箱和密码。",
     "stay": "保持登录"
+  },
+  "import": {
+    "title": "导入观看记录",
+    "subtitle": "来自其他服务的评分、已看作品和想看清单会导入到 {{name}} 的个人资料，推荐也会以此为起点。",
+    "sourcesLabel": "从哪里导入？",
+    "importing": "正在导入…",
+    "choose": "选择文件",
+    "tvHint": "在电视上？遥控器无法选择文件：请在已登录此账号的手机或电脑上打开 {{url}}。",
+    "entryTitle": "你在其他平台的记录",
+    "entryLabel": "Letterboxd 或 IMDb",
+    "entryValue": "导入你的评分和已看作品，获得更好的推荐。",
+    "entryAction": "导入",
+    "errors": {
+      "unknown_format": "无法读取该文件。请上传 Letterboxd（.zip）或 IMDb（.csv）的导出文件。",
+      "too_big": "文件太大（最大 10 MB）。"
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "导出文件（.zip）",
+      "step1": "在 letterboxd.com 打开 Settings，再进入 Data，选择 Export your data。",
+      "step2": "直接在这里上传 .zip 文件，无需解压。"
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "评分和想看清单（.csv）",
+      "step1": "在 imdb.com 打开“你的评分”，选择 ⋯ 然后“导出”。文件准备好后 IMDb 会通知你。",
+      "step2": "如果想把 Watchlist 加入“我的片单”，用同样的方法导出。",
+      "step3": "在这里上传 .csv 文件（可以一次上传多个）。"
+    },
+    "done": {
+      "title": "导入完成",
+      "nothingNew": "没有新内容：全部都已经导入过了。",
+      "liked": "喜欢",
+      "disliked": "不喜欢",
+      "watched": "已看",
+      "listed": "已加入我的片单",
+      "notFound": "目录中暂无",
+      "showMissing": "显示未找到的作品",
+      "hideMissing": "隐藏未找到的作品",
+      "home": "前往首页",
+      "again": "继续导入"
+    }
+  },
+  "history": {
+    "title": "观看记录",
+    "subtitle": "{{name}} 在这里看过的内容，最新的在前。",
+    "settings": "记录设置",
+    "pause": "暂停观看记录",
+    "pauseHint": "暂停期间，此个人资料观看的内容不会被保存：不会出现在这里、“继续观看”或推荐中。",
+    "download": "下载（.csv）",
+    "clear": "清除记录",
+    "clearTitle": "清除全部观看记录？",
+    "clearText": "{{name}} 看过的所有内容都会被删除，“继续观看”和推荐从中学到的内容也会一并删除。“喜欢”和“我的片单”会保留。",
+    "cleared": "记录已清除",
+    "removed": "已从记录中移除《{{title}}》",
+    "remove": "从记录中移除《{{title}}》",
+    "more": "显示更多",
+    "loadError": "无法加载观看记录",
+    "emptyTitle": "还没有观看记录",
+    "emptyText": "此个人资料观看的作品会显示在这里。",
+    "pausedTitle": "观看记录已暂停",
+    "pausedText": "暂停期间不会保存任何内容。可随时在上方重新开启。",
+    "yourYear": "你的一年"
+  },
+  "stats": {
+    "title": "你的 {{year}}",
+    "subtitle": "{{name}} 在这里看过的内容，用数字说话。",
+    "years": "年份",
+    "estimate": "根据所看内容的时长估算。",
+    "hours_other": "约 {{formatted}} 小时",
+    "minutes_other": "{{count}} 分钟",
+    "hoursShort_other": "{{count}} 小时",
+    "minutesShort_other": "{{count}} 分钟",
+    "titles": "作品",
+    "movies": "电影",
+    "shows": "剧集",
+    "episodes": "集数",
+    "daysWatched": "观看天数",
+    "longestStreak": "最长连续观看",
+    "days_other": "{{count}} 天",
+    "fromTo": "{{from}} – {{to}}",
+    "currentStreak_other": "目前已连续 {{count}} 天",
+    "first": "今年看的第一部",
+    "byMonth": "每月观看时长",
+    "genres": "最爱的类型",
+    "topTitles": "看得最多",
+    "actors": "你一直在看的演员",
+    "episodesCount_other": "{{count}} 集",
+    "titlesCount_other": "{{count}} 部作品",
+    "topGenre": "最爱类型",
+    "topTitle": "看得最多",
+    "topActor": "最爱演员",
+    "shareTitle": "分享你的一年",
+    "shareText": "把你的一年做成一张图，发到动态或分享给朋友。",
+    "share": "分享我的一年",
+    "saved": "图片已保存",
+    "loadError": "无法加载你的年度数据",
+    "emptyTitle": "还没有可统计的内容",
+    "emptyText": "在这个个人资料里看几部作品，你的一年就会出现在这里。"
   }
 }

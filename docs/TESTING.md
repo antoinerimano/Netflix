@@ -1,14 +1,14 @@
 # Tests
 
-**123 automated tests** protect the app: 54 backend, 47 frontend, 22 end-to-end. GitHub runs
+**185 automated tests** protect the app: 89 backend, 58 frontend, 38 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 54 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 47 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 22 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 89 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 58 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 38 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 54 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 47 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 22 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 89 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 58 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 38 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (54)
+## Backend tests (89)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -84,7 +84,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_title_list_constant_queries` | the catalog list takes exactly 2 database queries, however many titles (no "N+1" slowdown) |
 | `test_title_detail_constant_queries` | a show's page (seasons, episodes, cast) takes exactly 5 queries, however big the show |
 
-### Recommendations: `backend/reco/tests.py` (5)
+### Recommendations: `backend/reco/tests.py` (12)
 
 | Test | Verifies |
 |---|---|
@@ -93,6 +93,61 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_action_on_other_users_profile_rejected` | likes / list actions can't be recorded on someone else's profile |
 | `test_action_on_own_profile_logged` | they are recorded on your own |
 | `test_public_endpoints` | catalog, genres, search and actors all answer (catches a broken import or URL) |
+| `test_choices_are_known_titles_spread_over_genres` | "What do you like to watch?" offers well-known titles with a poster, a different genre for each of the first ones, some in the profile's language |
+| `test_kids_profile_only_gets_titles_for_its_age` | a kids profile is only offered titles for its age |
+| `test_other_users_profile_is_refused` | nobody can see or save the picks of someone else's profile |
+| `test_picks_become_likes_and_the_home_is_rebuilt` | picks are saved as likes (unknown ids ignored), the home page is rebuilt at once, picked titles aren't offered again |
+| `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
+| `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
+| `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### Your year: `backend/reco/test_stats.py` (7)
+
+| Test | Verifies |
+|---|---|
+| `test_the_year_in_numbers` | time from runtimes (movie, episode, else the show's usual length, else 100 / 45 min), titles / movies / shows / episodes / days, minutes per month, the longest streak with its dates, the first title; years with history |
+| `test_genres_share_the_time_and_add_up` | a title's time is split between its genres; the shares add up to 100% |
+| `test_top_titles_and_lead_actors` | most watched titles by time (with their episode count); actors among the five first-billed only, most titles first, with their photo |
+| `test_default_year_is_the_latest_with_history` | without a year: the latest one with history |
+| `test_streaks` | longest and current streaks (a gap breaks the current one) |
+| `test_kids_age_and_other_accounts` | a kids profile's numbers follow its age limit; another account's are refused |
+| `test_no_history` | no history: zeros, no streak, the current year |
+
+### Watch history: `backend/reco/test_history.py` (8)
+
+| Test | Verifies |
+|---|---|
+| `test_opening_the_player_writes_one_entry_per_episode_and_day` | the watch page writes one entry per movie / episode per day (again the same day: the same entry), newest first, episodes with their name |
+| `test_pages_of_fifty` | 50 entries per page, then the next page |
+| `test_removing_the_last_entry_of_a_title_forgets_it` | removing an entry keeps the title's signals while another entry is left; removing the last one also clears Continue watching, Play / open signals, its sources and its "Because you watched" row; likes stay |
+| `test_clear_all` | Clear history empties it and Continue watching |
+| `test_paused_history_saves_nothing_about_watching` | paused: no entry, no Continue watching, no Play / open signal, no impression, no source result (a like still counts); back on, it records again |
+| `test_export_csv` | the CSV file: header, a movie line and an episode line with its name |
+| `test_kids_profile_list_respects_its_age_and_others_are_refused` | a kids profile's list follows its age limit; nobody reads or removes another account's history |
+| `test_backfill_from_what_was_recorded_before` | the migration builds the first history from Continue watching (with the episode) and Play presses (one per title and day) |
+
+### Upcoming episodes: `backend/reco/test_calendar.py` (5)
+
+| Test | Verifies |
+|---|---|
+| `test_your_shows_recent_and_upcoming` | followed, listed and watched shows count (follow wins as the reason); this week's episodes newest first, today and the next 30 days soonest first; specials, older and further episodes left out |
+| `test_suggestions_are_popular_shows_coming_back_that_arent_tracked` | "Coming back soon": popular shows with an episode coming, not already tracked, with their next episode |
+| `test_kids_profile_only_sees_its_age` | a kids profile doesn't see shows above its age, nor get them suggested |
+| `test_someone_elses_profile_is_refused` | nobody can read another account's calendar |
+| `test_the_sync_refreshes_tracked_shows_that_still_air` | the episode sync also refreshes the shows people track, not ended ones |
+
+### History import: `backend/reco/test_imports.py` (8)
+
+| Test | Verifies |
+|---|---|
+| `test_letterboxd_files_become_likes_dislikes_watched_and_my_list` | Letterboxd ratings / watchlist / hearts: 3.5 stars or more and hearts are likes, 2 or less dislikes, the rest watched, the watchlist goes to My List; matched by name + year (a same-name film from another year isn't), unknown titles reported; the home page is rebuilt |
+| `test_dates_are_kept` | likes and watched titles keep their date from the export, not the import day |
+| `test_letterboxd_zip_export` | the Letterboxd .zip works as is; its deleted/ folder and non-film files are ignored |
+| `test_imdb_ratings_match_by_imdb_id_and_skip_episodes` | IMDb ratings match by IMDb id, shows included, single episodes skipped |
+| `test_what_the_profile_did_here_wins` | an import never changes a thumb or My List entry made in the app |
+| `test_importing_twice_adds_nothing_twice` | the same file twice adds nothing the second time (and doesn't rebuild the home page) |
+| `test_unknown_or_missing_files_are_refused` | no file, or a file that isn't a Letterboxd / IMDb export, is refused with a reason |
+| `test_other_users_profile_is_refused` | nobody can import into someone else's profile |
 
 ### Languages: `backend/users/test_i18n.py` (13)
 
@@ -134,7 +189,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (47)
+## Frontend tests (58)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -197,14 +252,51 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | links to sign up | the "Create an account" link is there and goes to `/register` (regression: it rendered empty) |
 | is translated | the page and the link appear in French |
 
+### Taste picker: `frontend/src/components/profiles/TastePage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
+| Skip goes home without saving | Skip saves nothing |
+
+### Your year page: `frontend/src/components/stats/StatsPage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| the year in numbers, genres scaled to the top one, switching year | "About 10 hours", streak, top titles with episodes and time, actors with titles; genre bars scaled to the top one with the share as text; a value on the busiest month only; a year chip loads that year |
+| nothing watched yet | the empty state, no share button |
+
+### Watch history page: `frontend/src/components/history/HistoryPage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| entries by day, episodes with their name, download | Today / Yesterday / a date, "S1 · E2 · <name>" for episodes, a remove button per entry, Download asks for the CSV |
+| paused and empty: says nothing is saved | a paused, empty history says so; the switch shows it; Clear is off |
+
+### Upcoming page: `frontend/src/components/calendar/CalendarPage.test.jsx` (3)
+
+| Test | Verifies |
+|---|---|
+| days, the week row, and where an episode leads | rows titled Today / Tomorrow / the date with "In N days", the week's episodes in their own row; an episode out today opens the player on it |
+| an episode still to come opens the show | an upcoming episode opens the show's page |
+| a calendar that could not load offers to try again | the error is shown with "Try again" |
+
+### History import page: `frontend/src/components/import/ImportPage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| a file import: summary, focus on "Go to your home page", titles not found on demand | the summary appears with the focus on "Go to your home page"; the titles not found show on demand |
+| Letterboxd first, IMDb a press away, an unreadable file is explained | Letterboxd is selected first, IMDb can be chosen; a file that isn't an export gets a clear message |
+
 ---
 
-## End-to-end tests (22)
+## End-to-end tests (38)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
-Test data: 8 movies, 1 show with 2 seasons, French translations, one account with three
-profiles (Alex in English, Camille in French, Kids), see `backend/users/management/commands/e2e_prepare.py`.
+Test data: 8 movies, 1 show with 2 seasons, French translations, one account with four
+profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), and a show
+still on air ("Night Shift": an episode 12 days ago, then in 3 and 10 days, dated from the run), see `backend/users/management/commands/e2e_prepare.py`.
 
 ### Signing in: `e2e/tests/auth.spec.js` (5)
 
@@ -237,6 +329,54 @@ profiles (Alex in English, Camille in French, Kids), see `backend/users/manageme
 | OK on the player never traps the remote in it | after OK on the player (full screen or not), the remote always comes back to the app, never stuck inside the player |
 | CineSrc: the remote drives the player, the focus stays in the app | Play / Pause reach the CineSrc player as commands; the focus never leaves the app |
 | Back on the player returns to the title | Back leaves the player for the title's page |
+
+### Focus look never covers a neighbour: `e2e/tests/focus-overlap.spec.js` (10: 5 at 1280 × 720, the same 5 at 1920 × 1080)
+
+Every control on screen is focused the way the remote does; its focus look (the box after any
+lift / zoom, plus its ring) must keep at least 2px clear of every other control. Zoom clipped by
+its own card doesn't count, nor does what scrolls under a pinned bar, nor rows that touch at rest
+(menu lists). Each page is checked screen by screen, top to bottom.
+
+| Test | Pages |
+|---|---|
+| browsing pages | home, Movies, TV Shows, My List, Upcoming, search (empty and with results) |
+| title pages and the player | a movie, a show, the player (its "Continue watching" entry is removed after) |
+| signed out: sign in, sign up | sign in, sign up |
+| menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
+| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account |
+
+To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Your year: `e2e/tests/stats.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| walk through the recap with the remote | Down goes through the streak, month chart, genres, most watched and reaches "Share my year" (regression: the button at the right edge was skipped for the footer); Right reaches the card beside the streak; a title opens and Back returns to it (regression: while the page loaded, the focus jumped to the footer) |
+
+### Watch history: `e2e/tests/history.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| remove an entry, pause, clear: all with the remote | Kids watches two titles; the remote reaches an entry, Right its remove button, OK removes it and the focus moves to the next one; the pause switch stops recording (a title opened meanwhile isn't added); Clear history opens a dialog on Cancel, Right + OK empties it |
+
+### Upcoming: `e2e/tests/calendar.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| follow a show coming back, then its episodes are in the calendar | an empty calendar offers "Night Shift"; Down lands on it, OK follows it (the focus stays) and its episodes appear by day; Up reaches them; OK on one to come opens the show; Back returns to that card |
+
+### History import: `e2e/tests/import.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| import with the remote: sources, upload, summary, then home | the remote starts on the selected source, Right / OK switch to IMDb and back, Down reaches "Choose files"; after a Letterboxd file (uploaded like a phone would) the summary counts liked / watched / not found, the remote lands on "Go to your home page", the titles not found can be shown, and home opens with its rows |
+
+### Taste picker: `e2e/tests/taste.spec.js` (2, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| home banner opens the picker, Back returns without saving | a new profile's home offers "Pick titles" right under Play (Down, not skipped); Right reaches "Not now"; the banner remembers its button; OK opens the picker; Back leaves it without saving |
+| pick with OK, Continue with Down, then a personal home page | starts on the first poster; OK picks; Down never leaves the focus under the pinned bar and enters it on Continue (not Skip); Up returns to the poster; Continue opens the home page without the banner |
 
 ### Languages, search and lists: `e2e/tests/i18n-search.spec.js` (5)
 

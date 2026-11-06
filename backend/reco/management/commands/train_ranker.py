@@ -55,8 +55,8 @@ def _row_hash(row_type: str) -> float:
     return 0.0
 
 def _profile_vec(profile_id: int, emb_map: dict, limit=30):
-    strong = ["outbound", "add_to_list", "like", "click"]
-    weights = {"outbound": 4.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
+    strong = ["outbound", "watched", "add_to_list", "like", "click"]
+    weights = {"outbound": 4.0, "watched": 3.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
 
     acts = (TitleAction.objects
             .filter(profile_id=profile_id, action__in=strong)

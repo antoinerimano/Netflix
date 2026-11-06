@@ -25,9 +25,7 @@
   },
   "profiles": {
     "title": "プロフィール",
-    "count_other": "{{count}} / {{max}}",
-    "edit": "編集",
-    "addHint_other": "1人に1つ、最大{{count}}つまで"
+    "count_other": "{{count}} / {{max}}"
   },
   "signOut": {
     "label": "ログアウト",
@@ -35,5 +33,104 @@
     "signedInAs": "{{email}} でログイン中",
     "text": "このデバイスで再びログインするには、メールアドレスとパスワードが必要です。",
     "stay": "ログインしたままにする"
+  },
+  "import": {
+    "title": "視聴履歴をインポート",
+    "subtitle": "ほかのサービスの評価、視聴済み作品、ウォッチリストを{{name}}のプロフィールに取り込み、そこからおすすめを作ります。",
+    "sourcesLabel": "インポート元",
+    "importing": "インポート中…",
+    "choose": "ファイルを選択",
+    "tvHint": "テレビをお使いですか？リモコンではファイルを選べません。このアカウントでログインしたスマートフォンかパソコンで {{url}} を開いてください。",
+    "entryTitle": "ほかのサービスの履歴",
+    "entryLabel": "Letterboxd、IMDb",
+    "entryValue": "評価や視聴済み作品を取り込むと、おすすめの精度が上がります。",
+    "entryAction": "インポート",
+    "errors": {
+      "unknown_format": "このファイルを読み込めませんでした。Letterboxd（.zip）または IMDb（.csv）のエクスポートをアップロードしてください。",
+      "too_big": "ファイルが大きすぎます（最大 10 MB）。"
+    },
+    "letterboxd": {
+      "name": "Letterboxd",
+      "what": "エクスポートファイル（.zip）",
+      "step1": "letterboxd.com で Settings を開き、Data から Export your data を選びます。",
+      "step2": ".zip ファイルを解凍せずにここにアップロードします。"
+    },
+    "imdb": {
+      "name": "IMDb",
+      "what": "評価とウォッチリスト（.csv）",
+      "step1": "imdb.com で「あなたの評価」を開き、⋯ から「エクスポート」を選びます。準備ができると IMDb から通知が届きます。",
+      "step2": "ウォッチリストもマイリストに入れたい場合は、同じ手順でエクスポートします。",
+      "step3": ".csv ファイルをここにアップロードします（複数まとめても大丈夫です）。"
+    },
+    "done": {
+      "title": "インポートが完了しました",
+      "nothingNew": "新しいものはありません。すべて取り込み済みです。",
+      "liked": "好き",
+      "disliked": "好きではない",
+      "watched": "視聴済み",
+      "listed": "マイリストに追加",
+      "notFound": "まだカタログにない作品",
+      "showMissing": "見つからなかった作品を表示",
+      "hideMissing": "見つからなかった作品を隠す",
+      "home": "ホームへ",
+      "again": "さらにインポート"
+    }
+  },
+  "history": {
+    "title": "視聴履歴",
+    "subtitle": "{{name}}がここで視聴した作品（新しい順）。",
+    "settings": "履歴の設定",
+    "pause": "視聴履歴を一時停止",
+    "pauseHint": "一時停止中は、このプロフィールで視聴したものは保存されません。ここにも、続きを見るにも、おすすめにも残りません。",
+    "download": "ダウンロード（.csv）",
+    "clear": "履歴を消去",
+    "clearTitle": "すべての履歴を消去しますか？",
+    "clearText": "{{name}}の視聴内容がすべて削除され、続きを見るとおすすめへの反映も消えます。「好き」とマイリストは残ります。",
+    "cleared": "履歴を消去しました",
+    "removed": "{{title}}を履歴から削除しました",
+    "remove": "{{title}}を履歴から削除",
+    "more": "さらに表示",
+    "loadError": "履歴を読み込めませんでした",
+    "emptyTitle": "まだ何も視聴していません",
+    "emptyText": "このプロフィールで視聴した作品がここに表示されます。",
+    "pausedTitle": "視聴履歴は一時停止中です",
+    "pausedText": "一時停止中は何も保存されません。いつでも上で再開できます。",
+    "yourYear": "あなたの1年"
+  },
+  "stats": {
+    "title": "あなたの{{year}}年",
+    "subtitle": "{{name}}がここで視聴したものを数字で。",
+    "years": "年",
+    "estimate": "視聴した作品の再生時間から推定しています。",
+    "hours_other": "約{{formatted}}時間",
+    "minutes_other": "{{count}}分",
+    "hoursShort_other": "{{count}}時間",
+    "minutesShort_other": "{{count}}分",
+    "titles": "作品",
+    "movies": "映画",
+    "shows": "番組",
+    "episodes": "エピソード",
+    "daysWatched": "視聴した日数",
+    "longestStreak": "最長連続視聴",
+    "days_other": "{{count}}日",
+    "fromTo": "{{from}}〜{{to}}",
+    "currentStreak_other": "現在{{count}}日連続",
+    "first": "今年最初の作品",
+    "byMonth": "月別の視聴時間",
+    "genres": "好きなジャンル",
+    "topTitles": "よく見た作品",
+    "actors": "よく見た俳優",
+    "episodesCount_other": "{{count}}エピソード",
+    "titlesCount_other": "{{count}}作品",
+    "topGenre": "一番のジャンル",
+    "topTitle": "一番見た作品",
+    "topActor": "一番の俳優",
+    "shareTitle": "1年をシェア",
+    "shareText": "あなたの1年を1枚の画像に。ストーリーや友だちに。",
+    "share": "1年をシェア",
+    "saved": "画像を保存しました",
+    "loadError": "1年のデータを読み込めませんでした",
+    "emptyTitle": "まだ数えるものがありません",
+    "emptyText": "このプロフィールで作品を見ると、ここに1年が表示されます。"
   }
 }

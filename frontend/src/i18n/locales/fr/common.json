@@ -77,6 +77,9 @@
     "installIos": "Touchez le bouton Partager dans Safari, puis « Sur l'écran d'accueil ».",
     "account": "Paramètres du compte",
     "signOut": "Se déconnecter",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "upcoming": "À venir",
+    "history": "Historique de visionnage",
+    "stats": "Votre année en revue"
   }
 }

@@ -13,7 +13,7 @@ import { setActiveProfile } from '../utils/activeProfile';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 import {
-  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, SearchIcon, ShareIcon, CheckIcon,
+  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, CalendarIcon, SearchIcon, ShareIcon, CheckIcon,
 } from '../design/icons';
 
 const SITE_URL = 'https://tauruss.top/';
@@ -194,6 +194,7 @@ const Navbar = () => {
   const handleNavigateMovies = () => navigate('/movies');
   const handleNavigateTV = () => navigate('/tv');
   const handleNavigateList = () => navigate('/list');
+  const handleNavigateCalendar = () => navigate('/calendar');
   const handleLogin = () => navigate('/login');
   const toggleProfileDropdown = () => setIsProfileDropdownOpen((v) => !v);
 
@@ -235,6 +236,7 @@ const Navbar = () => {
     { path: '/movies', label: t('nav.movies'), icon: <FilmIcon />, onClick: handleNavigateMovies },
     { path: '/tv', label: t('nav.tv'), icon: <TvIcon />, onClick: handleNavigateTV },
     { path: '/list', label: t('nav.myList'), icon: <BookmarkIcon />, onClick: handleNavigateList },
+    { path: '/calendar', label: t('nav.upcoming'), icon: <CalendarIcon />, onClick: handleNavigateCalendar },
   ];
 
   return (
@@ -391,6 +393,12 @@ const Navbar = () => {
                 )}
                 <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/profiles?manage')}>
                   {t('nav.manageProfiles')}
+                </div>
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/history')}>
+                  {t('nav.history')}
+                </div>
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/stats')}>
+                  {t('nav.stats')}
                 </div>
                 <div className="dropdown-divider"></div>
                 {isStaff && (

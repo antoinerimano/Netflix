@@ -161,3 +161,57 @@ Status: [ ] todo   [~] in progress   [x] done
         WatchPage helpers in watch/playerEvents.js (+ tests), backend one-off scripts in
         backend/tools, their lists in backend/data, notes in docs/; TMDB / Bunny keys out of the
         code; MySQL password out of docker-compose.yml; CSP header (no script-src: the ad script).
+
+7. GROWTH: PERSONAL FROM DAY ONE, REASONS TO COME BACK
+------------------------------------------------------
+[x] 7.1 Taste onboarding ("What do you like to watch?", /taste)
+        After creating a profile (sign up step 2, or "Add" on Who's watching?): 60 well-known titles
+        (300+ votes, a poster, within the profile's age limit, spread over genres, movies and shows
+        alternating, 12 in the profile's language), pick 3 or more, Skip always there. Picks are
+        saved as likes (TitleRating, TitleAction provider "onboarding") and the home snapshot is
+        rebuilt on the spot, so the first home page is already personal. Home: "Make this home page
+        yours" banner while a profile has no like / list / play yet (needs_taste), closable.
+        Backend: reco/taste.py (GET / POST /api/taste/).
+[x] 7.2 Import your history (/import, account page, link on the taste picker)
+        Letterboxd (.zip or .csv) and IMDb (ratings / watchlist .csv) export files, from a phone or
+        computer (a TV says so; Trakt was built then left out: too few users). High ratings + hearts ->
+        likes, low -> dislikes, watched -> TitleAction "watched" (new, weight 3, seeds "Because you
+        watched"), watchlist -> My List; dates kept; never overrides what was done in the app; matched
+        by IMDb id, else name + year. Home rebuilt after (never replaced by an empty one).
+        Backend: reco/imports.py.
+[x] 7.2b Account page: profiles are managed in one place ("Manage profiles", /profiles?manage); the
+        account page only links there ("Profiles · 3 of 4").
+[x] 7.2c Focus never covers a neighbour (TV remote): buttons / chips / pills get a ring without
+        growing (scale ate the 8-12px gaps), profile pictures and colors a thinner halo; measured on
+        every page, sheet and dialog by e2e/tests/focus-overlap.spec.js (2px clear at least).
+[x] 7.3 Upcoming (/calendar, navbar "Upcoming", 5th tab on phones, button in the notifications panel)
+        New episodes of the profile's shows (followed, in My List, watched in the last 6 months) day by
+        day for 30 days (Today / Tomorrow / date, "In N days"), the past week's in their own row;
+        out today -> the player on that episode, still to come -> the show. "Coming back soon": popular
+        shows with an episode coming, OK follows them and their episodes join the calendar. Remote:
+        one row per day (group), the focus stays on a followed suggestion. The episode sync
+        (sync_tmdb_daily_episodes) now also refreshes every tracked show still on air (--no-tracked
+        turns it off), so a show off TMDb's airing / trending lists keeps its dates.
+        Backend: reco/calendar.py (GET /api/calendar/).
+[x] 7.4 Watch history (/history, profile menu "Watch history")
+        WatchEvent: one entry per movie / episode per day, written when the watch page opens; the
+        first history is built from Continue watching + Play presses (migration). By day, newest first,
+        50 per page. Remove an entry (the title's last one also clears Continue watching, Play / open
+        signals, its sources and its "Because you watched" row; likes / My List stay), Clear history
+        (confirmed), Pause (Profile.history_paused: no entry, progress, Play / open signal, impression
+        or source result is saved), Download (.csv). Remote: rows, Right = remove, the focus moves
+        to the next entry. Backend: reco/history.py.
+[x] 7.5 Your year (/stats, profile menu "Your year in review", "Your year" on the history page)
+        From the watch history: about N hours (runtimes: movie, episode, else the show's usual length),
+        titles / movies / shows / episodes / days, longest + current streak, first title of the year,
+        minutes per month (bar chart, one series in the brand red, validated on the card surface;
+        value on the busiest month, hover tooltip, table for screen readers), genres (time split
+        between a title's genres, bars scaled to the top one), most watched, actors you kept watching
+        (5 first-billed), years to switch. "Share my year": a 1080x1350 picture (share sheet, else
+        saved). Remote: every section takes the focus; Share under its text (at the right edge Down
+        skipped it). Navigation fix: Back to a page still loading no longer sends the focus to the
+        footer (recoverFocus waits for restorePlace). Backend: reco/stats.py.
+[ ] 7.6 Collections and watch order (franchises)
+[ ] 7.7 Public, shareable lists
+[ ] 7.8 "I have 90 minutes" / "Surprise me"
+[ ] 7.9 Arabic and Urdu (right-to-left layouts)

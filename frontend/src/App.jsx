@@ -17,6 +17,11 @@ import { BrandLoader } from './design';
 const AccountManagement = lazy(() => import('./components/AccountManagement'));
 const Register = lazy(() => import('./components/Register'));
 const CreateProfile = lazy(() => import('./components/CreateProfile'));
+const TastePage = lazy(() => import('./components/profiles/TastePage'));
+const ImportPage = lazy(() => import('./components/import/ImportPage'));
+const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
+const HistoryPage = lazy(() => import('./components/history/HistoryPage'));
+const StatsPage = lazy(() => import('./components/stats/StatsPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -90,6 +95,56 @@ function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "What do you like to watch?": a new profile's first likes (reco/taste.py) */}
+        <Route
+          path="/taste"
+          element={
+            <ProtectedRoute>
+              <TastePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Import your history": Letterboxd / IMDb files into the active profile (reco/imports.py) */}
+        <Route
+          path="/import"
+          element={
+            <ProtectedRoute>
+              <ImportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Upcoming": new episodes of the profile's shows, day by day (reco/calendar.py) */}
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Watch history" of the active profile: remove, clear, pause, download (reco/history.py) */}
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <HistoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Your year": the active profile's watching in numbers, from its history (reco/stats.py) */}
+        <Route
+          path="/stats"
+          element={
+            <ProtectedRoute>
+              <StatsPage />
             </ProtectedRoute>
           }
         />

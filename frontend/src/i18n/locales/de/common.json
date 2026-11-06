@@ -77,6 +77,9 @@
     "installIos": "Tippe in Safari auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
     "account": "Kontoeinstellungen",
     "signOut": "Abmelden",
-    "signIn": "Anmelden"
+    "signIn": "Anmelden",
+    "upcoming": "Demnächst",
+    "history": "Wiedergabeverlauf",
+    "stats": "Dein Jahresrückblick"
   }
 }

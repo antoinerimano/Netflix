@@ -204,5 +204,24 @@
         "Cuello alto"
       ]
     }
+  },
+  "taste": {
+    "title": "¿Qué te gusta ver?",
+    "subtitle_one": "Elige {{count}} título o más que te guste. Tu página de inicio se crea a partir de ellos.",
+    "subtitle_many": "Elige {{count}} títulos o más que te gusten. Tu página de inicio se crea a partir de ellos.",
+    "subtitle_other": "Elige {{count}} títulos o más que te gusten. Tu página de inicio se crea a partir de ellos.",
+    "pickMore_one": "Elige {{count}} más",
+    "pickMore_many": "Elige {{count}} más",
+    "pickMore_other": "Elige {{count}} más",
+    "picked_one": "{{count}} elegido",
+    "picked_many": "{{count}} elegidos",
+    "picked_other": "{{count}} elegidos",
+    "skip": "Omitir por ahora",
+    "showMore": "Ver más títulos",
+    "building": "Creando tu página de inicio…",
+    "loadError": "No se pudieron cargar los títulos",
+    "none": "Ahora mismo no hay títulos para elegir",
+    "barLabel": "Tu selección",
+    "importLink": "¿Valoras títulos en Letterboxd o IMDb? Impórtalos"
   }
 }

@@ -203,5 +203,21 @@
         "Rollkragen"
       ]
     }
+  },
+  "taste": {
+    "title": "Was schaust du gerne?",
+    "subtitle_one": "Wähle mindestens {{count}} Titel, der dir gefällt. Deine Startseite wird daraus erstellt.",
+    "subtitle_other": "Wähle mindestens {{count}} Titel, die dir gefallen. Deine Startseite wird daraus erstellt.",
+    "pickMore_one": "Noch {{count}} auswählen",
+    "pickMore_other": "Noch {{count}} auswählen",
+    "picked_one": "{{count}} ausgewählt",
+    "picked_other": "{{count}} ausgewählt",
+    "skip": "Vorerst überspringen",
+    "showMore": "Weitere Titel anzeigen",
+    "building": "Deine Startseite wird erstellt…",
+    "loadError": "Die Titel konnten nicht geladen werden",
+    "none": "Gerade gibt es keine Titel zur Auswahl",
+    "barLabel": "Deine Auswahl",
+    "importLink": "Du bewertest Titel auf Letterboxd oder IMDb? Importiere sie"
   }
 }

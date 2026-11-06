@@ -32,6 +32,8 @@ from .models import (
     EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating, PlaybackOutcome,
     ShowFollow, Notification,
 )
+from .taste import has_taste_signal
+from .history import WATCH_SIGNALS, record_watch
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -71,8 +73,8 @@ CLICK_EXCLUDE_DAYS = 14  # opened but not played: can come back after this
 TOP_RATED_MIN_VOTES = 1000
 
 # actions that say "I like this", with weights (keep in sync with train_ranker._profile_vec).
-# outbound = pressed Play (the only "watched" signal), click = opened the detail page.
-PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
+# outbound = pressed Play here, watched = seen elsewhere (imported history), click = opened the detail page.
+PROFILE_ACTION_WEIGHTS = {"outbound": 4.0, "watched": 3.0, "add_to_list": 3.0, "like": 2.0, "click": 1.0}
 
 # Dislike: titles most similar to a disliked one are pushed down by this much in every row
 DISLIKE_NEIGHBORS = 30
@@ -728,11 +730,11 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
         planned_rows.append(("for_you", "For you", sim_ids, 30))
         _plan_mark("for_you_similars", seeds=len(seed_ids), sim=len(sim_ids), planned=len(planned_rows))
 
-        # "Because you watched X": only titles the profile pressed Play on (outbound),
-        # not titles it just opened (click) or added to its list
+        # "Because you watched X": only titles the profile pressed Play on (outbound) or saw
+        # elsewhere (imported "watched"), not titles it just opened (click) or added to its list
         watched_ids = list(
             TitleAction.objects
-            .filter(profile_id=profile.id, action="outbound")
+            .filter(profile_id=profile.id, action__in=["outbound", "watched"])
             .order_by("-created_at")
             .values_list("title_id", flat=True)[:50]
         )
@@ -1185,6 +1187,8 @@ def _describe_rows(payload, profile):
 
 def _with_live_rows(payload, profile):
     """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
+    # nothing liked / listed / played yet: the app offers the "pick what you like" page
+    payload = {**payload, "needs_taste": not has_taste_signal(profile.id)}
     rows = list(payload.get("rows") or [])
     new_eps = _new_episodes_row()
     if new_eps["items"]:
@@ -1249,6 +1253,7 @@ class LogImpressionView(APIView):
         own_profile_ids = set(
             Profile.objects
             .filter(user=request.user, id__in={item["profile_id"] for item in items})
+            .filter(history_paused=False)  # paused watch history: nothing about it is saved
             .values_list("id", flat=True)
         )
         items = [item for item in items if item["profile_id"] in own_profile_ids]
@@ -1277,7 +1282,9 @@ class LogActionView(APIView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        get_object_or_404(Profile, id=data["profile_id"], user=request.user)
+        profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
+        if profile.history_paused and data["action"] in WATCH_SIGNALS:
+            return Response({"ok": True, "paused": True})  # what it opens / plays isn't saved
         TitleAction.objects.create(
             profile_id=data["profile_id"],
             title_id=data["title_id"],
@@ -1319,10 +1326,13 @@ class WatchProgressView(APIView):
 
         profile = get_object_or_404(Profile, id=data["profile_id"], user=request.user)
         title = get_object_or_404(Title.objects.only("id", "type"), id=data["title_id"])
+        if profile.history_paused:
+            return Response({"ok": True, "finished": False, "paused": True})  # nothing saved
         is_tv = title.type == "tv"
         season = data.get("season") if is_tv else None
         episode = data.get("episode") if is_tv else None
         position, duration = data.get("position"), data.get("duration")
+        record_watch(profile, title, season, episode)  # watch history: today's entry
 
         wp, _ = WatchProgress.objects.get_or_create(
             profile=profile, title=title, defaults={"season_number": season, "episode_number": episode}
@@ -1511,6 +1521,8 @@ class PlaybackView(APIView):
         key = str(request.data.get("provider") or "")
         if not Provider.objects.filter(key=key).exists():
             return Response({"detail": "unknown provider"}, status=400)
+        if profile.history_paused:
+            return Response({"ok": True, "paused": True})
         PlaybackOutcome.objects.create(profile=profile, title=title, provider_key=key, worked=bool(request.data.get("worked")))
         return Response({"ok": True})
 

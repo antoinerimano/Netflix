@@ -118,5 +118,21 @@
       "ex": ["None", "Blush", "Freckles", "Round glasses", "Square glasses", "Earrings", "Beauty mark"],
       "ts": ["T-shirt", "Hoodie", "Collar", "Turtleneck"]
     }
+  },
+  "taste": {
+    "title": "What do you like to watch?",
+    "subtitle_one": "Pick {{count}} title or more that you like. Your home page is built from them.",
+    "subtitle_other": "Pick {{count}} titles or more that you like. Your home page is built from them.",
+    "pickMore_one": "Pick {{count}} more",
+    "pickMore_other": "Pick {{count}} more",
+    "picked_one": "{{count}} picked",
+    "picked_other": "{{count}} picked",
+    "skip": "Skip for now",
+    "showMore": "Show more titles",
+    "building": "Building your home page…",
+    "loadError": "Couldn't load the titles",
+    "none": "No titles to pick from right now",
+    "barLabel": "Your picks",
+    "importLink": "Rate titles on Letterboxd or IMDb? Import them"
   }
 }

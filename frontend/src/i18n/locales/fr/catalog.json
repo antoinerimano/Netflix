@@ -30,6 +30,12 @@
       "hiddenGem": "Noté {{rating}}/10, mais peu connu",
       "popularNow": "Populaire en ce moment",
       "newRelease": "Nouveau : sorti en {{date}}"
+    },
+    "taste": {
+      "title": "Personnalisez cette page d'accueil",
+      "body": "Choisissez quelques titres que vous aimez : vos recommandations partiront de là.",
+      "action": "Choisir des titres",
+      "dismiss": "Plus tard"
     }
   },
   "hero": {
@@ -121,7 +127,8 @@
     "newEpisode": "Nouvel épisode · S{{season}} É{{episode}}",
     "emptyTitle": "Pas encore de nouveaux épisodes",
     "emptyText": "Touchez la cloche sur la page d'une série pour être averti quand un nouvel épisode sort.",
-    "browse": "Parcourir les séries"
+    "browse": "Parcourir les séries",
+    "calendar": "Voir les épisodes à venir"
   },
   "browse": {
     "movie": {
@@ -263,5 +270,29 @@
     "soap": "Feuilleton",
     "talk": "Talk-show",
     "war_and_politics": "Guerre et politique"
+  },
+  "calendar": {
+    "title": "À venir",
+    "subtitle": "Les nouveaux épisodes des séries que vous suivez, avez dans Ma liste ou regardez.",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "inDays_one": "Dans {{count}} jour",
+    "inDays_many": "Dans {{count}} jours",
+    "inDays_other": "Dans {{count}} jours",
+    "recent": "Sortis cette semaine",
+    "episodeLabel": "{{show}}, saison {{season}}, épisode {{episode}}",
+    "reason": {
+      "follow": "Suivie",
+      "list": "Dans Ma liste",
+      "watching": "En cours"
+    },
+    "emptyTitle": "Votre calendrier est vide",
+    "emptyText": "Suivez une série (M'avertir sur sa page) ou ajoutez-la à Ma liste : ses nouveaux épisodes apparaîtront ici.",
+    "nothingSoon": "Aucun nouvel épisode pour vos séries dans les 30 prochains jours.",
+    "suggestTitle": "Bientôt de retour",
+    "suggestText": "Suivez une série pour ajouter ses épisodes à votre calendrier",
+    "follow": "Suivre",
+    "following": "Suivie",
+    "loadError": "Impossible de charger votre calendrier"
   }
 }

@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import Hero, { heroArtwork } from "../components/Hero";
-import { Skeleton } from "../design";
+import { Button, Skeleton } from "../design";
+import { WandIcon } from "../design/icons";
 import "./HomePage.css";
 import Row from "../components/Row";
 import Footer from "../components/Footer";
@@ -12,13 +13,33 @@ import { rowTitle } from "../i18n/catalogText";
 
 const ROW_SIZE = 18;
 
+// the "pick what you like" banner, closed on this device for this profile
+const tasteKey = (pid) => `tasteBannerClosed_${pid}`;
+function readTasteDismissed(pid) {
+  try {
+    return localStorage.getItem(tasteKey(pid)) === "1";
+  } catch {
+    return false;
+  }
+}
+function saveTasteDismissed(pid) {
+  try {
+    localStorage.setItem(tasteKey(pid), "1");
+  } catch {
+    /* private mode: it just comes back next time */
+  }
+}
+
 const HomePage = () => {
   const { t, i18n } = useTranslation("catalog");
   const [loading, setLoading] = useState(true);
   const [heroPick, setHeroPick] = useState(null);
 
   // rows backend
-  const [homeRows, setHomeRows] = useState([]); // [{row_type,title,items:[...]}, ...]
+  const [homeRows, setHomeRows] = useState([]);
+  // no likes / list / plays yet: offer "What do you like to watch?" (/taste) above the rows
+  const [needsTaste, setNeedsTaste] = useState(false);
+  const [tasteDismissed, setTasteDismissed] = useState(false); // [{row_type,title,items:[...]}, ...]
   const [profileId, setProfileId] = useState(() =>
     localStorage.getItem("activeProfileId")
   );
@@ -53,6 +74,8 @@ const HomePage = () => {
         const rows = Array.isArray(data) ? data : data?.rows || [];
         const arr = Array.isArray(rows) ? rows : [];
         setHomeRows(arr);
+        setNeedsTaste(!!data?.needs_taste);
+        setTasteDismissed(readTasteDismissed(pid));
 
         // keep your hero-pick logic as-is...
         const priority = [
@@ -172,6 +195,30 @@ const HomePage = () => {
     <div className="homepage">
       <Navbar />
       <Hero hero={heroPick} />
+
+      {needsTaste && !tasteDismissed ? (
+        <aside className="taste-banner" aria-labelledby="taste-banner-title">
+          <span className="taste-banner__icon" aria-hidden="true"><WandIcon /></span>
+          <div className="taste-banner__text">
+            <h2 id="taste-banner-title" className="taste-banner__title">{t("home.taste.title")}</h2>
+            <p className="taste-banner__body">{t("home.taste.body")}</p>
+            {/* on the left, under the text: Down from the hero's Play lands here (TV remote) */}
+            <div className="taste-banner__actions" data-tv-group>
+              <Button variant="primary" size="sm" to="/taste" data-tv-current>{t("home.taste.action")}</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setTasteDismissed(true);
+                  saveTasteDismissed(profileId);
+                }}
+              >
+                {t("home.taste.dismiss")}
+              </Button>
+            </div>
+          </div>
+        </aside>
+      ) : null}
 
       {dedupedRows.map((row, idx) => (
         <Row

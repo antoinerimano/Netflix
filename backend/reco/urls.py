@@ -4,6 +4,11 @@ from .views import (
     MyListView, MyListItemView, MyListImportView, TitleRatingView, PlaybackView,
     ShowFollowView, NotificationListView,
 )
+from .taste import TasteView
+from .imports import ImportFilesView
+from .calendar import CalendarView
+from .history import HistoryView, HistoryItemView, HistoryPauseView, HistoryExportView
+from .stats import StatsView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -18,4 +23,12 @@ urlpatterns = [
     path("follows/<int:title_id>/", ShowFollowView.as_view()),
     path("notifications/", NotificationListView.as_view()),
     path("notifications/read/", NotificationListView.as_view()),
+    path("taste/", TasteView.as_view()),
+    path("import/files/", ImportFilesView.as_view()),
+    path("calendar/", CalendarView.as_view()),
+    path("history/", HistoryView.as_view()),
+    path("history/pause/", HistoryPauseView.as_view()),
+    path("history/export/", HistoryExportView.as_view()),
+    path("history/<int:event_id>/", HistoryItemView.as_view()),
+    path("stats/", StatsView.as_view()),
 ]
