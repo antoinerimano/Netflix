@@ -143,8 +143,10 @@
 .watch-ep:focus-visible {
   box-shadow: none;
 }
+/* lift + ring, no growth: a 3% bigger still came within 2px of the next episode
+   (e2e/tests/focus-overlap.spec.js, on Linux fonts) */
 .watch-ep:focus-visible .watch-ep__still {
-  transform: translateY(-3px) scale(1.03);
+  transform: translateY(-3px);
   box-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-lg);
 }
 .watch-ep:focus-visible .watch-ep__play {

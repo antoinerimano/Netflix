@@ -105,7 +105,7 @@ html.tv-keys .poster-card:hover .poster-card__more {
   transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease;
 }
 .tvd-ep-card:focus-visible .tvd-ep-card__still {
-  transform: translateY(-4px) scale(1.03);
+  transform: translateY(-4px); /* no growth: episodes sit close (focus-overlap.spec.js) */
   box-shadow: 0 0 0 3px var(--focus-ring), 0 14px 30px rgba(0, 0, 0, 0.6);
 }
 @media (hover: hover) {
