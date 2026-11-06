@@ -233,3 +233,17 @@ msgstr "この再設定リンクは有効期限が切れているか、すでに
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "パスワードを変更しました。"
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Taurussで%(name)sを観る。"
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "%(name)sの出演作品（映画・ドラマ）。"
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "ページが見つかりません"

@@ -1,9 +1,9 @@
 # streaming_backend/urls.py
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework_nested import routers
-from users import views
+from users import seo, views
 from users.dashboard import dashboard_view
 from users.views import (
     ActorListView,
@@ -64,4 +64,12 @@ urlpatterns = [
     path('api/actors/', ActorListView.as_view(), name='actors-list'),
     path('api/providers/', views.provider_list, name='provider-list'),
 
+    # SEO (users/seo.py): sitemaps, and the app's pages for any URL nginx couldn't find as a file
+    path('sitemap.xml', seo.sitemap_index, name='sitemap'),
+    path('sitemap-static.xml', seo.sitemap_static),
+    path('sitemap-<str:section>-<int:page>.xml', seo.sitemap_section),
+    re_path(r'^movies/(?P<title_id>\d+)/?$', seo.movie_page),
+    re_path(r'^tv/(?P<title_id>\d+)/?$', seo.tv_page),
+    re_path(r'^actor/(?P<tmdb_id>\d+)/?$', seo.actor_page),
+    re_path(r'^(?!api/)(?P<path>.*)$', seo.app_page),
 ]

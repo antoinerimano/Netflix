@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import Movies from './components/Movies';
@@ -6,24 +6,30 @@ import MovieDetail from './components/MovieDetail';
 import TVShows from './components/TVShows';
 import TVShowDetail from './components/TVShowDetail';
 import List from './components/List';
-import AccountManagement from './components/AccountManagement';
-import Register from './components/Register';
 import Login from './components/Login';
-import CreateProfile from './components/CreateProfile';
-import ConfirmPasswordReset from './components/ConfirmPasswordReset';
-import ConfirmEmailChange from './components/ConfirmEmailChange';
-import AdminMovies from './components/AdminMovies';
-import AdminUsers from './components/AdminUsers';
-import WatchPage from './components/WatchPage';
 import ActorDetail from './components/ActorDetails';
 import ProtectedStaffRoute from './ProtectedStaffRoute';
+import { BrandLoader } from './design';
+
+// Pages that are rarely the first stop are downloaded when opened (their own JS files): the
+// first load only carries the browsing pages. Home, browse, detail, search and profiles stay in
+// the main bundle so Back / the TV remote land on their place without waiting.
+const AccountManagement = lazy(() => import('./components/AccountManagement'));
+const Register = lazy(() => import('./components/Register'));
+const CreateProfile = lazy(() => import('./components/CreateProfile'));
+const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
+const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
+const AdminMovies = lazy(() => import('./components/AdminMovies'));
+const AdminUsers = lazy(() => import('./components/AdminUsers'));
+const WatchPage = lazy(() => import('./components/WatchPage'));
+const DesignSystemPage = lazy(() => import('./design/DesignSystemPage'));
 import ProtectedRoute from './ProtectedRoute';
-import DesignSystemPage from './design/DesignSystemPage';
 import NotFound from './pages/NotFound';
 import ProfilesPage from './components/profiles/ProfilesPage';
 import SearchPage from './pages/SearchPage';
 import { restorePlace } from './tv/spatialNavigation';
 import { useTranslation } from 'react-i18next';
+import { currentPageTitle } from './utils/pageTitle';
 
 // ✅ add this
 import AdManagerLoader from './components/AdManagerLoader';
@@ -32,7 +38,7 @@ function App() {
   // the browser tab / installed app title in the app's language
   const { t } = useTranslation();
   useEffect(() => {
-    document.title = t('meta.title');
+    document.title = currentPageTitle() || t('meta.title'); // a title / actor page keeps its own
   }, [t]);
 
   // a profile switch remounts every page for the new profile (its home, list, age limit...)
@@ -66,6 +72,7 @@ function App() {
       {/* each page fades in (design/base.css .page-enter): keyed on the path only, so filters /
           search in the URL don't replay it */}
       <div className="page-enter" key={location.pathname}>
+      <Suspense fallback={<BrandLoader page />}>
       <Routes key={profileKey}>
         {/* "Who's watching?": signed in, no profile needed yet */}
         <Route
@@ -139,13 +146,14 @@ function App() {
         <Route path="/admin/*" element={<Navigate to="/" replace />} />
 
         {/* Living style guide (src/design), development only */}
-        {process.env.NODE_ENV !== 'production' ? (
+        {import.meta.env.DEV ? (
           <Route path="/design-system" element={<DesignSystemPage />} />
         ) : null}
 
         {/* unknown address: a real "not found" page (was a blank screen) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       </div>
     </>
   );

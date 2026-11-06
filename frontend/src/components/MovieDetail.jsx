@@ -4,6 +4,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../utils/pageTitle';
 import { useFormat, languageName as intlLanguageName } from '../i18n/format';
 import { fetchMovieById } from '../api/titlesApi';
 import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
@@ -104,6 +105,7 @@ const MovieDetail = () => {
   const activeProfileId = localStorage.getItem('activeProfileId');
   const [isInList, setIsInList] = useState(false);
   const listTouched = useRef(false); // the user toggled My List: the server's first answer is stale
+  usePageTitle(movie?.title);
 
   const cast = useMemo(() => castObjects(movie?.actors, { byPopularity: true }), [movie]);
   const countryList = useMemo(() => getNames(movie?.production_countries, fmt.regionName), [movie, fmt.lng]); // eslint-disable-line react-hooks/exhaustive-deps

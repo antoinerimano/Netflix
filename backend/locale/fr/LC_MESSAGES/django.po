@@ -241,3 +241,17 @@ msgstr "Ce lien de réinitialisation a expiré ou a déjà été utilisé."
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "Votre mot de passe a été modifié."
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Regardez %(name)s sur Tauruss."
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "Films et séries avec %(name)s."
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "Page introuvable"

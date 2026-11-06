@@ -10,7 +10,7 @@ function setup(url = CINESRC) {
   const iframe = document.createElement('iframe');
   wrap.appendChild(iframe);
   document.body.appendChild(wrap);
-  const post = jest.spyOn(iframe.contentWindow, 'postMessage').mockImplementation(() => {});
+  const post = vi.spyOn(iframe.contentWindow, 'postMessage').mockImplementation(() => {});
   const iframeRef = { current: iframe };
   const wrapRef = { current: wrap };
   const hook = renderHook(() => usePlayerRemote({ url, iframeRef, wrapRef }));

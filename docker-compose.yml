@@ -3,11 +3,11 @@ services:
     image: mysql:8.0
     command: ["--default-authentication-plugin=mysql_native_password"]
     environment:
-      # On laisse DB_NAME/USER/PASSWORD dans le backend/.env,
-      # mais MySQL a besoin de ses variables à lui pour initialiser la DB.
-      # Mets ici EXACTEMENT le même user/pass/db que dans backend/.env
+      # Only read when the database is created (empty mysql_data volume): an existing database
+      # keeps its own password. Set it in .env next to this file (see .env.example), the same
+      # as DB_PASSWORD in backend/.env.
       MYSQL_DATABASE: user_data_db
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
@@ -44,6 +44,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/security-headers.inc:/etc/nginx/conf.d/security-headers.inc:ro
       - static_vol:/vol/static:ro
       - media_vol:/vol/media:ro
       - certbot_www:/var/www/certbot:ro

@@ -28,13 +28,17 @@ beforeAll(() => {
     const b = boxes.get(this) || { x: 0, y: 0, w: 0, h: 0 };
     return { left: b.x, top: b.y, width: b.w, height: b.h, right: b.x + b.w, bottom: b.y + b.h, x: b.x, y: b.y };
   };
-  window.scrollBy = jest.fn();
+  window.scrollBy = vi.fn();
   window.innerWidth = 1920;
   window.innerHeight = 1080;
   startSpatialNavigation();
 });
 
-afterAll(() => {
+afterAll(async () => {
+  // let the focus-recovery observer (a DOM change + one animation frame) finish while the
+  // test page still exists, instead of firing into a torn-down window
+  document.body.innerHTML = '';
+  await new Promise((resolve) => setTimeout(resolve, 50));
   Element.prototype.getBoundingClientRect = realRect;
 });
 

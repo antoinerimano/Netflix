@@ -235,3 +235,17 @@ msgstr "Este enlace para restablecer ha caducado o ya se ha usado."
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "Tu contraseña se ha cambiado."
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Mira %(name)s en Tauruss."
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "Películas y series con %(name)s."
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "Página no encontrada"

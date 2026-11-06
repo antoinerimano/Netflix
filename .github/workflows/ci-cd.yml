@@ -82,7 +82,7 @@ jobs:
         run: python manage.py test --noinput
 
   frontend:
-    name: Frontend (tests, translations, build)
+    name: Frontend (tests, translations, build) # name = required check on main: keep it
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -93,7 +93,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20" # same as frontend/Dockerfile
+          node-version: "22" # same as frontend/Dockerfile
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -102,15 +102,14 @@ jobs:
       - name: Translations (same keys, plurals and placeholders in every language)
         run: npm run i18n:check
 
-      - name: Tests
-        run: npm test -- --watchAll=false
-        env:
-          CI: "true"
+      - name: Lint (warnings fail it)
+        run: npm run lint
 
-      - name: Production build (warnings fail it)
+      - name: Tests (Vitest)
+        run: npm test
+
+      - name: Production build
         run: npm run build
-        env:
-          CI: "true"
 
   e2e:
     name: End-to-end (Playwright, real app, TV remote)
@@ -153,7 +152,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json

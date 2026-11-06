@@ -228,3 +228,17 @@ msgstr "এই রিসেট লিংকের মেয়াদ শেষ �
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "আপনার পাসওয়ার্ড বদলানো হয়েছে।"
+
+#: users/seo.py
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "Tauruss-এ %(name)s দেখুন।"
+
+#: users/seo.py
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "%(name)s অভিনীত সিনেমা ও টিভি শো।"
+
+#: users/seo.py
+msgid "Page not found"
+msgstr "পেজ পাওয়া যায়নি"
