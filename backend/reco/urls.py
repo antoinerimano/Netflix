@@ -6,6 +6,7 @@ from .views import (
 )
 from .taste import TasteView
 from .imports import ImportFilesView
+from .calendar import CalendarView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -22,4 +23,5 @@ urlpatterns = [
     path("notifications/read/", NotificationListView.as_view()),
     path("taste/", TasteView.as_view()),
     path("import/files/", ImportFilesView.as_view()),
+    path("calendar/", CalendarView.as_view()),
 ]

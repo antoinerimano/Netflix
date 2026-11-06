@@ -19,6 +19,7 @@ const Register = lazy(() => import('./components/Register'));
 const CreateProfile = lazy(() => import('./components/CreateProfile'));
 const TastePage = lazy(() => import('./components/profiles/TastePage'));
 const ImportPage = lazy(() => import('./components/import/ImportPage'));
+const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -112,6 +113,16 @@ function App() {
           element={
             <ProtectedRoute>
               <ImportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Upcoming": new episodes of the profile's shows, day by day (reco/calendar.py) */}
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
             </ProtectedRoute>
           }
         />

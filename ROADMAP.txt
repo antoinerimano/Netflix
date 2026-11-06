@@ -184,7 +184,15 @@ Status: [ ] todo   [~] in progress   [x] done
 [x] 7.2c Focus never covers a neighbour (TV remote): buttons / chips / pills get a ring without
         growing (scale ate the 8-12px gaps), profile pictures and colors a thinner halo; measured on
         every page, sheet and dialog by e2e/tests/focus-overlap.spec.js (2px clear at least).
-[ ] 7.3 Calendar of upcoming episodes (followed shows)
+[x] 7.3 Upcoming (/calendar, navbar "Upcoming", 5th tab on phones, button in the notifications panel)
+        New episodes of the profile's shows (followed, in My List, watched in the last 6 months) day by
+        day for 30 days (Today / Tomorrow / date, "In N days"), the past week's in their own row;
+        out today -> the player on that episode, still to come -> the show. "Coming back soon": popular
+        shows with an episode coming, OK follows them and their episodes join the calendar. Remote:
+        one row per day (group), the focus stays on a followed suggestion. The episode sync
+        (sync_tmdb_daily_episodes) now also refreshes every tracked show still on air (--no-tracked
+        turns it off), so a show off TMDb's airing / trending lists keeps its dates.
+        Backend: reco/calendar.py (GET /api/calendar/).
 [ ] 7.4 Watch history page (browse, remove, pause, export)
 [ ] 7.5 Personal stats / year in review
 [ ] 7.6 Collections and watch order (franchises)

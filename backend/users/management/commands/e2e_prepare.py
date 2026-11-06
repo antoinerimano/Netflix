@@ -106,6 +106,24 @@ class Command(BaseCommand):
                 )
         TitleTranslation.objects.create(title=show, language="fr", name="Breaking Bad", overview="Un professeur de chimie bascule dans le crime.")
 
+        # a show still on air, dates relative to the run (the "Upcoming" calendar): one episode
+        # 12 days ago (outside "New episodes" and "out this past week"), then in 3 and 10 days
+        from datetime import timedelta
+        from django.utils import timezone
+        today = timezone.localdate()
+        airing = Title.objects.create(
+            type="tv", title="Night Shift", original_title="Night Shift", tmdb_id=900001, original_language="en",
+            first_air_date="2024-01-10", release_year=2024, description="Night nurses, long shifts.",
+            genre="Drama", primary_genre_norm="drama", popularity=40, vote_average=7.5, vote_count=2000,
+            rating="7.5", status="Returning Series", poster="https://image.tmdb.org/t/p/w500/e2e-900001.jpg",
+            landscape_image="https://image.tmdb.org/t/p/w780/e2e-900001-wide.jpg",
+        )
+        TVShowExtras.objects.create(title=airing, number_of_seasons=1, number_of_episodes=3, in_production=True)
+        season = Season.objects.create(tv=airing, season_number=1, name="Season 1", air_date="2024-01-10")
+        for e, days in ((1, -12), (2, 3), (3, 10)):
+            Episode.objects.create(season=season, episode_number=e, name=f"Shift {e}", overview=f"Night {e}.",
+                                   air_date=today + timedelta(days=days), runtime=45)
+
         user = User.objects.create_user(E2E_EMAIL, "E2E User", E2E_PASSWORD)
         profiles = [
             Profile.objects.create(user=user, name="Alex", language_preference="en", age_restriction="NC-17"),

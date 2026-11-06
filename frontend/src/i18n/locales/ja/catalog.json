@@ -123,7 +123,8 @@
     "newEpisode": "新しいエピソード · S{{season}} E{{episode}}",
     "emptyTitle": "新しいエピソードはまだありません",
     "emptyText": "シリーズのページでベルをタップすると、新しいエピソードの配信時に通知を受け取れます。",
-    "browse": "ドラマ・シリーズを探す"
+    "browse": "ドラマ・シリーズを探す",
+    "calendar": "配信予定のエピソードを見る"
   },
   "browse": {
     "movie": {
@@ -251,5 +252,27 @@
     "soap": "ソープドラマ",
     "talk": "トーク番組",
     "war_and_politics": "戦争＆政治"
+  },
+  "calendar": {
+    "title": "配信予定",
+    "subtitle": "フォロー中、マイリストに追加済み、または視聴中の番組の新しいエピソード。",
+    "today": "今日",
+    "tomorrow": "明日",
+    "inDays_other": "{{count}}日後",
+    "recent": "今週配信",
+    "episodeLabel": "{{show}}、シーズン{{season}}、エピソード{{episode}}",
+    "reason": {
+      "follow": "フォロー中",
+      "list": "マイリスト",
+      "watching": "視聴中"
+    },
+    "emptyTitle": "カレンダーは空です",
+    "emptyText": "番組をフォロー（番組ページの「通知を受け取る」）するか、マイリストに追加すると、新しいエピソードがここに表示されます。",
+    "nothingSoon": "今後30日間、あなたの番組の新しいエピソードはありません。",
+    "suggestTitle": "まもなく再開",
+    "suggestText": "番組をフォローすると、エピソードがカレンダーに追加されます",
+    "follow": "フォロー",
+    "following": "フォロー中",
+    "loadError": "カレンダーを読み込めませんでした"
   }
 }

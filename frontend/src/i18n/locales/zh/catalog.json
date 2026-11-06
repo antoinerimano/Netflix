@@ -123,7 +123,8 @@
     "newEpisode": "新剧集 · 第 {{season}} 季第 {{episode}} 集",
     "emptyTitle": "暂无新剧集",
     "emptyText": "在剧集页面点按铃铛，新剧集上线时就会收到提醒。",
-    "browse": "浏览剧集"
+    "browse": "浏览剧集",
+    "calendar": "查看即将播出的剧集"
   },
   "browse": {
     "movie": {
@@ -251,5 +252,27 @@
     "soap": "肥皂剧",
     "talk": "脱口秀",
     "war_and_politics": "战争政治"
+  },
+  "calendar": {
+    "title": "即将播出",
+    "subtitle": "你关注的、在“我的片单”中或正在看的剧集的新一集。",
+    "today": "今天",
+    "tomorrow": "明天",
+    "inDays_other": "{{count}} 天后",
+    "recent": "本周已播出",
+    "episodeLabel": "{{show}}，第 {{season}} 季第 {{episode}} 集",
+    "reason": {
+      "follow": "已关注",
+      "list": "在我的片单中",
+      "watching": "正在看"
+    },
+    "emptyTitle": "你的日历是空的",
+    "emptyText": "关注一部剧集（在剧集页面点“通知我”）或把它加入“我的片单”，新的一集会出现在这里。",
+    "nothingSoon": "未来 30 天内你的剧集没有新的一集。",
+    "suggestTitle": "即将回归",
+    "suggestText": "关注一部剧集，把它的新集加入你的日历",
+    "follow": "关注",
+    "following": "已关注",
+    "loadError": "无法加载你的日历"
   }
 }

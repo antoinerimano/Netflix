@@ -125,7 +125,8 @@
     "newEpisode": "Neue Folge · S{{season}} F{{episode}}",
     "emptyTitle": "Noch keine neuen Folgen",
     "emptyText": "Tippe auf der Seite einer Serie auf die Glocke, um bei neuen Folgen benachrichtigt zu werden.",
-    "browse": "Serien entdecken"
+    "browse": "Serien entdecken",
+    "calendar": "Kommende Folgen ansehen"
   },
   "browse": {
     "movie": {
@@ -260,5 +261,28 @@
     "soap": "Seifenoper",
     "talk": "Talkshow",
     "war_and_politics": "Krieg & Politik"
+  },
+  "calendar": {
+    "title": "Demnächst",
+    "subtitle": "Neue Folgen der Serien, denen du folgst, die in Meiner Liste sind oder die du schaust.",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "inDays_one": "In {{count}} Tag",
+    "inDays_other": "In {{count}} Tagen",
+    "recent": "Diese Woche erschienen",
+    "episodeLabel": "{{show}}, Staffel {{season}}, Folge {{episode}}",
+    "reason": {
+      "follow": "Gefolgt",
+      "list": "In Meiner Liste",
+      "watching": "Am Schauen"
+    },
+    "emptyTitle": "Dein Kalender ist leer",
+    "emptyText": "Folge einer Serie (Benachrichtigen auf ihrer Seite) oder füge sie Meiner Liste hinzu: Ihre neuen Folgen erscheinen hier.",
+    "nothingSoon": "Keine neuen Folgen deiner Serien in den nächsten 30 Tagen.",
+    "suggestTitle": "Bald zurück",
+    "suggestText": "Folge einer Serie, um ihre Folgen in deinen Kalender zu holen",
+    "follow": "Folgen",
+    "following": "Gefolgt",
+    "loadError": "Dein Kalender konnte nicht geladen werden"
   }
 }

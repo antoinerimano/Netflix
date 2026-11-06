@@ -127,7 +127,8 @@
     "newEpisode": "Nuevo episodio · T{{season}} E{{episode}}",
     "emptyTitle": "Todavía no hay episodios nuevos",
     "emptyText": "Toca la campana en la página de una serie para recibir un aviso cuando salga un nuevo episodio.",
-    "browse": "Explorar series"
+    "browse": "Explorar series",
+    "calendar": "Ver próximos episodios"
   },
   "browse": {
     "movie": {
@@ -269,5 +270,29 @@
     "soap": "Telenovela",
     "talk": "Programa de entrevistas",
     "war_and_politics": "Guerra y política"
+  },
+  "calendar": {
+    "title": "Próximamente",
+    "subtitle": "Los nuevos episodios de las series que sigues, tienes en Mi lista o estás viendo.",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "inDays_one": "En {{count}} día",
+    "inDays_many": "En {{count}} días",
+    "inDays_other": "En {{count}} días",
+    "recent": "Estrenados esta semana",
+    "episodeLabel": "{{show}}, temporada {{season}}, episodio {{episode}}",
+    "reason": {
+      "follow": "Siguiendo",
+      "list": "En Mi lista",
+      "watching": "Viendo"
+    },
+    "emptyTitle": "Tu calendario está vacío",
+    "emptyText": "Sigue una serie (Avísame en su página) o añádela a Mi lista: sus nuevos episodios aparecerán aquí.",
+    "nothingSoon": "No hay episodios nuevos de tus series en los próximos 30 días.",
+    "suggestTitle": "Vuelven pronto",
+    "suggestText": "Sigue una serie para añadir sus episodios a tu calendario",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "loadError": "No se pudo cargar tu calendario"
   }
 }

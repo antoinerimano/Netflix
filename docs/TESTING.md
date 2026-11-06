@@ -1,14 +1,14 @@
 # Tests
 
-**155 automated tests** protect the app: 69 backend, 51 frontend, 35 end-to-end. GitHub runs
+**164 automated tests** protect the app: 74 backend, 54 frontend, 36 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 69 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 51 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 35 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 74 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 54 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 36 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 69 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 51 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 35 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 74 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 54 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 36 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (69)
+## Backend tests (74)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -101,6 +101,16 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
 
+### Upcoming episodes: `backend/reco/test_calendar.py` (5)
+
+| Test | Verifies |
+|---|---|
+| `test_your_shows_recent_and_upcoming` | followed, listed and watched shows count (follow wins as the reason); this week's episodes newest first, today and the next 30 days soonest first; specials, older and further episodes left out |
+| `test_suggestions_are_popular_shows_coming_back_that_arent_tracked` | "Coming back soon": popular shows with an episode coming, not already tracked, with their next episode |
+| `test_kids_profile_only_sees_its_age` | a kids profile doesn't see shows above its age, nor get them suggested |
+| `test_someone_elses_profile_is_refused` | nobody can read another account's calendar |
+| `test_the_sync_refreshes_tracked_shows_that_still_air` | the episode sync also refreshes the shows people track, not ended ones |
+
 ### History import: `backend/reco/test_imports.py` (8)
 
 | Test | Verifies |
@@ -154,7 +164,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (51)
+## Frontend tests (54)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -224,6 +234,14 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### Upcoming page: `frontend/src/components/calendar/CalendarPage.test.jsx` (3)
+
+| Test | Verifies |
+|---|---|
+| days, the week row, and where an episode leads | rows titled Today / Tomorrow / the date with "In N days", the week's episodes in their own row; an episode out today opens the player on it |
+| an episode still to come opens the show | an upcoming episode opens the show's page |
+| a calendar that could not load offers to try again | the error is shown with "Try again" |
+
 ### History import page: `frontend/src/components/import/ImportPage.test.jsx` (2)
 
 | Test | Verifies |
@@ -233,12 +251,13 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (35)
+## End-to-end tests (36)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
 Test data: 8 movies, 1 show with 2 seasons, French translations, one account with four
-profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), see `backend/users/management/commands/e2e_prepare.py`.
+profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), and a show
+still on air ("Night Shift": an episode 12 days ago, then in 3 and 10 days, dated from the run), see `backend/users/management/commands/e2e_prepare.py`.
 
 ### Signing in: `e2e/tests/auth.spec.js` (5)
 
@@ -281,13 +300,19 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 
 | Test | Pages |
 |---|---|
-| browsing pages | home, Movies, TV Shows, My List, search (empty and with results) |
+| browsing pages | home, Movies, TV Shows, My List, Upcoming, search (empty and with results) |
 | title pages and the player | a movie, a show, the player (its "Continue watching" entry is removed after) |
 | signed out: sign in, sign up | sign in, sign up |
 | menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
 | profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, account |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Upcoming: `e2e/tests/calendar.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| follow a show coming back, then its episodes are in the calendar | an empty calendar offers "Night Shift"; Down lands on it, OK follows it (the focus stays) and its episodes appear by day; Up reaches them; OK on one to come opens the show; Back returns to that card |
 
 ### History import: `e2e/tests/import.spec.js` (1, remote only, at 1280 × 720)
 

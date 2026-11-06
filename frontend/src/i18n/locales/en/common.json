@@ -77,6 +77,7 @@
     "installIos": "Tap the Share button in Safari, then “Add to Home Screen”.",
     "account": "Account settings",
     "signOut": "Sign out",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "upcoming": "Upcoming"
   }
 }

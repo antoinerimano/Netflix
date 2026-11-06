@@ -108,3 +108,10 @@ export async function saveTaste(profileId, titleIds) {
   const res = await api.post("/taste/", { title_ids: titleIds, session_id: getRecoSessionId() }, { params: { profileId } });
   return res.data;
 }
+
+// ---------- upcoming episodes (backend reco/calendar.py) ----------
+// { today, tracked, recent: [episode], upcoming: [episode], suggestions: [show] }
+export async function fetchCalendar(profileId) {
+  const res = await api.get("/calendar/", { params: { profileId } });
+  return res.data;
+}

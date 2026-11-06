@@ -1,0 +1,174 @@
+/* src/components/calendar/calendar.css - "Upcoming" (/calendar): one row of episode cards per day */
+
+.calendar-page {
+  color: var(--color-text);
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-8) 0 var(--space-12);
+}
+.calendar__head,
+.cal-day__title,
+.cal-nothing,
+.calendar .ui-empty {
+  padding: 0 var(--page-gutter);
+}
+.calendar__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+}
+.calendar__subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+}
+.cal-nothing {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* a day */
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.cal-day__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+.cal-day__sub {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+/* the scroller keeps 10px inside for the focus ring + lift (design/components.css .ui-scroller) */
+.cal-row {
+  gap: var(--space-4);
+  margin: -10px 0;
+  padding: 10px var(--page-gutter);
+  scroll-padding-inline: var(--page-gutter);
+}
+.cal-row--skeleton {
+  display: flex;
+  overflow: hidden;
+}
+
+/* an episode */
+.cal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: clamp(14rem, 22vw, 20rem);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+.cal-card__art {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: clamp(14rem, 22vw, 20rem);
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease;
+}
+.cal-card__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cal-card__badge {
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+.cal-card__show {
+  overflow: hidden;
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-card__name,
+.cal-card__why {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-card__why {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+@media (hover: hover) {
+  .cal-card:hover .cal-card__art {
+    transform: translateY(-3px);
+  }
+}
+/* remote focus: the picture is framed and lifted (no growth: cards sit 16px apart), the show
+   name underlined. The scroller's 10px inside room holds the 3px lift + 3px ring. */
+.cal-card:focus-visible {
+  box-shadow: none;
+}
+.cal-card:focus-visible .cal-card__art {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 12px 26px rgba(0, 0, 0, 0.6);
+}
+.cal-card:focus-visible .cal-card__show {
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* a show to follow */
+.cal-card__follow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.cal-card__follow svg {
+  width: 1rem;
+  height: 1rem;
+}
+.cal-card--follow.is-on .cal-card__follow {
+  color: var(--color-success);
+}
+
+@media (max-width: 600px) {
+  .calendar {
+    gap: var(--space-6);
+  }
+  .cal-card,
+  .cal-card__art {
+    width: 70vw;
+  }
+}

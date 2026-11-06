@@ -74,6 +74,12 @@ export const BellIcon = (p) => (
     <path d="M10 20a2.2 2.2 0 0 0 4 0" />
   </Icon>
 );
+export const CalendarIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </Icon>
+);
 export const BellOffIcon = (p) => (
   <Icon {...p}>
     <path d="M8.5 4.1A6 6 0 0 1 18 9c0 3 .6 4.9 1.2 6M17 16.5H3.5S6 15 6 9c0-.6.1-1.2.3-1.8" />
