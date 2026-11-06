@@ -204,5 +204,23 @@
         "Col roulé"
       ]
     }
+  },
+  "taste": {
+    "title": "Qu'aimez-vous regarder ?",
+    "subtitle_one": "Choisissez au moins {{count}} titre que vous aimez. Votre page d'accueil est construite à partir de vos choix.",
+    "subtitle_many": "Choisissez au moins {{count}} titres que vous aimez. Votre page d'accueil est construite à partir de vos choix.",
+    "subtitle_other": "Choisissez au moins {{count}} titres que vous aimez. Votre page d'accueil est construite à partir de vos choix.",
+    "pickMore_one": "Encore {{count}} à choisir",
+    "pickMore_many": "Encore {{count}} à choisir",
+    "pickMore_other": "Encore {{count}} à choisir",
+    "picked_one": "{{count}} choisi",
+    "picked_many": "{{count}} choisis",
+    "picked_other": "{{count}} choisis",
+    "skip": "Passer pour l'instant",
+    "showMore": "Afficher plus de titres",
+    "building": "Création de votre page d'accueil…",
+    "loadError": "Impossible de charger les titres",
+    "none": "Aucun titre à proposer pour le moment",
+    "barLabel": "Vos choix"
   }
 }

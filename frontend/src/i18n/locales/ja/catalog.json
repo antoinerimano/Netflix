@@ -30,6 +30,12 @@
       "hiddenGem": "評価 {{rating}}/10、知る人ぞ知る作品",
       "popularNow": "いま人気",
       "newRelease": "新作：{{date}}公開"
+    },
+    "taste": {
+      "title": "あなた好みのホーム画面に",
+      "body": "好きな作品をいくつか選ぶと、そこからおすすめが始まります。",
+      "action": "作品を選ぶ",
+      "dismiss": "後で"
     }
   },
   "hero": {

@@ -30,6 +30,12 @@
       "hiddenGem": "Valoración {{rating}}/10, pero poco conocida",
       "popularNow": "Popular ahora",
       "newRelease": "Novedad: estreno en {{date}}"
+    },
+    "taste": {
+      "title": "Haz tuya esta página de inicio",
+      "body": "Elige algunos títulos que te gusten y tus recomendaciones partirán de ellos.",
+      "action": "Elegir títulos",
+      "dismiss": "Ahora no"
     }
   },
   "hero": {

@@ -210,8 +210,9 @@ const START_SELECTORS = [
 // Groups remember their position: going down to the next row and back up returns to the card
 // you were on (like TV apps), and entering a group lands on its current item (season shown,
 // source playing, active profile) rather than whatever happens to be closest.
-const GROUPS = ".row, .watch-info__row, .watch-info__seasons, .profiles__grid, .profile-form__pictures, .profile-form__letter-colors, .profile-form__chips, .avatar-builder__tabs, .avatar-builder__colors, .avatar-builder__options, .detail-similar, .detail-cast, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
-const CURRENT_IN_GROUP = ".is-active, .selected, .is-selected, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-current='page']";
+// Any page can declare one: data-tv-group on the container, data-tv-current on the item to land on.
+const GROUPS = "[data-tv-group], .row, .watch-info__row, .watch-info__seasons, .profiles__grid, .profile-form__pictures, .profile-form__letter-colors, .profile-form__chips, .avatar-builder__tabs, .avatar-builder__colors, .avatar-builder__options, .detail-similar, .detail-cast, .tvd-seasons__chips, .browse__genres, .browse-filters__chips, .watchpage__providerRow, .nav-links, .profile-dropdown";
+const CURRENT_IN_GROUP = ".is-active, .selected, .is-selected, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-current='page'], [data-tv-current]";
 const lastInGroup = new WeakMap();
 
 function usable(el) {

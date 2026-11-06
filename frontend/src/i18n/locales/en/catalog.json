@@ -30,6 +30,12 @@
       "hiddenGem": "Rated {{rating}}/10, but few people know it",
       "popularNow": "Popular right now",
       "newRelease": "New: out {{date}}"
+    },
+    "taste": {
+      "title": "Make this home page yours",
+      "body": "Pick a few titles you like and your recommendations start from them.",
+      "action": "Pick titles",
+      "dismiss": "Not now"
     }
   },
   "hero": {

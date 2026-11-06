@@ -202,5 +202,17 @@
         "高领"
       ]
     }
+  },
+  "taste": {
+    "title": "你喜欢看什么？",
+    "subtitle_other": "至少选择 {{count}} 部你喜欢的作品，我们会据此为你打造首页。",
+    "pickMore_other": "还需选择 {{count}} 部",
+    "picked_other": "已选 {{count}} 部",
+    "skip": "暂时跳过",
+    "showMore": "显示更多作品",
+    "building": "正在生成你的首页…",
+    "loadError": "无法加载作品",
+    "none": "目前没有可选的作品",
+    "barLabel": "你的选择"
   }
 }

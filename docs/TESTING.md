@@ -1,14 +1,14 @@
 # Tests
 
-**123 automated tests** protect the app: 54 backend, 47 frontend, 22 end-to-end. GitHub runs
+**133 automated tests** protect the app: 60 backend, 49 frontend, 24 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 54 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 47 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 22 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 60 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 49 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 24 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 54 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 47 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 22 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 60 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 49 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 24 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (54)
+## Backend tests (60)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -84,7 +84,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_title_list_constant_queries` | the catalog list takes exactly 2 database queries, however many titles (no "N+1" slowdown) |
 | `test_title_detail_constant_queries` | a show's page (seasons, episodes, cast) takes exactly 5 queries, however big the show |
 
-### Recommendations: `backend/reco/tests.py` (5)
+### Recommendations: `backend/reco/tests.py` (11)
 
 | Test | Verifies |
 |---|---|
@@ -93,6 +93,12 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_action_on_other_users_profile_rejected` | likes / list actions can't be recorded on someone else's profile |
 | `test_action_on_own_profile_logged` | they are recorded on your own |
 | `test_public_endpoints` | catalog, genres, search and actors all answer (catches a broken import or URL) |
+| `test_choices_are_known_titles_spread_over_genres` | "What do you like to watch?" offers well-known titles with a poster, a different genre for each of the first ones, some in the profile's language |
+| `test_kids_profile_only_gets_titles_for_its_age` | a kids profile is only offered titles for its age |
+| `test_other_users_profile_is_refused` | nobody can see or save the picks of someone else's profile |
+| `test_picks_become_likes_and_the_home_is_rebuilt` | picks are saved as likes (unknown ids ignored), the home page is rebuilt at once, picked titles aren't offered again |
+| `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
+| `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
 
 ### Languages: `backend/users/test_i18n.py` (13)
 
@@ -134,7 +140,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (47)
+## Frontend tests (49)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -197,14 +203,21 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | links to sign up | the "Create an account" link is there and goes to `/register` (regression: it rendered empty) |
 | is translated | the page and the link appear in French |
 
+### Taste picker: `frontend/src/components/profiles/TastePage.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
+| Skip goes home without saving | Skip saves nothing |
+
 ---
 
-## End-to-end tests (22)
+## End-to-end tests (24)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
-Test data: 8 movies, 1 show with 2 seasons, French translations, one account with three
-profiles (Alex in English, Camille in French, Kids), see `backend/users/management/commands/e2e_prepare.py`.
+Test data: 8 movies, 1 show with 2 seasons, French translations, one account with four
+profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), see `backend/users/management/commands/e2e_prepare.py`.
 
 ### Signing in: `e2e/tests/auth.spec.js` (5)
 
@@ -237,6 +250,13 @@ profiles (Alex in English, Camille in French, Kids), see `backend/users/manageme
 | OK on the player never traps the remote in it | after OK on the player (full screen or not), the remote always comes back to the app, never stuck inside the player |
 | CineSrc: the remote drives the player, the focus stays in the app | Play / Pause reach the CineSrc player as commands; the focus never leaves the app |
 | Back on the player returns to the title | Back leaves the player for the title's page |
+
+### Taste picker: `e2e/tests/taste.spec.js` (2, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| home banner opens the picker, Back returns without saving | a new profile's home offers "Pick titles" right under Play (Down, not skipped); Right reaches "Not now"; the banner remembers its button; OK opens the picker; Back leaves it without saving |
+| pick with OK, Continue with Down, then a personal home page | starts on the first poster; OK picks; Down never leaves the focus under the pinned bar and enters it on Continue (not Skip); Up returns to the poster; Continue opens the home page without the banner |
 
 ### Languages, search and lists: `e2e/tests/i18n-search.spec.js` (5)
 

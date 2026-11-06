@@ -30,6 +30,12 @@
       "hiddenGem": "Voto {{rating}}/10, ma poco conosciuto",
       "popularNow": "Popolare ora",
       "newRelease": "Novità: uscito a {{date}}"
+    },
+    "taste": {
+      "title": "Rendi tua questa home page",
+      "body": "Scegli qualche titolo che ti piace e i consigli partiranno da lì.",
+      "action": "Scegli i titoli",
+      "dismiss": "Non ora"
     }
   },
   "hero": {

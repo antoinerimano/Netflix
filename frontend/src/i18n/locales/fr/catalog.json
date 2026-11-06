@@ -30,6 +30,12 @@
       "hiddenGem": "Noté {{rating}}/10, mais peu connu",
       "popularNow": "Populaire en ce moment",
       "newRelease": "Nouveau : sorti en {{date}}"
+    },
+    "taste": {
+      "title": "Personnalisez cette page d'accueil",
+      "body": "Choisissez quelques titres que vous aimez : vos recommandations partiront de là.",
+      "action": "Choisir des titres",
+      "dismiss": "Plus tard"
     }
   },
   "hero": {

@@ -95,3 +95,16 @@ export async function markNotificationsRead(profileId) {
   if (!profileId) return;
   await api.post("/notifications/read/", null, { params: { profileId } });
 }
+
+// ---------- taste onboarding (backend reco/taste.py) ----------
+// { titles: [{id, type, title, poster, release_year}], min_picks }: well-known titles to pick from
+export async function fetchTasteTitles(profileId) {
+  const res = await api.get("/taste/", { params: { profileId } });
+  return res.data;
+}
+
+// The picks become likes and the home page is rebuilt from them (a few seconds).
+export async function saveTaste(profileId, titleIds) {
+  const res = await api.post("/taste/", { title_ids: titleIds, session_id: getRecoSessionId() }, { params: { profileId } });
+  return res.data;
+}

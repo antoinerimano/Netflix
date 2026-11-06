@@ -17,6 +17,7 @@ import { BrandLoader } from './design';
 const AccountManagement = lazy(() => import('./components/AccountManagement'));
 const Register = lazy(() => import('./components/Register'));
 const CreateProfile = lazy(() => import('./components/CreateProfile'));
+const TastePage = lazy(() => import('./components/profiles/TastePage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -90,6 +91,16 @@ function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "What do you like to watch?": a new profile's first likes (reco/taste.py) */}
+        <Route
+          path="/taste"
+          element={
+            <ProtectedRoute>
+              <TastePage />
             </ProtectedRoute>
           }
         />

@@ -30,6 +30,12 @@
       "hiddenGem": "Bewertet mit {{rating}}/10, aber kaum bekannt",
       "popularNow": "Gerade beliebt",
       "newRelease": "Neu: erschienen {{date}}"
+    },
+    "taste": {
+      "title": "Mach diese Startseite zu deiner",
+      "body": "Wähle ein paar Titel, die dir gefallen – deine Empfehlungen bauen darauf auf.",
+      "action": "Titel auswählen",
+      "dismiss": "Nicht jetzt"
     }
   },
   "hero": {

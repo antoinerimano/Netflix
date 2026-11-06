@@ -202,5 +202,17 @@
         "タートルネック"
       ]
     }
+  },
+  "taste": {
+    "title": "どんな作品が好きですか？",
+    "subtitle_other": "好きな作品を{{count}}本以上選んでください。選んだ作品をもとにホーム画面を作ります。",
+    "pickMore_other": "あと{{count}}本選んでください",
+    "picked_other": "{{count}}本選択中",
+    "skip": "今はスキップ",
+    "showMore": "もっと見る",
+    "building": "ホーム画面を作成中…",
+    "loadError": "作品を読み込めませんでした",
+    "none": "現在選べる作品がありません",
+    "barLabel": "選んだ作品"
   }
 }

@@ -4,6 +4,7 @@ from .views import (
     MyListView, MyListItemView, MyListImportView, TitleRatingView, PlaybackView,
     ShowFollowView, NotificationListView,
 )
+from .taste import TasteView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -18,4 +19,5 @@ urlpatterns = [
     path("follows/<int:title_id>/", ShowFollowView.as_view()),
     path("notifications/", NotificationListView.as_view()),
     path("notifications/read/", NotificationListView.as_view()),
+    path("taste/", TasteView.as_view()),
 ]

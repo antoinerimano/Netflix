@@ -30,6 +30,12 @@
       "hiddenGem": "评分 {{rating}}/10，但鲜为人知",
       "popularNow": "当前热门",
       "newRelease": "新片：{{date}} 上映"
+    },
+    "taste": {
+      "title": "打造属于你的首页",
+      "body": "选几部你喜欢的作品，推荐将从它们开始。",
+      "action": "选择作品",
+      "dismiss": "以后再说"
     }
   },
   "hero": {

@@ -32,6 +32,7 @@ from .models import (
     EditorialCollection, RecoModelArtifact, WatchProgress, MyListItem, TitleRating, PlaybackOutcome,
     ShowFollow, Notification,
 )
+from .taste import has_taste_signal
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -1185,6 +1186,8 @@ def _describe_rows(payload, profile):
 
 def _with_live_rows(payload, profile):
     """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
+    # nothing liked / listed / played yet: the app offers the "pick what you like" page
+    payload = {**payload, "needs_taste": not has_taste_signal(profile.id)}
     rows = list(payload.get("rows") or [])
     new_eps = _new_episodes_row()
     if new_eps["items"]:
