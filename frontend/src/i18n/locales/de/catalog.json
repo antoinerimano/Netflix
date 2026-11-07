@@ -21,7 +21,8 @@
       "lang_trending": "Trends auf {{language}}",
       "trending": "Im Trend",
       "new_episodes": "Neue Folgen",
-      "continue_watching": "Weiterschauen"
+      "continue_watching": "Weiterschauen",
+      "collections_next": "Weiter in deinen Filmreihen"
     },
     "why": {
       "similarTo": "Ähnlich wie {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Bewertet mit {{rating}}/10 von {{votes}} Personen",
       "hiddenGem": "Bewertet mit {{rating}}/10, aber kaum bekannt",
       "popularNow": "Gerade beliebt",
-      "newRelease": "Neu: erschienen {{date}}"
+      "newRelease": "Neu: erschienen {{date}}",
+      "collectionPart": "Teil {{position}} von {{collection}}"
     },
     "taste": {
       "title": "Mach diese Startseite zu deiner",
@@ -284,5 +286,21 @@
     "follow": "Folgen",
     "following": "Gefolgt",
     "loadError": "Dein Kalender konnte nicht geladen werden"
+  },
+  "collection": {
+    "partOf": "Teil von {{name}}",
+    "order": "Reihenfolge",
+    "progress": "{{watched}} von {{total}} gesehen",
+    "allWatched": "Alle gesehen",
+    "kicker_one": "Reihe · {{count}} Film",
+    "kicker_other": "Reihe · {{count}} Filme",
+    "watchNext": "Als Nächstes: {{title}}",
+    "startWith": "Mit {{title}} beginnen",
+    "part": "Teil {{position}}",
+    "watched": "Gesehen",
+    "comingSoon": "Demnächst",
+    "thisOne": "Dieser",
+    "notFound": "Reihe nicht gefunden",
+    "loadError": "Diese Reihe konnte nicht geladen werden"
   }
 }

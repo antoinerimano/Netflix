@@ -21,7 +21,8 @@
       "lang_trending": "Em alta em {{language}}",
       "trending": "Em alta",
       "new_episodes": "Novos episódios",
-      "continue_watching": "Continuar assistindo"
+      "continue_watching": "Continuar assistindo",
+      "collections_next": "A seguir nas suas coleções"
     },
     "why": {
       "similarTo": "Parecido com {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Nota {{rating}}/10 de {{votes}} pessoas",
       "hiddenGem": "Nota {{rating}}/10, mas pouco conhecido",
       "popularNow": "Em alta agora",
-      "newRelease": "Novidade: lançado em {{date}}"
+      "newRelease": "Novidade: lançado em {{date}}",
+      "collectionPart": "Parte {{position}} de {{collection}}"
     },
     "taste": {
       "title": "Deixe esta página inicial com a sua cara",
@@ -294,5 +296,22 @@
     "follow": "Seguir",
     "following": "Seguindo",
     "loadError": "Não foi possível carregar seu calendário"
+  },
+  "collection": {
+    "partOf": "Parte de {{name}}",
+    "order": "Ordem para assistir",
+    "progress": "{{watched}} de {{total}} assistidos",
+    "allWatched": "Todos assistidos",
+    "kicker_one": "Coleção · {{count}} filme",
+    "kicker_many": "Coleção · {{count}} filmes",
+    "kicker_other": "Coleção · {{count}} filmes",
+    "watchNext": "Assistir a seguir: {{title}}",
+    "startWith": "Começar por {{title}}",
+    "part": "Parte {{position}}",
+    "watched": "Assistido",
+    "comingSoon": "Em breve",
+    "thisOne": "Este",
+    "notFound": "Coleção não encontrada",
+    "loadError": "Não foi possível carregar esta coleção"
   }
 }

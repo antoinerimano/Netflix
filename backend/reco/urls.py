@@ -9,6 +9,7 @@ from .imports import ImportFilesView
 from .calendar import CalendarView
 from .history import HistoryView, HistoryItemView, HistoryPauseView, HistoryExportView
 from .stats import StatsView
+from .collections import CollectionView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -31,4 +32,5 @@ urlpatterns = [
     path("history/export/", HistoryExportView.as_view()),
     path("history/<int:event_id>/", HistoryItemView.as_view()),
     path("stats/", StatsView.as_view()),
+    path("collections/<int:collection_id>/", CollectionView.as_view()),
 ]

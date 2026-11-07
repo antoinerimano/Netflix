@@ -122,3 +122,10 @@ export async function fetchStats(profileId, year = null) {
   const res = await api.get("/stats/", { params: { profileId, ...(year ? { year } : {}) } });
   return res.data;
 }
+
+// ---------- franchises in watch order (backend reco/collections.py) ----------
+// { id, name, poster, backdrop, parts: [{ title, position, watched, upcoming }], watched, total, next }
+export async function fetchCollection(profileId, collectionId) {
+  const res = await api.get(`/collections/${collectionId}/`, { params: { profileId } });
+  return res.data;
+}

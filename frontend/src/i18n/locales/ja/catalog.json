@@ -21,7 +21,8 @@
       "lang_trending": "{{language}}で話題",
       "trending": "話題の作品",
       "new_episodes": "新しいエピソード",
-      "continue_watching": "視聴を続ける"
+      "continue_watching": "視聴を続ける",
+      "collections_next": "シリーズの続き"
     },
     "why": {
       "similarTo": "{{title}}に似ています",
@@ -29,7 +30,8 @@
       "ratedBy": "{{votes}}人が評価 {{rating}}/10",
       "hiddenGem": "評価 {{rating}}/10、知る人ぞ知る作品",
       "popularNow": "いま人気",
-      "newRelease": "新作：{{date}}公開"
+      "newRelease": "新作：{{date}}公開",
+      "collectionPart": "{{collection}}のパート{{position}}"
     },
     "taste": {
       "title": "あなた好みのホーム画面に",
@@ -274,5 +276,20 @@
     "follow": "フォロー",
     "following": "フォロー中",
     "loadError": "カレンダーを読み込めませんでした"
+  },
+  "collection": {
+    "partOf": "{{name}}の作品",
+    "order": "視聴順",
+    "progress": "{{total}}作品中{{watched}}作品を視聴",
+    "allWatched": "すべて視聴済み",
+    "kicker_other": "シリーズ · {{count}}作品",
+    "watchNext": "次に見る：{{title}}",
+    "startWith": "{{title}}から見る",
+    "part": "パート{{position}}",
+    "watched": "視聴済み",
+    "comingSoon": "近日公開",
+    "thisOne": "この作品",
+    "notFound": "シリーズが見つかりません",
+    "loadError": "シリーズを読み込めませんでした"
   }
 }

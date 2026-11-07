@@ -21,7 +21,8 @@
       "lang_trending": "{{language}} में ट्रेंडिंग",
       "trending": "ट्रेंडिंग",
       "new_episodes": "नए एपिसोड",
-      "continue_watching": "देखना जारी रखें"
+      "continue_watching": "देखना जारी रखें",
+      "collections_next": "आपकी फ़िल्म सीरीज़ में आगे"
     },
     "why": {
       "similarTo": "{{title}} जैसी",
@@ -29,7 +30,8 @@
       "ratedBy": "{{votes}} लोगों ने {{rating}}/10 रेटिंग दी",
       "hiddenGem": "{{rating}}/10 रेटिंग, पर कम लोग जानते हैं",
       "popularNow": "अभी लोकप्रिय",
-      "newRelease": "नई: {{date}} में रिलीज़"
+      "newRelease": "नई: {{date}} में रिलीज़",
+      "collectionPart": "{{collection}} का भाग {{position}}"
     },
     "taste": {
       "title": "इस होम पेज को अपना बनाएँ",
@@ -284,5 +286,21 @@
     "follow": "फ़ॉलो करें",
     "following": "फ़ॉलो कर रहे हैं",
     "loadError": "आपका कैलेंडर लोड नहीं हो सका"
+  },
+  "collection": {
+    "partOf": "{{name}} का हिस्सा",
+    "order": "देखने का क्रम",
+    "progress": "{{total}} में से {{watched}} देखी",
+    "allWatched": "सब देख लीं",
+    "kicker_one": "सीरीज़ · {{count}} फ़िल्म",
+    "kicker_other": "सीरीज़ · {{count}} फ़िल्में",
+    "watchNext": "आगे देखें: {{title}}",
+    "startWith": "{{title}} से शुरू करें",
+    "part": "भाग {{position}}",
+    "watched": "देखी",
+    "comingSoon": "जल्द आ रही है",
+    "thisOne": "यही",
+    "notFound": "सीरीज़ नहीं मिली",
+    "loadError": "यह सीरीज़ लोड नहीं हो सकी"
   }
 }

@@ -21,7 +21,8 @@
       "lang_trending": "{{language}} ভাষায় ট্রেন্ডিং",
       "trending": "ট্রেন্ডিং",
       "new_episodes": "নতুন পর্ব",
-      "continue_watching": "দেখা চালিয়ে যান"
+      "continue_watching": "দেখা চালিয়ে যান",
+      "collections_next": "আপনার সিরিজে এরপর"
     },
     "why": {
       "similarTo": "{{title}}-এর মতো",
@@ -29,7 +30,8 @@
       "ratedBy": "{{votes}} জন {{rating}}/10 রেটিং দিয়েছেন",
       "hiddenGem": "{{rating}}/10 রেটিং, তবে কম পরিচিত",
       "popularNow": "এখন জনপ্রিয়",
-      "newRelease": "নতুন: {{date}}-এ মুক্তি"
+      "newRelease": "নতুন: {{date}}-এ মুক্তি",
+      "collectionPart": "{{collection}}-এর পর্ব {{position}}"
     },
     "taste": {
       "title": "এই হোম পেজটি নিজের মতো করে নিন",
@@ -284,5 +286,21 @@
     "follow": "ফলো করুন",
     "following": "ফলো করছেন",
     "loadError": "আপনার ক্যালেন্ডার লোড করা যায়নি"
+  },
+  "collection": {
+    "partOf": "{{name}}-এর অংশ",
+    "order": "দেখার ক্রম",
+    "progress": "{{total}}টির মধ্যে {{watched}}টি দেখা",
+    "allWatched": "সব দেখা হয়েছে",
+    "kicker_one": "সিরিজ · {{count}}টি সিনেমা",
+    "kicker_other": "সিরিজ · {{count}}টি সিনেমা",
+    "watchNext": "এরপর দেখুন: {{title}}",
+    "startWith": "{{title}} দিয়ে শুরু করুন",
+    "part": "পর্ব {{position}}",
+    "watched": "দেখা",
+    "comingSoon": "শিগগিরই আসছে",
+    "thisOne": "এটি",
+    "notFound": "সিরিজ পাওয়া যায়নি",
+    "loadError": "এই সিরিজ লোড করা যায়নি"
   }
 }

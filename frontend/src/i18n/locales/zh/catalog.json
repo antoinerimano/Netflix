@@ -21,7 +21,8 @@
       "lang_trending": "{{language}}热门",
       "trending": "热门",
       "new_episodes": "新剧集",
-      "continue_watching": "继续观看"
+      "continue_watching": "继续观看",
+      "collections_next": "你的系列，接着看"
     },
     "why": {
       "similarTo": "与《{{title}}》相似",
@@ -29,7 +30,8 @@
       "ratedBy": "{{votes}} 人评分 {{rating}}/10",
       "hiddenGem": "评分 {{rating}}/10，但鲜为人知",
       "popularNow": "当前热门",
-      "newRelease": "新片：{{date}} 上映"
+      "newRelease": "新片：{{date}} 上映",
+      "collectionPart": "{{collection}} 第 {{position}} 部"
     },
     "taste": {
       "title": "打造属于你的首页",
@@ -274,5 +276,20 @@
     "follow": "关注",
     "following": "已关注",
     "loadError": "无法加载你的日历"
+  },
+  "collection": {
+    "partOf": "属于 {{name}}",
+    "order": "观看顺序",
+    "progress": "已看 {{watched}} / {{total}}",
+    "allWatched": "已全部看完",
+    "kicker_other": "系列 · {{count}} 部电影",
+    "watchNext": "接着看：{{title}}",
+    "startWith": "从《{{title}}》开始",
+    "part": "第 {{position}} 部",
+    "watched": "已看",
+    "comingSoon": "即将上映",
+    "thisOne": "本片",
+    "notFound": "找不到该系列",
+    "loadError": "无法加载该系列"
   }
 }

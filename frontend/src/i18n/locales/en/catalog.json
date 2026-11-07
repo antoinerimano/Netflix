@@ -21,7 +21,8 @@
       "lang_trending": "Trending in {{language}}",
       "trending": "Trending",
       "new_episodes": "New episodes",
-      "continue_watching": "Continue watching"
+      "continue_watching": "Continue watching",
+      "collections_next": "Next in your collections"
     },
     "why": {
       "similarTo": "Similar to {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Rated {{rating}}/10 by {{votes}} people",
       "hiddenGem": "Rated {{rating}}/10, but few people know it",
       "popularNow": "Popular right now",
-      "newRelease": "New: out {{date}}"
+      "newRelease": "New: out {{date}}",
+      "collectionPart": "Part {{position}} of {{collection}}"
     },
     "taste": {
       "title": "Make this home page yours",
@@ -284,5 +286,21 @@
     "follow": "Follow",
     "following": "Following",
     "loadError": "Couldn't load your calendar"
+  },
+  "collection": {
+    "partOf": "Part of {{name}}",
+    "order": "Watch order",
+    "progress": "{{watched}} of {{total}} watched",
+    "allWatched": "All watched",
+    "kicker_one": "Collection · {{count}} movie",
+    "kicker_other": "Collection · {{count}} movies",
+    "watchNext": "Watch next: {{title}}",
+    "startWith": "Start with {{title}}",
+    "part": "Part {{position}}",
+    "watched": "Watched",
+    "comingSoon": "Coming soon",
+    "thisOne": "This one",
+    "notFound": "Collection not found",
+    "loadError": "Couldn't load this collection"
   }
 }

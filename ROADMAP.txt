@@ -211,7 +211,16 @@ Status: [ ] todo   [~] in progress   [x] done
         saved). Remote: every section takes the focus; Share under its text (at the right edge Down
         skipped it). Navigation fix: Back to a page still loading no longer sends the focus to the
         footer (recoverFocus waits for restorePlace). Backend: reco/stats.py.
-[ ] 7.6 Collections and watch order (franchises)
+[x] 7.6 Franchises in watch order (/collection/:id)
+        TMDB collections (Title.collection_id, indexed, kept in sync by Title.save(), backfilled):
+        movie pages "Part of <collection>" (numbered row, this one marked, watched checked, "Watch
+        order" as its last tile), the collection page (progress, "Start with" / "Watch next", parts in
+        release order, "Coming soon" for announced ones), "Next movie" in the player, home row "Next
+        in your collections" (next part of every franchise started, latest first, "Part 2 of ...").
+        Remote: the link is the row's last tile (above the row, Up from the other movies missed it).
+        Navigation fix: OK on a link no longer sends the new page's focus to the footer while it
+        loads (where the focus was is remembered with the page it was on). Backend:
+        reco/collections.py.
 [ ] 7.7 Public, shareable lists
 [ ] 7.8 "I have 90 minutes" / "Surprise me"
 [ ] 7.9 Arabic and Urdu (right-to-left layouts)

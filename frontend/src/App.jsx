@@ -22,6 +22,7 @@ const ImportPage = lazy(() => import('./components/import/ImportPage'));
 const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
 const HistoryPage = lazy(() => import('./components/history/HistoryPage'));
 const StatsPage = lazy(() => import('./components/stats/StatsPage'));
+const CollectionPage = lazy(() => import('./components/collection/CollectionPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -180,6 +181,15 @@ function App() {
         <Route path="/confirm-email-change/:userId/:token" element={<ConfirmEmailChange />} />
         <Route path="/watch/:id" element={<WatchPage />} />
         <Route path="/actor/:tmdbId" element={<ActorDetail />} />
+        {/* a franchise in watch order (reco/collections.py) */}
+        <Route
+          path="/collection/:id"
+          element={
+            <ProtectedRoute>
+              <CollectionPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin-only */}
         <Route

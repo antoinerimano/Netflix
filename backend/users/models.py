@@ -135,6 +135,9 @@ class Title(models.Model):
     production_countries = models.JSONField(default=list, blank=True)
     spoken_languages = models.JSONField(default=list, blank=True)
     belongs_to_collection = models.JSONField(null=True, blank=True)
+    # TMDB collection id, kept in sync with belongs_to_collection by save(): indexed, so a
+    # franchise's parts are one quick query (reco/collections.py)
+    collection_id = models.IntegerField(null=True, blank=True, db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)
@@ -153,6 +156,20 @@ class Title(models.Model):
 
     def __str__(self):
         return f"{self.title} [{self.type}]"
+
+    @staticmethod
+    def collection_id_of(bc):
+        try:
+            return int(bc.get("id")) if isinstance(bc, dict) and bc.get("id") else None
+        except (TypeError, ValueError):
+            return None
+
+    def save(self, *args, **kwargs):
+        self.collection_id = self.collection_id_of(self.belongs_to_collection)
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and "belongs_to_collection" in update_fields:
+            kwargs["update_fields"] = {*update_fields, "collection_id"}
+        super().save(*args, **kwargs)
 
 
 class TVShowExtras(models.Model):

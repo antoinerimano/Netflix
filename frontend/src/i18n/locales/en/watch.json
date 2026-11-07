@@ -46,5 +46,6 @@
     "playingNow": "playing",
     "soon": "Soon",
     "comingSoon": "coming soon"
-  }
+  },
+  "nextMovie": "Next movie"
 }

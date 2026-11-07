@@ -21,7 +21,8 @@
       "lang_trending": "В тренде ({{language}})",
       "trending": "В тренде",
       "new_episodes": "Новые серии",
-      "continue_watching": "Продолжить просмотр"
+      "continue_watching": "Продолжить просмотр",
+      "collections_next": "Продолжение ваших франшиз"
     },
     "why": {
       "similarTo": "Похоже на «{{title}}»",
@@ -29,7 +30,8 @@
       "ratedBy": "Оценка {{rating}}/10 от {{votes}} зрителей",
       "hiddenGem": "Оценка {{rating}}/10, но мало кто знает",
       "popularNow": "Популярно сейчас",
-      "newRelease": "Новинка: вышел в {{date}}"
+      "newRelease": "Новинка: вышел в {{date}}",
+      "collectionPart": "Часть {{position}} из {{collection}}"
     },
     "taste": {
       "title": "Настройте главную страницу под себя",
@@ -304,5 +306,23 @@
     "follow": "Подписаться",
     "following": "Подписка",
     "loadError": "Не удалось загрузить календарь"
+  },
+  "collection": {
+    "partOf": "Часть франшизы {{name}}",
+    "order": "Порядок просмотра",
+    "progress": "Просмотрено {{watched}} из {{total}}",
+    "allWatched": "Всё просмотрено",
+    "kicker_one": "Франшиза · {{count}} фильм",
+    "kicker_few": "Франшиза · {{count}} фильма",
+    "kicker_many": "Франшиза · {{count}} фильмов",
+    "kicker_other": "Франшиза · {{count}} фильма",
+    "watchNext": "Смотреть дальше: {{title}}",
+    "startWith": "Начать с {{title}}",
+    "part": "Часть {{position}}",
+    "watched": "Просмотрено",
+    "comingSoon": "Скоро",
+    "thisOne": "Этот",
+    "notFound": "Франшиза не найдена",
+    "loadError": "Не удалось загрузить франшизу"
   }
 }

@@ -1,14 +1,14 @@
 # Tests
 
-**185 automated tests** protect the app: 89 backend, 58 frontend, 38 end-to-end. GitHub runs
+**195 automated tests** protect the app: 95 backend, 61 frontend, 39 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 89 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 58 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 38 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 95 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 61 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 39 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 89 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 58 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 38 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 95 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 61 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 39 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (89)
+## Backend tests (95)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -100,6 +100,17 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
 | `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### Franchises in watch order: `backend/reco/test_collections.py` (6)
+
+| Test | Verifies |
+|---|---|
+| `test_collection_id_follows_the_json` | `Title.collection_id` is set from `belongs_to_collection` on save, also with `update_fields` |
+| `test_parts_in_release_order_with_what_was_watched_and_whats_next` | parts in release order (announced ones last, "upcoming"), numbered, watched from the history, the next one to watch, name and artwork |
+| `test_played_or_imported_counts_as_watched` | Play pressed, Continue watching and imported "watched" count; nothing next when only an announced part is left |
+| `test_unknown_collection_age_limit_and_other_accounts` | unknown collection, a kids profile that may see none of it, another account: 404 |
+| `test_home_row_offers_the_next_part_of_started_franchises` | "Next in your collections": the next part of each started franchise, the latest watched first, "Part 3 of ..." under it |
+| `test_no_row_when_nothing_started_or_everything_seen` | no row when no franchise was started, or all of it was seen |
 
 ### Your year: `backend/reco/test_stats.py` (7)
 
@@ -189,7 +200,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (58)
+## Frontend tests (61)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -259,6 +270,14 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### Collection page: `frontend/src/components/collection/CollectionPage.test.jsx` (3)
+
+| Test | Verifies |
+|---|---|
+| half watched: what comes next, checks, coming soon | the name, "Collection · 3 movies", the progress meter, "Watch next: ...", each part's number / title / year / state for screen readers |
+| nothing watched: start with the first one; all seen: no button | "Start with ...", then "All watched" and no button |
+| a collection that does not exist | "Collection not found" |
+
 ### Your year page: `frontend/src/components/stats/StatsPage.test.jsx` (2)
 
 | Test | Verifies |
@@ -290,13 +309,14 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (38)
+## End-to-end tests (39)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
 Test data: 8 movies, 1 show with 2 seasons, French translations, one account with four
 profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), and a show
-still on air ("Night Shift": an episode 12 days ago, then in 3 and 10 days, dated from the run), see `backend/users/management/commands/e2e_prepare.py`.
+still on air ("Night Shift": an episode 12 days ago, then in 3 and 10 days, dated from the run),
+a franchise (The Godfather + The Godfather Part II, collection 230), see `backend/users/management/commands/e2e_prepare.py`.
 
 ### Signing in: `e2e/tests/auth.spec.js` (5)
 
@@ -339,13 +359,19 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 
 | Test | Pages |
 |---|---|
-| browsing pages | home, Movies, TV Shows, My List, Upcoming, search (empty and with results) |
-| title pages and the player | a movie, a show, the player (its "Continue watching" entry is removed after) |
+| browsing pages | home, Movies, TV Shows, My List, Upcoming, a collection, search (empty and with results) |
+| title pages and the player | a movie in a franchise, a movie, a show, the player (Alex's history is cleared after) |
 | signed out: sign in, sign up | sign in, sign up |
 | menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
 | profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Franchises: `e2e/tests/collection.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| collection: movie page, collection page, what comes next | the movie page's numbered row starts on this movie, Right reaches part 2 then "Watch order"; the collection page starts on "Start with ...", Down + Right reach part 2, OK opens it, Back returns to it; after part 1: "Next movie" in the player, "1 of 2 watched", "Watch next: ..." and the home row "Next in your collections" |
 
 ### Your year: `e2e/tests/stats.spec.js` (1, remote only, at 1280 × 720)
 

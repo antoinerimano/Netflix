@@ -16,6 +16,7 @@ import DetailHero, { splitGenres, genreName } from './detail/DetailHero';
 import CastRow, { castObjects } from './detail/CastRow';
 import MoreLikeThis from './detail/MoreLikeThis';
 import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
+import CollectionSection from './collection/CollectionSection';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 
 /* --- Helpers --- */
@@ -233,6 +234,9 @@ const MovieDetail = () => {
             <TrailerEmbed url={movie.trailer_url} />
           </section>
         ) : null}
+
+        {/* the franchise in watch order (hidden for a movie alone) */}
+        <CollectionSection collectionId={movie.collection_id} titleId={movie.id} />
 
         <MoreLikeThis titleId={movie.id} />
 

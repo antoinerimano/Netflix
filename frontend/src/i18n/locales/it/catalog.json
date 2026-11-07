@@ -21,7 +21,8 @@
       "lang_trending": "Di tendenza in {{language}}",
       "trending": "Di tendenza",
       "new_episodes": "Nuovi episodi",
-      "continue_watching": "Continua a guardare"
+      "continue_watching": "Continua a guardare",
+      "collections_next": "Il seguito delle tue saghe"
     },
     "why": {
       "similarTo": "Simile a {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Voto {{rating}}/10 da {{votes}} persone",
       "hiddenGem": "Voto {{rating}}/10, ma poco conosciuto",
       "popularNow": "Popolare ora",
-      "newRelease": "Novità: uscito a {{date}}"
+      "newRelease": "Novità: uscito a {{date}}",
+      "collectionPart": "Parte {{position}} di {{collection}}"
     },
     "taste": {
       "title": "Rendi tua questa home page",
@@ -294,5 +296,22 @@
     "follow": "Segui",
     "following": "Seguita",
     "loadError": "Impossibile caricare il calendario"
+  },
+  "collection": {
+    "partOf": "Parte di {{name}}",
+    "order": "Ordine di visione",
+    "progress": "{{watched}} su {{total}} visti",
+    "allWatched": "Visti tutti",
+    "kicker_one": "Saga · {{count}} film",
+    "kicker_many": "Saga · {{count}} film",
+    "kicker_other": "Saga · {{count}} film",
+    "watchNext": "Guarda il prossimo: {{title}}",
+    "startWith": "Inizia con {{title}}",
+    "part": "Parte {{position}}",
+    "watched": "Visto",
+    "comingSoon": "Prossimamente",
+    "thisOne": "Questo",
+    "notFound": "Saga non trovata",
+    "loadError": "Impossibile caricare questa saga"
   }
 }
