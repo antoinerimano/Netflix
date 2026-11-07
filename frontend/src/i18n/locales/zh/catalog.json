@@ -330,5 +330,37 @@
     "notFound": "此片单未分享或不存在",
     "notFoundText": "请让分享者检查一下链接。",
     "loadError": "无法加载此片单"
+  },
+  "pick": {
+    "title": "看点什么？",
+    "subtitle": "告诉我们你有多少时间、想看什么样的。",
+    "time": "有多少时间？",
+    "mood": "想看",
+    "show": "给我推荐",
+    "showMore": "换一批",
+    "surprise": "随便来一部",
+    "yourPick": "为你挑选",
+    "moreInfo": "更多信息",
+    "another": "换一部",
+    "perEpisode": "每集 {{time}}",
+    "noneTitle": "没有合适的",
+    "noneText": "换个心情或多给点时间试试。",
+    "allShownText": "这些选项下的推荐你都看过了，换个选项试试。",
+    "loadError": "无法找到推荐",
+    "times": {
+      "90": "90 分钟以内",
+      "120": "约 2 小时",
+      "episode": "一集",
+      "any": "不限时长"
+    },
+    "moods": {
+      "any": "都行",
+      "funny": "搞笑",
+      "exciting": "刺激",
+      "scary": "恐怖",
+      "feelgood": "治愈",
+      "thoughtful": "引人深思",
+      "romantic": "浪漫"
+    }
   }
 }

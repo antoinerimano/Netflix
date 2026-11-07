@@ -342,5 +342,37 @@
     "notFound": "This list isn't shared, or doesn't exist",
     "notFoundText": "Ask whoever shared it to check the link.",
     "loadError": "Couldn't load this list"
+  },
+  "pick": {
+    "title": "What to watch?",
+    "subtitle": "Tell us how much time you have and what you feel like.",
+    "time": "How much time?",
+    "mood": "In the mood for",
+    "show": "Show me",
+    "showMore": "Show me others",
+    "surprise": "Surprise me",
+    "yourPick": "Your pick",
+    "moreInfo": "More info",
+    "another": "Another one",
+    "perEpisode": "{{time}} an episode",
+    "noneTitle": "Nothing fits",
+    "noneText": "Try another mood or more time.",
+    "allShownText": "You've seen every pick for these choices: try others.",
+    "loadError": "Couldn't find picks",
+    "times": {
+      "90": "Under 90 min",
+      "120": "About 2 hours",
+      "episode": "One episode",
+      "any": "No limit"
+    },
+    "moods": {
+      "any": "Anything",
+      "funny": "Funny",
+      "exciting": "Exciting",
+      "scary": "Scary",
+      "feelgood": "Feel-good",
+      "thoughtful": "Thoughtful",
+      "romantic": "Romantic"
+    }
   }
 }

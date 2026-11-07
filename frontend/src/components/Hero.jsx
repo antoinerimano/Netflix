@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import './Hero.css';
 import { logOutboundClickBeacon, logTitleClick } from '../api/analyticsApi';
 import { Button, Rating, Badge } from '../design';
-import { PlayIcon, InfoIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import { PlayIcon, InfoIcon, VolumeOnIcon, VolumeOffIcon, DiceIcon } from '../design/icons';
 import { tmdbImage, tmdbSrcSet, IMG } from '../utils/tmdbImage';
 
 const TRAILER_DELAY_MS = 3000;
@@ -178,6 +178,8 @@ const Hero = ({ hero: title }) => {
           <Button variant="glass" size="lg" icon={<InfoIcon />} onClick={moreInfo}>
             {t('options.moreInfo')}
           </Button>
+          {/* can't decide: one title that fits (components/pick/PickPage.jsx) */}
+          <Button variant="glass" size="lg" icon={<DiceIcon />} label={t('pick.surprise')} onClick={() => navigate('/pick?surprise=1')} />
         </div>
       </div>
 

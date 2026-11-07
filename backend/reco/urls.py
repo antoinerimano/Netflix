@@ -11,6 +11,7 @@ from .history import HistoryView, HistoryItemView, HistoryPauseView, HistoryExpo
 from .stats import StatsView
 from .collections import CollectionView
 from .lists import ListsView, ListView, ListItemView, PublicListView, PublicListCopyView
+from .pick import PickView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -34,6 +35,7 @@ urlpatterns = [
     path("history/<int:event_id>/", HistoryItemView.as_view()),
     path("stats/", StatsView.as_view()),
     path("collections/<int:collection_id>/", CollectionView.as_view()),
+    path("pick/", PickView.as_view()),
     path("lists/", ListsView.as_view()),
     path("lists/<int:list_id>/", ListView.as_view()),
     path("lists/<int:list_id>/items/<int:title_id>/", ListItemView.as_view()),

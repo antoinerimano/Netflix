@@ -354,5 +354,37 @@
     "notFound": "Esta lista no está compartida o no existe",
     "notFoundText": "Pide a quien la compartió que revise el enlace.",
     "loadError": "No se pudo cargar esta lista"
+  },
+  "pick": {
+    "title": "¿Qué ver?",
+    "subtitle": "Dinos cuánto tiempo tienes y qué te apetece.",
+    "time": "¿Cuánto tiempo?",
+    "mood": "Con ganas de",
+    "show": "Muéstrame",
+    "showMore": "Muéstrame otros",
+    "surprise": "Sorpréndeme",
+    "yourPick": "Tu elección",
+    "moreInfo": "Más información",
+    "another": "Otro",
+    "perEpisode": "{{time}} por episodio",
+    "noneTitle": "Nada encaja",
+    "noneText": "Prueba otro estado de ánimo o más tiempo.",
+    "allShownText": "Ya viste todas las sugerencias para esta elección: prueba otras.",
+    "loadError": "No se encontraron sugerencias",
+    "times": {
+      "90": "Menos de 90 min",
+      "120": "Unas 2 horas",
+      "episode": "Un episodio",
+      "any": "Sin límite"
+    },
+    "moods": {
+      "any": "Cualquier cosa",
+      "funny": "Divertido",
+      "exciting": "Emocionante",
+      "scary": "De miedo",
+      "feelgood": "Reconfortante",
+      "thoughtful": "Para pensar",
+      "romantic": "Romántico"
+    }
   }
 }

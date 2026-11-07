@@ -23,7 +23,7 @@ test('home: banner, rows, back up to the banner, never lost', async ({ page }) =
 
   await remote(page, 'Up');
   // the banner above the rows, not the navbar (regression: the fixed navbar always looked closer)
-  expect(await focused(page)).toMatch(/^BUTTON (Play|More info|Sound on|Sound off)/);
+  expect(await focused(page)).toMatch(/^BUTTON (Play|More info|Surprise me|Sound on|Sound off)/);
 
   await remote(page, 'Up Up Up Down Down Down Right Left');
   expect(await focused(page)).not.toBe('BODY');

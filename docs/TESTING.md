@@ -1,14 +1,14 @@
 # Tests
 
-**207 automated tests** protect the app: 104 backend, 63 frontend, 40 end-to-end. GitHub runs
+**217 automated tests** protect the app: 110 backend, 66 frontend, 41 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 104 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 63 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 40 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 110 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 66 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 41 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 104 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 63 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 40 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 110 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 66 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 41 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (104)
+## Backend tests (110)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -100,6 +100,17 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
 | `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### What to watch: `backend/reco/test_pick.py` (6)
+
+| Test | Verifies |
+|---|---|
+| `test_time` | under 90 min / about 2 h: movies of 60 to 95 / 130 min; one episode: shows whose episodes last up to 60 min; no limit: both (no shorts); the time comes back with each title |
+| `test_mood` | each mood's genres, and what it leaves out (no horror in feel-good) |
+| `test_what_was_seen_or_already_shown_is_left_out` | watched, rated, "not interested" and what the app already showed are never picked again |
+| `test_kids_and_other_accounts_and_bad_params` | a kids profile gets titles for its age; another account's profile is refused; an unknown time or mood is refused |
+| `test_count_and_surprise` | one title for "Surprise me", as many as asked otherwise |
+| `test_draw_favours_the_best_without_repeats` | the draw only takes from the best 60, the best more often, never twice the same |
 
 ### Lists and sharing them: `backend/reco/test_lists.py` (8)
 
@@ -214,7 +225,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (63)
+## Frontend tests (66)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -284,6 +295,14 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### What to watch page: `frontend/src/components/pick/PickPage.test.jsx` (3)
+
+| Test | Verifies |
+|---|---|
+| the choices go with the request; again leaves out what was shown | the time and mood chosen are sent, each result shows its length ("22 min an episode"), "Show me others" leaves out what was shown |
+| surprise: one title, no time limit, then another one | `/pick?surprise=1` asks for one title with no time limit (regression: it went with the default "under 90 min"), "Another one" leaves out the first |
+| nothing fits | the empty state says to try another mood or more time |
+
 ### Add to a list: `frontend/src/components/lists/ListPicker.test.jsx` (2)
 
 | Test | Verifies |
@@ -330,7 +349,7 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (40)
+## End-to-end tests (41)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -380,13 +399,19 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 
 | Test | Pages |
 |---|---|
-| browsing pages | home, Movies, TV Shows, My List, Upcoming, a collection, search (empty and with results) |
+| browsing pages | home, Movies, TV Shows, My List, Upcoming, a collection, What to watch (choices and a surprise), search (empty and with results) |
 | title pages and the player | a movie in a franchise, a movie, a show, the player (Alex's history is cleared after) |
 | signed out: sign in, sign up | sign in, sign up |
 | menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
 | profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account, My List with your lists, a list, its shared page, the "Add to a list" dialog |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### What to watch: `e2e/tests/pick.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| surprise me, then choose the time and the mood | "Surprise me" on the home banner opens one title with the focus on Watch; "Another one" changes it and keeps the focus on itself; under 90 min: "Nothing fits"; about 2 hours + funny: Amélie, "2 hr 8 min", focused, OK opens it |
 
 ### Lists: `e2e/tests/lists.spec.js` (1, remote only, at 1280 × 720)
 

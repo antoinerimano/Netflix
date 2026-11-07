@@ -45,7 +45,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
       const pages = {};
       await expect(page.locator('.row').first()).toBeVisible();
       pages['/'] = await checkPage(page);
-      for (const path of ['/movies', '/tv', '/list', '/calendar', '/collection/230', '/search', '/search?q=the']) {
+      for (const path of ['/movies', '/tv', '/list', '/calendar', '/collection/230', '/pick', '/pick?surprise=1', '/search', '/search?q=the']) {
         await page.goto(path);
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);
