@@ -1,7 +1,15 @@
+# container logs (docker compose logs): at most 3 x 10 MB per service
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: mysql:8.0
-    command: ["--default-authentication-plugin=mysql_native_password"]
+    # binary logs: 3 days (MySQL default 30 filled the disk, ~0.5 GB per home snapshot rebuild)
+    command: ["--default-authentication-plugin=mysql_native_password", "--binlog-expire-logs-seconds=259200"]
     environment:
       # Only read when the database is created (empty mysql_data volume): an existing database
       # keeps its own password. Set it in .env next to this file (see .env.example), the same
@@ -11,6 +19,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "127.0.0.1:3306:3306"    
 
@@ -28,6 +37,7 @@ services:
     expose:
       - "8000"
     restart: unless-stopped
+    logging: *default-logging
 
   frontend:
     build:
@@ -36,6 +46,7 @@ services:
     expose:
       - "80"
     restart: unless-stopped
+    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -53,6 +64,7 @@ services:
       - backend
       - frontend
     restart: unless-stopped
+    logging: *default-logging
 
   certbot:
     image: certbot/certbot:latest
@@ -60,6 +72,7 @@ services:
       - certbot_www:/var/www/certbot
       - letsencrypt:/etc/letsencrypt
     restart: "no"
+    logging: *default-logging
 
 volumes:
   mysql_data:
