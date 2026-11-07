@@ -1,14 +1,15 @@
 // src/components/TitleOptions.js
-// Options for one title, in a sheet (design Modal): Play / Resume, More info, My List, like /
-// dislike, then the card's own actions (remove from Continue watching, not interested).
+// Options for one title, in a sheet (design Modal): Play / Resume, More info, My List, Add to a
+// list (the list picker), like / dislike, then the card's own actions (remove from Continue watching, not interested).
 // Opened by holding OK on a TV remote, the remote's menu key, a right click, a long press on
 // touch screens or the card's "⋯" button (see Row.js, tv/spatialNavigation.js).
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Rating } from '../design';
 import {
-  PlayIcon, InfoIcon, PlusIcon, CheckIcon, ThumbUpIcon, ThumbDownIcon, BanIcon, CloseIcon,
+  PlayIcon, InfoIcon, PlusIcon, CheckIcon, ThumbUpIcon, ThumbDownIcon, BanIcon, CloseIcon, ListPlusIcon,
 } from '../design/icons';
+import ListPicker from './lists/ListPicker';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import { fetchRating, setRating } from '../api/recoApi';
 import { logActionBeacon } from '../api/analyticsApi';
@@ -45,6 +46,10 @@ export default function TitleOptions({
   const profileId = localStorage.getItem('activeProfileId');
   const [inList, setInList] = useState(null); // null: not known yet
   const [rating, setRatingState] = useState(null);
+  // the "Add to a list" dialog, opened as this sheet closes: it keeps its own copy of the title
+  // (a home row forgets the title when the sheet closes)
+  const [pickTitle, setPickTitle] = useState(null);
+  const picker = <ListPicker title={pickTitle} open={!!pickTitle} onClose={() => setPickTitle(null)} />;
   const touched = useRef({ list: false, rating: false }); // clicked before the server answered
 
   useEffect(() => {
@@ -63,7 +68,7 @@ export default function TitleOptions({
     };
   }, [open, title?.id, profileId]);
 
-  if (!title) return null;
+  if (!title) return picker;
 
   const toggleList = () => {
     const next = !inList;
@@ -90,6 +95,7 @@ export default function TitleOptions({
   const year = title.release_year || String(title.release_date || title.first_air_date || '').slice(0, 4);
 
   return (
+    <>
     <Modal
       open={open}
       onClose={onClose}
@@ -130,6 +136,7 @@ export default function TitleOptions({
                 onClick={toggleList}
               />
             )}
+            <MenuItem icon={<ListPlusIcon />} label={t('lists.addToList')} onClick={then(() => setPickTitle(title))} />
             <MenuItem icon={<ThumbUpIcon />} label={t('rate.like')} active={rating === 'like'} onClick={() => rate('like')} />
             <MenuItem icon={<ThumbDownIcon />} label={t('rate.dislike')} active={rating === 'dislike'} onClick={() => rate('dislike')} />
           </>
@@ -146,5 +153,7 @@ export default function TitleOptions({
         ) : null}
       </ul>
     </Modal>
+    {picker}
+    </>
   );
 }

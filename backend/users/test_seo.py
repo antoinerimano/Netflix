@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from django.core.cache import cache
+from django.conf import settings
 from django.test import TestCase, override_settings
 
 from . import seo
@@ -145,6 +146,21 @@ class SeoPagesTests(TestCase):
             self.assertEqual(self.client.get(path).status_code, 200, path)
         for path in ("/nope", "/movies/abc", "/wp-login.php", "/movies/1/extra"):
             self.assertEqual(self.client.get(path).status_code, 404, path)
+
+    def test_every_app_route_is_known(self):
+        """Each <Route path> of the frontend (App.jsx) loads with 200, not a 404 page: a route
+        missing from APP_ROUTES worked inside the app but not on a reload or an opened link."""
+        app = Path(settings.BASE_DIR).parent / "frontend" / "src" / "App.jsx"
+        if not app.exists():
+            self.skipTest("frontend not checked out")
+        paths = re.findall(r'<Route\s+path="([^"]+)"', app.read_text(encoding="utf-8"))
+        self.assertGreater(len(paths), 20)
+        own_views = ("/movies/:", "/tv/:", "/actor/:", "/l/:")  # their own pages (title / actor / list tags)
+        for path in paths:
+            if path in ("*", "/design-system") or path.startswith(own_views):
+                continue
+            url = re.sub(r":\w+", "x", path.replace("/*", "/x"))
+            self.assertEqual(self.client.get(url).status_code, 200, f"{path} -> add it to seo.APP_ROUTES")
 
     def test_api_404_stays_json(self):
         res = self.client.get("/api/does-not-exist/")

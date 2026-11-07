@@ -1,14 +1,14 @@
 # Tests
 
-**195 automated tests** protect the app: 95 backend, 61 frontend, 39 end-to-end. GitHub runs
+**207 automated tests** protect the app: 104 backend, 63 frontend, 40 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 95 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 61 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 39 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 104 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 63 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 40 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 95 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 61 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 39 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 104 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 63 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 40 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (95)
+## Backend tests (104)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -100,6 +100,19 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_bad_bodies_are_refused` | missing, empty, non-numeric or more than 50 picks are refused |
 | `test_an_empty_rebuild_never_replaces_the_home_page` | a rebuilt home page with nothing in it (everything already seen) keeps the page the profile had |
 | `test_home_says_when_the_profile_has_no_taste_yet` | the home page tells the app to offer the picker until the profile likes something |
+
+### Lists and sharing them: `backend/reco/test_lists.py` (8)
+
+| Test | Verifies |
+|---|---|
+| `test_create_list_add_remove_and_read` | a list made with its first title (name tidied, private, a 10-letter share id), adding twice adds once, titles in the order added, covers, removing |
+| `test_lists_say_which_contain_a_title` | the lists say which ones hold a given title (the "Add to a list" checks) |
+| `test_rename_describe_delete_and_bad_names` | rename, description cut at 300, an empty name refused, delete |
+| `test_limits` | 50 lists per profile, 500 titles per list |
+| `test_private_until_shared_then_anyone_can_read_it` | a private list's public address is a 404; shared, anyone signed out sees its name, author and titles |
+| `test_save_a_copy` | another account saves a private copy, titles in the same order |
+| `test_other_accounts_and_kids` | another account can't read or change a list; a kids profile's view of its list follows its age |
+| `test_shared_list_page_for_search_engines_and_previews` | `/l/<id>`: 404 while private; shared: its title, "author: titles" description, first poster, `ItemList` data |
 
 ### Franchises in watch order: `backend/reco/test_collections.py` (6)
 
@@ -178,7 +191,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `SearchTests.test_translated_name_and_reason_shape` | search finds a title by its translated name ("Le Parrain" → The Godfather) and says why it matched |
 | `SearchTests.test_typo_fallback_runs` | a misspelled search works (regression: the typo-tolerant pass crashed) |
 
-### Search engines and link previews: `backend/users/test_seo.py` (15)
+### Search engines and link previews: `backend/users/test_seo.py` (16)
 
 What `users/seo.py` answers for the app's pages (nginx sends it every URL that isn't a file) and the sitemaps.
 
@@ -194,13 +207,14 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 | `test_actor_page` | an actor page has the actor's name, photo and a translated description; an unknown actor is a 404 |
 | `test_translated_fallback_description` | a title without synopsis gets a description in the page's language |
 | `test_app_routes_200_unknown_404` | every app route answers 200; made-up addresses (`/wp-login.php`) answer 404 instead of a page that looks real |
+| `test_every_app_route_is_known` | every `<Route path>` of `frontend/src/App.jsx` answers 200 from Django (regression: `/taste`, `/import`, `/calendar`, `/history`, `/stats`, `/collection/…` were 404 + noindex on a reload or an opened link) |
 | `test_api_404_stays_json` | unknown API addresses are not turned into app pages |
 | `test_index_and_sections`, `test_unknown_parts_404`, `test_split_into_files` | `/sitemap.xml` lists the parts; each part lists its movies / shows / actors once; parts split at 40,000 addresses |
 | `test_revalidates_and_survives_outage` | `index.html` is re-checked with the frontend on every page (a deploy shows at once) and the last copy is used if the frontend is briefly down |
 
 ---
 
-## Frontend tests (61)
+## Frontend tests (63)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -270,6 +284,13 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | Continue waits for enough picks, then saves them and opens the home page | Continue stays off until 3 titles are picked (picking again unpicks), then the picks are sent and the home page opens |
 | Skip goes home without saving | Skip saves nothing |
 
+### Add to a list: `frontend/src/components/lists/ListPicker.test.jsx` (2)
+
+| Test | Verifies |
+|---|---|
+| toggles the title in a list, the focus starts on the first list | checks where the title is, OK adds it (count and toast), the focus lands on the first list once they arrive |
+| a new list starts with the title; an empty name is refused | "Give the list a name.", then the new list, checked |
+
 ### Collection page: `frontend/src/components/collection/CollectionPage.test.jsx` (3)
 
 | Test | Verifies |
@@ -309,7 +330,7 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (39)
+## End-to-end tests (40)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -363,9 +384,15 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 | title pages and the player | a movie in a franchise, a movie, a show, the player (Alex's history is cleared after) |
 | signed out: sign in, sign up | sign in, sign up |
 | menus, sheets and dialogs | browse filters, title options, profile menu, notifications, every tab of the avatar builder |
-| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account |
+| profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account, My List with your lists, a list, its shared page, the "Add to a list" dialog |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Lists: `e2e/tests/lists.spec.js` (1, remote only, at 1280 × 720)
+
+| Test | Verifies |
+|---|---|
+| make a list, share it, open it signed out, save a copy | "Add to a list" beside My List opens on the name field, a new list starts with the title, Back closes; from a card's options sheet the dialog starts on the list and OK adds; My List starts on "Your lists"; Share shows the address; someone signed out sees the list and opens a title; "Save a copy" opens the copy |
 
 ### Franchises: `e2e/tests/collection.spec.js` (1, remote only, at 1280 × 720)
 

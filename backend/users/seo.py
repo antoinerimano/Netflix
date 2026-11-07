@@ -59,6 +59,8 @@ HREFLANGS = {"zh": "zh-Hans", "pt": "pt-BR"}
 APP_ROUTES = [re.compile(p) for p in (
     r"^/$",
     r"^/(profiles|search|movies|tv|list|register|login|create-profile|choose-subscription)/?$",
+    r"^/(taste|import|calendar|history|stats)/?$",
+    r"^/(collection|lists)/[^/]+/?$",
     r"^/account/[^/]+/?$",
     r"^/watch/[^/]+/?$",
     r"^/reset-password/[^/]+/[^/]+/?$",
@@ -265,6 +267,33 @@ def actor_page(request, tmdb_id):
         ld["image"] = image
     head = _head(title=f"{actor['name']} | {SITE_NAME}", description=description, path=path, lang=lang,
                  image=image, og_type="profile", json_ld=ld)
+    return render_shell(head, lang)
+
+
+def list_page(request, share_id):
+    """A shared list (/l/<share_id>): its name, what's in it, the first poster. Private or
+    unknown: a real 404 (nobody can guess what a private list holds)."""
+    from reco.models import UserList, UserListItem
+
+    lst = UserList.objects.filter(share_id=share_id, is_public=True).select_related("profile").first()
+    if lst is None:
+        return _not_found(request)
+    lang = _lang(request)
+    path = f"/l/{share_id}"
+    titles = list(
+        UserListItem.objects.filter(user_list=lst).order_by("added_at", "id")
+        .values_list("title__title", "title__poster")[:50]
+    )
+    names = [t for t, _p in titles]
+    description = lst.description or ", ".join(names[:6])
+    image = _image(next((p for _t, p in titles if p), None))
+    ld = {
+        "@context": "https://schema.org", "@type": "ItemList", "name": lst.name, "url": _page_url(path, lang),
+        "numberOfItems": len(titles),
+        "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": n} for i, n in enumerate(names)],
+    }
+    head = _head(title=f"{lst.name} | {SITE_NAME}", description=_clip(f"{lst.profile.name}: {description}"),
+                 path=path, lang=lang, image=image, json_ld=ld)
     return render_shell(head, lang)
 
 

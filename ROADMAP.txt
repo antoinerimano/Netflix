@@ -221,6 +221,15 @@ Status: [ ] todo   [~] in progress   [x] done
         Navigation fix: OK on a link no longer sends the new page's focus to the footer while it
         loads (where the focus was is remembered with the page it was on). Backend:
         reco/collections.py.
-[ ] 7.7 Public, shareable lists
+[x] 7.7 Lists you make and share (/lists/:id, shared at /l/:shareId)
+        Named lists per profile (50 max, 500 titles each): "Add to a list" in the options sheet (hold
+        OK) and beside My List on title pages (a new list starts with the title); "Your lists" at the
+        top of My List; a list's page (titles with remove, Edit, Delete confirmed, Share switch: the
+        address in big letters to type on a phone, the share sheet / Copy). Shared page for anyone
+        (signed out too): name, "A list by <profile>", posters; "Save a copy" signed in. Django serves
+        /l/<id> with its own title / description / poster / ItemList (users/seo.py), 404 while private.
+        Fix found on the way: the app routes added since 7.1 (/taste, /import, /calendar, /history,
+        /stats, /collection) answered 404 + noindex on a reload in production (seo.APP_ROUTES); a
+        test now checks every route of App.jsx. Backend: reco/lists.py.
 [ ] 7.8 "I have 90 minutes" / "Surprise me"
 [ ] 7.9 Arabic and Urdu (right-to-left layouts)

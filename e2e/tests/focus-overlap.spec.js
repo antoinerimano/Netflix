@@ -144,6 +144,24 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);
       }
+
+      // lists: My List with "Your lists", a list (shared), its public page, the "Add to a list" dialog
+      const profileId = String(JSON.parse(await page.evaluate(() => localStorage.getItem('activeProfile'))).id);
+      const auth = { headers: { Authorization: `Bearer ${session.access}` }, params: { profileId } };
+      const heat = (await (await page.request.get(`${API}/titles/search/`, { params: { q: 'Heat' } })).json());
+      const heatId = (heat.results || heat).find((t) => t.title === 'Heat').id;
+      const made = await (await page.request.post(`${API}/lists/`, { ...auth, data: { name: 'Overlap check', title_id: heatId } })).json();
+      await page.request.patch(`${API}/lists/${made.id}/`, { ...auth, data: { is_public: true } });
+      for (const path of ['/list', `/lists/${made.id}`, `/l/${made.share_id}`]) {
+        await page.goto(path);
+        await page.waitForLoadState('networkidle');
+        pages[path] = await checkPage(page);
+      }
+      await page.goto(`/movies/${heatId}`);
+      await page.getByRole('button', { name: 'Add to a list' }).click();
+      await expect(page.locator('.list-pick').first()).toBeVisible();
+      pages['add to a list'] = await checkPage(page, { scope: '.ui-modal', screens: 1 });
+      await page.request.delete(`${API}/lists/${made.id}/`, auth);
       report(pages);
       expect(pages).toEqual(Object.fromEntries(Object.keys(pages).map((k) => [k, []])));
     });

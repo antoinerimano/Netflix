@@ -11,6 +11,7 @@ import { logTitleClick, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import { Button, EmptyState, Skeleton } from '../design';
 import { PlusIcon } from '../design/icons';
+import YourLists from './lists/YourLists';
 
 const List = () => {
   const { t, i18n } = useTranslation('catalog');
@@ -77,20 +78,19 @@ const List = () => {
   return (
     <div className="browse">
       <Navbar />
-      {!loading && !error && list.length > 0 ? (
-        <header className="browse__head">
-          <div className="browse__titles">
-            <h1 className="browse__title">{t('common:nav.myList')}</h1>
-            <span className="browse__count">
-              {t('list.count', { count: list.length })}
-            </span>
-          </div>
-        </header>
-      ) : null}
+      {/* the page's title, then the lists this profile made ("New list"), then My List's titles */}
+      <header className="browse__head">
+        <div className="browse__titles">
+          <h1 className="browse__title">{t('common:nav.myList')}</h1>
+          {!loading && !error && list.length > 0 ? (
+            <span className="browse__count">{t('list.count', { count: list.length })}</span>
+          ) : null}
+        </div>
+      </header>
+      {activeProfileId ? <YourLists key={activeProfileId} /> : null}
       {!loading && (error || list.length === 0) ? (
         error ? (
           <EmptyState
-            page
             tone="error"
             title={t('list.loadError')}
             actions={<Button variant="primary" onClick={() => window.location.reload()}>{t('actions.tryAgain')}</Button>}
@@ -99,7 +99,6 @@ const List = () => {
           </EmptyState>
         ) : (
           <EmptyState
-            page
             icon={<PlusIcon />}
             title={t('list.emptyTitle')}
             actions={

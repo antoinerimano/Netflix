@@ -17,6 +17,7 @@ import CastRow, { castObjects } from './detail/CastRow';
 import MoreLikeThis from './detail/MoreLikeThis';
 import { Button, EmptyState, SectionTitle, Skeleton, friendlyError } from '../design';
 import CollectionSection from './collection/CollectionSection';
+import AddToListButton from './lists/AddToListButton';
 import { PlayIcon, PlusIcon, CheckIcon } from '../design/icons';
 
 /* --- Helpers --- */
@@ -222,6 +223,7 @@ const MovieDetail = () => {
               label={isInList ? t('options.inList') : t('options.addToList')}
               onClick={handleToggleList}
             />
+            <AddToListButton title={movie} />
             <RatingButtons titleId={movie.id} />
           </>
         }
