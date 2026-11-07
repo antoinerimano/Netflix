@@ -273,7 +273,7 @@
 }
 .tvd-ep-card__runtime {
   position: absolute;
-  right: var(--space-2);
+  inset-inline-end: var(--space-2);
   bottom: var(--space-2);
   padding: 1px var(--space-2);
   border-radius: var(--radius-xs);
@@ -364,7 +364,7 @@
   align-items: center;
   gap: var(--space-1);
   min-height: 2rem;
-  margin-left: calc(-1 * var(--space-2));
+  margin-inline-start: calc(-1 * var(--space-2));
   padding: 0 var(--space-2);
   border: 0;
   border-radius: var(--radius-sm);

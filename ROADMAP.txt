@@ -130,7 +130,7 @@ Status: [ ] todo   [~] in progress   [x] done
 5. LANGUAGES
 ------------
 [x] 5.1 The app in the user's language: English, French, Spanish, German, Italian, Japanese, Chinese,
-        Hindi, Portuguese (Brazil), Russian, Bengali (Arabic / Urdu next: they need right-to-left layouts)
+        Hindi, Portuguese (Brazil), Russian, Bengali, Arabic, Urdu (right to left: 7.9)
         Frontend: i18next / react-i18next, one JSON file per language and area (src/i18n/locales),
         English bundled and every other language downloaded on first use (its own chunks), CLDR
         plurals, numbers / dates / durations / language and country names through Intl, <html
@@ -239,4 +239,10 @@ Status: [ ] todo   [~] in progress   [x] done
         home page then drawn among the best 60, the best more often. Candidates cached an hour per
         age limit + time + mood (15 ms warm). Remote: choice rows are groups, the focus follows the
         results, "Another one" keeps it. Backend: reco/pick.py.
-[ ] 7.9 Arabic and Urdu (right-to-left layouts)
+[x] 7.9 Arabic and Urdu (right-to-left layouts)
+        The app, the titles (TMDB ar-SA / ur-PK) and the server's emails and pages in Arabic and Urdu;
+        <html dir="rtl"> (app and the server-rendered page shell). The CSS uses logical properties
+        (margin-inline-start, inset-inline-end, text-align: start...) so the layout flips by itself;
+        src/i18n/rtl.css holds the rest: arrows mirrored, banner shades on the right. The poster rows
+        are mirrored as a whole (react-slick's own rtl mode misplaces short rows), cards turned back,
+        swipe / drag handled in Row.jsx. The remote follows the screen: Left goes further into a row.

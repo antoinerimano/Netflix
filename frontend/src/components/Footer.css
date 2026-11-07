@@ -27,7 +27,7 @@
   transition: color var(--duration-fast), background-color var(--duration-fast);
 }
 .site-footer__link:first-child {
-  margin-left: calc(-1 * var(--space-3)); /* text aligned with the page edge */
+  margin-inline-start: calc(-1 * var(--space-3)); /* text aligned with the page edge */
 }
 .site-footer__link:hover {
   background: var(--color-glass);

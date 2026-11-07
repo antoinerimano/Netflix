@@ -5,7 +5,7 @@
 .row {
   position: relative;
   margin-top: var(--space-8);
-  padding-left: var(--page-gutter); /* cards start on the page margin and run to the screen edge */
+  padding-inline-start: var(--page-gutter); /* cards start on the page margin and run to the screen edge */
   color: var(--color-text);
 }
 .row:first-of-type {
@@ -31,7 +31,27 @@
   overflow: visible; /* the slider itself clips; cards can grow a little on hover */
 }
 .row .slick-slide {
-  padding-right: var(--space-2);
+  padding-inline-end: var(--space-2);
+}
+/* right-to-left (Arabic, Urdu): react-slick's own rtl mode misplaces short rows, so the slider
+   keeps its left-to-right math and the whole row is mirrored, each card mirrored back: the
+   first card sits at the right edge and the row scrolls leftwards */
+[dir="rtl"] .row .slick-slider {
+  direction: ltr;
+  transform: scaleX(-1);
+}
+[dir="rtl"] .row .slick-list {
+  touch-action: pan-y; /* sideways swipes come to Row.jsx (scroll still works) */
+}
+[dir="rtl"] .row .row-slide {
+  direction: rtl;
+  transform: scaleX(-1);
+}
+[dir="rtl"] .row .row-arrow .ui-icon--flip {
+  transform: none; /* the mirrored row already turns it */
+}
+[dir="rtl"] .row .row-arrow:hover .ui-icon--flip {
+  transform: scale(1.25);
 }
 .slick-prev:before,
 .slick-next:before {
@@ -62,11 +82,11 @@
   transition: transform var(--duration-fast) var(--ease-standard);
 }
 .row .row-arrow--next {
-  right: 0;
+  inset-inline-end: 0;
   background: linear-gradient(to left, rgba(8, 8, 10, 0.85), transparent);
 }
 .row .row-arrow--prev {
-  left: 0;
+  inset-inline-start: 0;
   background: linear-gradient(to right, rgba(8, 8, 10, 0.85), transparent);
 }
 .row:hover .row-arrow {
@@ -177,7 +197,7 @@ html.tv-keys .row .row-arrow {
 /* status badge on the artwork (S1 · E3, New episode) */
 .row-card-badge {
   position: absolute;
-  left: var(--space-2);
+  inset-inline-start: var(--space-2);
   bottom: var(--space-3);
   z-index: 4;
   padding: 2px var(--space-2);
@@ -200,8 +220,8 @@ html.tv-keys .row .row-arrow {
 /* progress (Continue watching): always visible, flush with the bottom of the artwork */
 .progress-bar-container {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   bottom: 0;
   z-index: 5;
   height: 4px;
@@ -246,10 +266,10 @@ html.tv-keys .row .row-arrow {
   background: rgba(8, 8, 10, 0.9);
 }
 .row-options-btn {
-  left: var(--space-2);
+  inset-inline-start: var(--space-2);
 }
 .row-unmute-btn {
-  right: var(--space-2);
+  inset-inline-end: var(--space-2);
 }
 
 /* "⋯" options: on hover so cards stay clean; always on touch screens (no hover). The remote

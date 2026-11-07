@@ -35,7 +35,7 @@
   flex-direction: column;
   gap: var(--space-3);
   margin-top: var(--space-8);
-  padding-left: var(--page-gutter);
+  padding-inline-start: var(--page-gutter);
   overflow: hidden;
 }
 .home-skeleton__cards {

@@ -1,14 +1,14 @@
 # Tests
 
-**217 automated tests** protect the app: 110 backend, 66 frontend, 41 end-to-end. GitHub runs
+**221 automated tests** protect the app: 110 backend, 67 frontend, 44 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
 | Backend (Django) | 110 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 66 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 41 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Frontend (Vitest) | 67 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 44 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -37,8 +37,8 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 | Job | Steps | Time |
 |---|---|---|
 | **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 110 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 66 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 41 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Frontend** | translations check · lint (warnings fail it) · 67 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 44 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -225,7 +225,7 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 
 ---
 
-## Frontend tests (66)
+## Frontend tests (67)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -248,14 +248,15 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 | outside full screen the arrows still move around the page | the remote keeps navigating the page when the player isn't full screen |
 | players without an API get no commands | nothing is sent to the other players |
 
-### Languages and formatting: `frontend/src/i18n/i18n.test.js` (16)
+### Languages and formatting: `frontend/src/i18n/i18n.test.js` (17)
 
 | Test | Verifies |
 |---|---|
 | `normalizeLanguage` (8 cases) | browser and profile language codes map to app languages (`fr-CA`, `jp`, `zh-TW`, `pt-BR`…); unknown ones give nothing |
 | every supported code normalizes to itself | the list of languages is consistent |
 | switching language loads its texts and updates `<html lang>` | a language's texts load when chosen, the page declares its language, plurals follow the language ("1 saison", "3 saisons") |
-| every supported language has its own texts | each of the 11 languages really has its texts: a language added to the list without them fails here |
+| every supported language has its own texts | each of the 13 languages really has its texts: a language added to the list without them fails here |
+| Arabic and Urdu: right to left, with their own plural forms | `<html dir="rtl">` in Arabic and Urdu, back to `ltr` in English; Arabic plurals take their six forms ("موسم واحد", "موسمان", "3 مواسم", "11 موسمًا"); `ar-SA` / `ur-PK` map to them |
 | unsupported languages are ignored | an unknown language leaves the app in English |
 | formatting follows the language | durations, decimal numbers (`7,3` in French), language names and "Yesterday" are written the local way |
 | row titles | home row titles are written in the app's language from the server's data |
@@ -349,12 +350,12 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (41)
+## End-to-end tests (44)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
-Test data: 8 movies, 1 show with 2 seasons, French translations, one account with four
-profiles (Alex in English, Camille in French, Kids, and Sam: new, nothing liked yet), and a show
+Test data: 8 movies, 1 show with 2 seasons, French translations, one account with five
+profiles (Alex in English, Camille in French, Kids, Sam: new, nothing liked yet, and Layla in Arabic), and a show
 still on air ("Night Shift": an episode 12 days ago, then in 3 and 10 days, dated from the run),
 a franchise (The Godfather + The Godfather Part II, collection 230), see `backend/users/management/commands/e2e_prepare.py`.
 
@@ -406,6 +407,14 @@ its own card doesn't count, nor does what scrolls under a pinned bar, nor rows t
 | profiles, account, picker, import | Who's watching?, Manage profiles, the profile editor, taste picker, import, watch history, your year, account, My List with your lists, a list, its shared page, the "Add to a list" dialog |
 
 To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour> (<w>x<h>)`.
+
+### Right to left: `e2e/tests/rtl.spec.js` (3, at 1920 × 1080)
+
+| Test | Verifies |
+|---|---|
+| an Arabic profile gets the app right to left | Layla gets `<html lang="ar" dir="rtl">` and the Arabic page title; the navbar reads from the right (Home right of Movies); a row's first card is at the right edge, the second to its left; no sideways scroll |
+| the remote moves through a mirrored row | Left goes further into the row (card 2, then card 8 with the slider following, fully on screen), Right comes back to the first card at the right edge |
+| the focus look keeps clear of its neighbours right to left too | the overlap check of `focus-overlap.spec.js` on home, Movies, What to watch?, My List and the account page, in Arabic |
 
 ### What to watch: `e2e/tests/pick.spec.js` (1, remote only, at 1280 × 720)
 

@@ -310,7 +310,7 @@ textarea:focus-visible {
   content: "Hold OK for options";
   position: absolute;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
   z-index: 11;
   padding: 3px 8px;
   border-radius: 999px;

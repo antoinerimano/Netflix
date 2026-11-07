@@ -85,7 +85,7 @@ class SeoPagesTests(TestCase):
         self.assertIn(f'hreflang="fr" href="https://tauruss.top/movies/{self.movie.pk}?lng=fr"', html)
         self.assertIn(f'hreflang="zh-Hans" href="https://tauruss.top/movies/{self.movie.pk}?lng=zh"', html)
         self.assertIn(f'hreflang="x-default" href="https://tauruss.top/movies/{self.movie.pk}"', html)
-        self.assertEqual(len(_tags(html, r'rel="alternate"')), 12)  # 11 languages + x-default
+        self.assertEqual(len(_tags(html, r'rel="alternate"')), 14)  # 13 languages + x-default
 
     def test_translated_page(self):
         html = self.client.get(f"/movies/{self.movie.pk}?lng=fr").content.decode()

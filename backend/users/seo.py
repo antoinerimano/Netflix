@@ -39,7 +39,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.utils import translation
 from django.utils.translation import gettext as _
 
-from .i18n import APP_LANGUAGES, DEFAULT_LANGUAGE, to_app_language, to_django_language
+from .i18n import APP_LANGUAGES, DEFAULT_LANGUAGE, RTL_LANGUAGES, to_app_language, to_django_language
 from .models import Actor, Title, TitleTranslation
 
 log = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ SITEMAP_CACHE_SECONDS = 6 * 3600
 
 # og:locale per app language
 OG_LOCALES = {"en": "en_US", "fr": "fr_FR", "es": "es_ES", "de": "de_DE", "it": "it_IT", "ja": "ja_JP",
-              "zh": "zh_CN", "hi": "hi_IN", "pt": "pt_BR", "ru": "ru_RU", "bn": "bn_BD"}
+              "zh": "zh_CN", "hi": "hi_IN", "pt": "pt_BR", "ru": "ru_RU", "bn": "bn_BD", "ar": "ar_AR", "ur": "ur_PK"}
 # hreflang per app language (BCP 47)
 HREFLANGS = {"zh": "zh-Hans", "pt": "pt-BR"}
 
@@ -184,7 +184,9 @@ def _head(*, title, description, path, lang, image=None, og_type="website", noin
 def render_shell(head, lang, status=200):
     page = _REPLACED_TAGS.sub("", shell.get())
     page = page.replace("</head>", f"  {head}\n</head>", 1)
-    page = re.sub(r'<html lang="[^"]*"', f'<html lang="{HREFLANGS.get(lang, lang)}"', page, count=1)
+    # right-to-left languages are mirrored from the first paint, before the app loads
+    direction = "rtl" if lang in RTL_LANGUAGES else "ltr"
+    page = re.sub(r'<html lang="[^"]*"(\s+dir="[^"]*")?', f'<html lang="{HREFLANGS.get(lang, lang)}" dir="{direction}"', page, count=1)
     res = HttpResponse(page, status=status, content_type="text/html; charset=utf-8")
     res["Cache-Control"] = "no-cache"  # the shell names the current JS bundles
     return res

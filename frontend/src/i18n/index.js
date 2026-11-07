@@ -34,6 +34,8 @@ export const SUPPORTED_LANGUAGES = {
   pt: 'Português',
   ru: 'Русский',
   bn: 'বাংলা',
+  ar: 'العربية',
+  ur: 'اردو',
 };
 export const LANGUAGE_CODES = Object.keys(SUPPORTED_LANGUAGES);
 export const DEFAULT_LANGUAGE = 'en';

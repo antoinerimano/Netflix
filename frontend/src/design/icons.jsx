@@ -91,13 +91,20 @@ export const BellOffIcon = (p) => (
     <path d="M10 20a2.2 2.2 0 0 0 4 0M3 3l18 18" />
   </Icon>
 );
+// arrows that point along the reading direction: mirrored in right-to-left languages
+const flip = (p) => ({ ...p, className: ["ui-icon--flip", p.className].filter(Boolean).join(" ") });
 export const ArrowLeftIcon = (p) => (
-  <Icon {...p}>
+  <Icon {...flip(p)}>
     <path d="M19 12H5M11 18l-6-6 6-6" />
   </Icon>
 );
+export const ChevronLeftIcon = (p) => (
+  <Icon {...flip(p)}>
+    <path d="m15 6-6 6 6 6" />
+  </Icon>
+);
 export const ChevronRightIcon = (p) => (
-  <Icon {...p}>
+  <Icon {...flip(p)}>
     <path d="m9 6 6 6-6 6" />
   </Icon>
 );

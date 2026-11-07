@@ -14,7 +14,9 @@ from contextlib import contextmanager
 from django.conf import settings
 from django.utils import translation
 
-APP_LANGUAGES = ("en", "fr", "es", "de", "it", "ja", "zh", "hi", "pt", "ru", "bn")
+APP_LANGUAGES = ("en", "fr", "es", "de", "it", "ja", "zh", "hi", "pt", "ru", "bn", "ar", "ur")
+# written right to left: the page is mirrored (<html dir="rtl">)
+RTL_LANGUAGES = ("ar", "ur")
 DEFAULT_LANGUAGE = "en"
 
 # older profiles / other conventions -> ours
@@ -23,7 +25,7 @@ _ALIASES = {"jp": "ja", "pt-br": "pt", "pt-pt": "pt", "cn": "zh", "zh-hans": "zh
 _DJANGO_CODES = {"zh": "zh-hans", "pt": "pt-br"}  # Brazilian Portuguese: most speakers
 # ours -> TMDB's language parameter / translation iso codes
 TMDB_CODES = {"en": "en-US", "fr": "fr-FR", "es": "es-ES", "de": "de-DE", "it": "it-IT", "ja": "ja-JP", "zh": "zh-CN",
-              "hi": "hi-IN", "pt": "pt-BR", "ru": "ru-RU", "bn": "bn-BD"}
+              "hi": "hi-IN", "pt": "pt-BR", "ru": "ru-RU", "bn": "bn-BD", "ar": "ar-SA", "ur": "ur-PK"}
 
 
 def to_app_language(code, default=None):

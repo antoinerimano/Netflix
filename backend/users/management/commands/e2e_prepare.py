@@ -143,11 +143,13 @@ class Command(BaseCommand):
             Profile.objects.create(user=user, name="Kids", language_preference="en", age_restriction="G", is_kids=True),
             # a brand-new profile: nothing liked yet, so the app offers "What do you like?" (/taste)
             Profile.objects.create(user=user, name="Sam", language_preference="en", age_restriction="NC-17"),
+            # Arabic: the app right to left
+            Profile.objects.create(user=user, name="Layla", language_preference="ar", age_restriction="NC-17"),
         ]
         for p in profiles:
             upsert_seed_snapshot(p)  # home rows right away (the cron builds them in production)
         # profiles in use already liked something: no "pick what you like" banner on their home
         from reco.models import TitleRating
         heat = Title.objects.get(title="Heat")
-        for p in profiles[:3]:
+        for p in profiles[:3] + profiles[4:]:
             TitleRating.objects.create(profile=p, title=heat, value=TitleRating.LIKE)
