@@ -15,6 +15,7 @@ import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
+import AddToListButton from './lists/AddToListButton';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import DetailHero, { splitGenres, genreName } from './detail/DetailHero';
@@ -239,6 +240,7 @@ export default function TVShowDetail() {
               label={isInList ? t('options.inList') : t('options.addToList')}
               onClick={handleToggleList}
             />
+            <AddToListButton title={{ ...title, type: 'tv' }} />
             <RatingButtons titleId={title.id} />
             <FollowButton titleId={title.id} />
           </>

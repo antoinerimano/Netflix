@@ -122,3 +122,19 @@ export async function fetchStats(profileId, year = null) {
   const res = await api.get("/stats/", { params: { profileId, ...(year ? { year } : {}) } });
   return res.data;
 }
+
+// ---------- franchises in watch order (backend reco/collections.py) ----------
+// { id, name, poster, backdrop, parts: [{ title, position, watched, upcoming }], watched, total, next }
+export async function fetchCollection(profileId, collectionId) {
+  const res = await api.get(`/collections/${collectionId}/`, { params: { profileId } });
+  return res.data;
+}
+
+// ---------- what to watch (backend reco/pick.py) ----------
+// time: "90" | "120" | "episode" | "any"; mood: "any" | "funny" | ...; exclude: ids already shown
+export async function fetchPicks(profileId, { time, mood, count = 6, exclude = [] }) {
+  const res = await api.get("/pick/", {
+    params: { profileId, time, mood, count, ...(exclude.length ? { exclude: exclude.slice(-300).join(",") } : {}) },
+  });
+  return res.data;
+}

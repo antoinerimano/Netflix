@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from django.core.cache import cache
+from django.conf import settings
 from django.test import TestCase, override_settings
 
 from . import seo
@@ -84,7 +85,7 @@ class SeoPagesTests(TestCase):
         self.assertIn(f'hreflang="fr" href="https://tauruss.top/movies/{self.movie.pk}?lng=fr"', html)
         self.assertIn(f'hreflang="zh-Hans" href="https://tauruss.top/movies/{self.movie.pk}?lng=zh"', html)
         self.assertIn(f'hreflang="x-default" href="https://tauruss.top/movies/{self.movie.pk}"', html)
-        self.assertEqual(len(_tags(html, r'rel="alternate"')), 12)  # 11 languages + x-default
+        self.assertEqual(len(_tags(html, r'rel="alternate"')), 14)  # 13 languages + x-default
 
     def test_translated_page(self):
         html = self.client.get(f"/movies/{self.movie.pk}?lng=fr").content.decode()
@@ -146,6 +147,21 @@ class SeoPagesTests(TestCase):
         for path in ("/nope", "/movies/abc", "/wp-login.php", "/movies/1/extra"):
             self.assertEqual(self.client.get(path).status_code, 404, path)
 
+    def test_every_app_route_is_known(self):
+        """Each <Route path> of the frontend (App.jsx) loads with 200, not a 404 page: a route
+        missing from APP_ROUTES worked inside the app but not on a reload or an opened link."""
+        app = Path(settings.BASE_DIR).parent / "frontend" / "src" / "App.jsx"
+        if not app.exists():
+            self.skipTest("frontend not checked out")
+        paths = re.findall(r'<Route\s+path="([^"]+)"', app.read_text(encoding="utf-8"))
+        self.assertGreater(len(paths), 20)
+        own_views = ("/movies/:", "/tv/:", "/actor/:", "/l/:")  # their own pages (title / actor / list tags)
+        for path in paths:
+            if path in ("*", "/design-system") or path.startswith(own_views):
+                continue
+            url = re.sub(r":\w+", "x", path.replace("/*", "/x"))
+            self.assertEqual(self.client.get(url).status_code, 200, f"{path} -> add it to seo.APP_ROUTES")
+
     def test_api_404_stays_json(self):
         res = self.client.get("/api/does-not-exist/")
         self.assertEqual(res.status_code, 404)
@@ -177,12 +193,35 @@ class SeoSitemapTests(TestCase):
         self.assertEqual(actors.count("/actor/7<"), 1)
         self.assertIn("<loc>https://tauruss.top/tv</loc>", self.client.get("/sitemap-static.xml").content.decode())
 
+    @override_settings(SITE_URL="https://tauruss.top")
+    def test_every_language_listed_with_its_alternates(self):
+        movies = self.client.get("/sitemap-movies-1.xml").content.decode()
+        self.assertIn('xmlns:xhtml="http://www.w3.org/1999/xhtml"', movies)
+        page = f"https://tauruss.top/movies/{self.m1.pk}"
+        for code in seo.APP_LANGUAGES:  # one <url> per language, English without ?lng=
+            url = page if code == "en" else f"{page}?lng={code}"
+            self.assertEqual(movies.count(f"<loc>{url}</loc>"), 1)
+        # each of them names all 13 languages + x-default
+        first = movies.split("</url>")[0]
+        self.assertEqual(first.count("<xhtml:link "), len(seo.APP_LANGUAGES) + 1)
+        self.assertIn(f'hreflang="ar" href="{page}?lng=ar"', first)
+        self.assertIn(f'hreflang="zh-Hans" href="{page}?lng=zh"', first)
+        self.assertIn(f'hreflang="x-default" href="{page}"', first)
+        static = self.client.get("/sitemap-static.xml").content.decode()
+        self.assertIn("<loc>https://tauruss.top/?lng=ur</loc>", static)
+
+    def test_files_stay_under_the_limits(self):
+        self.assertLessEqual(seo.SITEMAP_PAGES_PER_FILE * len(seo.APP_LANGUAGES), 50_000)
+        with mock.patch.object(seo, "_sitemap_sections", return_value={"movies": list(range(1, seo.SITEMAP_PAGES_PER_FILE + 1))}):
+            size = len(self.client.get("/sitemap-movies-1.xml").content)
+        self.assertLess(size, 50 * 1024 * 1024)
+
     def test_unknown_parts_404(self):
         self.assertEqual(self.client.get("/sitemap-movies-2.xml").status_code, 404)
         self.assertEqual(self.client.get("/sitemap-users-1.xml").status_code, 404)
 
     def test_split_into_files(self):
-        with mock.patch.object(seo, "SITEMAP_URLS_PER_FILE", 1):
+        with mock.patch.object(seo, "SITEMAP_PAGES_PER_FILE", 1):
             body = self.client.get("/sitemap.xml").content.decode()
             self.assertIn("sitemap-movies-2.xml", body)
             self.assertNotIn("sitemap-movies-3.xml", body)

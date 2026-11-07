@@ -21,7 +21,8 @@
       "lang_trending": "Trending in {{language}}",
       "trending": "Trending",
       "new_episodes": "New episodes",
-      "continue_watching": "Continue watching"
+      "continue_watching": "Continue watching",
+      "collections_next": "Next in your collections"
     },
     "why": {
       "similarTo": "Similar to {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Rated {{rating}}/10 by {{votes}} people",
       "hiddenGem": "Rated {{rating}}/10, but few people know it",
       "popularNow": "Popular right now",
-      "newRelease": "New: out {{date}}"
+      "newRelease": "New: out {{date}}",
+      "collectionPart": "Part {{position}} of {{collection}}"
     },
     "taste": {
       "title": "Make this home page yours",
@@ -284,5 +286,93 @@
     "follow": "Follow",
     "following": "Following",
     "loadError": "Couldn't load your calendar"
+  },
+  "collection": {
+    "partOf": "Part of {{name}}",
+    "order": "Watch order",
+    "progress": "{{watched}} of {{total}} watched",
+    "allWatched": "All watched",
+    "kicker_one": "Collection · {{count}} movie",
+    "kicker_other": "Collection · {{count}} movies",
+    "watchNext": "Watch next: {{title}}",
+    "startWith": "Start with {{title}}",
+    "part": "Part {{position}}",
+    "watched": "Watched",
+    "comingSoon": "Coming soon",
+    "thisOne": "This one",
+    "notFound": "Collection not found",
+    "loadError": "Couldn't load this collection"
+  },
+  "lists": {
+    "yourLists": "Your lists",
+    "newList": "New list",
+    "newListHint": "Group titles, then share",
+    "count_one": "{{count}} title",
+    "count_other": "{{count}} titles",
+    "shared": "Shared",
+    "addToList": "Add to a list",
+    "pickerTitle": "Add “{{title}}” to a list",
+    "added": "Added to {{name}}",
+    "removedFrom": "Removed from {{name}}",
+    "name": "Name",
+    "namePlaceholder": "e.g. Best heist movies",
+    "create": "Create",
+    "nameRequired": "Give the list a name.",
+    "tooMany": "You've reached the most lists a profile can have.",
+    "empty": "Nothing in this list yet",
+    "emptyText": "Add titles from their page, or hold OK on a card for its options.",
+    "share": "Share this list",
+    "shareHint": "Anyone with the link can see it, with your profile name ({{name}}) as its author.",
+    "link": "Link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "shareVia": "Share",
+    "tvHint": "On a TV? Type this address on your phone.",
+    "preview": "See it as others do",
+    "edit": "Edit",
+    "editTitle": "Edit list",
+    "description": "Description (optional)",
+    "delete": "Delete list",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteText": "The list goes away, not the titles in it. A shared link stops working.",
+    "remove": "Remove {{title}} from the list",
+    "by": "A list by {{name}}",
+    "saveCopy": "Save a copy",
+    "makeYourOwn": "Make your own lists",
+    "notFound": "This list isn't shared, or doesn't exist",
+    "notFoundText": "Ask whoever shared it to check the link.",
+    "loadError": "Couldn't load this list"
+  },
+  "pick": {
+    "title": "What to watch?",
+    "subtitle": "Tell us how much time you have and what you feel like.",
+    "time": "How much time?",
+    "mood": "In the mood for",
+    "show": "Show me",
+    "showMore": "Show me others",
+    "surprise": "Surprise me",
+    "yourPick": "Your pick",
+    "moreInfo": "More info",
+    "another": "Another one",
+    "perEpisode": "{{time}} an episode",
+    "noneTitle": "Nothing fits",
+    "noneText": "Try another mood or more time.",
+    "allShownText": "You've seen every pick for these choices: try others.",
+    "loadError": "Couldn't find picks",
+    "times": {
+      "90": "Under 90 min",
+      "120": "About 2 hours",
+      "episode": "One episode",
+      "any": "No limit"
+    },
+    "moods": {
+      "any": "Anything",
+      "funny": "Funny",
+      "exciting": "Exciting",
+      "scary": "Scary",
+      "feelgood": "Feel-good",
+      "thoughtful": "Thoughtful",
+      "romantic": "Romantic"
+    }
   }
 }

@@ -75,7 +75,7 @@
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-secondary);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 .cal-card__art {
@@ -97,7 +97,7 @@
 }
 .cal-card__badge {
   position: absolute;
-  left: var(--space-2);
+  inset-inline-start: var(--space-2);
   bottom: var(--space-2);
   padding: 2px var(--space-2);
   border-radius: var(--radius-xs);

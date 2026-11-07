@@ -1,0 +1,255 @@
+/* src/components/collection/collection.css - a franchise in watch order (/collection/:id) and the
+   "Part of ..." section on movie pages */
+
+.collection-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* hero: the collection's backdrop, its name, progress, what's next */
+.coll-hero {
+  position: relative;
+  min-height: min(56vh, 30rem);
+  display: flex;
+  align-items: flex-end;
+  background-color: var(--color-bg-deep);
+  background-position: center 20%;
+  background-size: cover;
+}
+.coll-hero__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, var(--color-bg) 4%, rgba(15, 15, 18, 0.55) 45%, rgba(15, 15, 18, 0.2) 100%),
+    linear-gradient(to right, rgba(15, 15, 18, 0.8), transparent 70%);
+}
+.coll-hero__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 48rem;
+  padding: var(--space-12) var(--page-gutter) var(--space-8);
+}
+.coll-hero__kicker {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.coll-hero__title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.coll-hero__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+/* a meter: the track is a lighter step of the fill */
+.coll-meter {
+  display: block;
+  overflow: hidden;
+  width: 10rem;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(229, 9, 20, 0.25);
+}
+.coll-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--color-brand);
+}
+.coll-hero__actions {
+  margin-top: var(--space-2);
+}
+
+/* the movies, numbered */
+.coll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--page-gutter) var(--space-12);
+}
+.coll__title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+.coll__parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(8rem, 13vw, 11rem), 1fr));
+  gap: var(--space-6) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* a movie of the franchise */
+.coll-part {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  text-align: start;
+  cursor: pointer;
+}
+.coll-part__art {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease;
+}
+.coll-part__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.coll-part__num {
+  position: absolute;
+  inset-inline-start: var(--space-2);
+  top: var(--space-2);
+  display: grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.78);
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-black);
+}
+.coll-part__check {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  top: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: #0b0b0b;
+}
+.coll-part__check svg {
+  width: 1rem;
+  height: 1rem;
+}
+.coll-part.is-watched .coll-part__art img {
+  opacity: 0.6;
+}
+.coll-part.is-current .coll-part__art {
+  box-shadow: 0 0 0 2px var(--color-brand), var(--shadow-md);
+}
+.coll-part__name {
+  overflow: hidden;
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.coll-part__meta {
+  font-size: var(--text-sm);
+}
+@media (hover: hover) {
+  .coll-part:hover .coll-part__art {
+    transform: translateY(-3px);
+  }
+}
+/* remote focus: lift + ring, no growth (focus-overlap.spec.js) */
+.coll-part:focus-visible {
+  box-shadow: none;
+}
+.coll-part:focus-visible .coll-part__art {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 12px 26px rgba(0, 0, 0, 0.6);
+}
+.coll-part:focus-visible .coll-part__name {
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* "Part of ..." on a movie page */
+.coll-section__progress {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+/* "Watch order": the row's last tile, the size of a poster */
+.coll-more {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+}
+.coll-more__tile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  color: var(--color-text-secondary);
+  transition: transform var(--focus-speed) ease, box-shadow var(--focus-speed) ease, color var(--focus-speed) ease;
+}
+.coll-more__tile svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+@media (hover: hover) {
+  .coll-more:hover .coll-more__tile {
+    color: var(--color-text);
+    transform: translateY(-3px);
+  }
+}
+.coll-more:focus-visible {
+  box-shadow: none;
+}
+.coll-more:focus-visible .coll-more__tile {
+  color: var(--color-text);
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 12px 26px rgba(0, 0, 0, 0.6);
+}
+.coll-more:focus-visible .coll-part__name {
+  text-decoration: underline;
+  text-decoration-color: var(--focus-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.coll-section__row {
+  gap: var(--space-4);
+}
+.coll-section__row > li {
+  width: clamp(8rem, 12vw, 10rem);
+}

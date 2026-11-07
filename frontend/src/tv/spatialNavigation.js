@@ -277,11 +277,15 @@ function inViewport(el) {
 // the remote continues from the element closest to where the focus was, never from nowhere.
 let lastRect = null;
 let lastRectPage = "";
+// the page each element was focused on: OK on a link changes the address first and removes the
+// link a moment later, so "where the focus was" must stay with the page it was on, not the new
+// one (otherwise the new page, still loading, "continued" from there: the footer)
+const focusedOnPage = new WeakMap();
 function rememberRect(el) {
   const r = el?.getBoundingClientRect?.();
   if (r && r.width > 0) {
     lastRect = r; // a removed element measures 0: keep where it was
-    lastRectPage = window.location.pathname;
+    lastRectPage = focusedOnPage.get(el) || window.location.pathname;
   }
 }
 // only on the page it was measured on: after a navigation the new page starts at its main action
@@ -691,6 +695,7 @@ export function startSpatialNavigation() {
   window.addEventListener("keyup", onKeyUp);
   document.addEventListener("focusin", (e) => {
     lastFocused = e.target;
+    focusedOnPage.set(e.target, window.location.pathname);
     rememberRect(e.target);
     if (keyboardMode && e.target?.matches?.(FOCUSABLE)) placeByEntry.set(entryKey(), placeOf(e.target));
     const group = e.target.closest?.(GROUPS);

@@ -6,7 +6,7 @@ import { genreName, splitGenres } from "./detail/DetailHero";
 import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
-import { saveWatchProgress, reportPlayback, fetchPreferredSource } from "../api/recoApi";
+import { saveWatchProgress, reportPlayback, fetchPreferredSource, fetchCollection } from "../api/recoApi";
 import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbBackground, IMG } from "../utils/tmdbImage";
 import { Button, Chip, EmptyState, Skeleton, Spinner } from "../design";
@@ -175,6 +175,31 @@ export default function WatchPage() {
     }
     return null;
   }, [isTV, title, seasonNumber, episodeNumber]);
+
+  // a movie of a franchise: the next part in watch order (released), for the "Next movie" button
+  const [nextPart, setNextPart] = useState(null);
+  useEffect(() => {
+    setNextPart(null);
+    const collectionId = !isTV ? title?.collection_id : null;
+    const profileId = localStorage.getItem("activeProfileId");
+    if (!collectionId || !profileId) return undefined;
+    let alive = true;
+    fetchCollection(profileId, collectionId)
+      .then((c) => {
+        if (!alive) return;
+        const i = c.parts.findIndex((p) => p.title.id === title.id);
+        const next = i >= 0 ? c.parts.slice(i + 1).find((p) => !p.upcoming) : null;
+        setNextPart(next ? next.title : null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [isTV, title?.id, title?.collection_id]);
+
+  const goToNextPart = useCallback(() => {
+    if (nextPart) navigate(`/watch/${nextPart.id}`, { replace: true });
+  }, [navigate, nextPart]);
 
   const goToNextEpisode = useCallback(() => {
     if (!nextEpisode) return;
@@ -696,6 +721,11 @@ export default function WatchPage() {
               title={t("seasonEpisode", { season: nextEpisode.season, episode: nextEpisode.episode })}
             >
               {t("nextEpisode")}
+            </Button>
+          ) : null}
+          {nextPart ? (
+            <Button variant="glass" size="sm" iconRight={<ChevronRightIcon />} onClick={goToNextPart} title={nextPart.title}>
+              {t("nextMovie")}
             </Button>
           ) : null}
           {sourceType !== "none" ? (

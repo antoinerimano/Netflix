@@ -71,5 +71,6 @@ urlpatterns = [
     re_path(r'^movies/(?P<title_id>\d+)/?$', seo.movie_page),
     re_path(r'^tv/(?P<title_id>\d+)/?$', seo.tv_page),
     re_path(r'^actor/(?P<tmdb_id>\d+)/?$', seo.actor_page),
+    re_path(r'^l/(?P<share_id>[a-z0-9]+)/?$', seo.list_page),  # a shared list (reco/lists.py)
     re_path(r'^(?!api/)(?P<path>.*)$', seo.app_page),
 ]

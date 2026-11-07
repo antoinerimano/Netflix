@@ -10,6 +10,7 @@ import { AuthProvider } from './components/AuthContext';
 import './pwa/installPrompt'; // catch the install prompt as early as possible
 import { startSpatialNavigation } from './tv/spatialNavigation';
 import './tv/focus.css'; // one focus look for keyboard / TV remote
+import './i18n/rtl.css'; // Arabic / Urdu: what logical CSS properties can't flip
 import { BrandLoader } from './design';
 
 startSpatialNavigation(); // TV remote / keyboard: arrows, Enter, Back

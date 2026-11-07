@@ -168,6 +168,33 @@ class WatchEvent(models.Model):
         ]
 
 
+class UserList(models.Model):
+    """
+    A named list a profile makes ("Best heist movies"), next to My List (reco/lists.py). Private
+    until shared: then anyone with /l/<share_id> can see it (and search engines).
+    """
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="lists")
+    name = models.CharField(max_length=80)
+    description = models.CharField(max_length=300, blank=True, default="")
+    share_id = models.CharField(max_length=12, unique=True)  # the public address: /l/<share_id>
+    is_public = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["profile", "-updated_at"])]
+
+
+class UserListItem(models.Model):
+    user_list = models.ForeignKey(UserList, on_delete=models.CASCADE, related_name="items")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user_list", "title"], name="uniq_user_list_title")]
+        indexes = [models.Index(fields=["user_list", "added_at"])]
+
+
 class MyListItem(models.Model):
     """A title in a profile's "My List"."""
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="my_list")

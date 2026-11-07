@@ -21,7 +21,8 @@
       "lang_trending": "Trends auf {{language}}",
       "trending": "Im Trend",
       "new_episodes": "Neue Folgen",
-      "continue_watching": "Weiterschauen"
+      "continue_watching": "Weiterschauen",
+      "collections_next": "Weiter in deinen Filmreihen"
     },
     "why": {
       "similarTo": "Ähnlich wie {{title}}",
@@ -29,7 +30,8 @@
       "ratedBy": "Bewertet mit {{rating}}/10 von {{votes}} Personen",
       "hiddenGem": "Bewertet mit {{rating}}/10, aber kaum bekannt",
       "popularNow": "Gerade beliebt",
-      "newRelease": "Neu: erschienen {{date}}"
+      "newRelease": "Neu: erschienen {{date}}",
+      "collectionPart": "Teil {{position}} von {{collection}}"
     },
     "taste": {
       "title": "Mach diese Startseite zu deiner",
@@ -284,5 +286,93 @@
     "follow": "Folgen",
     "following": "Gefolgt",
     "loadError": "Dein Kalender konnte nicht geladen werden"
+  },
+  "collection": {
+    "partOf": "Teil von {{name}}",
+    "order": "Reihenfolge",
+    "progress": "{{watched}} von {{total}} gesehen",
+    "allWatched": "Alle gesehen",
+    "kicker_one": "Reihe · {{count}} Film",
+    "kicker_other": "Reihe · {{count}} Filme",
+    "watchNext": "Als Nächstes: {{title}}",
+    "startWith": "Mit {{title}} beginnen",
+    "part": "Teil {{position}}",
+    "watched": "Gesehen",
+    "comingSoon": "Demnächst",
+    "thisOne": "Dieser",
+    "notFound": "Reihe nicht gefunden",
+    "loadError": "Diese Reihe konnte nicht geladen werden"
+  },
+  "lists": {
+    "yourLists": "Deine Listen",
+    "newList": "Neue Liste",
+    "newListHint": "Titel sammeln, dann teilen",
+    "count_one": "{{count}} Titel",
+    "count_other": "{{count}} Titel",
+    "shared": "Geteilt",
+    "addToList": "Zu einer Liste hinzufügen",
+    "pickerTitle": "„{{title}}“ zu einer Liste hinzufügen",
+    "added": "Zu {{name}} hinzugefügt",
+    "removedFrom": "Aus {{name}} entfernt",
+    "name": "Name",
+    "namePlaceholder": "z. B. Die besten Heist-Filme",
+    "create": "Erstellen",
+    "nameRequired": "Gib der Liste einen Namen.",
+    "tooMany": "Du hast die maximale Anzahl an Listen für ein Profil erreicht.",
+    "empty": "Noch nichts in dieser Liste",
+    "emptyText": "Füge Titel von ihrer Seite hinzu oder halte OK auf einer Karte für ihre Optionen.",
+    "share": "Diese Liste teilen",
+    "shareHint": "Jeder mit dem Link kann sie sehen, mit deinem Profilnamen ({{name}}) als Autor.",
+    "link": "Link",
+    "copy": "Link kopieren",
+    "copied": "Link kopiert",
+    "shareVia": "Teilen",
+    "tvHint": "Auf einem Fernseher? Tippe diese Adresse auf deinem Handy ein.",
+    "preview": "So sehen andere sie",
+    "edit": "Bearbeiten",
+    "editTitle": "Liste bearbeiten",
+    "description": "Beschreibung (optional)",
+    "delete": "Liste löschen",
+    "deleteTitle": "„{{name}}“ löschen?",
+    "deleteText": "Die Liste verschwindet, nicht die Titel darin. Ein geteilter Link funktioniert dann nicht mehr.",
+    "remove": "{{title}} aus der Liste entfernen",
+    "by": "Eine Liste von {{name}}",
+    "saveCopy": "Kopie speichern",
+    "makeYourOwn": "Eigene Listen erstellen",
+    "notFound": "Diese Liste ist nicht geteilt oder existiert nicht",
+    "notFoundText": "Bitte die Person, die sie geteilt hat, den Link zu prüfen.",
+    "loadError": "Diese Liste konnte nicht geladen werden"
+  },
+  "pick": {
+    "title": "Was schauen?",
+    "subtitle": "Sag uns, wie viel Zeit du hast und worauf du Lust hast.",
+    "time": "Wie viel Zeit?",
+    "mood": "Lust auf",
+    "show": "Zeig mir was",
+    "showMore": "Zeig mir andere",
+    "surprise": "Überrasch mich",
+    "yourPick": "Dein Tipp",
+    "moreInfo": "Mehr Infos",
+    "another": "Noch einer",
+    "perEpisode": "{{time}} pro Folge",
+    "noneTitle": "Nichts passt",
+    "noneText": "Probier eine andere Stimmung oder mehr Zeit.",
+    "allShownText": "Du hast alle Tipps für diese Auswahl gesehen: probier eine andere.",
+    "loadError": "Keine Tipps gefunden",
+    "times": {
+      "90": "Unter 90 Min.",
+      "120": "Etwa 2 Stunden",
+      "episode": "Eine Folge",
+      "any": "Ohne Limit"
+    },
+    "moods": {
+      "any": "Egal",
+      "funny": "Lustig",
+      "exciting": "Spannend",
+      "scary": "Gruselig",
+      "feelgood": "Wohlfühlen",
+      "thoughtful": "Nachdenklich",
+      "romantic": "Romantisch"
+    }
   }
 }

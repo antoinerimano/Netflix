@@ -135,7 +135,7 @@
 
 .hero__mute {
   position: absolute;
-  right: var(--page-gutter);
+  inset-inline-end: var(--page-gutter);
   bottom: clamp(var(--space-12), 9vh, 7rem);
 }
 

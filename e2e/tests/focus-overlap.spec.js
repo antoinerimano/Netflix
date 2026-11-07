@@ -45,7 +45,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
       const pages = {};
       await expect(page.locator('.row').first()).toBeVisible();
       pages['/'] = await checkPage(page);
-      for (const path of ['/movies', '/tv', '/list', '/calendar', '/search', '/search?q=the']) {
+      for (const path of ['/movies', '/tv', '/list', '/calendar', '/collection/230', '/pick', '/pick?surprise=1', '/search', '/search?q=the']) {
         await page.goto(path);
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);
@@ -57,7 +57,8 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
     test('title pages and the player', async ({ page }) => {
       const { session, profile } = await signInAs(page, 'Alex', '/');
       const pages = {};
-      for (const name of ['Inception', 'Breaking Bad']) {
+      // The Godfather: its collection row; Breaking Bad last: its player (episodes) is checked
+      for (const name of ['The Godfather', 'Inception', 'Breaking Bad']) {
         const path = await titleUrl(page, name);
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);
@@ -66,11 +67,10 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
       await expect(page).toHaveURL(/\/watch\//);
       await page.waitForLoadState('networkidle');
       pages['/watch'] = await checkPage(page);
-      // opening the player saved a "Continue watching" entry: remove it, the other tests expect
-      // Alex's home as it was (Play, not Resume)
-      const titleId = new URL(page.url()).pathname.split('/').pop();
-      const res = await page.request.delete(`${API}/watch-progress/`, {
-        params: { profileId: String(profile.id), titleId },
+      // opening the player saved history (Continue watching, a watch entry): clear it, the other
+      // tests expect Alex's home as it was (Play, not Resume; no "Next in your collections")
+      const res = await page.request.delete(`${API}/history/`, {
+        params: { profileId: String(profile.id) },
         headers: { Authorization: `Bearer ${session.access}` },
       });
       expect(res.ok()).toBeTruthy();
@@ -144,6 +144,24 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
         await page.waitForLoadState('networkidle');
         pages[path] = await checkPage(page);
       }
+
+      // lists: My List with "Your lists", a list (shared), its public page, the "Add to a list" dialog
+      const profileId = String(JSON.parse(await page.evaluate(() => localStorage.getItem('activeProfile'))).id);
+      const auth = { headers: { Authorization: `Bearer ${session.access}` }, params: { profileId } };
+      const heat = (await (await page.request.get(`${API}/titles/search/`, { params: { q: 'Heat' } })).json());
+      const heatId = (heat.results || heat).find((t) => t.title === 'Heat').id;
+      const made = await (await page.request.post(`${API}/lists/`, { ...auth, data: { name: 'Overlap check', title_id: heatId } })).json();
+      await page.request.patch(`${API}/lists/${made.id}/`, { ...auth, data: { is_public: true } });
+      for (const path of ['/list', `/lists/${made.id}`, `/l/${made.share_id}`]) {
+        await page.goto(path);
+        await page.waitForLoadState('networkidle');
+        pages[path] = await checkPage(page);
+      }
+      await page.goto(`/movies/${heatId}`);
+      await page.getByRole('button', { name: 'Add to a list' }).click();
+      await expect(page.locator('.list-pick').first()).toBeVisible();
+      pages['add to a list'] = await checkPage(page, { scope: '.ui-modal', screens: 1 });
+      await page.request.delete(`${API}/lists/${made.id}/`, auth);
       report(pages);
       expect(pages).toEqual(Object.fromEntries(Object.keys(pages).map((k) => [k, []])));
     });

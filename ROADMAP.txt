@@ -130,7 +130,7 @@ Status: [ ] todo   [~] in progress   [x] done
 5. LANGUAGES
 ------------
 [x] 5.1 The app in the user's language: English, French, Spanish, German, Italian, Japanese, Chinese,
-        Hindi, Portuguese (Brazil), Russian, Bengali (Arabic / Urdu next: they need right-to-left layouts)
+        Hindi, Portuguese (Brazil), Russian, Bengali, Arabic, Urdu (right to left: 7.9)
         Frontend: i18next / react-i18next, one JSON file per language and area (src/i18n/locales),
         English bundled and every other language downloaded on first use (its own chunks), CLDR
         plurals, numbers / dates / durations / language and country names through Intl, <html
@@ -211,7 +211,40 @@ Status: [ ] todo   [~] in progress   [x] done
         saved). Remote: every section takes the focus; Share under its text (at the right edge Down
         skipped it). Navigation fix: Back to a page still loading no longer sends the focus to the
         footer (recoverFocus waits for restorePlace). Backend: reco/stats.py.
-[ ] 7.6 Collections and watch order (franchises)
-[ ] 7.7 Public, shareable lists
-[ ] 7.8 "I have 90 minutes" / "Surprise me"
-[ ] 7.9 Arabic and Urdu (right-to-left layouts)
+[x] 7.6 Franchises in watch order (/collection/:id)
+        TMDB collections (Title.collection_id, indexed, kept in sync by Title.save(), backfilled):
+        movie pages "Part of <collection>" (numbered row, this one marked, watched checked, "Watch
+        order" as its last tile), the collection page (progress, "Start with" / "Watch next", parts in
+        release order, "Coming soon" for announced ones), "Next movie" in the player, home row "Next
+        in your collections" (next part of every franchise started, latest first, "Part 2 of ...").
+        Remote: the link is the row's last tile (above the row, Up from the other movies missed it).
+        Navigation fix: OK on a link no longer sends the new page's focus to the footer while it
+        loads (where the focus was is remembered with the page it was on). Backend:
+        reco/collections.py.
+[x] 7.7 Lists you make and share (/lists/:id, shared at /l/:shareId)
+        Named lists per profile (50 max, 500 titles each): "Add to a list" in the options sheet (hold
+        OK) and beside My List on title pages (a new list starts with the title); "Your lists" at the
+        top of My List; a list's page (titles with remove, Edit, Delete confirmed, Share switch: the
+        address in big letters to type on a phone, the share sheet / Copy). Shared page for anyone
+        (signed out too): name, "A list by <profile>", posters; "Save a copy" signed in. Django serves
+        /l/<id> with its own title / description / poster / ItemList (users/seo.py), 404 while private.
+        Fix found on the way: the app routes added since 7.1 (/taste, /import, /calendar, /history,
+        /stats, /collection) answered 404 + noindex on a reload in production (seo.APP_ROUTES); a
+        test now checks every route of App.jsx. Backend: reco/lists.py.
+[x] 7.8 What to watch? (/pick, "Surprise me" on the home banner)
+        The time you have (under 90 min, about 2 h, one episode, no limit) and a mood (funny, exciting,
+        scary, feel-good, thoughtful, romantic: genres in / out), then "Show me" (6 titles with their
+        length, a new set each time) or "Surprise me" (one, big: Watch / More info / Another one).
+        Well-liked, released, within the age limit, not watched / rated / turned down; ranked like the
+        home page then drawn among the best 60, the best more often. Candidates cached an hour per
+        age limit + time + mood (15 ms warm). Remote: choice rows are groups, the focus follows the
+        results, "Another one" keeps it. Backend: reco/pick.py.
+[x] 7.9 Arabic and Urdu (right-to-left layouts)
+        The app, the titles (TMDB ar-SA / ur-PK) and the server's emails and pages in Arabic and Urdu;
+        <html dir="rtl"> (app and the server-rendered page shell). The CSS uses logical properties
+        (margin-inline-start, inset-inline-end, text-align: start...) so the layout flips by itself;
+        src/i18n/rtl.css holds the rest: arrows mirrored, banner shades on the right. The poster rows
+        are mirrored as a whole (react-slick's own rtl mode misplaces short rows), cards turned back,
+        swipe / drag handled in Row.jsx. The remote follows the screen: Left goes further into a row.
+        Sitemaps list every page in every language (?lng=) with its hreflang alternates, 1,000 pages
+        per file, so Google finds and pairs the translated pages without waiting to crawl them.

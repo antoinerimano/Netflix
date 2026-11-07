@@ -38,6 +38,8 @@ export function whyText(item) {
       return t('catalog:home.why.ratedBy', { rating: rating(w.rating), votes: formatCompact(w.votes) });
     case 'hiddenGem':
       return t('catalog:home.why.hiddenGem', { rating: rating(w.rating) });
+    case 'collectionPart':
+      return t('catalog:home.why.collectionPart', { position: w.position, collection: w.collection || '' });
     case 'newRelease':
       return t('catalog:home.why.newRelease', { date: formatDate(`${w.date}-01`, { month: 'short', year: 'numeric' }) });
     default:

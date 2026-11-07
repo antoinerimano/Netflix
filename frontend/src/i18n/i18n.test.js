@@ -48,6 +48,24 @@ test('every supported language has its own texts', async () => {
   }
 });
 
+test('Arabic and Urdu: right to left, with their own plural forms', async () => {
+  await setLanguage('ar');
+  await i18n.loadNamespaces('catalog');
+  expect(document.documentElement.dir).toBe('rtl');
+  expect(document.documentElement.lang).toBe('ar');
+  // Arabic has six forms: 1, 2, 3-10 and 11-99 all read differently
+  expect(i18n.t('catalog:detail.seasonCount', { count: 1 })).toBe('موسم واحد');
+  expect(i18n.t('catalog:detail.seasonCount', { count: 2 })).toBe('موسمان');
+  expect(i18n.t('catalog:detail.seasonCount', { count: 3 })).toBe('3 مواسم');
+  expect(i18n.t('catalog:detail.seasonCount', { count: 11 })).toBe('11 موسمًا');
+  await setLanguage('ur');
+  expect(document.documentElement.dir).toBe('rtl');
+  await setLanguage('en');
+  expect(document.documentElement.dir).toBe('ltr');
+  expect(normalizeLanguage('ar-SA')).toBe('ar');
+  expect(normalizeLanguage('ur-PK')).toBe('ur');
+});
+
 test('unsupported languages are ignored', async () => {
   await setLanguage('xx');
   expect(i18n.resolvedLanguage).toBe('en');

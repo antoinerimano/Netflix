@@ -1,0 +1,51 @@
+{
+  "loadFailed": "تعذّر تحميل هذا العنوان.",
+  "cantPlay": "لا يمكن تشغيل هذا العنوان",
+  "seasonEpisode": "الموسم {{season}} · الحلقة {{episode}}",
+  "back": "رجوع",
+  "nextEpisode": "الحلقة التالية",
+  "fullscreen": "ملء الشاشة",
+  "fullscreenHint": "ملء الشاشة (F)",
+  "player": {
+    "label": "المشغّل",
+    "tileLabel": "المشغّل: اضغط OK للتحكم به في وضع ملء الشاشة",
+    "chooseTitle": "اختر مصدرًا",
+    "chooseText": "اختر مصدرًا من الأسفل، أو الصق رابطك الخاص.",
+    "loadingSource": "جارٍ تحميل المصدر…",
+    "loadingNamed": "جارٍ تحميل {{source}}",
+    "notPlayable": "يبدو أن هذا الرابط غير قابل للتشغيل. جرّب مصدرًا آخر.",
+    "noFullscreen": "وضع ملء الشاشة غير متاح هنا. استخدم أزرار المشغّل نفسه، أو جرّب مصدرًا آخر."
+  },
+  "keys": {
+    "control": "<key>OK</key> التحكم في المشغّل",
+    "playPause": "<key>OK</key> / <key>Space</key> تشغيل · إيقاف مؤقت",
+    "seek": "<key>◀</key> <key>▶</key> ترجيع · تقديم",
+    "exit": "<key>Back</key> الخروج من ملء الشاشة",
+    "volume": "<key>▲</key> <key>▼</key> مستوى الصوت"
+  },
+  "sources": {
+    "label": "المصادر",
+    "title": "المصدر",
+    "help": "الفيديو لا يبدأ؟ جرّب مصدرًا آخر.",
+    "choose": "اختر مصدرًا",
+    "loadFailed": "تعذّر تحميل المصادر.",
+    "switched": "لم يتم تحميل {{from}}، تم التبديل إلى {{to}}.",
+    "notPlaying": "لا يعمل على {{source}}؟",
+    "try": "جرّب {{source}}",
+    "down": "غير متاح؟",
+    "downHint": "لم نتمكن من الوصول إلى هذا المصدر في آخر فحص",
+    "custom": "رابطك",
+    "customLabel": "رابط الفيديو الخاص بك",
+    "customPlaceholder": "الصق رابط فيديو أو مشغّل (https://…)"
+  },
+  "info": {
+    "about": "نبذة",
+    "seasonEpisodes": "حلقات الموسم {{number}}",
+    "episodeNamed": "الحلقة {{number}}: {{name}}",
+    "playing": "قيد التشغيل",
+    "playingNow": "قيد التشغيل",
+    "soon": "قريبًا",
+    "comingSoon": "قريبًا"
+  },
+  "nextMovie": "الفيلم التالي"
+}

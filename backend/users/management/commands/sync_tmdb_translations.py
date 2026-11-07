@@ -42,6 +42,8 @@ REGIONS = {
     "pt": ["BR", "PT"],
     "ru": ["RU"],
     "bn": ["BD", "IN"],
+    "ar": ["SA", "AE", "EG"],
+    "ur": ["PK", "IN"],
 }
 
 

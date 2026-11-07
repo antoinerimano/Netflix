@@ -22,6 +22,10 @@ const ImportPage = lazy(() => import('./components/import/ImportPage'));
 const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
 const HistoryPage = lazy(() => import('./components/history/HistoryPage'));
 const StatsPage = lazy(() => import('./components/stats/StatsPage'));
+const CollectionPage = lazy(() => import('./components/collection/CollectionPage'));
+const ListPage = lazy(() => import('./components/lists/ListPage'));
+const PublicListPage = lazy(() => import('./components/lists/PublicListPage'));
+const PickPage = lazy(() => import('./components/pick/PickPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const AdminMovies = lazy(() => import('./components/AdminMovies'));
@@ -180,6 +184,34 @@ function App() {
         <Route path="/confirm-email-change/:userId/:token" element={<ConfirmEmailChange />} />
         <Route path="/watch/:id" element={<WatchPage />} />
         <Route path="/actor/:tmdbId" element={<ActorDetail />} />
+        {/* "What to watch?": the time you have + a mood, or "Surprise me" (reco/pick.py) */}
+        <Route
+          path="/pick"
+          element={
+            <ProtectedRoute>
+              <PickPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* one of the profile's lists; a shared list, for anyone with the link (reco/lists.py) */}
+        <Route
+          path="/lists/:id"
+          element={
+            <ProtectedRoute>
+              <ListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/l/:shareId" element={<PublicListPage />} />
+        {/* a franchise in watch order (reco/collections.py) */}
+        <Route
+          path="/collection/:id"
+          element={
+            <ProtectedRoute>
+              <CollectionPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin-only */}
         <Route

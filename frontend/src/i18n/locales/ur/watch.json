@@ -1,0 +1,51 @@
+{
+  "loadFailed": "یہ ٹائٹل لوڈ نہیں ہو سکا۔",
+  "cantPlay": "یہ ٹائٹل چلایا نہیں جا سکتا",
+  "seasonEpisode": "سیزن {{season}} · قسط {{episode}}",
+  "back": "واپس",
+  "nextEpisode": "اگلی قسط",
+  "fullscreen": "فل اسکرین",
+  "fullscreenHint": "فل اسکرین (F)",
+  "player": {
+    "label": "پلیئر",
+    "tileLabel": "پلیئر: فل اسکرین میں کنٹرول کرنے کے لیے OK دبائیں",
+    "chooseTitle": "ایک سورس منتخب کریں",
+    "chooseText": "نیچے سے ایک سورس منتخب کریں، یا اپنا لنک پیسٹ کریں۔",
+    "loadingSource": "سورس لوڈ ہو رہا ہے…",
+    "loadingNamed": "{{source}} لوڈ ہو رہا ہے",
+    "notPlayable": "یہ لنک چلنے کے قابل نہیں لگتا۔ کوئی اور سورس آزمائیں۔",
+    "noFullscreen": "یہاں فل اسکرین دستیاب نہیں۔ پلیئر کے اپنے کنٹرول استعمال کریں، یا کوئی اور سورس آزمائیں۔"
+  },
+  "keys": {
+    "control": "<key>OK</key> پلیئر کنٹرول کریں",
+    "playPause": "<key>OK</key> / <key>Space</key> چلائیں · روکیں",
+    "seek": "<key>◀</key> <key>▶</key> پیچھے · آگے",
+    "exit": "<key>Back</key> فل اسکرین سے باہر",
+    "volume": "<key>▲</key> <key>▼</key> آواز"
+  },
+  "sources": {
+    "label": "سورسز",
+    "title": "سورس",
+    "help": "ویڈیو شروع نہیں ہو رہی؟ کوئی اور سورس آزمائیں۔",
+    "choose": "ایک سورس منتخب کریں",
+    "loadFailed": "سورسز لوڈ نہیں ہو سکے۔",
+    "switched": "{{from}} لوڈ نہیں ہوا، {{to}} پر منتقل کر دیا گیا۔",
+    "notPlaying": "{{source}} پر نہیں چل رہا؟",
+    "try": "{{source}} آزمائیں",
+    "down": "آف لائن؟",
+    "downHint": "ہماری آخری جانچ میں یہ سورس دستیاب نہیں تھا",
+    "custom": "آپ کا لنک",
+    "customLabel": "آپ کا ویڈیو لنک",
+    "customPlaceholder": "ویڈیو یا پلیئر کا لنک پیسٹ کریں (https://…)"
+  },
+  "info": {
+    "about": "تعارف",
+    "seasonEpisodes": "سیزن {{number}} کی اقساط",
+    "episodeNamed": "قسط {{number}}: {{name}}",
+    "playing": "چل رہا ہے",
+    "playingNow": "چل رہا ہے",
+    "soon": "جلد",
+    "comingSoon": "جلد آ رہا ہے"
+  },
+  "nextMovie": "اگلی فلم"
+}

@@ -1,0 +1,56 @@
+/* src/i18n/rtl.css - right-to-left languages (Arabic, Urdu): <html dir="rtl"> is set by
+   src/i18n/index.js. Spacing and positions are logical properties everywhere (margin-inline-start,
+   inset-inline-end, text-align: start...), so they flip by themselves; this file holds what
+   logical properties can't express: icons that point along the reading direction and
+   shades that darken the side the text is on. */
+
+/* arrows and chevrons (ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon) */
+[dir="rtl"] .ui-icon--flip {
+  transform: scaleX(-1);
+}
+
+/* the text sits on the right over the artwork: darken the right side instead */
+[dir="rtl"] .hero__scrim {
+  background:
+    linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.6) 18%, transparent 45%),
+    linear-gradient(to left, rgba(8, 8, 10, 0.88) 0%, rgba(8, 8, 10, 0.55) 32%, transparent 62%),
+    linear-gradient(to bottom, rgba(8, 8, 10, 0.55) 0%, transparent 22%);
+}
+[dir="rtl"] .detail-hero__scrim {
+  background:
+    linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.75) 22%, transparent 55%),
+    linear-gradient(to left, rgba(8, 8, 10, 0.92) 0%, rgba(8, 8, 10, 0.6) 35%, transparent 68%),
+    linear-gradient(to bottom, rgba(8, 8, 10, 0.55) 0%, transparent 20%);
+}
+[dir="rtl"] .coll-hero__shade {
+  background:
+    linear-gradient(to top, var(--color-bg) 4%, rgba(15, 15, 18, 0.55) 45%, rgba(15, 15, 18, 0.2) 100%),
+    linear-gradient(to left, rgba(15, 15, 18, 0.8), transparent 70%);
+}
+[dir="rtl"] .pick-surprise__shade {
+  background:
+    linear-gradient(to top, rgba(10, 10, 12, 0.95) 10%, rgba(10, 10, 12, 0.5) 55%, rgba(10, 10, 12, 0.15)),
+    linear-gradient(to left, rgba(10, 10, 12, 0.85), transparent 70%);
+}
+[dir="rtl"] .stats-card--hero {
+  background:
+    radial-gradient(80% 120% at 100% 0%, rgba(229, 9, 20, 0.28), transparent 60%),
+    var(--color-surface-1);
+}
+
+/* the genre chips scroll leftwards: fade the far (left) edge */
+[dir="rtl"] .browse__genres {
+  -webkit-mask-image: linear-gradient(to left, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
+  mask-image: linear-gradient(to left, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
+}
+@media (max-width: 600px) {
+  [dir="rtl"] .browse__genres {
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - var(--space-8)), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - var(--space-8)), transparent);
+  }
+}
+
+/* the loading shimmer sweeps in the reading direction */
+[dir="rtl"] .ui-skeleton::after {
+  animation-direction: reverse;
+}

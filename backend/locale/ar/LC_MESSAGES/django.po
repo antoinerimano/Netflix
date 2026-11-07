@@ -1,0 +1,241 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-07 10:00-0500\n"
+"Language: ar\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#: .\reco\management\commands\notify_new_episodes.py:98
+#, python-format
+msgid "New episode of %(show)s"
+msgstr "حلقة جديدة من %(show)s"
+
+#: .\reco\management\commands\notify_new_episodes.py:101
+#, python-format
+msgid "%(count)d new episode of shows you follow"
+msgid_plural "%(count)d new episodes of shows you follow"
+msgstr[0] "لا حلقات جديدة من المسلسلات التي تتابعها"
+msgstr[1] "حلقة جديدة واحدة من المسلسلات التي تتابعها"
+msgstr[2] "حلقتان جديدتان من المسلسلات التي تتابعها"
+msgstr[3] "%(count)d حلقات جديدة من المسلسلات التي تتابعها"
+msgstr[4] "%(count)d حلقة جديدة من المسلسلات التي تتابعها"
+msgstr[5] "%(count)d حلقة جديدة من المسلسلات التي تتابعها"
+
+#: .\users\seo.py:220
+#, python-format
+msgid "Watch %(name)s on Tauruss."
+msgstr "شاهد %(name)s على Tauruss."
+
+#: .\users\seo.py:265
+#, python-format
+msgid "Movies and TV shows with %(name)s."
+msgstr "أفلام ومسلسلات مع %(name)s."
+
+#: .\users\seo.py:305
+msgid "Page not found"
+msgstr "الصفحة غير موجودة"
+
+#: .\users\templates\emails\_button.html:11
+msgid "If the button doesn't work, copy this link into your browser:"
+msgstr "إذا لم يعمل الزر، انسخ هذا الرابط في متصفحك:"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "مرحبًا %(name)s،"
+
+#: .\users\templates\emails\base.html:20
+#: .\users\templates\emails\email_change.txt:2
+#: .\users\templates\emails\new_episodes.txt:2
+#: .\users\templates\emails\password_reset.txt:2
+msgid "Hello,"
+msgstr "مرحبًا،"
+
+#: .\users\templates\emails\base.html:27
+#: .\users\templates\emails\email_change.txt:12
+#: .\users\templates\emails\new_episodes.txt:12
+#: .\users\templates\emails\password_reset.txt:12
+#, python-format
+msgid "This email was sent by %(company)s. For help, contact"
+msgstr "أرسل %(company)s هذه الرسالة. للمساعدة، تواصل مع"
+
+#: .\users\templates\emails\email_change.html:3
+#: .\users\templates\emails\email_change.html:4 .\users\views.py:266
+msgid "Confirm your new email address"
+msgstr "أكّد عنوان بريدك الإلكتروني الجديد"
+
+#: .\users\templates\emails\email_change.html:6
+#, python-format
+msgid ""
+"We received a request to change your account email to <strong>%(new_email)s</"
+"strong>. Click the button below to confirm:"
+msgstr "تلقّينا طلبًا لتغيير البريد الإلكتروني لحسابك إلى <strong>%(new_email)s</strong>. اضغط على الزر أدناه للتأكيد:"
+
+#: .\users\templates\emails\email_change.html:7
+msgid "Confirm email change"
+msgstr "تأكيد تغيير البريد الإلكتروني"
+
+#: .\users\templates\emails\email_change.html:9
+#: .\users\templates\emails\email_change.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: nothing will change."
+msgstr "إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة: لن يتغيّر شيء."
+
+#: .\users\templates\emails\email_change.txt:4
+#, python-format
+msgid "We received a request to change your account email to %(new_email)s."
+msgstr "تلقّينا طلبًا لتغيير البريد الإلكتروني لحسابك إلى %(new_email)s."
+
+#: .\users\templates\emails\email_change.txt:5
+msgid "Open this link to confirm:"
+msgstr "افتح هذا الرابط للتأكيد:"
+
+#: .\users\templates\emails\new_episodes.html:3
+#: .\users\templates\emails\new_episodes.html:4
+msgid "New episodes are out"
+msgstr "صدرت حلقات جديدة"
+
+#: .\users\templates\emails\new_episodes.html:6
+#: .\users\templates\emails\new_episodes.txt:4
+#, python-format
+msgid "Shows you follow on %(company)s have new episodes:"
+msgstr "للمسلسلات التي تتابعها على %(company)s حلقات جديدة:"
+
+#: .\users\templates\emails\new_episodes.html:12
+#: .\users\templates\emails\new_episodes.txt:6
+#, python-format
+msgid "Season %(season)s, episode %(episode)s"
+msgstr "الموسم %(season)s، الحلقة %(episode)s"
+
+#: .\users\templates\emails\new_episodes.html:16
+msgid "Watch"
+msgstr "شاهد"
+
+#: .\users\templates\emails\new_episodes.html:22
+#: .\users\templates\emails\new_episodes.txt:9
+msgid ""
+"You get this email because you clicked “Notify me” on these shows. Click it "
+"again on a show's page to stop."
+msgstr "تصلك هذه الرسالة لأنك ضغطت على «أعلمني» في هذه المسلسلات. اضغط عليه مرة أخرى في صفحة المسلسل لإيقاف ذلك."
+
+#: .\users\templates\emails\password_reset.html:3 .\users\views.py:440
+msgid "Reset your password"
+msgstr "أعد تعيين كلمة المرور"
+
+#: .\users\templates\emails\password_reset.html:4
+msgid "Password reset request"
+msgstr "طلب إعادة تعيين كلمة المرور"
+
+#: .\users\templates\emails\password_reset.html:6
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account. "
+"Click the button below to choose a new one:"
+msgstr "تلقّينا طلبًا لإعادة تعيين كلمة مرور حسابك على %(company)s. اضغط على الزر أدناه لاختيار كلمة جديدة:"
+
+#: .\users\templates\emails\password_reset.html:7
+msgid "Reset password"
+msgstr "إعادة تعيين كلمة المرور"
+
+#: .\users\templates\emails\password_reset.html:9
+#: .\users\templates\emails\password_reset.txt:9
+msgid ""
+"If you didn't ask for this, you can ignore this email: your account is safe."
+msgstr "إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة: حسابك آمن."
+
+#: .\users\templates\emails\password_reset.txt:4
+#, python-format
+msgid ""
+"We received a request to reset the password for your %(company)s account."
+msgstr "تلقّينا طلبًا لإعادة تعيين كلمة مرور حسابك على %(company)s."
+
+#: .\users\templates\emails\password_reset.txt:5
+msgid "Open this link to choose a new one:"
+msgstr "افتح هذا الرابط لاختيار كلمة جديدة:"
+
+#: .\users\test_i18n.py:35 .\users\views.py:222
+msgid "Invalid credentials."
+msgstr "بيانات تسجيل الدخول غير صحيحة."
+
+#: .\users\views.py:139 .\users\views.py:425
+msgid "Email is required."
+msgstr "البريد الإلكتروني مطلوب."
+
+#: .\users\views.py:141
+msgid "Password is required."
+msgstr "كلمة المرور مطلوبة."
+
+#: .\users\views.py:143
+msgid "This email is already registered."
+msgstr "هذا البريد الإلكتروني مسجّل بالفعل."
+
+#: .\users\views.py:174
+#, python-format
+msgid "You already have an active %(plan)s subscription."
+msgstr "لديك بالفعل اشتراك %(plan)s نشط."
+
+#: .\users\views.py:208
+#, python-format
+msgid "%(plan)s subscription created!"
+msgstr "تم إنشاء اشتراك %(plan)s!"
+
+#: .\users\views.py:254
+msgid "New email is required."
+msgstr "البريد الإلكتروني الجديد مطلوب."
+
+#: .\users\views.py:257 .\users\views.py:295
+msgid "This email is already in use."
+msgstr "هذا البريد الإلكتروني مستخدم بالفعل."
+
+#: .\users\views.py:272
+msgid "Confirmation email sent."
+msgstr "تم إرسال رسالة التأكيد."
+
+#: .\users\views.py:284
+msgid "This confirmation link is incomplete."
+msgstr "رابط التأكيد هذا غير مكتمل."
+
+#: .\users\views.py:289
+msgid "This confirmation link has expired."
+msgstr "انتهت صلاحية رابط التأكيد هذا."
+
+#: .\users\views.py:291
+msgid "This confirmation link is not valid."
+msgstr "رابط التأكيد هذا غير صالح."
+
+#: .\users\views.py:299
+msgid "Email updated."
+msgstr "تم تحديث البريد الإلكتروني."
+
+#: .\users\views.py:343
+msgid "This subscription is already canceled."
+msgstr "هذا الاشتراك ملغى بالفعل."
+
+#: .\users\views.py:410
+msgid "Refresh token is required."
+msgstr "رمز التحديث مطلوب."
+
+#: .\users\views.py:429
+msgid "If an account exists for this email, a reset link has been sent."
+msgstr "إذا كان هناك حساب بهذا البريد الإلكتروني، فقد أُرسل رابط إعادة التعيين."
+
+#: .\users\views.py:453
+msgid "All fields are required."
+msgstr "جميع الحقول مطلوبة."
+
+#: .\users\views.py:459
+msgid "This reset link is not valid."
+msgstr "رابط إعادة التعيين هذا غير صالح."
+
+#: .\users\views.py:462
+msgid "This reset link has expired or was already used."
+msgstr "انتهت صلاحية رابط إعادة التعيين هذا أو سبق استخدامه."
+
+#: .\users\views.py:471
+msgid "Your password has been changed."
+msgstr "تم تغيير كلمة المرور."

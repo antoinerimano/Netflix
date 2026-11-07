@@ -77,7 +77,8 @@
 .form-group > label {
   font-size: 0.92rem;
   color: var(--text-muted);
-  margin: 0 0 6px 2px;
+  margin: 0 0 6px;
+  margin-inline-start: 2px;
 }
 
 /* Inputs & Buttons */
@@ -195,7 +196,7 @@
 .admin-panel td {
   padding: 12px 12px;
   border-bottom: 1px solid #333;
-  text-align: left;
+  text-align: start;
   font-size: 1rem;
   vertical-align: middle;
 }
@@ -223,7 +224,7 @@
 }
 
 .admin-panel td button {
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 
 /* ---------- Error text ---------- */

@@ -9,7 +9,7 @@ import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
-import { ChevronRightIcon, MoreIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import { ChevronLeftIcon, ChevronRightIcon, MoreIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
 import TitleOptions from './TitleOptions';
 
 const LONG_PRESS_MS = 500; // touch: press and hold a card for its options
@@ -31,7 +31,7 @@ const NextArrow = ({ className, onClick }) => {
 
 const PrevArrow = ({ className, onClick, isVisible }) => (
   <div className={`${className} row-arrow row-arrow--prev`} aria-hidden="true" onClick={onClick} style={{ display: isVisible ? undefined : 'none' }}>
-    <ChevronRightIcon style={{ transform: 'rotate(180deg)' }} />
+    <ChevronLeftIcon />
   </div>
 );
 
@@ -334,8 +334,41 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
     else if (index >= current + show) slider.slickGoTo(index - show + 1);
   };
 
+  // right-to-left (Arabic, Urdu): the row is mirrored in CSS (Row.css), so react-slick's own
+  // swipe would scroll the wrong way; drag / swipe is handled here instead, reversed
+  const rtl = i18n.dir() === 'rtl';
+  const drag = useRef(null);
+  const rtlSwipe = rtl ? {
+    onPointerDown: (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      drag.current = { x: e.clientX, y: e.clientY, moved: false };
+    },
+    onPointerMove: (e) => {
+      const d = drag.current;
+      if (d && Math.abs(e.clientX - d.x) > 10 && Math.abs(e.clientX - d.x) > Math.abs(e.clientY - d.y)) d.moved = true;
+    },
+    onPointerUp: (e) => {
+      const d = drag.current;
+      drag.current = d && d.moved ? { moved: true } : null; // the click after a drag is swallowed below
+      const slider = sliderRef.current;
+      if (!d || !d.moved || !slider) return;
+      const card = rowRef.current?.querySelector('.slick-slide')?.getBoundingClientRect().width || 300;
+      const steps = Math.max(1, Math.round(Math.abs(e.clientX - d.x) / card));
+      // finger to the right = the cards further left come in = forwards
+      const target = currentSlideRef.current + (e.clientX > d.x ? steps : -steps);
+      slider.slickGoTo(Math.max(0, Math.min(target, displayedMovies.length - fullCards(settings))));
+    },
+    onPointerCancel: () => { drag.current = null; },
+    onDragStart: (e) => e.preventDefault(), // no ghost image while dragging a poster
+    onClickCapture: (e) => {
+      if (drag.current?.moved) { e.preventDefault(); e.stopPropagation(); }
+      drag.current = null;
+    },
+  } : {};
+
   const settings = {
     dots: false,
+    swipe: !rtl,
     infinite: false,
     accessibility: false, // its own arrow-key handling would fight the TV navigation
     speed: 450,
@@ -421,7 +454,7 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
   if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
 
   return (
-    <section className="row" ref={rowRef} aria-label={shownTitle}>
+    <section className="row" ref={rowRef} aria-label={shownTitle} {...rtlSwipe}>
       <h2 className="row__title">{shownTitle}</h2>
       <Slider ref={sliderRef} {...settings}>
         {displayedMovies.map((movie, index) => {

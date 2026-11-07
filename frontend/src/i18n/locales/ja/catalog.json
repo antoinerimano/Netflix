@@ -21,7 +21,8 @@
       "lang_trending": "{{language}}で話題",
       "trending": "話題の作品",
       "new_episodes": "新しいエピソード",
-      "continue_watching": "視聴を続ける"
+      "continue_watching": "視聴を続ける",
+      "collections_next": "シリーズの続き"
     },
     "why": {
       "similarTo": "{{title}}に似ています",
@@ -29,7 +30,8 @@
       "ratedBy": "{{votes}}人が評価 {{rating}}/10",
       "hiddenGem": "評価 {{rating}}/10、知る人ぞ知る作品",
       "popularNow": "いま人気",
-      "newRelease": "新作：{{date}}公開"
+      "newRelease": "新作：{{date}}公開",
+      "collectionPart": "{{collection}}のパート{{position}}"
     },
     "taste": {
       "title": "あなた好みのホーム画面に",
@@ -274,5 +276,91 @@
     "follow": "フォロー",
     "following": "フォロー中",
     "loadError": "カレンダーを読み込めませんでした"
+  },
+  "collection": {
+    "partOf": "{{name}}の作品",
+    "order": "視聴順",
+    "progress": "{{total}}作品中{{watched}}作品を視聴",
+    "allWatched": "すべて視聴済み",
+    "kicker_other": "シリーズ · {{count}}作品",
+    "watchNext": "次に見る：{{title}}",
+    "startWith": "{{title}}から見る",
+    "part": "パート{{position}}",
+    "watched": "視聴済み",
+    "comingSoon": "近日公開",
+    "thisOne": "この作品",
+    "notFound": "シリーズが見つかりません",
+    "loadError": "シリーズを読み込めませんでした"
+  },
+  "lists": {
+    "yourLists": "あなたのリスト",
+    "newList": "新しいリスト",
+    "newListHint": "作品をまとめて共有",
+    "count_other": "{{count}}作品",
+    "shared": "共有中",
+    "addToList": "リストに追加",
+    "pickerTitle": "「{{title}}」をリストに追加",
+    "added": "{{name}}に追加しました",
+    "removedFrom": "{{name}}から削除しました",
+    "name": "名前",
+    "namePlaceholder": "例：最高の強盗映画",
+    "create": "作成",
+    "nameRequired": "リストに名前を付けてください。",
+    "tooMany": "このプロフィールで作れるリストの上限に達しました。",
+    "empty": "このリストにはまだ何もありません",
+    "emptyText": "作品ページから追加するか、カードでOKを長押ししてオプションを開いてください。",
+    "share": "このリストを共有",
+    "shareHint": "リンクを知っている人なら誰でも見られます。作成者としてプロフィール名（{{name}}）が表示されます。",
+    "link": "リンク",
+    "copy": "リンクをコピー",
+    "copied": "リンクをコピーしました",
+    "shareVia": "共有",
+    "tvHint": "テレビをお使いですか？このアドレスをスマートフォンで入力してください。",
+    "preview": "ほかの人からの見え方",
+    "edit": "編集",
+    "editTitle": "リストを編集",
+    "description": "説明（任意）",
+    "delete": "リストを削除",
+    "deleteTitle": "「{{name}}」を削除しますか？",
+    "deleteText": "削除されるのはリストで、中の作品は残ります。共有リンクは使えなくなります。",
+    "remove": "{{title}}をリストから削除",
+    "by": "{{name}}のリスト",
+    "saveCopy": "コピーを保存",
+    "makeYourOwn": "自分のリストを作る",
+    "notFound": "このリストは共有されていないか、存在しません",
+    "notFoundText": "共有した人にリンクを確認してもらってください。",
+    "loadError": "リストを読み込めませんでした"
+  },
+  "pick": {
+    "title": "何を見る？",
+    "subtitle": "使える時間と気分を教えてください。",
+    "time": "どれくらい時間がある？",
+    "mood": "気分は",
+    "show": "表示する",
+    "showMore": "ほかの作品を表示",
+    "surprise": "おまかせ",
+    "yourPick": "あなたへのおすすめ",
+    "moreInfo": "詳細",
+    "another": "別の作品",
+    "perEpisode": "1話{{time}}",
+    "noneTitle": "条件に合う作品がありません",
+    "noneText": "別の気分か、もっと長い時間を選んでください。",
+    "allShownText": "この条件のおすすめはすべて表示しました。条件を変えてみてください。",
+    "loadError": "おすすめを見つけられませんでした",
+    "times": {
+      "90": "90分以内",
+      "120": "約2時間",
+      "episode": "1話だけ",
+      "any": "制限なし"
+    },
+    "moods": {
+      "any": "なんでも",
+      "funny": "笑える",
+      "exciting": "ハラハラ",
+      "scary": "怖い",
+      "feelgood": "ほっこり",
+      "thoughtful": "考えさせられる",
+      "romantic": "ロマンチック"
+    }
   }
 }

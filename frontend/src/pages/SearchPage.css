@@ -21,7 +21,7 @@
 }
 .search__field > svg {
   position: absolute;
-  left: var(--space-5);
+  inset-inline-start: var(--space-5);
   width: 1.4rem;
   height: 1.4rem;
   color: var(--color-text-muted);
@@ -50,7 +50,7 @@
 }
 .search__clear {
   position: absolute;
-  right: var(--space-3);
+  inset-inline-end: var(--space-3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -84,8 +84,8 @@
 .search__section-head,
 .search__count,
 .search__recent {
-  margin-left: var(--page-gutter);
-  margin-right: var(--page-gutter);
+  margin-inline-start: var(--page-gutter);
+  margin-inline-end: var(--page-gutter);
 }
 .search__section-head {
   display: flex;
@@ -121,7 +121,7 @@
   align-items: center;
 }
 .search__recent .ui-chip {
-  padding-right: 2.25rem;
+  padding-inline-end: 2.25rem;
 }
 .search__forget {
   display: inline-flex;
@@ -129,7 +129,7 @@
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
-  margin-left: -2rem;
+  margin-inline-start: -2rem;
   padding: 0;
   border: 0;
   border-radius: 50%;

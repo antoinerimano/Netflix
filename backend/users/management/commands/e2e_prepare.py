@@ -89,6 +89,18 @@ class Command(BaseCommand):
             if fr:
                 TitleTranslation.objects.create(title=t, language="fr", name=fr[0], overview=fr[1])
 
+        # a franchise (the collection page, "Next in your collections"): The Godfather + Part II
+        godfather = {"id": 230, "name": "The Godfather Collection", "poster_path": "/e2e-230.jpg", "backdrop_path": "/e2e-230-wide.jpg"}
+        Title.objects.filter(title="The Godfather").update(belongs_to_collection=godfather, collection_id=230)
+        Title.objects.create(
+            type="movie", title="The Godfather Part II", original_title="The Godfather Part II", tmdb_id=240,
+            original_language="en", release_date="1974-12-20", release_year=1974, runtime_minutes=202,
+            description="The Godfather Part II: the English synopsis.", genre="Crime, Drama", primary_genre_norm="crime",
+            popularity=30, vote_average=8.6, vote_count=9000, rating="8.6", director="E2E Director",
+            cast=["Actor One"], belongs_to_collection=godfather,
+            poster="https://image.tmdb.org/t/p/w500/e2e-240.jpg", landscape_image="https://image.tmdb.org/t/p/w780/e2e-240-wide.jpg",
+        )
+
         show = Title.objects.create(
             type="tv", title="Breaking Bad", original_title="Breaking Bad", tmdb_id=1396, original_language="en",
             first_air_date="2008-01-20", release_year=2008, description="A chemistry teacher turns to crime.",
@@ -131,11 +143,13 @@ class Command(BaseCommand):
             Profile.objects.create(user=user, name="Kids", language_preference="en", age_restriction="G", is_kids=True),
             # a brand-new profile: nothing liked yet, so the app offers "What do you like?" (/taste)
             Profile.objects.create(user=user, name="Sam", language_preference="en", age_restriction="NC-17"),
+            # Arabic: the app right to left
+            Profile.objects.create(user=user, name="Layla", language_preference="ar", age_restriction="NC-17"),
         ]
         for p in profiles:
             upsert_seed_snapshot(p)  # home rows right away (the cron builds them in production)
         # profiles in use already liked something: no "pick what you like" banner on their home
         from reco.models import TitleRating
         heat = Title.objects.get(title="Heat")
-        for p in profiles[:3]:
+        for p in profiles[:3] + profiles[4:]:
             TitleRating.objects.create(profile=p, title=heat, value=TitleRating.LIKE)

@@ -34,6 +34,7 @@ from .models import (
 )
 from .taste import has_taste_signal
 from .history import WATCH_SIGNALS, record_watch
+from .collections import next_in_collections_row
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -1196,6 +1197,10 @@ def _with_live_rows(payload, profile):
     cont = _continue_watching_row(profile)
     if cont["items"]:
         rows.insert(0, cont)
+    # the next part of every franchise the profile started, right after Continue watching
+    coll = next_in_collections_row(profile)
+    if coll:
+        rows.insert(1 if cont["items"] else 0, coll)
     return _describe_rows(_apply_age_limit(_drop_rejected({**payload, "rows": rows}, profile), profile), profile)
 
 
