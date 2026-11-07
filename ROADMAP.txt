@@ -246,3 +246,5 @@ Status: [ ] todo   [~] in progress   [x] done
         src/i18n/rtl.css holds the rest: arrows mirrored, banner shades on the right. The poster rows
         are mirrored as a whole (react-slick's own rtl mode misplaces short rows), cards turned back,
         swipe / drag handled in Row.jsx. The remote follows the screen: Left goes further into a row.
+        Sitemaps list every page in every language (?lng=) with its hreflang alternates, 1,000 pages
+        per file, so Google finds and pairs the translated pages without waiting to crawl them.

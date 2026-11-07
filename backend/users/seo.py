@@ -46,7 +46,9 @@ log = logging.getLogger(__name__)
 
 SITE_NAME = "Tauruss"
 DESCRIPTION_LENGTH = 160
-SITEMAP_URLS_PER_FILE = 40_000  # the limit is 50,000
+# pages per sitemap file: each page is listed once per language (13 <url>s), each with links to
+# all its languages, so a file holds 13,000 URLs and weighs ~20 MB (the limits: 50,000 / 50 MB)
+SITEMAP_PAGES_PER_FILE = 1_000
 SITEMAP_CACHE_SECONDS = 6 * 3600
 
 # og:locale per app language
@@ -346,16 +348,24 @@ def sitemap_index(request):
     site = _site()
     files = ["sitemap-static.xml"]
     for section, ids in _sitemap_sections().items():
-        pages = max(1, -(-len(ids) // SITEMAP_URLS_PER_FILE)) if ids else 0
+        pages = max(1, -(-len(ids) // SITEMAP_PAGES_PER_FILE)) if ids else 0
         files += [f"sitemap-{section}-{n}.xml" for n in range(1, pages + 1)]
     items = "".join(f"<sitemap><loc>{site}/{f}</loc></sitemap>" for f in files)
     return _xml(f'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{items}</sitemapindex>')
 
 
 def _urlset(paths):
-    site = _site()
-    items = "".join(f"<url><loc>{_esc(site + p)}</loc></url>" for p in paths)
-    return _xml(f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{items}</urlset>')
+    """Every page in every language (?lng=), each listing all its languages: how Google finds
+    and pairs the translated pages (the same links as in each page's <head>)."""
+    items = []
+    for path in paths:
+        urls = {code: _esc(_page_url(path, code)) for code in APP_LANGUAGES}
+        links = "".join(f'<xhtml:link rel="alternate" hreflang="{HREFLANGS.get(code, code)}" href="{url}"/>'
+                        for code, url in urls.items())
+        links += f'<xhtml:link rel="alternate" hreflang="x-default" href="{urls[DEFAULT_LANGUAGE]}"/>'
+        items += [f"<url><loc>{url}</loc>{links}</url>" for url in urls.values()]
+    return _xml('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+                + "".join(items) + "</urlset>")
 
 
 def sitemap_static(request):
@@ -366,7 +376,7 @@ def sitemap_section(request, section, page):
     if section not in SITEMAP_PATHS:
         return HttpResponseNotFound()
     ids = _sitemap_sections()[section]
-    chunk = ids[(page - 1) * SITEMAP_URLS_PER_FILE: page * SITEMAP_URLS_PER_FILE]
+    chunk = ids[(page - 1) * SITEMAP_PAGES_PER_FILE: page * SITEMAP_PAGES_PER_FILE]
     if page < 1 or not chunk:
         return HttpResponseNotFound()
     return _urlset(SITEMAP_PATHS[section].format(i) for i in chunk)

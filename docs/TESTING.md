@@ -1,12 +1,12 @@
 # Tests
 
-**221 automated tests** protect the app: 110 backend, 67 frontend, 44 end-to-end. GitHub runs
+**223 automated tests** protect the app: 112 backend, 67 frontend, 44 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 110 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
+| Backend (Django) | 112 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
 | Frontend (Vitest) | 67 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
 | End-to-end (Playwright) | 44 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
@@ -36,7 +36,7 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 110 tests | ~1 min 30 |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 112 tests | ~1 min 30 |
 | **Frontend** | translations check · lint (warnings fail it) · 67 tests · production build | ~1 min 10 |
 | **End-to-end** | starts MySQL, the backend and the production frontend · 44 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (110)
+## Backend tests (112)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -202,7 +202,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `SearchTests.test_translated_name_and_reason_shape` | search finds a title by its translated name ("Le Parrain" → The Godfather) and says why it matched |
 | `SearchTests.test_typo_fallback_runs` | a misspelled search works (regression: the typo-tolerant pass crashed) |
 
-### Search engines and link previews: `backend/users/test_seo.py` (16)
+### Search engines and link previews: `backend/users/test_seo.py` (18)
 
 What `users/seo.py` answers for the app's pages (nginx sends it every URL that isn't a file) and the sitemaps.
 
@@ -220,7 +220,9 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 | `test_app_routes_200_unknown_404` | every app route answers 200; made-up addresses (`/wp-login.php`) answer 404 instead of a page that looks real |
 | `test_every_app_route_is_known` | every `<Route path>` of `frontend/src/App.jsx` answers 200 from Django (regression: `/taste`, `/import`, `/calendar`, `/history`, `/stats`, `/collection/…` were 404 + noindex on a reload or an opened link) |
 | `test_api_404_stays_json` | unknown API addresses are not turned into app pages |
-| `test_index_and_sections`, `test_unknown_parts_404`, `test_split_into_files` | `/sitemap.xml` lists the parts; each part lists its movies / shows / actors once; parts split at 40,000 addresses |
+| `test_index_and_sections`, `test_unknown_parts_404`, `test_split_into_files` | `/sitemap.xml` lists the parts; each part lists its movies / shows / actors once; parts split at 1,000 pages |
+| `test_every_language_listed_with_its_alternates` | every page appears once per language (English without `?lng=`, the others with it), each naming all 13 languages + x-default (`zh-Hans`, `ar`…), the static pages too: how Google finds the translated pages |
+| `test_files_stay_under_the_limits` | a full part (1,000 pages × 13 languages) stays under 50,000 addresses and 50 MB |
 | `test_revalidates_and_survives_outage` | `index.html` is re-checked with the frontend on every page (a deploy shows at once) and the last copy is used if the frontend is briefly down |
 
 ---
