@@ -46,7 +46,7 @@ module.exports = defineConfig({
       },
     },
     {
-      // production build (what users get), ads off: their pop-unders take over the tab
+      // production build (what users get)
       command: `npm run build && node ../e2e/node_modules/serve/build/main.js -s build-e2e -l ${WEB_PORT} --no-clipboard`,
       cwd: '../frontend',
       url: `http://localhost:${WEB_PORT}`,
@@ -54,7 +54,6 @@ module.exports = defineConfig({
       reuseExistingServer: !isCI,
       env: {
         REACT_APP_API_BASE: `http://localhost:${API_PORT}`,
-        REACT_APP_DISABLE_ADS: 'true',
         BUILD_PATH: 'build-e2e', // vite.config.mjs
       },
     },
