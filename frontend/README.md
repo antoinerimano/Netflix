@@ -21,7 +21,6 @@ React 18 app, built with [Vite](https://vite.dev) (`vite.config.mjs`), tested wi
 | Variable | Meaning |
 | --- | --- |
 | `REACT_APP_API_BASE` | address of the Django API (`""` in production: same site, `/api`) |
-| `REACT_APP_DISABLE_ADS` | `true` turns the ad script off (local runs, end-to-end tests) |
 
 In the code they are `import.meta.env.REACT_APP_*` (`process.env` doesn't exist with Vite).
 

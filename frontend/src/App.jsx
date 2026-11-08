@@ -40,9 +40,6 @@ import { restorePlace } from './tv/spatialNavigation';
 import { useTranslation } from 'react-i18next';
 import { currentPageTitle } from './utils/pageTitle';
 
-// ✅ add this
-import AdManagerLoader from './components/AdManagerLoader';
-
 function App() {
   // the browser tab / installed app title in the app's language
   const { t } = useTranslation();
@@ -75,9 +72,6 @@ function App() {
 
   return (
     <>
-      {/* ✅ charge le script 1 seule fois pour toute l'app */}
-      <AdManagerLoader />
-
       {/* each page fades in (design/base.css .page-enter): keyed on the path only, so filters /
           search in the URL don't replay it */}
       <div className="page-enter" key={location.pathname}>
