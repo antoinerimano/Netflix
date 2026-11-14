@@ -10,6 +10,7 @@ import { logOutboundClickBeacon, logTitleClick } from '../api/analyticsApi';
 import { Button, Rating, Badge } from '../design';
 import { PlayIcon, InfoIcon, VolumeOnIcon, VolumeOffIcon, DiceIcon } from '../design/icons';
 import { tmdbImage, tmdbSrcSet, IMG } from '../utils/tmdbImage';
+import { useActivePreview } from './preview/previewStore';
 
 const TRAILER_DELAY_MS = 3000;
 
@@ -41,6 +42,7 @@ const Hero = ({ hero: title }) => {
   const [muted, setMuted] = useState(true);
   const [ended, setEnded] = useState(false); // played once: stay on the artwork
   const [onScreen, setOnScreen] = useState(true);
+  const rowPreview = useActivePreview(); // a row's trailer preview is playing: one video at a time
 
   const art = heroArtwork(title);
   const trailer = (title?.trailer_clip_url || '').trim();
@@ -68,7 +70,7 @@ const Hero = ({ hero: title }) => {
   useEffect(() => {
     const v = videoRef.current;
     if (!canPlayTrailer || !v || ended) return undefined;
-    if (!onScreen) {
+    if (!onScreen || rowPreview) {
       v.pause();
       return undefined;
     }
@@ -77,7 +79,7 @@ const Hero = ({ hero: title }) => {
       v.play()?.catch(() => setVideoFailed(true)); // autoplay refused: stay on the artwork
     }, v.currentTime > 0 ? 300 : TRAILER_DELAY_MS); // resuming after scrolling back: no wait
     return () => clearTimeout(timer);
-  }, [canPlayTrailer, onScreen, title?.id, ended]);
+  }, [canPlayTrailer, onScreen, rowPreview, title?.id, ended]);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted;
