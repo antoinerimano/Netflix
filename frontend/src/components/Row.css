@@ -136,8 +136,27 @@ html.tv-keys .row .row-arrow {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
   }
-  .movie-card:hover img {
+  .movie-card:hover img,
+  .movie-card:hover .row-preview {
     transform: scale(1.06);
+  }
+}
+
+/* trailer preview (preview/CardPreview.jsx): loads hidden, fades in over the artwork once it
+   plays; under the info panel, the badges and the buttons */
+.movie-card .row-preview {
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+.movie-card .row-preview.is-showing {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .movie-card .row-preview {
+    display: none; /* previewStore doesn't start any; in case the setting changes during a visit */
   }
 }
 

@@ -1,14 +1,14 @@
 # Tests
 
-**233 automated tests** protect the app: 122 backend, 67 frontend, 44 end-to-end. GitHub runs
+**243 automated tests** protect the app: 122 backend, 75 frontend, 46 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
 | Backend (Django) | 122 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 67 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 44 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Frontend (Vitest) | 75 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 46 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -37,8 +37,8 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 | Job | Steps | Time |
 |---|---|---|
 | **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 122 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 67 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 44 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Frontend** | translations check · lint (warnings fail it) · 75 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 46 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -246,7 +246,7 @@ The worker's own checks (is the YouTube video the title's?) run without network:
 
 ---
 
-## Frontend tests (67)
+## Frontend tests (75)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -295,6 +295,21 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | VidCore and others (2) | VidCore's text messages; anything else posted to the page (ads, extensions) is ignored |
 | URLs (2) | a bare domain gets `https://`; `.mp4` / `.m3u8` files play in the page's own player |
 | saved preferences and the address (3) | the saved source is per profile and title; old saved sources still work; `?season=` / `?episode=` / `?t=` only accept positive numbers |
+
+### Trailer previews on the rows: `frontend/src/components/preview/previewStore.test.js` (8)
+
+When a row card's trailer preview starts and stops (`components/preview/previewStore.js`).
+
+| Test | Verifies |
+|---|---|
+| waits, loads, then shows once the video can play (mouse) | nothing downloads for 250 ms (moving across a row costs nothing), then the clip loads; it shows after 700 ms, not before, even if ready earlier |
+| shows as soon as a slow video is ready after the delay | a clip still loading at 700 ms appears the moment it can play |
+| the remote waits longer than the mouse | a focused card shows its preview after 1.5 s |
+| one preview at a time; leaving a card stops it, leaving another changes nothing | a new card stops the previous one; a late "leave" of the old card doesn't stop the new one; no timer brings a stopped one back |
+| asking again for the card already previewed keeps it going | the click after a hover (which focuses the card) doesn't restart it |
+| a clip that fails is not tried again | a broken clip goes back to the artwork for the rest of the visit |
+| nothing without a clip, or when previews are off | no clip, reduced motion or data saver: no preview |
+| muted by default; the choice is remembered and shared by every card | sound on applies to every card and is remembered |
 
 ### Tab title: `frontend/src/utils/pageTitle.test.jsx` (2)
 
@@ -371,7 +386,7 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 
 ---
 
-## End-to-end tests (44)
+## End-to-end tests (46)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -485,6 +500,15 @@ To see what overlaps, the test prints `OVERLAP <page> \| <focused> -> <neighbour
 |---|---|
 | home banner opens the picker, Back returns without saving | a new profile's home offers "Pick titles" right under Play (Down, not skipped); Right reaches "Not now"; the banner remembers its button; OK opens the picker; Back leaves it without saving |
 | pick with OK, Continue with Down, then a personal home page | starts on the first poster; OK picks; Down never leaves the focus under the pinned bar and enters it on Continue (not Skip); Up returns to the poster; Continue opens the home page without the banner |
+
+### Trailer previews on the rows: `e2e/tests/row-preview.spec.js` (2)
+
+Every row title gets a clip (a little WebM the browser records from a canvas, served as the CDN's).
+
+| Test | Verifies |
+|---|---|
+| remote (1280 × 720): the focused card plays its preview, the next card takes over, the banner pauses | Down Down: the first card's preview fades in and plays, only one `<video>` on the page, the banner's trailer is paused; Right: the old preview stops at once, the new card's plays; Up to the banner: none left; the focus is never lost |
+| mouse: hover plays the preview, sound on is remembered, leaving stops it | hovering plays it; "Unmute" turns into "Mute" and is remembered (`previewMuted`); moving the mouse away removes it |
 
 ### Languages, search and lists: `e2e/tests/i18n-search.spec.js` (5)
 

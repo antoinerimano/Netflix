@@ -9,15 +9,12 @@ import './Row.css';
 import { logImpressions, logTitleClick, logOutboundClickBeacon } from '../api/analyticsApi';
 import { hideWatchProgress, markNotInterested } from '../api/recoApi';
 import { tmdbImage, IMG } from '../utils/tmdbImage';
-import { ChevronLeftIcon, ChevronRightIcon, MoreIcon, VolumeOnIcon, VolumeOffIcon } from '../design/icons';
+import { ChevronLeftIcon, ChevronRightIcon, MoreIcon } from '../design/icons';
 import TitleOptions from './TitleOptions';
+import CardPreview from './preview/CardPreview';
+import { previewStore } from './preview/previewStore';
 
 const LONG_PRESS_MS = 500; // touch: press and hold a card for its options
-
-const LOAD_ON_HOVER_MS = 1000;
-const STALL_HIDE_MS = 900;
-
-
 
 // Mouse-only paging arrows (the remote moves card by card); aria-hidden: not in the TV focus order
 const NextArrow = ({ className, onClick }) => {
@@ -61,15 +58,6 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
   const navigate = useNavigate();
   const title = analyticsTitle || shownTitle;
 
-  const [hoveredKey, setHoveredKey] = useState(null);
-  const [visibleVideoKeys, setVisibleVideoKeys] = useState(() => new Set());
-  const [isMutedMap, setIsMutedMap] = useState({});
-  const [loadedTrailerKeys, setLoadedTrailerKeys] = useState(() => new Set());
-
-  const videoRefs = useRef({});
-  const hoverInTimers = useRef({});
-  const stallTimers = useRef({});
-
   const sliderRef = useRef(null);
   const rowRef = useRef(null);
   const currentSlideRef = useRef(0);
@@ -92,158 +80,6 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
     return out;
   })();
 
-
-  const stopAllVideos = useCallback(() => {
-    Object.keys(videoRefs.current).forEach((k) => {
-      const v = videoRefs.current[k];
-      if (v) {
-        try { v.pause(); } catch { }
-        try { v.currentTime = 0; } catch { }
-      }
-    });
-    setVisibleVideoKeys(new Set());
-    Object.keys(stallTimers.current).forEach((k) => {
-      clearTimeout(stallTimers.current[k]);
-      delete stallTimers.current[k];
-    });
-  }, []);
-
-  const tryPlay = useCallback((key) => {
-    const v = videoRefs.current[key];
-    if (!v) return;
-    try { v.currentTime = 0; } catch { }
-    const p = v.play?.();
-    if (p && typeof p.catch === 'function') p.catch(() => { });
-  }, []);
-
-  const safeClear = (store, key) => {
-    if (store[key]) {
-      clearTimeout(store[key]);
-      delete store[key];
-    }
-  };
-
-  const unloadVideo = (key) => {
-    const v = videoRefs.current[key];
-    if (!v) return;
-    try { v.pause(); } catch { }
-    try { v.removeAttribute('src'); } catch { }
-    try { v.load(); } catch { }
-  };
-
-  const handleMouseEnter = (key, hasTrailer) => {
-    if (!hasTrailer) return;
-    stopAllVideos();
-    setHoveredKey(key);
-
-    safeClear(hoverInTimers.current, key);
-    hoverInTimers.current[key] = setTimeout(() => {
-      setLoadedTrailerKeys((prev) => {
-        const next = new Set(prev);
-        next.add(key);
-        return next;
-      });
-      setTimeout(() => tryPlay(key), 50);
-    }, LOAD_ON_HOVER_MS);
-  };
-
-  const handleMouseLeave = (key) => {
-    setHoveredKey(null);
-    safeClear(hoverInTimers.current, key);
-    safeClear(stallTimers.current, key);
-
-    setVisibleVideoKeys((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
-
-    unloadVideo(key);
-    setLoadedTrailerKeys((prev) => {
-      if (!prev.has(key)) return prev;
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    // the timer stores are objects that live as long as the row: read them at cleanup time
-    const hoverIn = hoverInTimers.current;
-    const stalls = stallTimers.current;
-    return () => {
-      Object.keys(hoverIn).forEach((k) => clearTimeout(hoverIn[k]));
-      Object.keys(stalls).forEach((k) => clearTimeout(stalls[k]));
-    };
-  }, []);
-
-  const onLoadedMetadata = (key) => {
-    if (hoveredKey === key) tryPlay(key);
-  };
-
-  const onPlaying = (key) => {
-    safeClear(stallTimers.current, key);
-    setVisibleVideoKeys((prev) => {
-      const next = new Set(prev);
-      next.add(key);
-      return next;
-    });
-  };
-
-  const startStallWatchdog = (key) => {
-    safeClear(stallTimers.current, key);
-    stallTimers.current[key] = setTimeout(() => {
-      if (hoveredKey === key) {
-        setVisibleVideoKeys((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-        const v = videoRefs.current[key];
-        if (v) {
-          try { v.pause(); } catch { }
-        }
-      }
-    }, STALL_HIDE_MS);
-  };
-
-  const onWaiting = (key) => startStallWatchdog(key);
-  const onStalled = (key) => startStallWatchdog(key);
-
-  const onError = (key) => {
-    safeClear(stallTimers.current, key);
-    setVisibleVideoKeys((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
-  };
-
-  const onEnded = (key) => {
-    if (hoveredKey === key) {
-      tryPlay(key);
-    } else {
-      setVisibleVideoKeys((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
-    }
-  };
-
-  const toggleMute = (e, key) => {
-    e.stopPropagation();
-    const next = !(isMutedMap[key] ?? true);
-    setIsMutedMap((m) => ({ ...m, [key]: next }));
-    const v = videoRefs.current[key];
-    if (v) {
-      v.muted = next;
-      if (!next && v.paused) {
-        const p = v.play?.();
-        if (p && typeof p.catch === 'function') p.catch(() => { });
-      }
-    }
-  };
 
   /** -------- Dynamic routing by type -------- */
   const getDetailPath = (t) => {
@@ -478,10 +314,6 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
             progressPercent = Math.min(100, (movie.progress / durationInSeconds) * 100);
           }
 
-          const canRenderVideo = loadedTrailerKeys.has(key) && !!trailerSrc;
-          const isVisible = visibleVideoKeys.has(key);
-          const isMuted = isMutedMap[key] ?? true;
-
           return (
             // react-slick overwrites tabIndex (-1) and style on each slide's root element:
             // this wrapper takes it, so the card itself stays focusable (TV remote / keyboard)
@@ -493,7 +325,12 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
               role="button"
               aria-label={movie?.title}
               data-options=""
-              onFocus={() => ensureCardVisible(index)}
+              onFocus={(e) => {
+                ensureCardVisible(index);
+                // remote / keyboard only: a mouse click also focuses, its hover already asked
+                if (e.currentTarget.matches(':focus-visible')) previewStore.request(key, trailerSrc, 'focus');
+              }}
+              onBlur={() => previewStore.cancel(key)}
               onClick={() => {
                 if (press.current.fired) {
                   press.current.fired = false; // the long press opened the options
@@ -507,38 +344,11 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
                 openOptions(movie, index);
               }}
               {...touchHandlers(movie, index)}
-              onMouseEnter={() => handleMouseEnter(key, !!trailerSrc)}
-              onMouseLeave={() => handleMouseLeave(key)}
+              // mouse only: on a touch screen a tap opens the title
+              onPointerEnter={(e) => e.pointerType === 'mouse' && previewStore.request(key, trailerSrc, 'mouse')}
+              onPointerLeave={() => previewStore.cancel(key)}
               style={{ position: 'relative' }}
             >
-              {canRenderVideo && (
-                <video
-                  ref={(el) => (videoRefs.current[key] = el)}
-                  src={trailerSrc}
-                  muted={isMuted}
-                  loop
-                  playsInline
-                  preload="none"
-                  poster={tmdbImage(posterSrc, IMG.backdropCard)}
-                  onLoadedMetadata={() => onLoadedMetadata(key)}
-                  onPlaying={() => onPlaying(key)}
-                  onWaiting={() => onWaiting(key)}
-                  onStalled={() => onStalled(key)}
-                  onError={() => onError(key)}
-                  onEnded={() => onEnded(key)}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    opacity: isVisible ? 1 : 0,
-                    transition: 'opacity 180ms ease-out',
-                    pointerEvents: 'none',
-                  }}
-                />
-              )}
-
               {/* shown when the artwork is missing / broken (the image covers it otherwise) */}
               <span className="row-card__fallback" aria-hidden="true">{movie?.title}</span>
               <img
@@ -561,9 +371,11 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  visibility: isVisible ? 'hidden' : 'visible',
                 }}
               />
+
+              {/* the trailer preview, over the artwork (preview/previewStore.js: when) */}
+              <CardPreview previewKey={key} src={trailerSrc} poster={tmdbImage(posterSrc, IMG.backdropCard)} />
 
               {/* mouse / touch: options (the remote holds OK; not in its focus order) */}
               <button
@@ -579,17 +391,6 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
                 >
                   <MoreIcon />
                 </button>
-
-              {canRenderVideo && isVisible && (
-                <button
-                  className="row-unmute-btn row-card-btn"
-                  onClick={(e) => toggleMute(e, key)}
-                  aria-label={isMuted ? t('trailer.unmuteLabel') : t('trailer.muteLabel')}
-                  title={isMuted ? t('trailer.unmute') : t('trailer.mute')}
-                >
-                  {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
-                </button>
-              )}
 
               {/* status on the artwork, always visible: where you are / what's new */}
               {movie?.resume ? (
