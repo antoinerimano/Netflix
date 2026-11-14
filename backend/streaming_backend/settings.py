@@ -167,6 +167,9 @@ FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000").split(",")[0
 # ---- SEO (users/seo.py): page shells with per-title tags, sitemaps ----
 # Public address of the site in canonical / hreflang / sitemap links
 SITE_URL = env("SITE_URL", default=FRONTEND_URL).rstrip("/")
+
+# where the trailer preview clips are served from (trailer-worker/ uploads them there)
+BUNNY_CDN_BASE = env("BUNNY_CDN_BASE", default="https://zuvo-movies-cdn.b-cdn.net").rstrip("/")
 # Where the frontend's index.html is read from (the frontend container in docker compose),
 # or a file path instead (FRONTEND_INDEX_FILE, e.g. frontend/build/index.html for a local run)
 FRONTEND_INDEX_URL = env("FRONTEND_INDEX_URL", default="http://frontend/index.html")

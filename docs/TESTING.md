@@ -1,12 +1,12 @@
 # Tests
 
-**223 automated tests** protect the app: 112 backend, 67 frontend, 44 end-to-end. GitHub runs
+**233 automated tests** protect the app: 122 backend, 67 frontend, 44 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 112 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
+| Backend (Django) | 122 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
 | Frontend (Vitest) | 67 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
 | End-to-end (Playwright) | 44 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
@@ -36,7 +36,7 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 112 tests | ~1 min 30 |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 122 tests | ~1 min 30 |
 | **Frontend** | translations check · lint (warnings fail it) · 67 tests · production build | ~1 min 10 |
 | **End-to-end** | starts MySQL, the backend and the production frontend · 44 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (112)
+## Backend tests (122)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -224,6 +224,25 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 | `test_every_language_listed_with_its_alternates` | every page appears once per language (English without `?lng=`, the others with it), each naming all 13 languages + x-default (`zh-Hans`, `ar`…), the static pages too: how Google finds the translated pages |
 | `test_files_stay_under_the_limits` | a full part (1,000 pages × 13 languages) stays under 50,000 addresses and 50 MB |
 | `test_revalidates_and_survives_outage` | `index.html` is re-checked with the frontend on every page (a deploy shows at once) and the last copy is used if the frontend is briefly down |
+
+### Trailers: `backend/users/test_trailers.py` (10)
+
+Which TMDB video is a title's trailer (`users/trailers.py`), and the two commands `trailer-worker/` talks to.
+
+| Test | Verifies |
+|---|---|
+| `test_official_trailer_over_an_earlier_fan_upload` | an official trailer wins over a fan upload listed first |
+| `test_a_show_gets_its_series_trailer_not_a_later_season` | a show gets its first trailer, not a "Season 4" one |
+| `test_original_language_first_then_english` | a trailer in the title's own language, else English, else another language |
+| `test_trailer_over_teaser_and_never_a_clip` | a trailer beats a teaser; clips / featurettes are never picked |
+| `test_re_release_trailer_loses_to_the_original` | a 4K re-release trailer loses to the original one |
+| `test_youtube_key_and_paths` | YouTube ids read from every link form; a movie and a show with the same TMDB id get different files (regression: they overwrote each other) |
+| `test_export_lists_titles_without_the_clip_of_their_trailer_most_popular_first` | `export_trailer_jobs` lists titles needing a clip (old `trailers/` ones included), most popular first, `--limit` / `--type` |
+| `test_import_saves_the_clip_on_the_right_title_from_the_cdn_address` | `import_trailer_results` saves each clip on its own title, with a URL built from `BUNNY_CDN_BASE` (never the file's); running it again changes nothing |
+| `test_import_skips_errors_stale_trailers_and_dry_runs` | errors, clips of a trailer TMDB has since replaced, and `--dry-run` change nothing |
+| `test_rejected_trailer_clears_the_old_clip_only_when_asked` | a rejected trailer's old clip is removed only with `--clear-rejected` |
+
+The worker's own checks (is the YouTube video the title's?) run without network: `cd trailer-worker && python -m unittest test_make_previews`.
 
 ---
 

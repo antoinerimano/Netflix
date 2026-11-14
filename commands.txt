@@ -2,7 +2,8 @@ docker compose exec backend python manage.py train_ranker
 docker compose exec backend python manage.py build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2
 docker compose exec backend python manage.py sync_tmdb_monthly --pages 10 --min-votes 2000 --verbose-adds --only-created
 docker compose exec backend python manage.py clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200
-docker compose exec backend python /app/tools/add_trailer_to_cdn.py
+docker compose exec -T backend python manage.py export_trailer_jobs > jobs.json   (titles needing a trailer preview: for trailer-worker/, see its README)
+docker compose exec -T backend python manage.py import_trailer_results - < results.json   (save the clips it made; --dry-run to count only)
 docker compose exec backend python manage.py check_providers   (health-check stream providers, auto-switch dead/moved domains)
 docker compose exec backend python manage.py sync_tmdb_translations   (titles / synopses in fr es de it ja zh from TMDB; first run: whole catalog, then only new titles)
 docker compose exec backend python manage.py sync_tmdb_translations --episodes --latest-seasons 2 --limit 500   (+ episode names / synopses of the most popular shows)

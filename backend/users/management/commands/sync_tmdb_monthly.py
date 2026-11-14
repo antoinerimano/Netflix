@@ -14,6 +14,7 @@ from django.db.models import Count
 
 from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
+from users.trailers import pick_trailer_url
 from users.jobs import tracked
 
 
@@ -95,12 +96,7 @@ def fill_field(obj, field: str, new_val, overwrite: bool) -> bool:
 
 
 def tmdb_trailer_url(full: dict) -> str:
-    for v in (full.get("videos") or {}).get("results", []) or []:
-        if v.get("site") == "YouTube" and v.get("type") == "Trailer":
-            key = v.get("key")
-            if key:
-                return f"https://www.youtube.com/watch?v={key}"
-    return ""
+    return pick_trailer_url(full)  # users/trailers.py: the best video, not the first one
 
 
 def tmdb_director_from_credits(full: dict) -> str:

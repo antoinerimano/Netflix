@@ -5,9 +5,9 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# deps système : mysqlclient (build), ffmpeg (trailers), libgomp1 (lightgbm)
+# deps système : mysqlclient (build), libgomp1 (lightgbm). Trailer clips: trailer-worker/, not here
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential default-libmysqlclient-dev pkg-config ffmpeg libgomp1 \
+    build-essential default-libmysqlclient-dev pkg-config libgomp1 \
   && rm -rf /var/lib/apt/lists/*
 
 # install python deps

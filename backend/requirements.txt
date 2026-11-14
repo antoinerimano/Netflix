@@ -12,7 +12,6 @@ django-sslserver~=0.22
 drf-nested-routers~=0.94.1
 numpy~=2.3.3
 # follows the video sites: keep it current
-yt-dlp>=2025.9.26
 requests~=2.32.3
 lightgbm~=4.6.0
 scikit-learn~=1.8.0

@@ -27,6 +27,7 @@ import django  # noqa: E402
 django.setup()  # noqa: E402
 
 from users.models import Title, Season, Episode, TVShowExtras  # noqa: E402
+from users.trailers import pick_trailer_url  # noqa: E402
 
 TMDB_KEY = "f6988ac086c88bbfe779ab0ed2eed215"  # your key
 SKIP_SPECIALS = True  # skip TMDB season_number==0
@@ -67,13 +68,8 @@ def tmdb_director(tmdb: Dict[str, Any]) -> str:
 def tmdb_cast_names(tmdb: Dict[str, Any], limit: int = 10) -> List[str]:
     return [c.get("name") for c in (tmdb.get("credits", {}) or {}).get("cast", []) if c.get("name")][:limit]
 
-def tmdb_trailer_url(tmdb: Dict[str, Any]) -> str:
-    for v in (tmdb.get("videos", {}) or {}).get("results", []):
-        if v.get("site") == "YouTube" and v.get("type") == "Trailer":
-            key = v.get("key")
-            if key:
-                return f"https://www.youtube.com/watch?v={key}"
-    return ""
+def tmdb_trailer_url(tmdb: dict) -> str:
+    return pick_trailer_url(tmdb)  # users/trailers.py: the best video, not the first one
 
 # ---- tv fetchers ----
 
