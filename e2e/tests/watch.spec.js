@@ -62,13 +62,16 @@ test('CineSrc: the remote drives the player, the focus stays in the app', async 
   await page.getByRole('button', { name: 'Watch' }).click();
   await page.locator('.watchpage__chip', { hasText: 'CineSrc' }).click();
   const player = page.frameLocator('iframe.watchpage__iframe');
-  await expect(player.locator('#state')).toBeVisible();
+  // the CineSrc player itself, not the first source's (same fake page): commands sent to it while
+  // the old one is still loaded are dropped (wrong origin) and the test failed now and then on CI
+  await expect.poll(() => page.frames().some((f) => /cinesrc\.st/.test(f.url()))).toBe(true);
+  await expect(player.locator('#state')).toHaveText('fake player');
 
   await page.locator('.watchpage__playerWrap').focus();
   await page.keyboard.press('Space'); // play / pause on a remote / keyboard
-  await expect(player.locator('#state')).toContainText('play');
+  await expect(player.locator('#state')).toHaveText('play'); // exactly: "fake player" contains "play"
   await page.keyboard.press('Space');
-  await expect(player.locator('#state')).toContainText('pause');
+  await expect(player.locator('#state')).toHaveText('play pause');
   expect(await focused(page)).toMatch(/^DIV Player/);
 });
 
