@@ -1,0 +1,7 @@
+.env
+.venv/
+jobs.json
+results.json
+results.tmp
+results.lock
+logs/
