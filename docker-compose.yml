@@ -8,8 +8,9 @@ x-logging: &default-logging
 services:
   db:
     image: mysql:8.0
-    # binary logs: 3 days (MySQL default 30 filled the disk, ~0.5 GB per home snapshot rebuild)
-    command: ["--default-authentication-plugin=mysql_native_password", "--binlog-expire-logs-seconds=259200"]
+    # binary logs off: no replica and no point-in-time restores, and they filled the disk
+    # (~0.5 GB per home snapshot rebuild, ~8 GB/day; even 3-day expiry kept ~26 GB)
+    command: ["--default-authentication-plugin=mysql_native_password", "--skip-log-bin"]
     environment:
       # Only read when the database is created (empty mysql_data volume): an existing database
       # keeps its own password. Set it in .env next to this file (see .env.example), the same
