@@ -11,6 +11,9 @@ const isCI = !!process.env.CI;
 
 module.exports = defineConfig({
   testDir: './tests',
+  // E2E_SKIP_SLOW=1 (pull requests / main on GitHub): focus-overlap.spec.js (3.4 min, every control's
+  // focus ring on every page) is left to the nightly run (.github/workflows/e2e-nightly.yml)
+  testIgnore: process.env.E2E_SKIP_SLOW ? ['**/focus-overlap.spec.js'] : [],
   timeout: 45_000,
   expect: { timeout: 10_000 },
   fullyParallel: false, // one shared database

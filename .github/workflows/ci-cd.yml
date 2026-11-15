@@ -3,6 +3,16 @@
 #   end-to-end tests (the real app in Chromium, driven with the keyboard like a TV remote)
 #   push to main, once everything passed: deploy to the server over SSH (docker compose)
 #
+# End-to-end, kept fast (~3 min instead of ~7):
+#   - split over 3 machines (shards), each with its own MySQL and database: whole test files per
+#     shard, in order, so their clean-ups still hold;
+#   - skipped when nothing the app runs changed (only ROADMAP.txt, docs/, ops/, scripts/, *.md,
+#     commands.txt): the "changes" job decides;
+#   - focus-overlap.spec.js (3.4 min: every control's focus ring on every page) runs every night
+#     instead (e2e-nightly.yml), with the whole suite.
+#   "End-to-end (Playwright, real app, TV remote)" is a required check on main: the job of that name
+#   sums up the shards (passed, or skipped because nothing changed), keep its name.
+#
 # Deploy setup (GitHub > Settings > Environments > "production"):
 #   secrets   SSH_HOST, SSH_USER, SSH_PRIVATE_KEY (a key allowed on the server), SSH_PORT (optional, 22)
 #   variables DEPLOY_ENABLED = true (the deploy job is skipped until then)
@@ -111,10 +121,42 @@ jobs:
       - name: Production build
         run: npm run build
 
-  e2e:
-    name: End-to-end (Playwright, real app, TV remote)
+  # does this change touch anything the app runs? (no: the end-to-end shards are skipped)
+  changes:
+    name: What changed
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then base="$PR_BASE"; else base="$PUSH_BEFORE"; fi
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "no base to compare with: run everything"; echo "app=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(git diff --name-only "$base" HEAD)
+          echo "$files"
+          app=$(echo "$files" | grep -vE '^(ROADMAP\.txt|commands\.txt|docs/|ops/|scripts/)|\.md$' | grep -c . || true)
+          if [ "$app" -gt 0 ]; then echo "app=true" >> "$GITHUB_OUTPUT"; else echo "app=false" >> "$GITHUB_OUTPUT"; fi
+
+  e2e-shard:
+    name: End-to-end ${{ matrix.shard }}/3
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false # see every shard's failures at once
+      matrix:
+        shard: [1, 2, 3]
     services:
       mysql:
         image: mysql:8.0
@@ -168,19 +210,41 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: End-to-end tests
+      - name: End-to-end tests (shard ${{ matrix.shard }} of 3, without focus-overlap)
         working-directory: e2e
-        run: npx playwright test
+        env:
+          E2E_SKIP_SLOW: "1" # focus-overlap.spec.js: nightly (e2e-nightly.yml)
+        run: npx playwright test --shard=${{ matrix.shard }}/3
 
       - name: Report (screenshots, videos and traces of what failed)
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             e2e/playwright-report
             e2e/test-results
           retention-days: 14
+
+  # the required check: passes when every shard passed, or when they were skipped (nothing the app
+  # runs changed); fails otherwise
+  e2e:
+    name: End-to-end (Playwright, real app, TV remote)
+    needs: [changes, e2e-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          APP: ${{ needs.changes.outputs.app }}
+          CHANGES: ${{ needs.changes.result }}
+          SHARDS: ${{ needs.e2e-shard.result }}
+        run: |
+          echo "changes: $CHANGES (app changed: $APP), shards: $SHARDS"
+          if [ "$CHANGES" = "success" ] && [ "$APP" = "false" ] && [ "$SHARDS" = "skipped" ]; then
+            echo "Nothing the app runs changed: end-to-end tests not needed."; exit 0
+          fi
+          [ "$SHARDS" = "success" ] || { echo "::error::end-to-end shards: $SHARDS"; exit 1; }
 
   deploy:
     name: Deploy
