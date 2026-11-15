@@ -277,6 +277,10 @@ Rule: every Claude call runs from a scheduled job (cron, Message Batches at half
 hard limit on how much it processes; pages only show what is already written. No chatbot, nothing
 a visitor can press to spend credits. Claude Haiku 5.5 by default; the Console's monthly spend
 limit (Billing -> Limits) is the safety net. Target: under US$5 a month for everything.
+TMDB first: whatever TMDB has (free, already synced: genres, keywords, overviews, episode
+summaries, age ratings, credits, translations, images) is taken from TMDB; Claude only adds what
+TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
+leaves (a missing translation), and is told the TMDB data, never asked to guess it.
 
 [ ] 8.1 "Catch me up" written in the background (follows 7.11)
         Today a recap is written the first time someone presses the button (throttled, then kept).
@@ -287,19 +291,26 @@ limit (Billing -> Limits) is the safety net. Target: under US$5 a month for ever
         syncs, tag batches, disk space and the last log lines; emails the admin only when
         something is wrong: what broke, the likely cause, the command to fix it.
 [ ] 8.3 Catalog quality pass (weekly batch, ~US$0.20 a month)
-        Finds likely duplicates, missing posters / overviews, odd age ratings (a horror film rated
-        G), titles in the wrong genre; fixes the safe ones with the existing commands (clean_db...),
-        lists the rest on the admin dashboard to approve.
+        TMDB first: missing posters / overviews / age ratings are fetched again from TMDB
+        (clean_db --backfill-tmdb). Then Claude looks only at what TMDB can't settle: likely
+        duplicates, odd age ratings (a horror film rated G), titles in the wrong genre; fixes the
+        safe ones with the existing commands, lists the rest on the admin dashboard to approve.
 [ ] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
         "Violence · Strong language · Frightening scenes" under the genres; remote-only e2e test.
 [ ] 8.5 Rows named by AI (weekly batch)
         Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
-        Nordic crime", "90s heist comedies") once per group, show them as home rows.
+        Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
+        and its AI moods, show them as home rows.
 [ ] 8.6 Missing translations (batch)
-        Overviews TMDB lacks in Bengali, Urdu, Hindi...: translated from English into
-        TitleTranslation, marked as machine translated.
+        TMDB first (sync_tmdb_translations, every 3 hours); only overviews TMDB still lacks in a
+        language (often Bengali, Urdu, Hindi) are translated from English into TitleTranslation,
+        marked as machine translated, and replaced when TMDB gets a real one.
 [ ] 8.7 Did the AI tags help? (no AI cost)
         Compare how often a /pick suggestion is played before and after 7.10 (TitleImpression /
         TitleAction), and "More like this" clicks before / after the embeddings rebuild.
+[ ] 8.8 Free TMDB data not pulled yet (no AI cost)
+        - TMDB's own "recommendations" and "similar" lists per title (append_to_response
+          recommendations,similar): extra candidates for "More like this" next to the embeddings.
+        - "alternative_titles": search finds a title by its other names (local release titles).
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
