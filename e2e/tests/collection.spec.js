@@ -19,9 +19,18 @@ async function moveUntil(page, key, pattern, max = 8) {
   expect(await focused(page)).toMatch(pattern);
 }
 
+// Sam's history is emptied after the test, passed or failed: taste.spec.js needs a profile
+// with no history (a failure here used to leave part 1 watched and fail that one too)
+let cleanup = null;
+test.afterEach(async ({ page }) => {
+  if (cleanup) await cleanup(page);
+  cleanup = null;
+});
+
 test('collection: movie page, collection page, what comes next', async ({ page }) => {
   const { session, profile } = await signInAs(page, 'Sam', '/');
   const auth = { headers: { Authorization: `Bearer ${session.access}` } };
+  cleanup = (p) => p.request.delete(`${API}/history/`, { ...auth, params: { profileId: String(profile.id) } });
   const first = await idOf(page, 'The Godfather');
   const second = await idOf(page, 'The Godfather Part II');
 
@@ -50,7 +59,10 @@ test('collection: movie page, collection page, what comes next', async ({ page }
   await expect.poll(() => focused(page)).toBe('BUTTON Part 2, The Godfather Part II, 1974');
 
   // after part 1: the player offers part 2, the collection says what's next, so does the home
+  // wait until the play is saved: leaving at once could cancel it (failed now and then on CI)
+  const saved = page.waitForResponse((r) => r.url().includes('/api/watch-progress/') && r.request().method() === 'POST' && r.ok());
   await page.goto(`/watch/${first}`);
+  await saved;
   await expect(page.getByRole('button', { name: 'Next movie' })).toBeVisible();
   await page.goto('/collection/230');
   await expect(page.getByText('1 of 2 watched').first()).toBeVisible();
@@ -59,6 +71,4 @@ test('collection: movie page, collection page, what comes next', async ({ page }
   const row = page.locator('.row', { hasText: 'Next in your collections' });
   await expect(row).toBeVisible();
   await expect(row).toContainText('The Godfather Part II');
-
-  await page.request.delete(`${API}/history/`, { ...auth, params: { profileId: String(profile.id) } });
 });
