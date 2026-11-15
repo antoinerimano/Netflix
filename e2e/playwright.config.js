@@ -41,6 +41,7 @@ module.exports = defineConfig({
         CORS_ALLOWED_ORIGINS: `http://localhost:${WEB_PORT},http://127.0.0.1:${WEB_PORT}`,
         THROTTLE_AUTH_RATE: '1000/min', // every test signs in
         THROTTLE_PASSWORD_RESET_RATE: '1000/hour',
+        THROTTLE_VISIT_RATE: '10000/min',
         EMAIL_BACKEND: 'django.core.mail.backends.locmem.EmailBackend',
         PYTHONIOENCODING: 'utf-8',
       },

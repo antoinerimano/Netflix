@@ -1,16 +1,18 @@
 # users/dashboard.py
-# Admin dashboard (<ADMINADMIN_URL>dashboard/): activity, providers, scheduled jobs, home pages,
-# catalog. Staff only (admin_view in urls.py).
+# Admin dashboard (<ADMINADMIN_URL>dashboard/): visitors (reco/visits.py), activity, providers,
+# scheduled jobs, home pages, catalog. Staff only (admin_view in urls.py).
 import datetime as dt
 from datetime import timedelta
 
 from django.contrib import admin
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDate
+from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
 from reco.models import Notification, PlaybackOutcome, RecoHomeSnapshot, TitleAction
+from reco.visits import live_stats, visitor_stats
 from .models import Episode, JobRun, Profile, Provider, ProviderCheck, Title, User
 
 PLAYS_DAYS = 14
@@ -135,6 +137,8 @@ def dashboard_view(request):
             ("New accounts, 7 days", User.objects.filter(created_at__gte=since7).count()),
             ("Alert emails sent, 7 days", Notification.objects.filter(emailed_at__gte=since7).count()),
         ],
+        "visitors": visitor_stats(now),
+        "live": live_stats(now),
         "plays": plays,
         "plays_top": plays_top,
         "plays_total": sum(d["n"] for d in plays),
@@ -154,3 +158,8 @@ def dashboard_view(request):
         ],
     }
     return TemplateResponse(request, "admin/dashboard.html", context)
+
+
+def dashboard_live_view(request):
+    """Who is on the site right now: the dashboard's Live card asks every 15 s."""
+    return JsonResponse(live_stats(timezone.now()))

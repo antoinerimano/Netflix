@@ -12,10 +12,12 @@ from .stats import StatsView
 from .collections import CollectionView
 from .lists import ListsView, ListView, ListItemView, PublicListView, PublicListCopyView
 from .pick import PickView
+from .visits import VisitView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
     path("events/action/", LogActionView.as_view()),
+    path("events/visit/", VisitView.as_view()),  # site visitors (admin dashboard)
     path("reco/home/", RecoHomeView.as_view()),
     path("watch-progress/", WatchProgressView.as_view()),
     path("my-list/", MyListView.as_view()),

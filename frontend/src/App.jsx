@@ -39,6 +39,7 @@ import SearchPage from './pages/SearchPage';
 import { restorePlace } from './tv/spatialNavigation';
 import { useTranslation } from 'react-i18next';
 import { currentPageTitle } from './utils/pageTitle';
+import { useVisitTracking } from './api/visitsApi';
 
 function App() {
   // the browser tab / installed app title in the app's language
@@ -60,6 +61,7 @@ function App() {
   // Back / Forward keep their place (the browse pages restore theirs)
   const location = useLocation();
   const navigationType = useNavigationType();
+  useVisitTracking(); // visitors for the admin dashboard (api/visitsApi.js)
   // a new page starts at the top (Back keeps the place). Only when the page itself changes: a
   // page updating its own URL (browse filters, "load more") must not jump back to the top.
   const lastPath = useRef(location.pathname);

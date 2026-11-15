@@ -1,14 +1,14 @@
 # Tests
 
-**243 automated tests** protect the app: 122 backend, 75 frontend, 46 end-to-end. GitHub runs
+**255 automated tests** protect the app: 130 backend, 78 frontend, 47 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 122 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py` | the real API, a real MySQL 8 database built from the migrations |
-| Frontend (Vitest) | 75 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
-| End-to-end (Playwright) | 46 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
+| Backend (Django) | 130 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py`, `backend/reco/test_visits.py` | the real API, a real MySQL 8 database built from the migrations |
+| Frontend (Vitest) | 78 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
+| End-to-end (Playwright) | 47 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
 Unit tests check one piece in isolation; integration tests go through the API and the database;
 end-to-end tests check what a user does, from the first page to the last click.
@@ -36,9 +36,9 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 122 tests | ~1 min 30 |
-| **Frontend** | translations check · lint (warnings fail it) · 75 tests · production build | ~1 min 10 |
-| **End-to-end** | starts MySQL, the backend and the production frontend · 46 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 130 tests | ~1 min 30 |
+| **Frontend** | translations check · lint (warnings fail it) · 78 tests · production build | ~1 min 10 |
+| **End-to-end** | starts MySQL, the backend and the production frontend · 47 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
 
 A failing end-to-end test is retried once on GitHub. A test that fails twice is a real failure;
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (122)
+## Backend tests (130)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -225,6 +225,21 @@ What `users/seo.py` answers for the app's pages (nginx sends it every URL that i
 | `test_files_stay_under_the_limits` | a full part (1,000 pages × 13 languages) stays under 50,000 addresses and 50 MB |
 | `test_revalidates_and_survives_outage` | `index.html` is re-checked with the frontend on every page (a deploy shows at once) and the last copy is used if the frontend is briefly down |
 
+### Site visitors: `backend/reco/test_visits.py` (8)
+
+What the app reports (`reco/visits.py`) and the admin dashboard's Visitors panel.
+
+| Test | Verifies |
+|---|---|
+| `test_a_page_view_without_storing_ids_tokens_or_searches` | a page view counts on its visitor; pages are stored as routes (`/movies/:id`), never with ids, password reset tokens or searches; the source is the other site's name, not its address |
+| `test_links_inside_the_site_are_not_a_source` | moving inside the site is not "sent by another site" |
+| `test_ping_keeps_a_visitor_live_without_a_page_view` | the minute ping keeps a visitor live and updates their page, without adding a page view; an unknown visitor's ping creates nothing |
+| `test_bots_staff_and_bad_ids_are_not_counted` | bots, headless browsers and staff accounts are not counted; a malformed visitor id is refused |
+| `test_signed_in_or_with_an_expired_token` | a signed-in visit is linked to the account; an expired / broken token still counts (signed out), never a 401 |
+| `test_devices` | desktop, phone, tablet and TV are told apart from the browser name |
+| `test_staff_sees_unique_visitors_and_progress` | today / 7 days unique visitors (not page views), the change against the week before, returning visitors, sources, new vs returning per day, who is live; the live numbers endpoint |
+| `test_not_for_visitors_or_members` | the dashboard and its live numbers are refused to anyone but staff |
+
 ### Trailers: `backend/users/test_trailers.py` (10)
 
 Which TMDB video is a title's trailer (`users/trailers.py`), and the two commands `trailer-worker/` talks to.
@@ -246,7 +261,7 @@ The worker's own checks (is the YouTube video the title's?) run without network:
 
 ---
 
-## Frontend tests (75)
+## Frontend tests (78)
 
 ### TV remote navigation: `frontend/src/tv/spatialNavigation.test.js` (7)
 
@@ -310,6 +325,14 @@ When a row card's trailer preview starts and stops (`components/preview/previewS
 | a clip that fails is not tried again | a broken clip goes back to the artwork for the rest of the visit |
 | nothing without a clip, or when previews are off | no clip, reduced motion or data saver: no preview |
 | muted by default; the choice is remembered and shared by every card | sound on applies to every card and is remembered |
+
+### Site visitors: `frontend/src/api/visitsApi.test.js` (3)
+
+| Test | Verifies |
+|---|---|
+| one random id per browser, kept between visits | the visitor id is a random UUID, the same on the next visit |
+| reports the page with the visitor and the visit | each page view carries the page, the site that sent the visitor, the visitor and the visit |
+| nothing when the browser asks not to be tracked | Global Privacy Control / Do Not Track: nothing is sent |
 
 ### Tab title: `frontend/src/utils/pageTitle.test.jsx` (2)
 
@@ -386,7 +409,7 @@ When a row card's trailer preview starts and stops (`components/preview/previewS
 
 ---
 
-## End-to-end tests (46)
+## End-to-end tests (47)
 
 The whole app in Chromium. Outside services are replaced: the video players by a stand-in that
 speaks CineSrc's API, images and fonts are blocked. The tests never depend on another website.
@@ -509,6 +532,12 @@ Every row title gets a clip (a little WebM the browser records from a canvas, se
 |---|---|
 | remote (1280 × 720): the focused card plays its preview, the next card takes over, the banner pauses | Down Down: the first card's preview fades in and plays, only one `<video>` on the page, the banner's trailer is paused; Right: the old preview stops at once, the new card's plays; Up to the banner: none left; the focus is never lost |
 | mouse: hover plays the preview, sound on is remembered, leaving stops it | hovering plays it; "Unmute" turns into "Mute" and is remembered (`previewMuted`); moving the mouse away removes it |
+
+### Site visitors: `e2e/tests/visits.spec.js` (1, remote only, at 1280 × 720, as a Samsung TV browser)
+
+| Test | Verifies |
+|---|---|
+| remote: every page opened is one page view, from the same visitor | the home page and the title opened with OK are each reported once, with the same visitor and visit; only the first page says where the visitor came from; the remote still moves around afterwards |
 
 ### Languages, search and lists: `e2e/tests/i18n-search.spec.js` (5)
 
