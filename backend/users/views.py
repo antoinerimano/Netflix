@@ -6,6 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
+import random
 import re
 from django.db.models import Q
 from django.db import models
@@ -602,7 +603,11 @@ class TitleViewSet(viewsets.ModelViewSet):
                 .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
             )
 
-        ids = tmdb_related.interleave(nearest(tmdb_related.MODEL_NAME), nearest(MODEL_NAME))
+        from_tmdb, from_embeddings = nearest(tmdb_related.MODEL_NAME), nearest(MODEL_NAME)
+        # which list starts is drawn each time (the answer is cached an hour): the first places
+        # get the most clicks, so a fixed start would favour one list in the comparison (8.7)
+        first, second = (from_tmdb, from_embeddings) if random.random() < 0.5 else (from_embeddings, from_tmdb)
+        ids = tmdb_related.interleave(first, second)
         titles = (
             Title.objects.only(*TitleListSerializer.Meta.fields)
             .filter(id__in=ids)
@@ -611,7 +616,12 @@ class TitleViewSet(viewsets.ModelViewSet):
         )
         rank = {tid: i for i, tid in enumerate(ids)}
         ordered = sorted(titles, key=lambda t: rank.get(t.id, len(rank)))[:limit]
-        return Response(TitleListSerializer(ordered, many=True, context=self.get_serializer_context()).data)
+        data = TitleListSerializer(ordered, many=True, context=self.get_serializer_context()).data
+        # which list each one came from (the app logs it: roadmap 8.7, reco/ai_report.py)
+        tmdb_ids = set(from_tmdb)
+        for item in data:
+            item["source"] = "tmdb" if item["id"] in tmdb_ids else "embeddings"
+        return Response(data)
 
     @action(detail=False, methods=["get"])
     @method_decorator(cache_page(60*60))

@@ -42,6 +42,13 @@ AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
 }
 
 
+def _ai_help(now):
+    """"Does the AI help?" (reco/ai_report.py, roadmap 8.7): last 28 days."""
+    from reco.ai_report import report
+
+    return report(days=28, now=now)
+
+
 def _ai_spend(now):
     """This month's Claude spending against the US$5 budget (reco/ai_budget.py)."""
     from reco import ai_budget
@@ -183,6 +190,7 @@ def dashboard_view(request):
         "providers": _providers(now),
         "jobs": _jobs(now),
         "ai": _ai_spend(now),
+        "ai_help": _ai_help(now),
         "snapshots_total": snapshots.count(),
         "snapshots_failed": snapshots.exclude(last_error="").count(),
         "snapshots_oldest": snapshots.order_by("built_at").values_list("built_at", flat=True).first(),

@@ -352,6 +352,27 @@
     {% else %}<p class="quiet">No AI use this month yet.</p>{% endif %}
   </section>
 
+  {# ---------- does the AI help? (reco/ai_report.py) ---------- #}
+  <section class="dash-card">
+    <h2>Does the AI help?</h2>
+    <p class="dash-sub">Last 28 days · shown = suggestions on screen · clicked within 24 h · played (player opened) within 48 h · a verdict once each group has 100+ shown and the gap is unlikely to be chance</p>
+    {% for c in ai_help %}
+      <h3 style="margin: 14px 0 4px">{{ c.label }} <span class="quiet">(decided on {{ c.metric }})</span></h3>
+      <table>
+        <tr><th>Group</th><th class="num">Shown</th><th class="num">Clicked</th><th class="num">Played</th></tr>
+        {% for g in c.groups %}
+          <tr>
+            <td>{{ g.label }}</td>
+            <td class="num">{{ g.shown|intcomma }}</td>
+            <td class="num">{{ g.clicked|intcomma }}{% if g.click_rate is not None %} <span class="quiet">({% widthratio g.clicked g.shown 100 %} %)</span>{% endif %}</td>
+            <td class="num">{{ g.played|intcomma }}{% if g.play_rate is not None %} <span class="quiet">({% widthratio g.played g.shown 100 %} %)</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <p><strong>{{ c.verdict }}</strong>{% if c.p is not None %} <span class="quiet">(p = {{ c.p|floatformat:3 }})</span>{% endif %}</p>
+    {% endfor %}
+  </section>
+
   <div class="dash-grid2">
     {# ---------- most watched ---------- #}
     <section class="dash-card">

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import { fetchPicks } from '../../api/recoApi';
+import { logImpressions, logTitleClick } from '../../api/analyticsApi';
 import { Button, Chip, EmptyState, Skeleton, friendlyError } from '../../design';
 import { DiceIcon, InfoIcon, PlayIcon } from '../../design/icons';
 import { formatRuntime } from '../../i18n/format';
@@ -59,6 +60,11 @@ export default function PickPage() {
           exclude: [...shown.current],
         });
         data.items.forEach((i) => shown.current.add(i.id));
+        // what was shown, and which way the moods were chosen (A/B test, backend reco/ai_report.py)
+        logImpressions({
+          items: data.items.map((it, position) => ({ title_id: it.id, position })),
+          row_type: `pick:${data.arm || 'ai'}`,
+        }).catch(() => {});
         // the remote follows what came out, unless the press came from the surprise itself
         // ("Another one" again and again stays on "Another one")
         focusResult.current = !document.activeElement?.closest?.('.pick-surprise');
@@ -95,7 +101,13 @@ export default function PickPage() {
     document.querySelector('.pick-surprise .ui-btn--primary, .pick-results .pick-card')?.focus();
   }, [result]);
 
-  const open = (item) => navigate(item.type === 'tv' ? `/tv/${item.id}` : `/movies/${item.id}`);
+  // a click on a suggestion (open it or play it): measured against what was shown
+  const clicked = (item) =>
+    logTitleClick({ title_id: item.id, surface: 'pick', position: result?.items?.indexOf(item) ?? 0 });
+  const open = (item) => {
+    clicked(item);
+    navigate(item.type === 'tv' ? `/tv/${item.id}` : `/movies/${item.id}`);
+  };
   const minutes = (item) => (item.type === 'tv'
     ? t('pick.perEpisode', { time: formatRuntime(item.minutes, i18n.resolvedLanguage) })
     : formatRuntime(item.minutes, i18n.resolvedLanguage));
@@ -125,7 +137,7 @@ export default function PickPage() {
           </p>
           {item.description ? <p className="pick-surprise__desc">{item.description}</p> : null}
           <div className="pick-surprise__actions" data-tv-group>
-            <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={() => navigate(`/watch/${item.id}`)} data-tv-current>{t('detail.watch')}</Button>
+            <Button variant="primary" size="lg" icon={<PlayIcon />} onClick={() => { clicked(item); navigate(`/watch/${item.id}`); }} data-tv-current>{t('detail.watch')}</Button>
             <Button variant="glass" size="lg" icon={<InfoIcon />} onClick={() => open(item)}>{t('pick.moreInfo')}</Button>
             <Button variant="glass" size="lg" icon={<DiceIcon />} loading={loading === 'surprise'} onClick={() => go('surprise')}>{t('pick.another')}</Button>
           </div>

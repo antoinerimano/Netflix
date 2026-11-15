@@ -134,7 +134,18 @@ class MoreLikeThisTests(TestCase):
         return [t["title"] for t in res.json()]
 
     def test_takes_turns_without_repeats(self):
-        self.assertEqual(self.names(), ["T1", "E1", "Adult", "T2", "E2"])
+        with mock.patch("users.views.random.random", return_value=0.1):  # TMDB starts
+            self.assertEqual(self.names(), ["T1", "E1", "Adult", "T2", "E2"])
+
+    def test_either_list_may_start(self):
+        # a fixed start would favour one list in the comparison (reco/ai_report.py)
+        with mock.patch("users.views.random.random", return_value=0.9):  # the embeddings start
+            self.assertEqual(self.names(), ["E1", "T1", "Adult", "E2", "T2"])
+
+    def test_each_one_says_where_it_came_from(self):
+        res = self.api.get(f"/api/titles/{self.film.id}/similar/").json()
+        sources = {t["title"]: t["source"] for t in res}
+        self.assertEqual(sources, {"T1": "tmdb", "Adult": "tmdb", "T2": "tmdb", "E1": "embeddings", "E2": "embeddings"})
 
     def test_age_limit_still_applies(self):
         self.assertNotIn("Adult", self.names({"HTTP_X_PROFILE_ID": str(self.kid.id)}))

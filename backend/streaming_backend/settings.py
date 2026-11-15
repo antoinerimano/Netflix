@@ -270,3 +270,9 @@ AI_FEATURE_CAPS = {  # user-triggered features: (US$ a day for the whole site, c
     "recap": (env.float("AI_RECAP_DAILY_USD", default=0.05), env.int("AI_RECAP_PER_USER_DAY", default=3)),
 }
 AI_BUDGET_EXEMPT_UNTIL = env("AI_BUDGET_EXEMPT_UNTIL", default="2026-11-30")  # the catalog's first tagging isn't counted
+
+# A/B tests (reco/experiments.py, roadmap 8.7): name -> end date (yyyy-mm-dd, "" = off). Until then,
+# half the profiles keep the old way; after it, everyone gets the AI feature.
+AI_EXPERIMENTS = {
+    "pick_moods": env("EXPERIMENT_PICK_MOODS_UNTIL", default="2026-12-31"),  # moods: AI tags vs genres
+}

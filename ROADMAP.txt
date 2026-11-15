@@ -344,9 +344,22 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         TMDB first (sync_tmdb_translations, every 3 hours); only overviews TMDB still lacks in a
         language (often Bengali, Urdu, Hindi) are translated from English into TitleTranslation,
         marked as machine translated, and replaced when TMDB gets a real one.
-[ ] 8.7 Did the AI tags help? (no AI cost)
-        Compare how often a /pick suggestion is played before and after 7.10 (TitleImpression /
-        TitleAction), and "More like this" clicks before / after the embeddings rebuild.
+[x] 8.7 Did the AI tags help? (no AI cost)
+        Nothing was recorded before (/pick logged nothing, "More like this" only clicks), so there is
+        no "before" to compare with: the app now records, and the halves are compared side by side.
+        - A/B test (reco/experiments.py, a profile always in the same half, no table): "What to
+          watch?" moods from the AI tags vs genres alone, until EXPERIMENT_PICK_MOODS_UNTIL
+          (2026-12-31), then everyone gets the AI tags. /api/pick/ says the group ("arm").
+        - Logged: /pick suggestions shown ("pick:ai" / "pick:control") and clicked (surface "pick");
+          "More like this" cards shown with their list ("more_like_this:tmdb" / ":embeddings", once,
+          when the row is on screen); which list starts is drawn each time (no position bias).
+        - Played = the player opened (WatchEvent) within 48 h; clicked within 24 h.
+        - Report (reco/ai_report.py): the dashboard's "Does the AI help?" card and manage.py
+          ai_report: shown / clicked / played per group, a verdict only with 100+ shown a group and a
+          two-proportion z-test p < 0.05, "Not enough data yet" before.
+        The tags' effect on the embeddings (Sunday rebuild) can't be split fairly: not measured.
+        Tests: reco/test_ai_report.py (9), More like this source / order tests, PickPage.test.jsx (2),
+        MoreLikeThis.test.jsx (2).
 [x] 8.8 Free TMDB data not pulled yet (no AI cost)
         manage.py sync_tmdb_related (users/tmdb_related.py, cron 05:00): one TMDB call per title
         (append_to_response=recommendations,similar,alternative_titles), most popular first, 5,000 a

@@ -7,7 +7,7 @@ from unittest import mock
 
 from django.core.cache import cache
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from users.models import Profile, Title, User
@@ -181,6 +181,7 @@ class EmbeddingTextTests(TestCase):
         self.assertEqual(tags.embedding_text(tt), "dark tense | heist | slow paced")
 
 
+@override_settings(AI_EXPERIMENTS={"pick_moods": ""})  # no A/B test: everyone gets the AI tags
 class PickWithTagsTests(TestCase):
     def setUp(self):
         cache.clear()
