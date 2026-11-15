@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework_nested import routers
 from users import seo, views
-from users.dashboard import dashboard_view
+from users.dashboard import dashboard_live_view, dashboard_view
 from users.views import (
     ActorListView,
     LogoutView,
@@ -40,6 +40,7 @@ seasons_router.register(r'episodes', views.EpisodeViewSet, basename='season-epis
 
 urlpatterns = [
     path(settings.ADMINADMIN_URL + "dashboard/", admin.site.admin_view(dashboard_view), name="admin-dashboard"),
+    path(settings.ADMINADMIN_URL + "dashboard/live/", admin.site.admin_view(dashboard_live_view), name="admin-dashboard-live"),
     path(settings.ADMINADMIN_URL, admin.site.urls),
 
     # ✅ Use the imported views directly (not views.TokenObtainPairView)

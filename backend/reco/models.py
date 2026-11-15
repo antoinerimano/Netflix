@@ -281,3 +281,32 @@ class Notification(models.Model):
             models.Index(fields=["profile", "-created_at"]),
             models.Index(fields=["emailed_at"]),
         ]
+
+
+# ---------- Site visitors (reco/visits.py, the admin dashboard's Visitors panel) ----------
+# No cookie and no IP address: a browser is a random id the app keeps in its own storage,
+# pages are stored as their route ("/movies/:id"), never with ids, tokens or searches.
+
+class Visitor(models.Model):
+    """One browser. Unique visitors = distinct ids; live = seen in the last few minutes."""
+    id = models.CharField(primary_key=True, max_length=36)
+    user = models.ForeignKey("users.User", null=True, blank=True, on_delete=models.SET_NULL)  # last signed in as
+    first_seen = models.DateTimeField(db_index=True)
+    last_seen = models.DateTimeField(db_index=True)
+    last_route = models.CharField(max_length=128, blank=True, default="")
+    device = models.CharField(max_length=16, blank=True, default="")      # desktop / mobile / tablet / tv
+    source = models.CharField(max_length=128, blank=True, default="")     # the site that first sent them
+    pageviews = models.PositiveIntegerField(default=0)
+
+
+class PageView(models.Model):
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE, related_name="views")
+    signed_in = models.BooleanField(default=False)
+    session_id = models.CharField(max_length=64, blank=True, default="")  # a visit: 30 min without activity ends it
+    route = models.CharField(max_length=128)
+    source = models.CharField(max_length=128, blank=True, default="")     # another site's link, "" = direct / inside the app
+    device = models.CharField(max_length=16, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["visitor", "created_at"])]

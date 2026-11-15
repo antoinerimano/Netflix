@@ -1,0 +1,1 @@
+{# +12 % / -5 % against the period before (users/templates/admin/dashboard.html) #}{% if change is not None %}<span class="dash-change {% if change >= 0 %}dash-change--up{% else %}dash-change--down{% endif %}" title="vs the period before">{% if change >= 0 %}+{% endif %}{{ change }} %</span>{% endif %}

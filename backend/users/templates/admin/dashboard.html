@@ -69,6 +69,30 @@
   .dash-status--critical::before { content: "✕"; background: var(--dash-critical); }
   .dash-status--none::before { content: "–"; background: var(--dash-quiet); }
 
+  /* visitors: live dot, change vs the period before, stacked new / returning columns */
+  .dash { --dash-bar-new: #9cc5f2; }
+  html[data-theme="dark"] .dash { --dash-bar-new: #2a5a8f; }
+  @media (prefers-color-scheme: dark) { html[data-theme="auto"] .dash { --dash-bar-new: #2a5a8f; } }
+  .dash-live { display: flex; align-items: baseline; gap: 10px; }
+  .dash-live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dash-good); align-self: center; box-shadow: 0 0 0 0 rgba(12,163,12,.5); animation: dash-pulse 2s infinite; }
+  @keyframes dash-pulse { 70% { box-shadow: 0 0 0 8px rgba(12,163,12,0); } 100% { box-shadow: 0 0 0 0 rgba(12,163,12,0); } }
+  @media (prefers-reduced-motion: reduce) { .dash-live-dot { animation: none; } }
+  .dash-change { font-size: 12px; font-weight: 600; margin-left: 6px; }
+  .dash-change--up { color: var(--dash-good); }
+  .dash-change--down { color: var(--dash-critical); }
+  .dash-change--up::before { content: "▲ "; }
+  .dash-change--down::before { content: "▼ "; }
+  .dash-cols--visitors { grid-template-columns: repeat({{ visitors.chart_days }}, 1fr); gap: 3px; }
+  .dash-col-axis--visitors { grid-template-columns: repeat({{ visitors.chart_days }}, 1fr); gap: 3px; }
+  .dash-col-stack { width: 100%; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .dash-col-stack .dash-col-bar { border-radius: 0; }
+  .dash-col-stack .dash-col-bar:first-child { border-radius: 4px 4px 0 0; }
+  .dash-col-bar--new { background: var(--dash-bar-new); }
+  .dash-legend { display: flex; gap: 14px; font-size: 12px; color: var(--dash-quiet); margin-top: 8px; }
+  .dash-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--dash-bar); }
+  .dash-legend i.new { background: var(--dash-bar-new); }
+  .dash-grid3 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
   .dash details summary { cursor: pointer; color: var(--dash-quiet); font-size: 12px; margin-top: 10px; }
   .dash-links a { margin-right: 14px; }
 </style>
@@ -82,6 +106,132 @@
     <a href="{% url 'admin-dashboard' %}">Refresh</a>
   </p>
 
+  {# ---------- visitors (reco/visits.py) ---------- #}
+  {% with v=visitors %}
+  <h2 style="margin: 4px 0 -8px">Visitors</h2>
+  <div class="dash-tiles">
+    <div class="dash-tile">
+      <div class="dash-tile-label">On the site now <span class="quiet">(last {{ live.minutes }} min)</span></div>
+      <div class="dash-tile-value dash-live"><span class="dash-live-dot" aria-hidden="true"></span><span id="live-count">{{ live.live|intcomma }}</span></div>
+      <div class="quiet"><span id="live-signed">{{ live.signed_in }}</span> signed in · updates every 15 s</div>
+    </div>
+    <div class="dash-tile">
+      <div class="dash-tile-label">Unique visitors today <span class="quiet">(UTC)</span></div>
+      <div class="dash-tile-value">{{ v.today|intcomma }}</div>
+    </div>
+    <div class="dash-tile">
+      <div class="dash-tile-label">Unique visitors, 7 days</div>
+      <div class="dash-tile-value">{{ v.u7|intcomma }}{% include "admin/_dash_change.html" with change=v.u7_change %}</div>
+      <div class="quiet">vs the 7 days before</div>
+    </div>
+    <div class="dash-tile">
+      <div class="dash-tile-label">Unique visitors, 30 days</div>
+      <div class="dash-tile-value">{{ v.u30|intcomma }}{% include "admin/_dash_change.html" with change=v.u30_change %}</div>
+      <div class="quiet">vs the 30 days before</div>
+    </div>
+    <div class="dash-tile">
+      <div class="dash-tile-label">Page views, 7 days</div>
+      <div class="dash-tile-value">{{ v.views7|intcomma }}{% include "admin/_dash_change.html" with change=v.views7_change %}</div>
+      <div class="quiet">{{ v.visits7|intcomma }} visits · {% if v.pages_per_visit %}{{ v.pages_per_visit }}{% else %}–{% endif %} pages per visit</div>
+    </div>
+    <div class="dash-tile">
+      <div class="dash-tile-label">Returning visitors, 7 days</div>
+      <div class="dash-tile-value">{% if v.returning7_pct is not None %}{{ v.returning7_pct }} %{% else %}–{% endif %}</div>
+      <div class="quiet">had come before these 7 days · {% if v.signed7_pct is not None %}{{ v.signed7_pct }} %{% else %}–{% endif %} signed in</div>
+    </div>
+  </div>
+
+  <section class="dash-card">
+    <h2>Unique visitors per day</h2>
+    <p class="dash-sub">Last {{ v.chart_days }} days (UTC) · busiest day {{ v.chart_top|intcomma }} · {{ v.total_visitors|intcomma }} different visitors since {% if v.first_day %}{{ v.first_day|date:"M j, Y" }}{% else %}tracking started{% endif %} · staff and bots not counted</p>
+    <div class="dash-cols dash-cols--visitors" role="img" aria-label="Unique visitors per day, last {{ v.chart_days }} days">
+      {% for d in v.chart %}
+        <div class="dash-col">
+          <div class="dash-col-stack">
+            <div class="dash-col-bar dash-col-bar--new{% if d.new %} dash-col-bar--some{% endif %}" style="height: {{ d.h_new }}%"></div>
+            <div class="dash-col-bar{% if d.returning %} dash-col-bar--some{% endif %}" style="height: {{ d.h_ret }}%"></div>
+          </div>
+          <div class="dash-col-tip">{{ d.day|date:"D M j" }}: {{ d.n|intcomma }} visitors ({{ d.new }} new, {{ d.returning }} returning)</div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="dash-col-axis dash-col-axis--visitors" aria-hidden="true">
+      {% for d in v.chart %}<div>{% if forloop.first or forloop.last or forloop.counter|divisibleby:5 %}{{ d.day|date:"M j" }}{% endif %}</div>{% endfor %}
+    </div>
+    <div class="dash-legend"><span><i></i>Returning</span><span><i class="new"></i>New</span></div>
+    <details>
+      <summary>As a table</summary>
+      <table>
+        <tr><th>Day</th><th class="num">Visitors</th><th class="num">New</th><th class="num">Returning</th></tr>
+        {% for d in v.chart reversed %}<tr><td>{{ d.day|date:"D M j" }}</td><td class="num">{{ d.n|intcomma }}</td><td class="num">{{ d.new|intcomma }}</td><td class="num">{{ d.returning|intcomma }}</td></tr>{% endfor %}
+      </table>
+    </details>
+  </section>
+
+  <div class="dash-grid3">
+    <section class="dash-card">
+      <h2>Right now</h2>
+      <p class="dash-sub">The page each visitor is on</p>
+      <table id="live-pages">
+        {% for p in live.pages %}<tr><td>{{ p.last_route|default:"–" }}</td><td class="num">{{ p.n }}</td></tr>{% empty %}<tr><td class="quiet">Nobody on the site</td></tr>{% endfor %}
+      </table>
+    </section>
+
+    <section class="dash-card">
+      <h2>Top pages, 7 days</h2>
+      <p class="dash-sub">Different visitors per page · page views</p>
+      {% if v.pages %}
+        <table>
+          {% for p in v.pages %}
+            <tr>
+              <td>{{ p.route }}</td>
+              <td style="width: 40%"><div class="dash-hbar" title="{{ p.visitors }} visitors, {{ p.views }} views"><div class="dash-hbar-track"><div class="dash-hbar-fill" style="width: {{ p.width }}%"></div></div><span class="dash-hbar-value">{{ p.visitors|intcomma }}</span></div></td>
+              <td class="num quiet">{{ p.views|intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}<p class="quiet">No visits this week yet.</p>{% endif %}
+    </section>
+
+    <section class="dash-card">
+      <h2>Where they come from, 7 days</h2>
+      <p class="dash-sub">Visitors sent by another site · the rest typed the address or used a bookmark</p>
+      <table>
+        <tr><td>Direct / bookmark / app</td><td class="num">{{ v.direct7|intcomma }}</td></tr>
+        {% for s in v.sources %}<tr><td>{{ s.source }}</td><td class="num">{{ s.visitors|intcomma }}</td></tr>{% endfor %}
+      </table>
+      <h2 style="margin-top: 18px">Devices, 7 days</h2>
+      <table>
+        {% for d in v.devices %}
+          <tr><td>{% if d.device == "tv" %}TV{% else %}{{ d.device|capfirst|default:"Unknown" }}{% endif %}</td><td style="width: 50%"><div class="dash-hbar"><div class="dash-hbar-track"><div class="dash-hbar-fill" style="width: {{ d.width }}%"></div></div><span class="dash-hbar-value">{{ d.pct }} %</span></div></td></tr>
+        {% empty %}<tr><td class="quiet">No visits this week yet.</td></tr>{% endfor %}
+      </table>
+    </section>
+  </div>
+  {% endwith %}
+
+  <script>
+    // the "On the site now" numbers and "Right now" pages, every 15 s (while this tab is visible)
+    (function () {
+      var url = "{% url 'admin-dashboard-live' %}";
+      function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+      function refresh() {
+        if (document.visibilityState !== "visible") return;
+        fetch(url, { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+          if (!d) return;
+          document.getElementById("live-count").textContent = d.live.toLocaleString();
+          document.getElementById("live-signed").textContent = d.signed_in;
+          document.getElementById("live-pages").innerHTML = d.pages.length
+            ? d.pages.map(function (p) { return "<tr><td>" + esc(p.last_route || "–") + '</td><td class="num">' + p.n + "</td></tr>"; }).join("")
+            : '<tr><td class="quiet">Nobody on the site</td></tr>';
+        }).catch(function () {});
+      }
+      setInterval(refresh, 15000);
+      document.addEventListener("visibilitychange", refresh);
+    })();
+  </script>
+
+  <h2 style="margin: 12px 0 -8px">Activity</h2>
   {# ---------- headline numbers ---------- #}
   <div class="dash-tiles">
     {% for label, value in tiles %}
