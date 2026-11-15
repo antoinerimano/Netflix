@@ -248,3 +248,15 @@ Status: [ ] todo   [~] in progress   [x] done
         swipe / drag handled in Row.jsx. The remote follows the screen: Left goes further into a row.
         Sitemaps list every page in every language (?lng=) with its hreflang alternates, 1,000 pages
         per file, so Google finds and pairs the translated pages without waiting to crawl them.
+[x] 7.10 AI title tags (manage.py tag_titles, nightly at 4:00)
+        Claude (Haiku 5.5, structured output: JSON that must match the schema) reads each title's TMDB
+        data and gives its moods (the six /pick moods + dark, tense, heartwarming, ...), 2-6 themes
+        ("heist", "found family"), pacing and content notes. Sent as Message Batches (half price, done
+        within 24 h): each run saves the batches that ended, then sends the next titles (never tagged,
+        or TMDB data changed since: source_hash), most popular first, 5,000 a night. Refusals kept (not
+        sent again), cut-off answers sent again. Whole catalog (~52,000 titles) about $6.
+        /pick: a tagged title fits a mood when Claude gave it that mood (a grim "comedy" is no longer
+        "funny"); untagged ones still go by genres. build_embeddings adds moods + themes + pacing to the
+        text each title is encoded from ("More like this", "Because you watched", search).
+        Needs ANTHROPIC_API_KEY in backend/.env. Backend: reco/tags.py, TitleTags, TagBatch.
+        Next: content notes on title pages.

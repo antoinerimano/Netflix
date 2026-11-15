@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from users.models import Title
-from reco.models import TitleEmbedding, TitleSimilar
+from reco.models import TitleEmbedding, TitleSimilar, TitleTags
+from reco.tags import embedding_text
 
 from pathlib import Path
 import os
@@ -48,6 +49,9 @@ class Command(BaseCommand):
             "cast","director","original_language","production_countries"
         ))
 
+        # AI moods / themes / pacing (manage.py tag_titles), when the title has them
+        tagged = {tt.title_id: tt for tt in TitleTags.objects.only("title_id", "moods", "themes", "pacing")}
+
         texts, ids = [], []
         for ti in titles:
             ids.append(ti.id)
@@ -61,6 +65,7 @@ class Command(BaseCommand):
                 ti.director or "",
                 ti.original_language or "",
                 _join(ti.production_countries),
+                embedding_text(tagged.get(ti.id)),
             ]).strip())
 
         from sentence_transformers import SentenceTransformer

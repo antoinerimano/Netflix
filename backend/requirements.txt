@@ -17,3 +17,5 @@ lightgbm~=4.6.0
 scikit-learn~=1.8.0
 python-dotenv~=1.1.1
 sentence-transformers~=5.2.0
+# Claude API: AI title tags (reco/tags.py, manage.py tag_titles)
+anthropic~=2.8.0
