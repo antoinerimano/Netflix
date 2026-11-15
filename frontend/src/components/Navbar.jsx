@@ -47,7 +47,6 @@ const Navbar = () => {
   const { isAuthenticated, logout } = useContext(AuthContext);
 
   const userId = localStorage.getItem('userId');
-  const isStaff = localStorage.getItem('isStaff') === '1'; // ADMIN
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
@@ -263,12 +262,6 @@ const Navbar = () => {
             {l.label}
           </li>
         ))}
-        {isStaff && (
-          <>
-            <li tabIndex={0} role="button" aria-current={current('/admin/users')} onClick={() => navigate('/admin/users')}>{t('nav.adminUsers')}</li>
-            <li tabIndex={0} role="button" aria-current={current('/admin/movies')} onClick={() => navigate('/admin/movies')}>{t('nav.adminMovies')}</li>
-          </>
-        )}
       </ul>
 
       <div className="navbar__actions">
@@ -401,12 +394,6 @@ const Navbar = () => {
                   {t('nav.stats')}
                 </div>
                 <div className="dropdown-divider"></div>
-                {isStaff && (
-                  <>
-                    <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={() => navigate('/admin/users')}>{t('nav.adminUsers')}</div>
-                    <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={() => navigate('/admin/movies')}>{t('nav.adminMovies')}</div>
-                  </>
-                )}
                 <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={handleShare}>
                   {shareStatus === 'copied' ? t('nav.linkCopied') : t('nav.shareApp')}
                 </div>

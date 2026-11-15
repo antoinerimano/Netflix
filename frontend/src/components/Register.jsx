@@ -53,7 +53,6 @@ const Register = () => {
       localStorage.setItem('access', session.access);
       localStorage.setItem('refresh', session.refresh);
       localStorage.setItem('userId', session.user.id);
-      localStorage.setItem('isStaff', session.user.is_staff ? '1' : '0');
       localStorage.setItem('user', JSON.stringify(session.user));
       setIsAuthenticated(true);
       navigate('/create-profile', { state: { userId: session.user.id } });

@@ -57,8 +57,6 @@
     "movies": "Film",
     "tv": "Serie TV",
     "myList": "La mia lista",
-    "adminUsers": "Admin utenti",
-    "adminMovies": "Admin titoli",
     "search": "Cerca",
     "searchPlaceholder": "Cerca film e serie",
     "searchLabel": "Cerca film e serie TV",
