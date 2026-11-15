@@ -12,7 +12,7 @@ APP_DIR=/opt/taurus
 LOCAL_DIR=${LOCAL_DIR:-/var/backups/taurus}
 REMOTE=${REMOTE:-gdrive:taurus-backups}
 KEEP_LOCAL=${KEEP_LOCAL:-3}
-KEEP_REMOTE_DAYS=${KEEP_REMOTE_DAYS:-14}   # ~1 GB per dump: 14 days ~ 14 GB (free Google account = 15 GB)
+KEEP_REMOTE_DAYS=${KEEP_REMOTE_DAYS:-10}   # ~1.1 GB per dump: 10 days ~ 11 GB (free Google account = 15 GB)
 
 log() { echo "[$(date -u '+%F %T')] $*"; }
 

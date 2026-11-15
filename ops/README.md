@@ -15,7 +15,7 @@ Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/
 
 `scripts/backup_db.sh` runs nightly at 01:30 UTC (log: `/var/log/taurus_backup.log`):
 gzipped `mysqldump` into `/var/backups/taurus` (newest 3 kept), copied to Google Drive
-folder `taurus-backups` through the rclone remote `gdrive` (14 days kept, ~1.1 GB each).
+folder `taurus-backups` through the rclone remote `gdrive` (10 days kept, ~1.1 GB each: ~11 GB of Drive).
 MySQL binary logs are off (`--skip-log-bin`), so these dumps are the only restore points.
 
 ### One-time Google Drive setup (needs a browser)
