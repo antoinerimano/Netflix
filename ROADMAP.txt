@@ -278,7 +278,8 @@ much each processes; pages show what is already written. AI a user can trigger (
 is allowed only behind caps (8.9) so visitors can never empty the credits: per user per day, per
 feature per day for the whole site, and the Console's monthly spend limit (Billing -> Limits) as
 the last safety net. Claude Haiku 5.5 by default. HARD LIMIT: US$5 a month for all Claude use,
-background jobs included (the Console's limit set to US$5 too).
+background jobs included (the Console's limit set to US$5 too), apart from the one-time first
+tagging of the catalog (7.10).
 TMDB first: whatever TMDB has (free, already synced: genres, keywords, overviews, episode
 summaries, age ratings, credits, translations, images) is taken from TMDB; Claude only adds what
 TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
@@ -327,8 +328,9 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
             "Ask Taurus", per day ........ US$0.05  (~25 conversations a day)
                           per user ....... 3 conversations a day
           At most ~US$4 a month in a full month (1.00 + 1.50 + 1.50), under the US$5 stop.
-          First month: the catalog's first tagging (~US$4, 7.10) counts too, so the user features
-          get what's left; the tagging itself stops at the monthly stop and resumes next month.
+          Not counted: the catalog's first tagging (7.10, one time, ~US$4, November 2026), the
+          setup the recommendations need. It runs to the end as planned; the US$5 a month starts
+          with the ongoing use (new titles' tags, jobs, recaps, chat) once it's done.
         - A cap reached: the feature says "back tomorrow" (or next month), the rest of the site
           works as usual (kept recaps, tags, genres).
         - This month's spend per feature on the admin dashboard, an email at 80 % of US$5.
