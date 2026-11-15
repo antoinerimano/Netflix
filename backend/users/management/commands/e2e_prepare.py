@@ -117,6 +117,13 @@ class Command(BaseCommand):
                     overview=f"What happens in season {s}, episode {e}.", air_date=f"{2007 + s}-0{e}-20", runtime=47,
                 )
         TitleTranslation.objects.create(title=show, language="fr", name="Breaking Bad", overview="Un professeur de chimie bascule dans le crime.")
+        # "Catch me up" (reco/recap.py) up to S2E2, already written: the tests never call Claude
+        from reco.models import ShowRecap
+        ShowRecap.objects.create(
+            title=show, season=2, episode=2, language="en", model_name="e2e",
+            text="Season 1: a chemistry teacher starts cooking with a former student.\n\n"
+                 "Season 2: what happens in season 2, episode 1.",
+        )
 
         # a show still on air, dates relative to the run (the "Upcoming" calendar): one episode
         # 12 days ago (outside "New episodes" and "out this past week"), then in 3 and 10 days

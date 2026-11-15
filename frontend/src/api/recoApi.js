@@ -138,3 +138,10 @@ export async function fetchPicks(profileId, { time, mood, count = 6, exclude = [
   });
   return res.data;
 }
+
+// ---------- "Catch me up" (backend reco/recap.py) ----------
+// peek: is there anything to recap for this profile? {available, season, episode} (no AI call)
+export async function fetchRecap(profileId, titleId, { peek = false } = {}) {
+  const res = await api.get("/recap/", { params: { profileId, titleId, ...(peek ? { peek: 1 } : {}) } });
+  return res.data;
+}

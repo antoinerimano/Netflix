@@ -1,6 +1,6 @@
 // src/components/TVShowDetail.js
-// Show page: shared detail template (components/detail): hero with Watch / My List / ratings /
-// new-episode alerts, then Episodes (season chips + episode cards), Cast and Details.
+// Show page: shared detail template (components/detail): hero with Watch / Catch me up / My List /
+// ratings / new-episode alerts, then Episodes (season chips + episode cards), Cast and Details.
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import { logOutboundClickBeacon, logActionBeacon } from '../api/analyticsApi';
 import { fetchMyList, setInMyList } from '../api/myListApi';
 import RatingButtons from './RatingButtons';
 import FollowButton from './FollowButton';
+import RecapButton from './detail/RecapButton';
 import AddToListButton from './lists/AddToListButton';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -233,6 +234,11 @@ export default function TVShowDetail() {
             >
               {t('detail.watch')}
             </Button>
+            <RecapButton
+              titleId={title.id}
+              profileId={activeProfileId}
+              onResume={(s, e) => go(buildWatchUrl(s, e), 'tv_recap', `watch_page_s${s}_e${e}`)}
+            />
             <Button
               variant="glass"
               icon={isInList ? <CheckIcon /> : <PlusIcon />}

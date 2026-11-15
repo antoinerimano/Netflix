@@ -117,6 +117,16 @@
     "noEpisodesTitle": "Noch keine Folgen",
     "noEpisodesText": "Für diese Staffel sind noch keine Folgen verfügbar."
   },
+  "recap": {
+    "button": "Bring mich auf den Stand",
+    "title": "Was bisher geschah",
+    "scope": "Alles vor Staffel {{season}}, Folge {{episode}}: ohne Spoiler.",
+    "loading": "Zusammenfassung wird geschrieben…",
+    "error": "Die Zusammenfassung kann gerade nicht geschrieben werden. Versuch es gleich noch einmal.",
+    "retry": "Erneut versuchen",
+    "resume": "Weiter mit S{{season}} F{{episode}}",
+    "note": "Von KI aus den Episodenbeschreibungen geschrieben: Details können falsch sein."
+  },
   "notifications": {
     "title": "Benachrichtigungen",
     "subtitle": "Neue Folgen der Serien, denen du folgst",

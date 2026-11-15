@@ -117,6 +117,16 @@
     "noEpisodesTitle": "No episodes yet",
     "noEpisodesText": "This season has no episodes available yet."
   },
+  "recap": {
+    "button": "Catch me up",
+    "title": "Catch me up",
+    "scope": "Everything before season {{season}}, episode {{episode}}: no spoilers.",
+    "loading": "Writing your recap…",
+    "error": "The recap can't be written right now. Try again in a moment.",
+    "retry": "Try again",
+    "resume": "Resume S{{season}} E{{episode}}",
+    "note": "Written by AI from the episode summaries: it can get details wrong."
+  },
   "notifications": {
     "title": "Notifications",
     "subtitle": "New episodes of the shows you follow",

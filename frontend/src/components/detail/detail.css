@@ -593,3 +593,30 @@
     transform: none;
   }
 }
+
+/* ---------- "Catch me up" dialog (RecapButton.jsx) ---------- */
+.recap-dialog__scope {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+.recap-dialog__text p {
+  margin: 0 0 var(--space-3);
+  line-height: 1.6;
+}
+.recap-dialog__note {
+  margin-top: var(--space-4) !important;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+.recap-dialog__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) 0;
+  color: var(--color-text-secondary);
+}
+.recap-dialog__error {
+  margin: 0;
+}

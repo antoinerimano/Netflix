@@ -341,3 +341,22 @@ class TagBatch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     collected_at = models.DateTimeField(null=True, blank=True)
     summary = models.CharField(max_length=255, blank=True, default="")
+
+
+# ---------- "Catch me up" (reco/recap.py) ----------
+
+class ShowRecap(models.Model):
+    """A recap of a show up to (not including) season / episode, in one language: written by Claude
+    once, then shown to every profile at that point."""
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="recaps")
+    season = models.PositiveIntegerField()
+    episode = models.PositiveIntegerField()
+    language = models.CharField(max_length=8)
+    text = models.TextField()
+    model_name = models.CharField(max_length=64, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["title", "season", "episode", "language"], name="uniq_show_recap"),
+        ]
