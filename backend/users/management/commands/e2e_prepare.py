@@ -124,6 +124,20 @@ class Command(BaseCommand):
             text="Season 1: a chemistry teacher starts cooking with a former student.\n\n"
                  "Season 2: what happens in season 2, episode 1.",
         )
+        # free TMDB data (roadmap 8.8), as sync_tmdb_related would have saved it: The Godfather's
+        # German title for search, a TMDB recommendation for Heat's "More like this"
+        from reco.models import TitleSimilar
+        from users.models import TitleAltName
+        TitleAltName.objects.create(title=Title.objects.get(title="The Godfather"), name="Der Pate",
+                                    name_norm="der pate", country="DE")
+        TitleSimilar.objects.create(title=Title.objects.get(title="Heat"), similar=Title.objects.get(title="Inception"),
+                                    score=1.0, model_name="tmdb")
+        # content notes on Heat's page (roadmap 8.4), as tag_titles would have saved them
+        from reco.models import TitleTags
+        TitleTags.objects.create(
+            title=Title.objects.get(title="Heat"), moods=",exciting,tense,", themes=["heist"], pacing="medium",
+            content_notes=",strong_language,violence,", model_name="e2e",
+        )
 
         # a show still on air, dates relative to the run (the "Upcoming" calendar): one episode
         # 12 days ago (outside "New episodes" and "out this past week"), then in 3 and 10 days

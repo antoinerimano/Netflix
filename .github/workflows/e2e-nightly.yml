@@ -1,0 +1,83 @@
+# Every night: the WHOLE end-to-end suite on main, focus-overlap.spec.js included (every control's
+# focus ring on every page, 3.4 min: left out of pull requests to keep them fast, ci-cd.yml).
+# A failure: GitHub emails the repository owner; the report (screenshots, videos, traces) is on the run.
+# Run it by hand: Actions > "End-to-end, nightly (whole suite)" > Run workflow.
+name: End-to-end, nightly (whole suite)
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 06:00 UTC, after the night's jobs on the server
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: End-to-end, whole suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-secret
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: System packages (mysqlclient build)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev pkg-config
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Backend dependencies
+        working-directory: backend
+        run: |
+          grep -v -i '^sentence-transformers' requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Playwright and Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: End-to-end tests (all of them)
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Report (screenshots, videos and traces of what failed)
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-nightly
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 14

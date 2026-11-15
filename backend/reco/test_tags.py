@@ -7,7 +7,7 @@ from unittest import mock
 
 from django.core.cache import cache
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from users.models import Profile, Title, User
@@ -19,7 +19,8 @@ from .pick import MOODS as PICK_MOODS
 
 def message(payload, stop_reason="end_turn"):
     text = payload if isinstance(payload, str) else json.dumps(payload)
-    return NS(stop_reason=stop_reason, content=[NS(type="thinking", thinking=""), NS(type="text", text=text)])
+    return NS(stop_reason=stop_reason, content=[NS(type="thinking", thinking=""), NS(type="text", text=text)],
+              usage=NS(input_tokens=1000, output_tokens=100))
 
 
 class FakeBatches:
@@ -180,6 +181,7 @@ class EmbeddingTextTests(TestCase):
         self.assertEqual(tags.embedding_text(tt), "dark tense | heist | slow paced")
 
 
+@override_settings(AI_EXPERIMENTS={"pick_moods": ""})  # no A/B test: everyone gets the AI tags
 class PickWithTagsTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -206,3 +208,23 @@ class PickWithTagsTests(TestCase):
         self.assertEqual(r.status_code, 200)
         names = {i["title"] for i in r.data["items"]}
         self.assertEqual(names, {"Funny Drama", "Plain Comedy", "Declined Comedy"})
+
+
+class ContentNotesApiTests(TestCase):
+    """Roadmap 8.4: the title page's "Contains: ..." comes from the saved tags, no AI call."""
+
+    def setUp(self):
+        cache.clear()
+        self.film = make_title("Heist", genre="Crime")
+        self.plain = make_title("Plain")
+
+    def test_notes_in_the_vocabulary_order(self):
+        TitleTags.objects.create(title=self.film, content_notes=",strong_language,made_up,violence,")
+        data = self.client.get(f"/api/titles/{self.film.id}/").json()
+        self.assertEqual(data["content_notes"], ["violence", "strong_language"])
+
+    def test_untagged_or_none(self):
+        self.assertEqual(self.client.get(f"/api/titles/{self.plain.id}/").json()["content_notes"], [])
+        TitleTags.objects.create(title=self.plain, content_notes="")
+        cache.clear()
+        self.assertEqual(self.client.get(f"/api/titles/{self.plain.id}/").json()["content_notes"], [])

@@ -138,6 +138,9 @@ class Title(models.Model):
     # TMDB collection id, kept in sync with belongs_to_collection by save(): indexed, so a
     # franchise's parts are one quick query (reco/collections.py)
     collection_id = models.IntegerField(null=True, blank=True, db_index=True)
+    # when manage.py sync_tmdb_related last fetched TMDB's recommendations / similar / alternative
+    # titles for it (null = never): refreshed every 60 days
+    related_synced_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)
@@ -262,6 +265,23 @@ class TitleKeyword(models.Model):
 
     def __str__(self):
         return f"{self.title_id} kw {self.keyword_norm}"
+
+
+class TitleAltName(models.Model):
+    """Another name of a title, from TMDB's alternative_titles (manage.py sync_tmdb_related): local
+    release titles ("Die Hard" -> "Piège de cristal", "Stirb langsam"), so search finds them."""
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="alt_names")
+    name = models.CharField(max_length=255)
+    name_norm = models.CharField(max_length=255, db_index=True)  # users/search.py _name(): lowercase, no article
+    country = models.CharField(max_length=2, blank=True, default="")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["title", "name_norm"], name="uniq_title_alt_name"),
+        ]
+
+    def __str__(self):
+        return f"{self.title_id} aka {self.name}"
 
 
 class TitleCompany(models.Model):

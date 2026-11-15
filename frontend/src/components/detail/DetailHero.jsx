@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { Badge, Rating } from '../../design';
+import { AlertIcon } from '../../design/icons';
+import { formatList } from '../../i18n/format';
 import { tmdbImage, tmdbSrcSet, IMG } from '../../utils/tmdbImage';
 import './detail.css';
 
@@ -39,8 +41,23 @@ export function genreName(name) {
   return i18n.t(`catalog:genres.${genreSlug(name)}`, { defaultValue: shown });
 }
 
+// Content notes from the AI tags (backend reco/tags.py CONTENT_NOTES, sent as title.content_notes):
+// only these keys are shown, in this order
+export const CONTENT_NOTES = [
+  'violence', 'gore', 'sexual_content', 'nudity', 'strong_language', 'drug_use', 'self_harm', 'animal_harm',
+  'frightening_scenes',
+];
+
+/** "Contains: Violence, Gore and Strong language" in the app's language, or "" (none / unknown). */
+export function contentNotesText(notes, t, lng) {
+  const known = CONTENT_NOTES.filter((n) => Array.isArray(notes) && notes.includes(n));
+  if (!known.length) return '';
+  return t('contentNotes.contains', { list: formatList(known.map((n) => t(`contentNotes.${n}`)), 'conjunction', lng) });
+}
+
 export default function DetailHero({ title, kind, meta = [], credits = [], actions }) {
-  const { t } = useTranslation('catalog');
+  const { t, i18n: i18nInstance } = useTranslation('catalog');
+  const notes = contentNotesText(title.content_notes, t, i18nInstance.resolvedLanguage);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -101,6 +118,14 @@ export default function DetailHero({ title, kind, meta = [], credits = [], actio
               <li key={g}>{g}</li>
             ))}
           </ul>
+        ) : null}
+
+        {/* plain text, not a control: the remote goes straight from the top to the actions */}
+        {notes ? (
+          <p className="detail-hero__notes">
+            <AlertIcon aria-hidden="true" />
+            <span>{notes}</span>
+          </p>
         ) : null}
 
         {actions ? <div className="ui-actions detail-hero__actions">{actions}</div> : null}

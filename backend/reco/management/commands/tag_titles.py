@@ -9,15 +9,20 @@ Batches cost half the normal price and finish within 24 h (usually under an hour
 waits on them. --wait stays until the batch it sent has ended (first run by hand).
 --dry-run sends nothing: how many titles need tags and a rough cost.
 
+What each batch cost is recorded when it's collected (reco/ai_budget.py). The catalog's first
+tagging (batches sent before AI_BUDGET_EXEMPT_UNTIL) isn't counted in the US$5 a month; after
+it, a new batch is cut to what the background jobs' budget (US$1 a month) has left.
+
 Needs ANTHROPIC_API_KEY in backend/.env (except --dry-run).
 """
 import time
+from types import SimpleNamespace
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 
-from reco import tags
+from reco import ai_budget, tags
 from reco.models import TagBatch, TitleTags
 from users.jobs import tracked
 from users.models import Title
@@ -25,6 +30,7 @@ from users.models import Title
 # Rough price per million tokens, batch rate (half the normal price), for --dry-run only.
 PRICES = {"claude-haiku-5-5": (0.05, 0.25), "claude-sonnet-5-5": (1.0, 5.0), "claude-opus-5-5": (2.0, 10.0)}
 OUT_TOKENS = 400  # thinking (effort low) + the JSON
+COST_PER_TITLE = 0.0001  # US$, batch price: measured ~0.000075 (1,030 tokens in, 95 out), with a margin
 
 
 def _client():
@@ -53,7 +59,13 @@ class Command(BaseCommand):
         if running:
             self.stdout.write(f"{running} batch(es) still running: nothing new sent.")
             return
-        todo = self._todo(o["min_votes"], o["limit"])
+        limit = o["limit"]
+        if not ai_budget.is_setup(timezone.now()):  # past the first tagging: within the jobs' budget
+            limit = min(limit, int(ai_budget.jobs_budget_left() / COST_PER_TITLE))
+            if limit <= 0:
+                self.stdout.write("The AI budget for background jobs is used up this month: nothing sent.")
+                return
+        todo = self._todo(o["min_votes"], limit)
         if not todo:
             self.stdout.write("Every title is tagged.")
             return
@@ -113,7 +125,13 @@ class Command(BaseCommand):
                 running += 1
                 continue
             counts = {"saved": 0, "refused": 0, "unusable": 0, "failed": 0}
+            spent = SimpleNamespace(input_tokens=0, output_tokens=0, usd=0.0)
             for result in client.messages.batches.results(batch.batch_id):
+                if result.result.type == "succeeded":  # every answer is billed: counted first
+                    usage = result.result.message.usage
+                    spent.input_tokens += usage.input_tokens or 0
+                    spent.output_tokens += usage.output_tokens or 0
+                    spent.usd += ai_budget.cost(usage, batch.model_name, batch=True)
                 tid = tags.title_id_of(result.custom_id)
                 h = batch.hashes.get(str(tid)) if tid else None
                 if h is None:
@@ -132,8 +150,10 @@ class Command(BaseCommand):
                     title_id=tid,
                     defaults={**tags.as_fields(parsed), "source_hash": h, "model_name": batch.model_name},
                 )
+            feature = "tags_setup" if ai_budget.is_setup(batch.created_at) else "tags"
+            ai_budget.record(feature, spent, batch.model_name, usd=spent.usd)
             batch.collected_at = timezone.now()
-            batch.summary = ", ".join(f"{k} {v}" for k, v in counts.items())
+            batch.summary = ", ".join(f"{k} {v}" for k, v in counts.items()) + f", US${spent.usd:.2f}"
             batch.save(update_fields=["collected_at", "summary"])
             self.stdout.write(f"Batch {batch.batch_id}: {batch.summary}.")
         return running

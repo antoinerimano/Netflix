@@ -13,7 +13,9 @@ watching would resume, or the furthest episode in its history), never that one o
 season 1 episode 1 there is nothing to recap: available false.
 Written in the profile's language, once per show + episode + language and kept (ShowRecap): every
 profile at the same point gets the same text. Writing one takes a few seconds and costs about
-US$0.001 (Claude Haiku 5.5); only those count toward the "recap" throttle, kept ones don't.
+US$0.001 (Claude Haiku 5.5), within the AI budget (reco/ai_budget.py: US$0.05 a day for the site,
+3 new recaps a day per user, US$5 a month for all AI); kept ones are free. peek says available
+only when the recap is kept or can be written today, so the button never leads to "come back".
 """
 import logging
 
@@ -21,12 +23,12 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from users.maturity import allowed_titles_q
 from users.models import Episode, Profile, Season, Title
 
+from . import ai_budget
 from .models import ShowRecap, WatchEvent, WatchProgress
 
 log = logging.getLogger(__name__)
@@ -50,10 +52,6 @@ next, and don't use what you may know about later episodes.
   separated by a blank line. Plain text: no headings, lists, bold or emoji.
 - Say where the main characters stand at the end of the last episode: that is where the viewer resumes.
 - Write in {language}. Keep the names of characters, places and the show as they are."""
-
-
-class RecapThrottle(UserRateThrottle):
-    scope = "recap"
 
 
 def resume_point(profile, title):
@@ -121,8 +119,8 @@ def _client():
     return anthropic.Anthropic(timeout=60.0, max_retries=1)
 
 
-def write_recap(title, season, episode, language):
-    """Claude's recap text, "" when it declined or can't be reached."""
+def write_recap(title, season, episode, language, profile=None):
+    """Claude's recap text, "" when it declined or can't be reached. What it cost is recorded."""
     text = prompt_text(title, season, episode)
     if not text:
         return ""
@@ -139,6 +137,7 @@ def write_recap(title, season, episode, language):
     except anthropic.APIError as exc:  # no key, rate limited, down...: the page says try again later
         log.warning("recap for title %s failed: %s", title.id, exc)
         return ""
+    ai_budget.record("recap", msg.usage, MODEL, profile=profile)  # billed even when declined
     if msg.stop_reason != "end_turn":  # refusal, or cut off
         return ""
     return "\n\n".join(b.text.strip() for b in msg.content if b.type == "text" and b.text.strip())
@@ -159,20 +158,19 @@ class RecapView(APIView):
         if not seen_episodes(title, season, episode):  # no summaries to go on
             return Response({"available": False})
         out = {"available": True, "season": season, "episode": episode}
-        if request.query_params.get("peek"):
-            return Response(out)
-
         language = (profile.language_preference or "en").split("-")[0].lower()
         if language not in LANGUAGE_NAMES:
             language = "en"
         kept = ShowRecap.objects.filter(title=title, season=season, episode=episode, language=language).first()
         if kept:
-            return Response({**out, "text": kept.text, "cached": True})
+            return Response(out if request.query_params.get("peek") else {**out, "text": kept.text, "cached": True})
 
-        throttle = RecapThrottle()
-        if not throttle.allow_request(request, self):
-            return Response({"detail": "Too many recaps, try again later.", "code": "recap_throttled"}, status=429)
-        text = write_recap(title, season, episode, language)
+        ok, reason = ai_budget.allowed("recap", profile)
+        if request.query_params.get("peek"):
+            return Response(out if ok else {"available": False})
+        if not ok:  # a cap is reached: back tomorrow (or next month)
+            return Response({"detail": "Recaps are paused for today.", "code": "ai_budget", "reason": reason}, status=429)
+        text = write_recap(title, season, episode, language, profile=profile)
         if not text:
             return Response({"detail": "The recap can't be written right now.", "code": "recap_unavailable"}, status=503)
         ShowRecap.objects.update_or_create(

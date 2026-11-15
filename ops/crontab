@@ -25,6 +25,10 @@
 30 4 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/clean_db_weekly.lock docker compose exec -T backend python manage.py clean_db --dedupe --backfill-links --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200 >> /var/log/clean_db_weekly.log 2>&1
 30 5 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/sync_tmdb_weekly.lock docker compose exec -T backend python manage.py sync_tmdb_monthly --pages 20 --min-votes 500 --verbose-adds --only-created >> /var/log/sync_tmdb_weekly.log 2>&1
 30 7 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_heavy.lock docker compose exec -T backend python manage.py train_ranker >> /var/log/train_ranker_weekly.log 2>&1
+# TMDB recommendations / similar + alternative titles (users/tmdb_related.py): 5,000 titles a night, free
+0 5 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_related.lock docker compose exec -T backend python manage.py sync_tmdb_related >> /var/log/taurus_related.log 2>&1
+# daily check-up (users/checkup.py): emails staff only when a job / the disk / the AI budget has a problem
+0 7 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_checkup.lock docker compose exec -T backend python manage.py daily_checkup >> /var/log/taurus_checkup.log 2>&1
 # AI title tags: collect last night's Claude batch, send the next one (half price, done within 24 h)
 0 4 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_tags.lock docker compose exec -T backend python manage.py tag_titles >> /var/log/taurus_tags.log 2>&1
 30 9 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_heavy.lock docker compose exec -T backend python manage.py build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2 >> /var/log/build_embeddings_weekly.log 2>&1

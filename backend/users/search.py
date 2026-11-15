@@ -215,7 +215,7 @@ def search_titles(q, profile=None, kind=None, limit=15, language=None):
     match); reason_key: the same as data for the app to word ({"key": "with", "name": ...}) or None.
     language: app code; titles also match by their translated name in it (TitleTranslation).
     """
-    from .models import TitleTranslation
+    from .models import TitleAltName, TitleTranslation
     from reco.models import TitleSimilar  # reco depends on users, not the other way round
 
     p = parse_query(q)
@@ -277,6 +277,17 @@ def search_titles(q, profile=None, kind=None, limit=15, language=None):
             for tid, tname in translated:
                 tn = _name(tname)
                 add([tid], 100 if tn == name else (85 if tn.startswith(name) else 70), "")
+        # its other names (TMDB alternative titles, sync_tmdb_related): "Stirb langsam" -> Die Hard.
+        # A bit below the same match on the main / translated name, with the name it matched.
+        if name:
+            akas = (
+                TitleAltName.objects.filter(title__in=base)
+                .filter(Q(name_norm=name) | Q(name_norm__startswith=name) | Q(name_norm__contains=f" {name}"))
+                .values_list("title_id", "name", "name_norm")[:300]
+            )
+            for tid, aka, aka_norm in akas:
+                score = 95 if aka_norm == name else (80 if aka_norm.startswith(name) else 65)
+                add([tid], score, f"Also known as {aka}", {"key": "aka", "name": aka})
         if expr:
             # directing outranks appearing in it (documentaries about a director)
             directors = list(_ft(base, "director", expr).order_by("-popularity").values_list("id", "director")[:100])

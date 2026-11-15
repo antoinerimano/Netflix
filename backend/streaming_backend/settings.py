@@ -124,7 +124,6 @@ REST_FRAMEWORK = {
         "auth": env("THROTTLE_AUTH_RATE", default="10/min"),
         "password_reset": env("THROTTLE_PASSWORD_RESET_RATE", default="5/hour"),
         "import": env("THROTTLE_IMPORT_RATE", default="20/hour"),  # history imports (reco/imports.py)
-        "recap": env("THROTTLE_RECAP_RATE", default="20/hour"),  # recaps Claude writes (reco/recap.py), kept ones are free
         "visit": env("THROTTLE_VISIT_RATE", default="120/min"),  # page views / pings (reco/visits.py)
     },
     # nginx sits in front: take the client IP from the last X-Forwarded-For hop
@@ -263,3 +262,17 @@ if not DEBUG:
 
     # si tu es derrière un reverse proxy (nginx)
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# ---------- AI budget (reco/ai_budget.py, roadmap 8.9): at most US$5 a month for all Claude use ----------
+AI_MONTHLY_BUDGET_USD = env.float("AI_MONTHLY_BUDGET_USD", default=5.0)
+AI_JOBS_MONTHLY_BUDGET_USD = env.float("AI_JOBS_MONTHLY_BUDGET_USD", default=1.0)  # background jobs (tags of new titles...)
+AI_FEATURE_CAPS = {  # user-triggered features: (US$ a day for the whole site, calls a day per user)
+    "recap": (env.float("AI_RECAP_DAILY_USD", default=0.05), env.int("AI_RECAP_PER_USER_DAY", default=3)),
+}
+AI_BUDGET_EXEMPT_UNTIL = env("AI_BUDGET_EXEMPT_UNTIL", default="2026-11-30")  # the catalog's first tagging isn't counted
+
+# A/B tests (reco/experiments.py, roadmap 8.7): name -> end date (yyyy-mm-dd, "" = off). Until then,
+# half the profiles keep the old way; after it, everyone gets the AI feature.
+AI_EXPERIMENTS = {
+    "pick_moods": env("EXPERIMENT_PICK_MOODS_UNTIL", default="2026-12-31"),  # moods: AI tags vs genres
+}

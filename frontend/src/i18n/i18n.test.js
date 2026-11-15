@@ -103,4 +103,12 @@ describe('texts the server sends as data', () => {
     expect(matchText({ match_key: { key: 'filters', genres: ['Crime'], yearFrom: 1990, yearTo: 1999, kind: 'tv' } })).toBe('Crime · 1990s · Series');
     expect(matchText({})).toBe('');
   });
+
+  test('found by another name (TMDB alternative titles)', async () => {
+    const hit = { match: 'Also known as Stirb langsam', match_key: { key: 'aka', name: 'Stirb langsam' } };
+    expect(matchText(hit)).toBe('Also known as Stirb langsam');
+    await i18n.changeLanguage('fr');
+    await i18n.loadNamespaces('catalog');
+    expect(matchText(hit)).toBe('Aussi connu sous le nom Stirb langsam');
+  });
 });

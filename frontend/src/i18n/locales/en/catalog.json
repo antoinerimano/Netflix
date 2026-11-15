@@ -123,20 +123,33 @@
     "scope": "Everything before season {{season}}, episode {{episode}}: no spoilers.",
     "loading": "Writing your recap…",
     "error": "The recap can't be written right now. Try again in a moment.",
+    "limit": "Recaps are taking a break for today. Come back tomorrow.",
     "retry": "Try again",
     "resume": "Resume S{{season}} E{{episode}}",
     "note": "Written by AI from the episode summaries: it can get details wrong."
   },
+  "contentNotes": {
+    "contains": "Contains: {{list}}",
+    "violence": "violence",
+    "gore": "gore",
+    "sexual_content": "sexual content",
+    "nudity": "nudity",
+    "strong_language": "strong language",
+    "drug_use": "drug use",
+    "self_harm": "self-harm",
+    "animal_harm": "harm to animals",
+    "frightening_scenes": "frightening scenes"
+  },
   "notifications": {
     "title": "Notifications",
-    "subtitle": "New episodes of the shows you follow",
+    "subtitle": "New episodes of your shows",
     "unread_one": "{{count}} new episode",
     "unread_other": "{{count}} new episodes",
     "new": "New",
     "earlier": "Earlier",
     "newEpisode": "New episode · S{{season}} E{{episode}}",
     "emptyTitle": "No new episodes yet",
-    "emptyText": "Tap the bell on a show's page to get an alert when a new episode is out.",
+    "emptyText": "Shows you follow, have in My List or are watching appear here when a new episode is out. Follow a show (the bell on its page) to also get an email.",
     "browse": "Browse TV shows",
     "calendar": "See upcoming episodes"
   },
@@ -219,7 +232,8 @@
       "directedBy": "Directed by {{name}}",
       "with": "With {{name}}",
       "about": "About {{text}}",
-      "closeMatch": "Close match"
+      "closeMatch": "Close match",
+      "aka": "Also known as {{name}}"
     }
   },
   "list": {

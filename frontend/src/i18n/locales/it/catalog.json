@@ -124,13 +124,26 @@
     "scope": "Tutto ciò che precede la stagione {{season}}, episodio {{episode}}: niente spoiler.",
     "loading": "Sto scrivendo il riassunto…",
     "error": "Al momento non è possibile scrivere il riassunto. Riprova tra poco.",
+    "limit": "I riassunti sono in pausa per oggi. Torna domani.",
     "retry": "Riprova",
     "resume": "Riprendi S{{season}} E{{episode}}",
     "note": "Scritto dall'IA a partire dalle trame degli episodi: alcuni dettagli potrebbero essere imprecisi."
   },
+  "contentNotes": {
+    "contains": "Contiene: {{list}}",
+    "violence": "violenza",
+    "gore": "scene cruente",
+    "sexual_content": "contenuti sessuali",
+    "nudity": "nudità",
+    "strong_language": "linguaggio volgare",
+    "drug_use": "uso di droghe",
+    "self_harm": "autolesionismo",
+    "animal_harm": "maltrattamento di animali",
+    "frightening_scenes": "scene spaventose"
+  },
   "notifications": {
     "title": "Notifiche",
-    "subtitle": "Nuovi episodi delle serie che segui",
+    "subtitle": "Nuovi episodi delle tue serie",
     "unread_one": "{{count}} nuovo episodio",
     "unread_many": "{{count}} nuovi episodi",
     "unread_other": "{{count}} nuovi episodi",
@@ -138,7 +151,7 @@
     "earlier": "Precedenti",
     "newEpisode": "Nuovo episodio · S{{season}} E{{episode}}",
     "emptyTitle": "Ancora nessun nuovo episodio",
-    "emptyText": "Tocca la campanella nella pagina di una serie per ricevere un avviso quando esce un nuovo episodio.",
+    "emptyText": "Le serie che segui, che hai nella La mia lista o che stai guardando compaiono qui quando esce un nuovo episodio. Segui una serie (la campanella nella sua pagina) per ricevere anche un'e-mail.",
     "browse": "Sfoglia le serie",
     "calendar": "Vedi gli episodi in arrivo"
   },
@@ -225,7 +238,8 @@
       "directedBy": "Regia di {{name}}",
       "with": "Con {{name}}",
       "about": "Sul tema {{text}}",
-      "closeMatch": "Risultato simile"
+      "closeMatch": "Risultato simile",
+      "aka": "Noto anche come {{name}}"
     }
   },
   "list": {

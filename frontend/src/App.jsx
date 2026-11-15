@@ -8,7 +8,6 @@ import TVShowDetail from './components/TVShowDetail';
 import List from './components/List';
 import Login from './components/Login';
 import ActorDetail from './components/ActorDetails';
-import ProtectedStaffRoute from './ProtectedStaffRoute';
 import { BrandLoader } from './design';
 
 // Pages that are rarely the first stop are downloaded when opened (their own JS files): the
@@ -28,8 +27,6 @@ const PublicListPage = lazy(() => import('./components/lists/PublicListPage'));
 const PickPage = lazy(() => import('./components/pick/PickPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
-const AdminMovies = lazy(() => import('./components/AdminMovies'));
-const AdminUsers = lazy(() => import('./components/AdminUsers'));
 const WatchPage = lazy(() => import('./components/WatchPage'));
 const DesignSystemPage = lazy(() => import('./design/DesignSystemPage'));
 import ProtectedRoute from './ProtectedRoute';
@@ -209,23 +206,7 @@ function App() {
           }
         />
 
-        {/* Admin-only */}
-        <Route
-          path="/admin/movies"
-          element={
-            <ProtectedStaffRoute>
-              <AdminMovies />
-            </ProtectedStaffRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedStaffRoute>
-              <AdminUsers />
-            </ProtectedStaffRoute>
-          }
-        />
+        {/* the old in-app admin pages (users / movies) are gone: the Django admin + its dashboard */}
         <Route path="/admin/*" element={<Navigate to="/" replace />} />
 
         {/* Living style guide (src/design), development only */}

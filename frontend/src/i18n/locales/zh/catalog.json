@@ -122,19 +122,32 @@
     "scope": "第 {{season}} 季第 {{episode}} 集之前的全部内容：无剧透。",
     "loading": "正在撰写前情提要…",
     "error": "暂时无法生成前情提要，请稍后再试。",
+    "limit": "前情提要今天暂停，请明天再来。",
     "retry": "重试",
     "resume": "继续观看 S{{season}} E{{episode}}",
     "note": "由 AI 根据剧集简介撰写：细节可能有误。"
   },
+  "contentNotes": {
+    "contains": "包含：{{list}}",
+    "violence": "暴力",
+    "gore": "血腥画面",
+    "sexual_content": "性内容",
+    "nudity": "裸露",
+    "strong_language": "粗口",
+    "drug_use": "吸毒",
+    "self_harm": "自残",
+    "animal_harm": "伤害动物",
+    "frightening_scenes": "惊悚场景"
+  },
   "notifications": {
     "title": "通知",
-    "subtitle": "你关注的剧集的新剧集",
+    "subtitle": "你的剧集有新的一集",
     "unread_other": "{{count}} 集新剧集",
     "new": "最新",
     "earlier": "更早",
     "newEpisode": "新剧集 · 第 {{season}} 季第 {{episode}} 集",
     "emptyTitle": "暂无新剧集",
-    "emptyText": "在剧集页面点按铃铛，新剧集上线时就会收到提醒。",
+    "emptyText": "你关注的、在我的片单中的或正在观看的剧集，有新一集时会显示在这里。关注剧集（剧集页面上的铃铛）还能收到电子邮件。",
     "browse": "浏览剧集",
     "calendar": "查看即将播出的剧集"
   },
@@ -213,7 +226,8 @@
       "directedBy": "导演：{{name}}",
       "with": "主演：{{name}}",
       "about": "关于{{text}}",
-      "closeMatch": "相近结果"
+      "closeMatch": "相近结果",
+      "aka": "又名：{{name}}"
     }
   },
   "list": {

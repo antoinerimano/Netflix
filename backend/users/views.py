@@ -6,6 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
+import random
 import re
 from django.db.models import Q
 from django.db import models
@@ -483,7 +484,8 @@ class TitleViewSet(viewsets.ModelViewSet):
         else:
             # detail serializer outputs every field + seasons/episodes/actors:
             # load them up front instead of one query per deferred field / season
-            qs = Title.objects.select_related("tv_extras").prefetch_related("seasons__episodes", "actors")
+            # (tags: the content notes, reco/models.py TitleTags, in the same query)
+            qs = Title.objects.select_related("tv_extras", "tags").prefetch_related("seasons__episodes", "actors")
 
         # age rating of the active profile (Kids profile / age limit)
         qs = qs.filter(allowed_titles_q(request_profile(self.request)))
@@ -580,20 +582,32 @@ class TitleViewSet(viewsets.ModelViewSet):
     @method_decorator(cache_page(60*60))
     @method_decorator(vary_on_headers("X-Profile-Id"))  # kids and adults get different answers
     def similar(self, request, pk=None):
-        """'More like this' on detail pages: nearest titles by embedding (reco.TitleSimilar,
-        built by build_embeddings), best first, within the active profile's age limit."""
+        """'More like this' on detail pages, within the active profile's age limit: TMDB's own
+        recommendations (what people who watched it also watched, manage.py sync_tmdb_related)
+        taking turns with the nearest titles by embedding (build_embeddings), no repeats. A title
+        not synced from TMDB yet: the embeddings alone, as before."""
         from reco.models import TitleSimilar  # reco depends on users: import here
         from reco.views import MODEL_NAME
+
+        from . import tmdb_related
 
         try:
             limit = max(1, min(int(request.query_params.get("limit", 18)), 30))
         except ValueError:
             limit = 18
-        ids = list(
-            TitleSimilar.objects.filter(title_id=pk, model_name=MODEL_NAME)
-            .order_by("-score")
-            .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
-        )
+
+        def nearest(model_name):
+            return list(
+                TitleSimilar.objects.filter(title_id=pk, model_name=model_name)
+                .order_by("-score")
+                .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
+            )
+
+        from_tmdb, from_embeddings = nearest(tmdb_related.MODEL_NAME), nearest(MODEL_NAME)
+        # which list starts is drawn each time (the answer is cached an hour): the first places
+        # get the most clicks, so a fixed start would favour one list in the comparison (8.7)
+        first, second = (from_tmdb, from_embeddings) if random.random() < 0.5 else (from_embeddings, from_tmdb)
+        ids = tmdb_related.interleave(first, second)
         titles = (
             Title.objects.only(*TitleListSerializer.Meta.fields)
             .filter(id__in=ids)
@@ -602,7 +616,12 @@ class TitleViewSet(viewsets.ModelViewSet):
         )
         rank = {tid: i for i, tid in enumerate(ids)}
         ordered = sorted(titles, key=lambda t: rank.get(t.id, len(rank)))[:limit]
-        return Response(TitleListSerializer(ordered, many=True, context=self.get_serializer_context()).data)
+        data = TitleListSerializer(ordered, many=True, context=self.get_serializer_context()).data
+        # which list each one came from (the app logs it: roadmap 8.7, reco/ai_report.py)
+        tmdb_ids = set(from_tmdb)
+        for item in data:
+            item["source"] = "tmdb" if item["id"] in tmdb_ids else "embeddings"
+        return Response(data)
 
     @action(detail=False, methods=["get"])
     @method_decorator(cache_page(60*60))

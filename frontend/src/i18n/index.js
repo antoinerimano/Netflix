@@ -39,7 +39,7 @@ export const SUPPORTED_LANGUAGES = {
 };
 export const LANGUAGE_CODES = Object.keys(SUPPORTED_LANGUAGES);
 export const DEFAULT_LANGUAGE = 'en';
-export const NAMESPACES = ['common', 'auth', 'profiles', 'catalog', 'watch', 'account', 'admin', 'legal'];
+export const NAMESPACES = ['common', 'auth', 'profiles', 'catalog', 'watch', 'account', 'legal'];
 const STORAGE_KEY = 'lang';
 
 // older profiles were saved with non-standard codes

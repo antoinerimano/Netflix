@@ -10,11 +10,12 @@ from rest_framework.test import APIClient
 from users.models import Episode, Profile, Season, Title, User
 
 from . import recap
-from .models import ShowRecap, WatchEvent, WatchProgress
+from .models import AiUsage, ShowRecap, WatchEvent, WatchProgress
 
 
 def reply(text="Walter starts cooking.", stop_reason="end_turn"):
-    return NS(stop_reason=stop_reason, content=[NS(type="thinking", thinking=""), NS(type="text", text=text)])
+    return NS(stop_reason=stop_reason, content=[NS(type="thinking", thinking=""), NS(type="text", text=text)],
+              usage=NS(input_tokens=3000, output_tokens=500))
 
 
 class RecapTests(TestCase):
@@ -113,13 +114,38 @@ class RecapTests(TestCase):
         self.claude.messages.create.side_effect = anthropic.APIConnectionError(request=mock.MagicMock())
         self.assertEqual(self.get().status_code, 503)
 
-    def test_throttled_only_when_writing(self):
+    def test_each_recap_written_is_counted(self):
         self.at(2, 2)
-        with mock.patch.object(recap.RecapThrottle, "allow_request", return_value=False):
-            self.assertEqual(self.get().status_code, 429)
+        self.get()
+        usage = AiUsage.objects.get(feature="recap")
+        self.assertEqual(usage.profile, self.profile)
+        self.assertAlmostEqual(usage.cost_usd, (3000 * 0.10 + 500 * 0.50) / 1e6)
+
+    def test_per_user_cap(self):
+        self.at(2, 2)
+        for _ in range(3):  # three recaps written today by this account (any profile)
+            AiUsage.objects.create(feature="recap", profile=self.profile, cost_usd=0.001)
+        self.assertEqual(self.get(peek=True).data, {"available": False})  # no button that leads nowhere
+        r = self.get()
+        self.assertEqual(r.status_code, 429)
+        self.assertEqual((r.data["code"], r.data["reason"]), ("ai_budget", "user"))
+        self.claude.messages.create.assert_not_called()
+
+    def test_site_daily_and_monthly_caps(self):
+        self.at(2, 2)
+        AiUsage.objects.create(feature="recap", profile=self.kid, cost_usd=0.05)  # the whole site, today
+        self.assertEqual(self.get().data["reason"], "day")
+        AiUsage.objects.all().delete()
+        AiUsage.objects.create(feature="tags", cost_usd=5.0)  # all AI, this month
+        self.assertEqual(self.get().data["reason"], "month")
+        self.claude.messages.create.assert_not_called()
+
+    def test_kept_recap_needs_no_budget(self):
+        self.at(2, 2)
+        AiUsage.objects.create(feature="tags", cost_usd=5.0)
         ShowRecap.objects.create(title=self.show, season=2, episode=2, language="fr", text="Kept.")
-        with mock.patch.object(recap.RecapThrottle, "allow_request", return_value=False):
-            self.assertEqual(self.get().data["text"], "Kept.")
+        self.assertTrue(self.get(peek=True).data["available"])
+        self.assertEqual(self.get().data["text"], "Kept.")
 
     def test_access(self):
         self.at(2, 2, profile=self.kid)

@@ -124,13 +124,26 @@
     "scope": "Tout ce qui précède la saison {{season}}, épisode {{episode}} : aucun spoiler.",
     "loading": "Rédaction du résumé…",
     "error": "Le résumé ne peut pas être rédigé pour le moment. Réessayez dans un instant.",
+    "limit": "Les résumés font une pause pour aujourd'hui. Revenez demain.",
     "retry": "Réessayer",
     "resume": "Reprendre S{{season}} É{{episode}}",
     "note": "Rédigé par une IA à partir des résumés des épisodes : certains détails peuvent être inexacts."
   },
+  "contentNotes": {
+    "contains": "Contient : {{list}}",
+    "violence": "violence",
+    "gore": "scènes sanglantes",
+    "sexual_content": "contenu sexuel",
+    "nudity": "nudité",
+    "strong_language": "langage grossier",
+    "drug_use": "consommation de drogue",
+    "self_harm": "automutilation",
+    "animal_harm": "maltraitance animale",
+    "frightening_scenes": "scènes effrayantes"
+  },
   "notifications": {
     "title": "Notifications",
-    "subtitle": "Nouveaux épisodes des séries que vous suivez",
+    "subtitle": "Nouveaux épisodes de vos séries",
     "unread_one": "{{count}} nouvel épisode",
     "unread_many": "{{count}} nouveaux épisodes",
     "unread_other": "{{count}} nouveaux épisodes",
@@ -138,7 +151,7 @@
     "earlier": "Plus tôt",
     "newEpisode": "Nouvel épisode · S{{season}} É{{episode}}",
     "emptyTitle": "Pas encore de nouveaux épisodes",
-    "emptyText": "Touchez la cloche sur la page d'une série pour être averti quand un nouvel épisode sort.",
+    "emptyText": "Les séries que vous suivez, que vous avez dans Ma liste ou que vous regardez apparaissent ici quand un nouvel épisode sort. Suivez une série (la cloche sur sa page) pour recevoir aussi un e-mail.",
     "browse": "Parcourir les séries",
     "calendar": "Voir les épisodes à venir"
   },
@@ -225,7 +238,8 @@
       "directedBy": "Réalisé par {{name}}",
       "with": "Avec {{name}}",
       "about": "Sur le thème {{text}}",
-      "closeMatch": "Résultat approchant"
+      "closeMatch": "Résultat approchant",
+      "aka": "Aussi connu sous le nom {{name}}"
     }
   },
   "list": {

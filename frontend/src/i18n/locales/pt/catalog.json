@@ -124,13 +124,26 @@
     "scope": "Tudo antes da temporada {{season}}, episódio {{episode}}: sem spoilers.",
     "loading": "Escrevendo seu resumo…",
     "error": "Não é possível escrever o resumo agora. Tente de novo em instantes.",
+    "limit": "Os resumos estão em pausa por hoje. Volte amanhã.",
     "retry": "Tentar de novo",
     "resume": "Continuar T{{season}} E{{episode}}",
     "note": "Escrito por IA a partir das sinopses dos episódios: alguns detalhes podem estar errados."
   },
+  "contentNotes": {
+    "contains": "Contém: {{list}}",
+    "violence": "violência",
+    "gore": "cenas sangrentas",
+    "sexual_content": "conteúdo sexual",
+    "nudity": "nudez",
+    "strong_language": "linguagem imprópria",
+    "drug_use": "uso de drogas",
+    "self_harm": "automutilação",
+    "animal_harm": "maus-tratos a animais",
+    "frightening_scenes": "cenas assustadoras"
+  },
   "notifications": {
     "title": "Notificações",
-    "subtitle": "Novos episódios das séries que você acompanha",
+    "subtitle": "Novos episódios das suas séries",
     "unread_one": "{{count}} episódio novo",
     "unread_many": "{{count}} episódios novos",
     "unread_other": "{{count}} episódios novos",
@@ -138,7 +151,7 @@
     "earlier": "Anteriores",
     "newEpisode": "Novo episódio · T{{season}} E{{episode}}",
     "emptyTitle": "Ainda sem episódios novos",
-    "emptyText": "Toque no sino na página de uma série para ser avisado quando sair um novo episódio.",
+    "emptyText": "As séries que você acompanha, tem na Minha lista ou está assistindo aparecem aqui quando sai um novo episódio. Acompanhe uma série (o sino na página dela) para receber também um e-mail.",
     "browse": "Explorar séries",
     "calendar": "Ver próximos episódios"
   },
@@ -225,7 +238,8 @@
       "directedBy": "Dirigido por {{name}}",
       "with": "Com {{name}}",
       "about": "Sobre {{text}}",
-      "closeMatch": "Resultado parecido"
+      "closeMatch": "Resultado parecido",
+      "aka": "Também conhecido como {{name}}"
     }
   },
   "list": {

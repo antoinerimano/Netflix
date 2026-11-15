@@ -122,19 +122,32 @@
     "scope": "シーズン{{season}} 第{{episode}}話より前のすべて：ネタバレなし。",
     "loading": "あらすじを作成中…",
     "error": "現在あらすじを作成できません。しばらくしてからもう一度お試しください。",
+    "limit": "あらすじは本日お休みです。また明日お試しください。",
     "retry": "再試行",
     "resume": "S{{season}} E{{episode}}から再開",
     "note": "エピソードの概要からAIが作成：細部が正しくない場合があります。"
   },
+  "contentNotes": {
+    "contains": "含まれる内容：{{list}}",
+    "violence": "暴力",
+    "gore": "流血・残虐描写",
+    "sexual_content": "性的な内容",
+    "nudity": "ヌード",
+    "strong_language": "下品な言葉",
+    "drug_use": "薬物使用",
+    "self_harm": "自傷行為",
+    "animal_harm": "動物への危害",
+    "frightening_scenes": "怖いシーン"
+  },
   "notifications": {
     "title": "お知らせ",
-    "subtitle": "フォロー中のシリーズの新しいエピソード",
+    "subtitle": "あなたの番組の新しいエピソード",
     "unread_other": "新しいエピソード {{count}}件",
     "new": "新着",
     "earlier": "以前のお知らせ",
     "newEpisode": "新しいエピソード · S{{season}} E{{episode}}",
     "emptyTitle": "新しいエピソードはまだありません",
-    "emptyText": "シリーズのページでベルをタップすると、新しいエピソードの配信時に通知を受け取れます。",
+    "emptyText": "フォロー中、マイリストに追加済み、または視聴中の番組は、新しいエピソードが出るとここに表示されます。メールも受け取るには番組をフォローしてください（番組ページのベル）。",
     "browse": "ドラマ・シリーズを探す",
     "calendar": "配信予定のエピソードを見る"
   },
@@ -213,7 +226,8 @@
       "directedBy": "監督：{{name}}",
       "with": "出演：{{name}}",
       "about": "{{text}}について",
-      "closeMatch": "近い結果"
+      "closeMatch": "近い結果",
+      "aka": "別名：{{name}}"
     }
   },
   "list": {

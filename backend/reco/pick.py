@@ -7,6 +7,8 @@ one at random ("Surprise me").
                  &count=6&exclude=1,2,3
   -> {"items": [{...title, "minutes": 98}], "candidates": 412}
 
+Moods: an A/B test is running (roadmap 8.7, reco/experiments.py "pick_moods"): half the profiles
+get them from genres alone, the old way; the answer's "arm" says which ("ai" / "control").
 time: "90" movies up to 95 min, "120" movies up to 130 min, "episode" shows whose episodes last
 up to 60 min, "any" both without a limit. mood: a title Claude tagged (reco/tags.py) fits when it
 was given that mood; one not tagged yet goes by a set of genres (and some left out: no horror in
@@ -28,6 +30,7 @@ from rest_framework.views import APIView
 from users.maturity import allowed_titles_q, profile_max_level
 from users.models import Profile, TVShowExtras
 
+from . import experiments
 from .models import TitleAction, TitleRating, WatchEvent, WatchProgress
 
 MOODS = {
@@ -65,18 +68,18 @@ def _seen(profile_id):
     return ids
 
 
-def candidates(profile, time_key, mood_key):
-    """[(Title, minutes)] that fit, most popular first (cached per age limit, time and mood: the
-    genre filter can't use an index, ~0.5 s a query)."""
-    key = f"pick:v2:{profile_max_level(profile)}:{time_key}:{mood_key}"
+def candidates(profile, time_key, mood_key, use_tags=True):
+    """[(Title, minutes)] that fit, most popular first (cached per age limit, time, mood and way of
+    choosing the mood: the genre filter can't use an index, ~0.5 s a query)."""
+    key = f"pick:v3:{profile_max_level(profile)}:{time_key}:{mood_key}:{'tags' if use_tags else 'genres'}"
     out = cache.get(key)
     if out is None:
-        out = _candidates(profile, time_key, mood_key)
+        out = _candidates(profile, time_key, mood_key, use_tags)
         cache.set(key, out, CANDIDATES_TTL)
     return out
 
 
-def _candidates(profile, time_key, mood_key):
+def _candidates(profile, time_key, mood_key, use_tags=True):
     from .views import _released_titles
 
     kinds, limit = TIMES[time_key]
@@ -91,8 +94,11 @@ def _candidates(profile, time_key, mood_key):
             by_genre |= Q(genre__icontains=g)
         for g in unwanted:
             by_genre &= ~Q(genre__icontains=g)
-        untagged = Q(tags__isnull=True) | Q(tags__moods="")  # not tagged yet, or Claude declined
-        qs = qs.filter(Q(tags__moods__contains=f",{mood_key},") | (untagged & by_genre))
+        if use_tags:
+            untagged = Q(tags__isnull=True) | Q(tags__moods="")  # not tagged yet, or Claude declined
+            qs = qs.filter(Q(tags__moods__contains=f",{mood_key},") | (untagged & by_genre))
+        else:  # the A/B test's control half (reco/experiments.py pick_moods): genres alone, as before 7.10
+            qs = qs.filter(by_genre)
     if kinds == ["movie"]:
         qs = qs.filter(runtime_minutes__gte=MIN_MOVIE, runtime_minutes__lte=limit)
     titles = list(qs.only("id", "type", "title", "poster", "landscape_image", "release_year", "rating", "description",
@@ -161,7 +167,9 @@ class PickView(APIView):
         exclude = {int(x) for x in str(request.query_params.get("exclude") or "").split(",")[:MAX_EXCLUDE] if x.strip().isdigit()}
 
         skip = _seen(profile.id) | exclude
-        items = [(t, m) for t, m in candidates(profile, time_key, mood_key) if t.id not in skip]
+        group = experiments.arm("pick_moods", profile)  # AI tags, or genres alone (A/B test, 8.7)
+        items = [(t, m) for t, m in candidates(profile, time_key, mood_key, use_tags=group == experiments.AI)
+                 if t.id not in skip]
         picks = draw(ranked(profile, items), count)
         return Response({
             "items": [
@@ -173,4 +181,5 @@ class PickView(APIView):
                 for t, m in picks
             ],
             "candidates": len(items),
+            "arm": group,  # the app logs what it shows with it (reco/ai_report.py)
         })

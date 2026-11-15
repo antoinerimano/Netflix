@@ -140,7 +140,6 @@ const Login = () => {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
       localStorage.setItem('userId', data.user.id);
-      localStorage.setItem('isStaff', data.user.is_staff ? '1' : '0');
       localStorage.setItem('user', JSON.stringify(data.user));
 
       setIsAuthenticated(true);

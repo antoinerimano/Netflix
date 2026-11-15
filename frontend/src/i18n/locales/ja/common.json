@@ -57,8 +57,6 @@
     "movies": "映画",
     "tv": "ドラマ・シリーズ",
     "myList": "マイリスト",
-    "adminUsers": "管理：ユーザー",
-    "adminMovies": "管理：作品",
     "search": "検索",
     "searchPlaceholder": "映画・ドラマを検索",
     "searchLabel": "映画とドラマを検索",

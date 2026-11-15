@@ -21,6 +21,10 @@ export default defineConfig({
     assetsDir: 'static',
     rolldownOptions: {
       output: {
+        // Vite's preload helper (the code that loads lazy pages, vite/preload-helper) in a file of its
+        // own that scripts/obfuscate.js leaves as is: obfuscated next to other code, control-flow
+        // flattening sometimes broke it ("reading 'href'" of undefined), and the sign-up page stayed blank
+        codeSplitting: { groups: [{ name: 'preload-helper', test: /preload-helper/ }] },
         entryFileNames: 'static/js/[name]-[hash].js',
         chunkFileNames: 'static/js/[name]-[hash].js',
         assetFileNames: (asset) =>
