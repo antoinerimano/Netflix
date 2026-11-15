@@ -238,7 +238,8 @@
       "directedBy": "Regia di {{name}}",
       "with": "Con {{name}}",
       "about": "Sul tema {{text}}",
-      "closeMatch": "Risultato simile"
+      "closeMatch": "Risultato simile",
+      "aka": "Noto anche come {{name}}"
     }
   },
   "list": {

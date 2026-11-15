@@ -581,20 +581,28 @@ class TitleViewSet(viewsets.ModelViewSet):
     @method_decorator(cache_page(60*60))
     @method_decorator(vary_on_headers("X-Profile-Id"))  # kids and adults get different answers
     def similar(self, request, pk=None):
-        """'More like this' on detail pages: nearest titles by embedding (reco.TitleSimilar,
-        built by build_embeddings), best first, within the active profile's age limit."""
+        """'More like this' on detail pages, within the active profile's age limit: TMDB's own
+        recommendations (what people who watched it also watched, manage.py sync_tmdb_related)
+        taking turns with the nearest titles by embedding (build_embeddings), no repeats. A title
+        not synced from TMDB yet: the embeddings alone, as before."""
         from reco.models import TitleSimilar  # reco depends on users: import here
         from reco.views import MODEL_NAME
+
+        from . import tmdb_related
 
         try:
             limit = max(1, min(int(request.query_params.get("limit", 18)), 30))
         except ValueError:
             limit = 18
-        ids = list(
-            TitleSimilar.objects.filter(title_id=pk, model_name=MODEL_NAME)
-            .order_by("-score")
-            .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
-        )
+
+        def nearest(model_name):
+            return list(
+                TitleSimilar.objects.filter(title_id=pk, model_name=model_name)
+                .order_by("-score")
+                .values_list("similar_id", flat=True)[: limit * 3]  # room for the age filter
+            )
+
+        ids = tmdb_related.interleave(nearest(tmdb_related.MODEL_NAME), nearest(MODEL_NAME))
         titles = (
             Title.objects.only(*TitleListSerializer.Meta.fields)
             .filter(id__in=ids)

@@ -238,7 +238,8 @@
       "directedBy": "Dirigido por {{name}}",
       "with": "Com {{name}}",
       "about": "Sobre {{text}}",
-      "closeMatch": "Resultado parecido"
+      "closeMatch": "Resultado parecido",
+      "aka": "Também conhecido como {{name}}"
     }
   },
   "list": {

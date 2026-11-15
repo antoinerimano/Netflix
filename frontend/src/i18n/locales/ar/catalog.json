@@ -256,7 +256,8 @@
       "directedBy": "من إخراج {{name}}",
       "with": "مع {{name}}",
       "about": "حول {{text}}",
-      "closeMatch": "تطابق قريب"
+      "closeMatch": "تطابق قريب",
+      "aka": "يُعرف أيضًا باسم {{name}}"
     }
   },
   "list": {

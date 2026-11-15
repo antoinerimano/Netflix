@@ -347,10 +347,19 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
 [ ] 8.7 Did the AI tags help? (no AI cost)
         Compare how often a /pick suggestion is played before and after 7.10 (TitleImpression /
         TitleAction), and "More like this" clicks before / after the embeddings rebuild.
-[ ] 8.8 Free TMDB data not pulled yet (no AI cost)
-        - TMDB's own "recommendations" and "similar" lists per title (append_to_response
-          recommendations,similar): extra candidates for "More like this" next to the embeddings.
-        - "alternative_titles": search finds a title by its other names (local release titles).
+[x] 8.8 Free TMDB data not pulled yet (no AI cost)
+        manage.py sync_tmdb_related (users/tmdb_related.py, cron 05:00): one TMDB call per title
+        (append_to_response=recommendations,similar,alternative_titles), most popular first, 5,000 a
+        night, again every 60 days (Title.related_synced_at); a failed call or bad data: retried next
+        run, never stops the others.
+        - "More like this": TMDB's recommendations (from real viewing) then similar, kept as
+          TitleSimilar rows model "tmdb", taking turns with the embeddings, no repeats, same age
+          limit; titles not synced yet: the embeddings alone. A new title with no embedding
+          neighbours gets a row at last (Avatar: Fire and Ash: 0 -> 30).
+        - Search: other names (TitleAltName, up to 30 a title) found exact / start / word, with
+          "Also known as <name>" (13 languages); its own name still wins with no reason.
+        Measured on 300 titles: 6,468 related titles, 2,929 other names, 0 failures.
+        Tests: users/test_tmdb_related.py (15), i18n.test.js, e2e/tests/tmdb-related.spec.js (remote).
 [x] 8.9 AI spending caps: US$5 a month for everything (needed before any new user-triggered AI)
         Done: reco/ai_budget.py (allowed / jobs_budget_left / record), AiUsage, settings
         AI_MONTHLY_BUDGET_USD, AI_JOBS_MONTHLY_BUDGET_USD, AI_FEATURE_CAPS, AI_BUDGET_EXEMPT_UNTIL

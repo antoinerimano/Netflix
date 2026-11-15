@@ -232,7 +232,8 @@
       "directedBy": "Regie: {{name}}",
       "with": "Mit {{name}}",
       "about": "Zum Thema {{text}}",
-      "closeMatch": "Ähnlicher Treffer"
+      "closeMatch": "Ähnlicher Treffer",
+      "aka": "Auch bekannt als {{name}}"
     }
   },
   "list": {

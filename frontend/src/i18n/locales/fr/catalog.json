@@ -238,7 +238,8 @@
       "directedBy": "Réalisé par {{name}}",
       "with": "Avec {{name}}",
       "about": "Sur le thème {{text}}",
-      "closeMatch": "Résultat approchant"
+      "closeMatch": "Résultat approchant",
+      "aka": "Aussi connu sous le nom {{name}}"
     }
   },
   "list": {

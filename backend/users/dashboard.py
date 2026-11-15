@@ -31,6 +31,7 @@ JOBS = [
     ("clean_db", "Database cleanup", None),
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
+    ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
 ]
 
 AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card

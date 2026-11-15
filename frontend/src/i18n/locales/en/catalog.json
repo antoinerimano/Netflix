@@ -232,7 +232,8 @@
       "directedBy": "Directed by {{name}}",
       "with": "With {{name}}",
       "about": "About {{text}}",
-      "closeMatch": "Close match"
+      "closeMatch": "Close match",
+      "aka": "Also known as {{name}}"
     }
   },
   "list": {

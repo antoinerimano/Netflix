@@ -232,7 +232,8 @@
       "directedBy": "ہدایت کار {{name}}",
       "with": "{{name}} کے ساتھ",
       "about": "{{text}} کے بارے میں",
-      "closeMatch": "قریبی مماثلت"
+      "closeMatch": "قریبی مماثلت",
+      "aka": "{{name}} کے نام سے بھی جانا جاتا ہے"
     }
   },
   "list": {

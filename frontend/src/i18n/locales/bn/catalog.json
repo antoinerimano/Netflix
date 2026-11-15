@@ -232,7 +232,8 @@
       "directedBy": "পরিচালক: {{name}}",
       "with": "{{name}}-এর সাথে",
       "about": "{{text}} বিষয়ে",
-      "closeMatch": "কাছাকাছি ফলাফল"
+      "closeMatch": "কাছাকাছি ফলাফল",
+      "aka": "{{name}} নামেও পরিচিত"
     }
   },
   "list": {

@@ -226,7 +226,8 @@
       "directedBy": "監督：{{name}}",
       "with": "出演：{{name}}",
       "about": "{{text}}について",
-      "closeMatch": "近い結果"
+      "closeMatch": "近い結果",
+      "aka": "別名：{{name}}"
     }
   },
   "list": {

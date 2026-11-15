@@ -226,7 +226,8 @@
       "directedBy": "导演：{{name}}",
       "with": "主演：{{name}}",
       "about": "关于{{text}}",
-      "closeMatch": "相近结果"
+      "closeMatch": "相近结果",
+      "aka": "又名：{{name}}"
     }
   },
   "list": {
