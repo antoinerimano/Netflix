@@ -29,7 +29,44 @@ JOBS = [
     ("build_embeddings", "Embeddings build", None),
     ("backfill_ratings", "Age ratings backfill", None),
     ("clean_db", "Database cleanup", None),
+    ("tag_titles", "AI title tags", timedelta(hours=30)),
+    ("daily_checkup", "Daily check-up", timedelta(hours=30)),
 ]
+
+AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
+    "recap": "Catch me up (users)",
+    "tags": "Title tags (job)",
+    "tags_setup": "First catalog tagging (not counted)",
+    "checkup": "Daily check-up (job)",
+}
+
+
+def _ai_spend(now):
+    """This month's Claude spending against the US$5 budget (reco/ai_budget.py)."""
+    from reco import ai_budget
+    from reco.models import AiUsage
+
+    month = AiUsage.objects.filter(created_at__gte=ai_budget._month_start(now)).exclude(feature=ai_budget.ALERT_FEATURE)
+    by_feature = {}
+    for feature, usd in month.values_list("feature", "cost_usd"):
+        by_feature[feature] = by_feature.get(feature, 0.0) + usd
+    budget = ai_budget.monthly_budget()
+    total = ai_budget.spent_this_month()
+    caps = ai_budget.feature_caps()
+    rows = []
+    for feature, usd in sorted(by_feature.items(), key=lambda kv: -kv[1]):
+        cap = caps.get(feature)
+        rows.append({
+            "label": AI_FEATURES.get(feature, feature),
+            "usd": usd,
+            "today": ai_budget.spent_today(feature),
+            "cap": f"US${cap[0]:.2f} a day, {cap[1]} per user" if cap else "",
+            "exempt": feature in ai_budget.EXEMPT,
+        })
+    return {
+        "total": total, "budget": budget, "pct": min(100, round(100 * total / budget)) if budget else 0,
+        "jobs_left": ai_budget.jobs_budget_left(), "rows": rows,
+    }
 
 
 def _pct(part, whole):
@@ -144,6 +181,7 @@ def dashboard_view(request):
         "plays_total": sum(d["n"] for d in plays),
         "providers": _providers(now),
         "jobs": _jobs(now),
+        "ai": _ai_spend(now),
         "snapshots_total": snapshots.count(),
         "snapshots_failed": snapshots.exclude(last_error="").count(),
         "snapshots_oldest": snapshots.order_by("built_at").values_list("built_at", flat=True).first(),

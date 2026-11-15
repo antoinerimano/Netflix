@@ -270,6 +270,30 @@ Status: [ ] todo   [~] in progress   [x] done
         Refusals / errors aren't kept: "Try again". Remote: focus on Resume, Up reaches the text, Back
         closes and gives the focus back to the button (e2e/tests/recap.spec.js; recap seeded, no AI call).
         Backend: reco/recap.py. Needs ANTHROPIC_API_KEY (already set for 7.10).
+        Now within the AI budget (8.9): 3 new recaps a day per user, US$0.05 a day for the site.
+[x] 7.12 The bell for every show you track, emails only for the ones you follow
+        notify_new_episodes: the bell gets the new episodes of every show a profile follows, has in
+        My List or watched in the last 6 months (the same shows as the Upcoming calendar,
+        reco/calendar.py tracked_shows); emails only for followed shows (a followed show: only
+        episodes since the follow). Bell texts in 13 languages ("New episodes of your shows").
+        Before: followed shows only, so most bells stayed empty (7 follows on the whole site).
+        Tests: reco/test_notifications.py (the command had none).
+[x] 7.13 Faster end-to-end checks on GitHub (~7 min -> ~3)
+        ci-cd.yml: the suite split over 3 machines (shards, each with its own MySQL / database,
+        whole files in order); skipped when only ROADMAP.txt, docs/, ops/, scripts/, *.md or
+        commands.txt changed ("What changed" job); focus-overlap.spec.js (3.4 min) left to a new
+        nightly run of the whole suite (e2e-nightly.yml, 06:00 UTC, GitHub emails a failure).
+        The required check "End-to-end (Playwright, real app, TV remote)" stays: a job of that name
+        sums up the shards. Locally: only the specs a change touches (npx playwright test recap).
+[x] 7.14 In-app admin pages removed; the obfuscator no longer breaks lazy pages
+        "Admin users" / "Admin movies" (navbar + phone menu, /admin/users, /admin/movies, their
+        "admin" translations in 13 languages, ProtectedStaffRoute) are gone: the Django admin and
+        its dashboard do it. /admin/* still sends old bookmarks home. Admin account: the old
+        admin@test.com has no rights any more, taurusgroupdmca@gmail.com is the admin.
+        Found on the way: scripts/obfuscate.js (control-flow flattening) sometimes broke Vite's
+        preload helper inside the bundle, so a lazy page (sign up) stayed blank ("reading 'href'" of
+        undefined); random per build (production happened to be fine). vite.config.mjs now puts the
+        helper in preload-helper-*.js, which obfuscate.js leaves as is (public Vite code).
 
 8. AI: BACKGROUND FIRST, USER-TRIGGERED ONLY WITH CAPS
 ------------------------------------------------------
@@ -290,17 +314,28 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         Instead: a nightly batch writes the recaps of the shows profiles are part way through
         (their Continue watching), and the button only appears once one is ready (within 8.9's
         background budget): pressing it then never costs anything.
-[ ] 8.2 Daily check-up (cron, ~US$0.10 a month)
-        Every morning: reads the admin dashboard's job runs (failed / slow), home snapshot builds,
-        syncs, tag batches, disk space and the last log lines; emails the admin only when
-        something is wrong: what broke, the likely cause, the command to fix it.
+[x] 8.2 Daily check-up (cron 07:00, ~US$0 most days)
+        manage.py daily_checkup (users/checkup.py): plain checks first, no AI: a scheduled job failed /
+        late / "running" for 6 h+ (with its error text), home pages failed or none rebuilt for 12 h,
+        an AI tag batch not collected after 26 h, the disk under 10 % / 5 GB free, the AI budget at
+        80 %+. Nothing wrong: no email, no AI. Something wrong: one email to staff; Claude Haiku 5.5
+        writes it (what broke, likely cause, the command to run, only from FIX_COMMANDS) within the
+        jobs' AI budget (feature "checkup", ~US$0.001); budget used up / API down: the facts only, the
+        alert never depends on the AI. --dry-run, --no-ai. On the dashboard's jobs list. Stream
+        providers left out (their own hourly check + dashboard card). Tests: users/test_checkup.py (15).
 [ ] 8.3 Catalog quality pass (weekly batch, ~US$0.20 a month)
         TMDB first: missing posters / overviews / age ratings are fetched again from TMDB
         (clean_db --backfill-tmdb). Then Claude looks only at what TMDB can't settle: likely
         duplicates, odd age ratings (a horror film rated G), titles in the wrong genre; fixes the
         safe ones with the existing commands, lists the rest on the admin dashboard to approve.
-[ ] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
-        "Violence · Strong language · Frightening scenes" under the genres; remote-only e2e test.
+[x] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
+        "Contains: violence and strong language" under the genres of a movie / show page, in the
+        app's language (13; the list worded by Intl), always in the same order, only known values,
+        no line when a title has none or isn't tagged yet. Plain text, not a control: the remote goes
+        straight from the top to Watch. API: content_notes on /api/titles/<id>/ (TitleSerializer,
+        tags loaded in the same query: still 5 queries a page). Tests: reco/test_tags.py
+        (ContentNotesApiTests), DetailHero.test.jsx, e2e/tests/content-notes.spec.js (remote only,
+        French), and RecapButton.test.jsx (the recap button had no unit test).
 [ ] 8.5 Rows named by AI (weekly batch)
         Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
         Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
@@ -316,7 +351,14 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         - TMDB's own "recommendations" and "similar" lists per title (append_to_response
           recommendations,similar): extra candidates for "More like this" next to the embeddings.
         - "alternative_titles": search finds a title by its other names (local release titles).
-[ ] 8.9 AI spending caps: US$5 a month for everything (needed before any new user-triggered AI)
+[x] 8.9 AI spending caps: US$5 a month for everything (needed before any new user-triggered AI)
+        Done: reco/ai_budget.py (allowed / jobs_budget_left / record), AiUsage, settings
+        AI_MONTHLY_BUDGET_USD, AI_JOBS_MONTHLY_BUDGET_USD, AI_FEATURE_CAPS, AI_BUDGET_EXEMPT_UNTIL
+        (2026-11-30: tag batches sent before it are "tags_setup", not counted). Recaps: the button
+        shows only when a recap is kept or can be written today; a cap -> "Come back tomorrow"
+        (13 languages). tag_titles records each batch's cost, cuts new batches to the jobs' budget.
+        Dashboard: "AI spend this month" card, tag_titles in the jobs list. Email to staff at 80 %.
+        Tests: reco/test_ai_budget.py + recap / tags tests. Chat caps (8.10) to add with the chat.
         - AiUsage: every Claude call records its feature, profile, tokens and cost (from the
           response's usage, Haiku 5.5 prices), per day; batches too, when collected.
         - The budget (backend/.env, defaults below), checked before every call:
@@ -334,7 +376,7 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         - A cap reached: the feature says "back tomorrow" (or next month), the rest of the site
           works as usual (kept recaps, tags, genres).
         - This month's spend per feature on the admin dashboard, an email at 80 % of US$5.
-        - "Catch me up" (7.11) moves behind it (today: 20 new recaps per user an hour, no site cap).
+        - "Catch me up" (7.11) moves behind it (was: 20 new recaps per user an hour, no site cap).
 [ ] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
         "something short and funny we haven't seen, the kids are here": Claude with the site's own
         actions as tools (search, the AI moods / themes, the profile's history and age limit, My

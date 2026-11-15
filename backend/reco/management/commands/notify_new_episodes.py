@@ -4,10 +4,12 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
-
-from reco.models import Notification, ShowFollow
 from django.utils.translation import gettext, ngettext
+
+from reco.calendar import tracked_shows
+from reco.models import MyListItem, Notification, ShowFollow, WatchProgress
 
 from users.emails import send_templated_email
 from users.i18n import language_of, to_app_language
@@ -20,8 +22,10 @@ LOOKBACK_DAYS = 3  # catches episodes even if a run was missed
 
 class Command(BaseCommand):
     help = (
-        "Create 'new episode' notifications for profiles following a show, then email each account "
-        "once with its new episodes. Run it right after sync_tmdb_daily_episodes."
+        "Create 'new episode' notifications (the bell) for every profile tracking a show (followed, "
+        "in My List, or watched in the last 6 months: reco/calendar.py tracked_shows), then email "
+        "each account once with the new episodes of the shows it FOLLOWS. Run it right after "
+        "sync_tmdb_daily_episodes."
     )
 
     def add_arguments(self, parser):
@@ -30,16 +34,26 @@ class Command(BaseCommand):
     @tracked("notify_new_episodes")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
         today = timezone.localdate()
-        follows = list(ShowFollow.objects.values_list("profile_id", "title_id", "created_at"))
+        # every profile that tracks a show: followed (the bell + an email), in My List or watched
+        # in the last 6 months (the bell only), the same shows as the "Upcoming" calendar
+        profile_ids = set(ShowFollow.objects.values_list("profile_id", flat=True))
+        profile_ids |= set(MyListItem.objects.filter(title__type="tv").values_list("profile_id", flat=True))
+        profile_ids |= set(WatchProgress.objects.filter(title__type="tv").values_list("profile_id", flat=True))
+        tracked = tracked_shows(list(profile_ids))
+        followed_at = {
+            (pid, tid): timezone.localtime(at).date()
+            for pid, tid, at in ShowFollow.objects.values_list("profile_id", "title_id", "created_at")
+        }
+        follows = [(pid, tid) for pid, shows in tracked.items() for tid in shows]
         if not follows:
-            self.stdout.write("Nobody follows a show.")
+            self.stdout.write("Nobody tracks a show.")
             return
 
         episodes = defaultdict(list)  # show id -> [(season, episode, air_date)]
         for show_id, season, episode, air_date in (
             Episode.objects
             .filter(
-                season__tv_id__in={title_id for _, title_id, _ in follows},
+                season__tv_id__in={title_id for _, title_id in follows},
                 air_date__gte=today - timedelta(days=LOOKBACK_DAYS),
                 air_date__lte=today,
                 season__season_number__gt=0,  # not specials
@@ -51,9 +65,10 @@ class Command(BaseCommand):
         to_create = [
             Notification(profile_id=profile_id, title_id=title_id,
                          season_number=season, episode_number=episode, air_date=air_date)
-            for profile_id, title_id, followed_at in follows
+            for profile_id, title_id in follows
             for season, episode, air_date in episodes.get(title_id, [])
-            if air_date >= timezone.localtime(followed_at).date()  # only episodes since the follow, no backlog
+            # a followed show: only episodes since the follow, no backlog (the others: the lookback)
+            if air_date >= followed_at.get((profile_id, title_id), air_date)
         ]
         before = Notification.objects.count()
         Notification.objects.bulk_create(to_create, ignore_conflicts=True)  # already notified: skipped
@@ -63,9 +78,12 @@ class Command(BaseCommand):
             self._send_emails()
 
     def _send_emails(self):
+        # emails only for the shows the profile follows (My List / watching: the bell only)
+        followed = ShowFollow.objects.filter(profile_id=OuterRef("profile_id"), title_id=OuterRef("title_id"))
         pending = list(
             Notification.objects
             .filter(emailed_at__isnull=True, created_at__gte=timezone.now() - timedelta(days=LOOKBACK_DAYS))
+            .filter(Exists(followed))
             .select_related("profile__user", "title")
             .order_by("title__title", "season_number", "episode_number")
         )

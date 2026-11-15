@@ -119,6 +119,20 @@ class TitleSerializer(serializers.ModelSerializer):
     tv_extras = TVExtrasSerializer(read_only=True)
     seasons = SeasonSerializer(many=True, read_only=True)
     actors = serializers.SerializerMethodField()
+    # "Contains: Violence · Strong language" on the title page (roadmap 8.4): the AI tags already
+    # saved by manage.py tag_titles (reco/tags.py CONTENT_NOTES), [] when untagged. No AI call here.
+    content_notes = serializers.SerializerMethodField()
+
+    def get_content_notes(self, obj):
+        from reco.models import TitleTags
+        from reco.tags import CONTENT_NOTES
+
+        try:
+            notes = obj.tags.note_list()
+        except TitleTags.DoesNotExist:
+            return []
+        # always in the same order on every page (the vocabulary's), only known values
+        return [n for n in CONTENT_NOTES if n in notes]
 
     def get_actors(self, obj):
         counts = _get_actor_appearance_counts()

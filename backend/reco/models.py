@@ -360,3 +360,19 @@ class ShowRecap(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["title", "season", "episode", "language"], name="uniq_show_recap"),
         ]
+
+
+# ---------- AI spending (reco/ai_budget.py) ----------
+
+class AiUsage(models.Model):
+    """One Claude call (or one collected batch): what it cost, for the US$5 a month budget."""
+    feature = models.CharField(max_length=32, db_index=True)   # recap / tags / tags_setup / ...
+    profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.SET_NULL)  # who triggered it
+    model_name = models.CharField(max_length=64, blank=True, default="")
+    input_tokens = models.PositiveIntegerField(default=0)
+    output_tokens = models.PositiveIntegerField(default=0)
+    cost_usd = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["feature", "created_at"])]

@@ -36,8 +36,10 @@ export default function RecapButton({ titleId, profileId, onResume }) {
       .then((r) => setRecap({ loading: false, text: r?.text || '', error: r?.text ? '' : t('recap.error') }))
       .catch((e) => {
         const status = e?.response?.status;
-        const error = status === 503 || status === 429 ? t('recap.error') : friendlyError(e, 'show');
-        setRecap({ loading: false, text: '', error });
+        let error = friendlyError(e, 'show');
+        if (e?.response?.data?.code === 'ai_budget') error = t('recap.limit'); // a daily / monthly AI cap
+        else if (status === 503) error = t('recap.error');
+        setRecap({ loading: false, text: '', error, limited: e?.response?.data?.code === 'ai_budget' });
       });
   }, [profileId, titleId, t]);
 
@@ -62,10 +64,10 @@ export default function RecapButton({ titleId, profileId, onResume }) {
         onClose={() => setOpen(false)}
         title={t('recap.title')}
         className="recap-dialog"
-        initialFocus={recap.error ? '.recap-retry' : '.recap-resume'}
+        initialFocus={recap.error && !recap.limited ? '.recap-retry' : '.recap-resume'}
         footer={
           <>
-            {recap.error ? (
+            {recap.error && !recap.limited ? (
               <Button variant="ghost" className="recap-retry" onClick={load}>
                 {t('recap.retry')}
               </Button>

@@ -483,7 +483,8 @@ class TitleViewSet(viewsets.ModelViewSet):
         else:
             # detail serializer outputs every field + seasons/episodes/actors:
             # load them up front instead of one query per deferred field / season
-            qs = Title.objects.select_related("tv_extras").prefetch_related("seasons__episodes", "actors")
+            # (tags: the content notes, reco/models.py TitleTags, in the same query)
+            qs = Title.objects.select_related("tv_extras", "tags").prefetch_related("seasons__episodes", "actors")
 
         # age rating of the active profile (Kids profile / age limit)
         qs = qs.filter(allowed_titles_q(request_profile(self.request)))

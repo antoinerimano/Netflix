@@ -124,6 +124,12 @@ class Command(BaseCommand):
             text="Season 1: a chemistry teacher starts cooking with a former student.\n\n"
                  "Season 2: what happens in season 2, episode 1.",
         )
+        # content notes on Heat's page (roadmap 8.4), as tag_titles would have saved them
+        from reco.models import TitleTags
+        TitleTags.objects.create(
+            title=Title.objects.get(title="Heat"), moods=",exciting,tense,", themes=["heist"], pacing="medium",
+            content_notes=",strong_language,violence,", model_name="e2e",
+        )
 
         # a show still on air, dates relative to the run (the "Upcoming" calendar): one episode
         # 12 days ago (outside "New episodes" and "out this past week"), then in 3 and 10 days

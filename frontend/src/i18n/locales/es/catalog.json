@@ -124,13 +124,26 @@
     "scope": "Todo lo anterior a la temporada {{season}}, episodio {{episode}}: sin spoilers.",
     "loading": "Escribiendo tu resumen…",
     "error": "Ahora no se puede escribir el resumen. Inténtalo de nuevo en un momento.",
+    "limit": "Los resúmenes descansan por hoy. Vuelve mañana.",
     "retry": "Reintentar",
     "resume": "Seguir T{{season}} E{{episode}}",
     "note": "Escrito por IA a partir de los resúmenes de los episodios: puede equivocarse en algunos detalles."
   },
+  "contentNotes": {
+    "contains": "Contiene: {{list}}",
+    "violence": "violencia",
+    "gore": "escenas sangrientas",
+    "sexual_content": "contenido sexual",
+    "nudity": "desnudos",
+    "strong_language": "lenguaje malsonante",
+    "drug_use": "consumo de drogas",
+    "self_harm": "autolesiones",
+    "animal_harm": "maltrato animal",
+    "frightening_scenes": "escenas aterradoras"
+  },
   "notifications": {
     "title": "Notificaciones",
-    "subtitle": "Nuevos episodios de las series que sigues",
+    "subtitle": "Nuevos episodios de tus series",
     "unread_one": "{{count}} episodio nuevo",
     "unread_many": "{{count}} episodios nuevos",
     "unread_other": "{{count}} episodios nuevos",
@@ -138,7 +151,7 @@
     "earlier": "Anteriores",
     "newEpisode": "Nuevo episodio · T{{season}} E{{episode}}",
     "emptyTitle": "Todavía no hay episodios nuevos",
-    "emptyText": "Toca la campana en la página de una serie para recibir un aviso cuando salga un nuevo episodio.",
+    "emptyText": "Las series que sigues, que tienes en Mi lista o que estás viendo aparecen aquí cuando sale un nuevo episodio. Sigue una serie (la campana en su página) para recibir también un correo.",
     "browse": "Explorar series",
     "calendar": "Ver próximos episodios"
   },
