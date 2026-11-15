@@ -8,7 +8,8 @@ one at random ("Surprise me").
   -> {"items": [{...title, "minutes": 98}], "candidates": 412}
 
 time: "90" movies up to 95 min, "120" movies up to 130 min, "episode" shows whose episodes last
-up to 60 min, "any" both without a limit. mood: a set of genres (and some left out: no horror in
+up to 60 min, "any" both without a limit. mood: a title Claude tagged (reco/tags.py) fits when it
+was given that mood; one not tagged yet goes by a set of genres (and some left out: no horror in
 "feel-good"). Only titles people liked (enough votes, a decent rating), released, with a poster,
 within the profile's age limit, not watched / rated / turned down by it, not in `exclude` (what
 the app already showed: "Show me" again, "Another one").
@@ -67,7 +68,7 @@ def _seen(profile_id):
 def candidates(profile, time_key, mood_key):
     """[(Title, minutes)] that fit, most popular first (cached per age limit, time and mood: the
     genre filter can't use an index, ~0.5 s a query)."""
-    key = f"pick:v1:{profile_max_level(profile)}:{time_key}:{mood_key}"
+    key = f"pick:v2:{profile_max_level(profile)}:{time_key}:{mood_key}"
     out = cache.get(key)
     if out is None:
         out = _candidates(profile, time_key, mood_key)
@@ -85,12 +86,13 @@ def _candidates(profile, time_key, mood_key):
     )
     if mood_key in MOODS:
         wanted, unwanted = MOODS[mood_key]
-        q = Q()
+        by_genre = Q()
         for g in wanted:
-            q |= Q(genre__icontains=g)
-        qs = qs.filter(q)
+            by_genre |= Q(genre__icontains=g)
         for g in unwanted:
-            qs = qs.exclude(genre__icontains=g)
+            by_genre &= ~Q(genre__icontains=g)
+        untagged = Q(tags__isnull=True) | Q(tags__moods="")  # not tagged yet, or Claude declined
+        qs = qs.filter(Q(tags__moods__contains=f",{mood_key},") | (untagged & by_genre))
     if kinds == ["movie"]:
         qs = qs.filter(runtime_minutes__gte=MIN_MOVIE, runtime_minutes__lte=limit)
     titles = list(qs.only("id", "type", "title", "poster", "landscape_image", "release_year", "rating", "description",

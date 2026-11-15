@@ -310,3 +310,34 @@ class PageView(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["visitor", "created_at"])]
+
+
+# ---------- AI title tags (reco/tags.py, manage.py tag_titles) ----------
+# Mood, themes, pacing and content notes written by Claude from a title's TMDB data, once per title
+# (again only when that data changes). Used by "What to watch?" (moods) and build_embeddings (all).
+
+class TitleTags(models.Model):
+    title = models.OneToOneField(Title, on_delete=models.CASCADE, primary_key=True, related_name="tags")
+    moods = models.CharField(max_length=255, blank=True, default="")          # ",funny,feelgood," ("" = none / refused)
+    themes = models.JSONField(default=list, blank=True)                        # ["found family", "heist", ...]
+    pacing = models.CharField(max_length=8, blank=True, default="")            # slow / medium / fast
+    content_notes = models.CharField(max_length=255, blank=True, default="")   # ",violence,gore,"
+    source_hash = models.CharField(max_length=16, blank=True, default="")      # what was sent: retag when it changes
+    model_name = models.CharField(max_length=64, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def mood_list(self):
+        return [m for m in self.moods.split(",") if m]
+
+    def note_list(self):
+        return [n for n in self.content_notes.split(",") if n]
+
+
+class TagBatch(models.Model):
+    """A Message Batch sent to Claude: collected by a later tag_titles run (they take up to 24 h)."""
+    batch_id = models.CharField(max_length=64, unique=True)
+    model_name = models.CharField(max_length=64)
+    hashes = models.JSONField(default=dict)          # {"<title id>": "<source hash>"} as sent
+    created_at = models.DateTimeField(auto_now_add=True)
+    collected_at = models.DateTimeField(null=True, blank=True)
+    summary = models.CharField(max_length=255, blank=True, default="")
