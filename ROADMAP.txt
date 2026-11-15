@@ -277,7 +277,8 @@ Rule: AI runs from scheduled jobs (cron, Message Batches at half price) with a h
 much each processes; pages show what is already written. AI a user can trigger (a button, a chat)
 is allowed only behind caps (8.9) so visitors can never empty the credits: per user per day, per
 feature per day for the whole site, and the Console's monthly spend limit (Billing -> Limits) as
-the last safety net. Claude Haiku 5.5 by default. Target: under US$5 a month for everything.
+the last safety net. Claude Haiku 5.5 by default. HARD LIMIT: US$5 a month for all Claude use,
+background jobs included (the Console's limit set to US$5 too).
 TMDB first: whatever TMDB has (free, already synced: genres, keywords, overviews, episode
 summaries, age ratings, credits, translations, images) is taken from TMDB; Claude only adds what
 TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
@@ -286,7 +287,8 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
 [ ] 8.1 "Catch me up" written in the background (follows 7.11)
         Today a recap is written the first time someone presses the button (throttled, then kept).
         Instead: a nightly batch writes the recaps of the shows profiles are part way through
-        (their Continue watching), and the button only appears once one is ready.
+        (their Continue watching), and the button only appears once one is ready (within 8.9's
+        background budget): pressing it then never costs anything.
 [ ] 8.2 Daily check-up (cron, ~US$0.10 a month)
         Every morning: reads the admin dashboard's job runs (failed / slow), home snapshot builds,
         syncs, tag batches, disk space and the last log lines; emails the admin only when
@@ -313,23 +315,30 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         - TMDB's own "recommendations" and "similar" lists per title (append_to_response
           recommendations,similar): extra candidates for "More like this" next to the embeddings.
         - "alternative_titles": search finds a title by its other names (local release titles).
-[ ] 8.9 AI spending caps (needed before any new user-triggered AI)
+[ ] 8.9 AI spending caps: US$5 a month for everything (needed before any new user-triggered AI)
         - AiUsage: every Claude call records its feature, profile, tokens and cost (from the
-          response's usage, Haiku 5.5 prices), per day.
-        - One check before each user-triggered call (ai_budget_ok(feature, profile)):
-            per user per day   (e.g. recaps 10, chat 10 conversations),
-            per feature per day for the whole site (e.g. US$0.50 recaps, US$1 chat),
-            all AI per month   (e.g. US$5, under the Console's own limit).
-          A cap reached: the feature says "back tomorrow" and the rest of the site works as usual
-          (kept recaps, tags, genres); background jobs stop at their own limits.
-        - Caps in backend/.env (AI_DAILY_BUDGET_USD, AI_MONTHLY_BUDGET_USD, per feature), today's
-          and this month's spend per feature on the admin dashboard, an email at 80 %.
+          response's usage, Haiku 5.5 prices), per day; batches too, when collected.
+        - The budget (backend/.env, defaults below), checked before every call:
+            all AI, per month ............ US$5.00  hard stop for everything, jobs included
+            background jobs, per month ... US$1.00  tags of new titles ~0.25, check-up ~0.10,
+                                                    catalog pass ~0.20, translations / rows rest
+            "Catch me up", per day ....... US$0.05  (~50 new recaps a day; kept ones are free)
+                           per user ...... 3 new recaps a day
+            "Ask Taurus", per day ........ US$0.05  (~25 conversations a day)
+                          per user ....... 3 conversations a day
+          At most ~US$4 a month in a full month (1.00 + 1.50 + 1.50), under the US$5 stop.
+          First month: the catalog's first tagging (~US$4, 7.10) counts too, so the user features
+          get what's left; the tagging itself stops at the monthly stop and resumes next month.
+        - A cap reached: the feature says "back tomorrow" (or next month), the rest of the site
+          works as usual (kept recaps, tags, genres).
+        - This month's spend per feature on the admin dashboard, an email at 80 % of US$5.
         - "Catch me up" (7.11) moves behind it (today: 20 new recaps per user an hour, no site cap).
 [ ] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
         "something short and funny we haven't seen, the kids are here": Claude with the site's own
         actions as tools (search, the AI moods / themes, the profile's history and age limit, My
         List, follow a show, open the player), answers with 4-6 titles and why each fits.
         Remote: answers as cards + suggestion chips ("Shorter", "A show instead", "Surprise me"),
-        no typing needed on a TV. ~US$0.002 a conversation; 10 a day per user, a daily site cap.
+        no typing needed on a TV. ~US$0.002 a conversation; within 8.9's caps (3 a day per user,
+        US$0.05 a day for the site).
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
