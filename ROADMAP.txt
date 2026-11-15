@@ -270,3 +270,36 @@ Status: [ ] todo   [~] in progress   [x] done
         Refusals / errors aren't kept: "Try again". Remote: focus on Resume, Up reaches the text, Back
         closes and gives the focus back to the button (e2e/tests/recap.spec.js; recap seeded, no AI call).
         Backend: reco/recap.py. Needs ANTHROPIC_API_KEY (already set for 7.10).
+
+8. AI IN THE BACKGROUND (never triggered by a user)
+---------------------------------------------------
+Rule: every Claude call runs from a scheduled job (cron, Message Batches at half price) with a
+hard limit on how much it processes; pages only show what is already written. No chatbot, nothing
+a visitor can press to spend credits. Claude Haiku 5.5 by default; the Console's monthly spend
+limit (Billing -> Limits) is the safety net. Target: under US$5 a month for everything.
+
+[ ] 8.1 "Catch me up" written in the background (follows 7.11)
+        Today a recap is written the first time someone presses the button (throttled, then kept).
+        Instead: a nightly batch writes the recaps of the shows profiles are part way through
+        (their Continue watching), and the button only appears once one is ready.
+[ ] 8.2 Daily check-up (cron, ~US$0.10 a month)
+        Every morning: reads the admin dashboard's job runs (failed / slow), home snapshot builds,
+        syncs, tag batches, disk space and the last log lines; emails the admin only when
+        something is wrong: what broke, the likely cause, the command to fix it.
+[ ] 8.3 Catalog quality pass (weekly batch, ~US$0.20 a month)
+        Finds likely duplicates, missing posters / overviews, odd age ratings (a horror film rated
+        G), titles in the wrong genre; fixes the safe ones with the existing commands (clean_db...),
+        lists the rest on the admin dashboard to approve.
+[ ] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
+        "Violence · Strong language · Frightening scenes" under the genres; remote-only e2e test.
+[ ] 8.5 Rows named by AI (weekly batch)
+        Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
+        Nordic crime", "90s heist comedies") once per group, show them as home rows.
+[ ] 8.6 Missing translations (batch)
+        Overviews TMDB lacks in Bengali, Urdu, Hindi...: translated from English into
+        TitleTranslation, marked as machine translated.
+[ ] 8.7 Did the AI tags help? (no AI cost)
+        Compare how often a /pick suggestion is played before and after 7.10 (TitleImpression /
+        TitleAction), and "More like this" clicks before / after the embeddings rebuild.
+Development (free: done in Claude Code on the current plan, no API credits): code review before
+merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.

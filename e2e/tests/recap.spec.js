@@ -67,6 +67,11 @@ test('catch me up on a show, then resume it', async ({ page }) => {
   await remote(page, 'OK');
   await expect(dialog).toContainText('a chemistry teacher');
   await expect.poll(() => focused(page)).toBe('BUTTON Resume S2 E2');
+  // the player saves the play: wait for it, then leave, so the cleanup comes after it (it used to
+  // land after the cleanup on CI and leave Alex with "Resume" on the home banner for later tests)
+  const played = page.waitForResponse((r) => r.url().includes('/api/watch-progress/') && r.request().method() === 'POST' && r.ok());
   await remote(page, 'OK');
   await expect(page).toHaveURL(new RegExp(`/watch/${show}\\?season=2&episode=2$`));
+  await played;
+  await page.goto('about:blank'); // no more progress from the player
 });
