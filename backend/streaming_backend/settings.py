@@ -124,6 +124,7 @@ REST_FRAMEWORK = {
         "auth": env("THROTTLE_AUTH_RATE", default="10/min"),
         "password_reset": env("THROTTLE_PASSWORD_RESET_RATE", default="5/hour"),
         "import": env("THROTTLE_IMPORT_RATE", default="20/hour"),  # history imports (reco/imports.py)
+        "recap": env("THROTTLE_RECAP_RATE", default="20/hour"),  # recaps Claude writes (reco/recap.py), kept ones are free
         "visit": env("THROTTLE_VISIT_RATE", default="120/min"),  # page views / pings (reco/visits.py)
     },
     # nginx sits in front: take the client IP from the last X-Forwarded-For hop

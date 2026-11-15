@@ -116,6 +116,16 @@
     "noEpisodesTitle": "暂无剧集",
     "noEpisodesText": "本季暂时没有可观看的剧集。"
   },
+  "recap": {
+    "button": "前情提要",
+    "title": "前情提要",
+    "scope": "第 {{season}} 季第 {{episode}} 集之前的全部内容：无剧透。",
+    "loading": "正在撰写前情提要…",
+    "error": "暂时无法生成前情提要，请稍后再试。",
+    "retry": "重试",
+    "resume": "继续观看 S{{season}} E{{episode}}",
+    "note": "由 AI 根据剧集简介撰写：细节可能有误。"
+  },
   "notifications": {
     "title": "通知",
     "subtitle": "你关注的剧集的新剧集",

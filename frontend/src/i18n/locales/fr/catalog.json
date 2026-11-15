@@ -118,6 +118,16 @@
     "noEpisodesTitle": "Pas encore d'épisodes",
     "noEpisodesText": "Aucun épisode n'est encore disponible pour cette saison."
   },
+  "recap": {
+    "button": "Me remettre à jour",
+    "title": "Pour vous remettre à jour",
+    "scope": "Tout ce qui précède la saison {{season}}, épisode {{episode}} : aucun spoiler.",
+    "loading": "Rédaction du résumé…",
+    "error": "Le résumé ne peut pas être rédigé pour le moment. Réessayez dans un instant.",
+    "retry": "Réessayer",
+    "resume": "Reprendre S{{season}} É{{episode}}",
+    "note": "Rédigé par une IA à partir des résumés des épisodes : certains détails peuvent être inexacts."
+  },
   "notifications": {
     "title": "Notifications",
     "subtitle": "Nouveaux épisodes des séries que vous suivez",

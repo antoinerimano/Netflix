@@ -260,3 +260,13 @@ Status: [ ] todo   [~] in progress   [x] done
         text each title is encoded from ("More like this", "Because you watched", search).
         Needs ANTHROPIC_API_KEY in backend/.env. Backend: reco/tags.py, TitleTags, TagBatch.
         Next: content notes on title pages.
+[x] 7.11 "Catch me up" on show pages (AI recaps, no spoilers)
+        Shown when the profile is past the first episode (Continue watching or history, the furthest):
+        "Catch me up" beside Watch opens a dialog with a recap of every episode BEFORE the one it
+        resumes at, written by Claude (Haiku 5.5) from the episodes' TMDB summaries in the profile's
+        language (older seasons in brief, the last two episode by episode), then "Resume S2 E4".
+        Written once per show + episode + language and kept (ShowRecap): about US$0.001 and ~10 s the
+        first time, instant after. 20 new recaps per user an hour (THROTTLE_RECAP_RATE); kept ones free.
+        Refusals / errors aren't kept: "Try again". Remote: focus on Resume, Up reaches the text, Back
+        closes and gives the focus back to the button (e2e/tests/recap.spec.js; recap seeded, no AI call).
+        Backend: reco/recap.py. Needs ANTHROPIC_API_KEY (already set for 7.10).

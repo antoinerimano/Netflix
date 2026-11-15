@@ -116,6 +116,16 @@
     "noEpisodesTitle": "エピソードはまだありません",
     "noEpisodesText": "このシーズンで視聴できるエピソードはまだありません。"
   },
+  "recap": {
+    "button": "これまでのあらすじ",
+    "title": "これまでのあらすじ",
+    "scope": "シーズン{{season}} 第{{episode}}話より前のすべて：ネタバレなし。",
+    "loading": "あらすじを作成中…",
+    "error": "現在あらすじを作成できません。しばらくしてからもう一度お試しください。",
+    "retry": "再試行",
+    "resume": "S{{season}} E{{episode}}から再開",
+    "note": "エピソードの概要からAIが作成：細部が正しくない場合があります。"
+  },
   "notifications": {
     "title": "お知らせ",
     "subtitle": "フォロー中のシリーズの新しいエピソード",

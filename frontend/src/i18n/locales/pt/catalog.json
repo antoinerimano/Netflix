@@ -118,6 +118,16 @@
     "noEpisodesTitle": "Ainda sem episódios",
     "noEpisodesText": "Esta temporada ainda não tem episódios disponíveis."
   },
+  "recap": {
+    "button": "Me atualize",
+    "title": "Para você se atualizar",
+    "scope": "Tudo antes da temporada {{season}}, episódio {{episode}}: sem spoilers.",
+    "loading": "Escrevendo seu resumo…",
+    "error": "Não é possível escrever o resumo agora. Tente de novo em instantes.",
+    "retry": "Tentar de novo",
+    "resume": "Continuar T{{season}} E{{episode}}",
+    "note": "Escrito por IA a partir das sinopses dos episódios: alguns detalhes podem estar errados."
+  },
   "notifications": {
     "title": "Notificações",
     "subtitle": "Novos episódios das séries que você acompanha",

@@ -118,6 +118,16 @@
     "noEpisodesTitle": "Ancora nessun episodio",
     "noEpisodesText": "Questa stagione non ha ancora episodi disponibili."
   },
+  "recap": {
+    "button": "Riassumimi la storia",
+    "title": "Riassunto",
+    "scope": "Tutto ciò che precede la stagione {{season}}, episodio {{episode}}: niente spoiler.",
+    "loading": "Sto scrivendo il riassunto…",
+    "error": "Al momento non è possibile scrivere il riassunto. Riprova tra poco.",
+    "retry": "Riprova",
+    "resume": "Riprendi S{{season}} E{{episode}}",
+    "note": "Scritto dall'IA a partire dalle trame degli episodi: alcuni dettagli potrebbero essere imprecisi."
+  },
   "notifications": {
     "title": "Notifiche",
     "subtitle": "Nuovi episodi delle serie che segui",
