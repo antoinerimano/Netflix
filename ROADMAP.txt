@@ -271,12 +271,13 @@ Status: [ ] todo   [~] in progress   [x] done
         closes and gives the focus back to the button (e2e/tests/recap.spec.js; recap seeded, no AI call).
         Backend: reco/recap.py. Needs ANTHROPIC_API_KEY (already set for 7.10).
 
-8. AI IN THE BACKGROUND (never triggered by a user)
----------------------------------------------------
-Rule: every Claude call runs from a scheduled job (cron, Message Batches at half price) with a
-hard limit on how much it processes; pages only show what is already written. No chatbot, nothing
-a visitor can press to spend credits. Claude Haiku 5.5 by default; the Console's monthly spend
-limit (Billing -> Limits) is the safety net. Target: under US$5 a month for everything.
+8. AI: BACKGROUND FIRST, USER-TRIGGERED ONLY WITH CAPS
+------------------------------------------------------
+Rule: AI runs from scheduled jobs (cron, Message Batches at half price) with a hard limit on how
+much each processes; pages show what is already written. AI a user can trigger (a button, a chat)
+is allowed only behind caps (8.9) so visitors can never empty the credits: per user per day, per
+feature per day for the whole site, and the Console's monthly spend limit (Billing -> Limits) as
+the last safety net. Claude Haiku 5.5 by default. Target: under US$5 a month for everything.
 TMDB first: whatever TMDB has (free, already synced: genres, keywords, overviews, episode
 summaries, age ratings, credits, translations, images) is taken from TMDB; Claude only adds what
 TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
@@ -312,5 +313,23 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         - TMDB's own "recommendations" and "similar" lists per title (append_to_response
           recommendations,similar): extra candidates for "More like this" next to the embeddings.
         - "alternative_titles": search finds a title by its other names (local release titles).
+[ ] 8.9 AI spending caps (needed before any new user-triggered AI)
+        - AiUsage: every Claude call records its feature, profile, tokens and cost (from the
+          response's usage, Haiku 5.5 prices), per day.
+        - One check before each user-triggered call (ai_budget_ok(feature, profile)):
+            per user per day   (e.g. recaps 10, chat 10 conversations),
+            per feature per day for the whole site (e.g. US$0.50 recaps, US$1 chat),
+            all AI per month   (e.g. US$5, under the Console's own limit).
+          A cap reached: the feature says "back tomorrow" and the rest of the site works as usual
+          (kept recaps, tags, genres); background jobs stop at their own limits.
+        - Caps in backend/.env (AI_DAILY_BUDGET_USD, AI_MONTHLY_BUDGET_USD, per feature), today's
+          and this month's spend per feature on the admin dashboard, an email at 80 %.
+        - "Catch me up" (7.11) moves behind it (today: 20 new recaps per user an hour, no site cap).
+[ ] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
+        "something short and funny we haven't seen, the kids are here": Claude with the site's own
+        actions as tools (search, the AI moods / themes, the profile's history and age limit, My
+        List, follow a show, open the player), answers with 4-6 titles and why each fits.
+        Remote: answers as cards + suggestion chips ("Shorter", "A show instead", "Surprise me"),
+        no typing needed on a TV. ~US$0.002 a conversation; 10 a day per user, a daily site cap.
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
