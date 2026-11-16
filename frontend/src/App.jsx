@@ -25,6 +25,7 @@ const CollectionPage = lazy(() => import('./components/collection/CollectionPage
 const ListPage = lazy(() => import('./components/lists/ListPage'));
 const PublicListPage = lazy(() => import('./components/lists/PublicListPage'));
 const PickPage = lazy(() => import('./components/pick/PickPage'));
+const AskPage = lazy(() => import('./components/ask/AskPage'));
 const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordReset'));
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const WatchPage = lazy(() => import('./components/WatchPage'));
@@ -183,6 +184,15 @@ function App() {
           element={
             <ProtectedRoute>
               <PickPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* "Ask Taurus": say what you feel like watching (reco/ask.py) */}
+        <Route
+          path="/ask"
+          element={
+            <ProtectedRoute>
+              <AskPage />
             </ProtectedRoute>
           }
         />

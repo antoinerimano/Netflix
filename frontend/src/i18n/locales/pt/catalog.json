@@ -410,5 +410,25 @@
       "thoughtful": "Para pensar",
       "romantic": "Romântico"
     }
+  },
+  "ask": {
+    "title": "Pergunte ao Taurus",
+    "subtitle": "Diga o que você está a fim de assistir: eu escolho no catálogo.",
+    "startersLabel": "Para começar",
+    "followUps": "Depois",
+    "placeholder": "Algo engraçado e curto, uma série para maratonar…",
+    "inputLabel": "O que você quer assistir?",
+    "send": "Perguntar",
+    "thinking": "Procurando no catálogo…",
+    "error": "O Taurus não pode responder agora. Tente de novo em instantes.",
+    "limit": "O Taurus está descansando hoje. Volte amanhã.",
+    "startOver": "Recomeçar",
+    "note": "Sugestões por IA, só do catálogo e dentro do limite de idade do seu perfil.",
+    "starters": {
+      "funny": "Algo engraçado hoje",
+      "scary": "Um filme de terror curto",
+      "series": "Uma série para maratonar",
+      "feelgood": "Algo aconchegante"
+    }
   }
 }

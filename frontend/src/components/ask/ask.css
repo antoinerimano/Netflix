@@ -1,0 +1,49 @@
+/* "Ask Taurus" (AskPage.jsx): the rest comes from pick.css (cards, chip rows, page layout) */
+.ask-turn {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+.ask-turn__question {
+  justify-self: end;
+  max-width: min(36rem, 90%);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-glass);
+  color: var(--color-text);
+}
+.ask-turn__reply {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.ask-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  color: var(--color-text-secondary);
+}
+.ask-error {
+  margin: var(--space-6) 0 0;
+}
+.ask-chips {
+  margin-top: var(--space-6);
+}
+.ask-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.ask-form__input {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.ask-note {
+  margin-top: var(--space-6);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}

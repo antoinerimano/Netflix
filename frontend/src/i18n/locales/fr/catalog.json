@@ -410,5 +410,25 @@
       "thoughtful": "Qui fait réfléchir",
       "romantic": "Romantique"
     }
+  },
+  "ask": {
+    "title": "Demander à Taurus",
+    "subtitle": "Dites ce que vous avez envie de regarder : je choisis dans le catalogue.",
+    "startersLabel": "Pour commencer",
+    "followUps": "Ensuite",
+    "placeholder": "Quelque chose de drôle et court, une série à dévorer…",
+    "inputLabel": "Qu'avez-vous envie de regarder ?",
+    "send": "Demander",
+    "thinking": "Je parcours le catalogue…",
+    "error": "Taurus ne peut pas répondre pour le moment. Réessayez dans un instant.",
+    "limit": "Taurus se repose pour aujourd'hui. Revenez demain.",
+    "startOver": "Recommencer",
+    "note": "Suggestions par IA, uniquement dans le catalogue et selon la limite d'âge de votre profil.",
+    "starters": {
+      "funny": "Quelque chose de drôle ce soir",
+      "scary": "Un film d'horreur court",
+      "series": "Une série à dévorer",
+      "feelgood": "Quelque chose de réconfortant"
+    }
   }
 }

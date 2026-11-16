@@ -398,5 +398,25 @@
       "thoughtful": "Nachdenklich",
       "romantic": "Romantisch"
     }
+  },
+  "ask": {
+    "title": "Frag Taurus",
+    "subtitle": "Sag, worauf du Lust hast: Ich suche im Katalog aus.",
+    "startersLabel": "Zum Start",
+    "followUps": "Weiter",
+    "placeholder": "Etwas Lustiges und Kurzes, eine Serie zum Durchschauen…",
+    "inputLabel": "Worauf hast du Lust?",
+    "send": "Fragen",
+    "thinking": "Ich durchsuche den Katalog…",
+    "error": "Taurus kann gerade nicht antworten. Versuch es gleich noch einmal.",
+    "limit": "Taurus macht für heute Pause. Komm morgen wieder.",
+    "startOver": "Neu anfangen",
+    "note": "Vorschläge von KI, nur aus dem Katalog und innerhalb der Altersgrenze deines Profils.",
+    "starters": {
+      "funny": "Etwas Lustiges heute Abend",
+      "scary": "Ein kurzer Horrorfilm",
+      "series": "Eine Serie zum Durchschauen",
+      "feelgood": "Etwas Wohltuendes"
+    }
   }
 }

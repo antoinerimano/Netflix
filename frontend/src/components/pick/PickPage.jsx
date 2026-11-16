@@ -12,7 +12,7 @@ import Footer from '../Footer';
 import { fetchPicks } from '../../api/recoApi';
 import { logImpressions, logTitleClick } from '../../api/analyticsApi';
 import { Button, Chip, EmptyState, Skeleton, friendlyError } from '../../design';
-import { DiceIcon, InfoIcon, PlayIcon } from '../../design/icons';
+import { DiceIcon, InfoIcon, PlayIcon, WandIcon } from '../../design/icons';
 import { formatRuntime } from '../../i18n/format';
 import { IMG, tmdbBackground, tmdbImage } from '../../utils/tmdbImage';
 import '../PosterCard.css';
@@ -180,6 +180,10 @@ export default function PickPage() {
           </Button>
           <Button variant="glass" icon={<DiceIcon />} loading={loading === 'surprise' && result?.mode !== 'surprise'} onClick={() => go('surprise')}>
             {t('pick.surprise')}
+          </Button>
+          {/* say it in your own words instead (reco/ask.py) */}
+          <Button variant="glass" icon={<WandIcon />} onClick={() => navigate('/ask')}>
+            {t('ask.title')}
           </Button>
         </div>
         {body}

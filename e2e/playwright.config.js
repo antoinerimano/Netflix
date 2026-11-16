@@ -46,6 +46,7 @@ module.exports = defineConfig({
         THROTTLE_PASSWORD_RESET_RATE: '1000/hour',
         THROTTLE_VISIT_RATE: '10000/min',
         EMAIL_BACKEND: 'django.core.mail.backends.locmem.EmailBackend',
+        AI_FAKE: '1', // AI features answer from a scripted fake (reco/ask_fake.py): never the API
         PYTHONIOENCODING: 'utf-8',
       },
     },

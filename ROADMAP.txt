@@ -437,12 +437,20 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
           works as usual (kept recaps, tags, genres).
         - This month's spend per feature on the admin dashboard, an email at 80 % of US$5.
         - "Catch me up" (7.11) moves behind it (was: 20 new recaps per user an hour, no site cap).
-[ ] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
-        "something short and funny we haven't seen, the kids are here": Claude with the site's own
-        actions as tools (search, the AI moods / themes, the profile's history and age limit, My
-        List, follow a show, open the player), answers with 4-6 titles and why each fits.
-        Remote: answers as cards + suggestion chips ("Shorter", "A show instead", "Surprise me"),
-        no typing needed on a TV. ~US$0.002 a conversation; within 8.9's caps (3 a day per user,
-        US$0.05 a day for the site).
+[x] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
+        /ask ("Ask Taurus" on "What to watch?"): say what you feel like watching (4 starters, the
+        last answer's 3 follow-ups, or a typed message), get 4-6 titles + a short reply in the
+        profile's language. Backend reco/ask.py: Claude Haiku 5.5 with ONE read-only tool,
+        find_titles (the catalog within the profile's age limit, without what it watched / rated /
+        turned down; moods from the AI tags, genres, kind, length, years, free text, "like X";
+        ranked for the profile like the home page), up to 3 searches, then a JSON answer
+        (structured output). Only ids a search returned can be shown; others are dropped. Leaner
+        than planned: no actions (My List, follow, play) for the AI: the viewer does them on the
+        cards. History: the app sends the last turns back, nothing is stored.
+        Measured: ~US$0.0005 a message (3,500 tokens in, 360 out). Caps (8.9): 12 messages a day per
+        user (~3 conversations), US$0.05 a day for the site (~90 messages), then "come back
+        tomorrow". Logged as shown "ask" / clicked surface "ask" (8.7's report can add it).
+        Tests: reco/test_ask.py (13), AskPage.test.jsx (5), e2e/tests/ask.spec.js (remote only,
+        scripted fake: settings.AI_FAKE in the e2e servers, reco/ask_fake.py, never the API).
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
