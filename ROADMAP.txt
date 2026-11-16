@@ -452,5 +452,10 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         tomorrow". Logged as shown "ask" / clicked surface "ask" (8.7's report can add it).
         Tests: reco/test_ask.py (13), AskPage.test.jsx (5), e2e/tests/ask.spec.js (remote only,
         scripted fake: settings.AI_FAKE in the e2e servers, reco/ask_fake.py, never the API).
+        In the menu bar and the phone tab bar ("Ask", full name for screen readers / tooltip): it
+        was only reachable through "What to watch?", itself behind the home banner's dice icon. 6
+        tabs: the tab grid follows the number of links, a touch smaller text under 360px; 901-1199px:
+        the search field narrower at rest (it widens when used). Checked at 320 / 390 / 768 / 1024 /
+        1280 / 1920px in English and French: no scroll, no cut label, no link under the search.
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.

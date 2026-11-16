@@ -77,6 +77,8 @@
     "signOut": "退出登录",
     "signIn": "登录",
     "upcoming": "即将播出",
+    "ask": "问问 Taurus",
+    "askShort": "提问",
     "history": "观看记录",
     "stats": "年度回顾"
   }

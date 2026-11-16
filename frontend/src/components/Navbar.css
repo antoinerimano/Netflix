@@ -461,7 +461,8 @@
     bottom: 0;
     z-index: var(--z-nav);
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-auto-flow: column; /* one column per tab, however many (6 with Ask) */
+    grid-auto-columns: minmax(0, 1fr);
     height: calc(4rem + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     border-top: 1px solid var(--color-border-subtle);
@@ -569,4 +570,19 @@
 }
 .navbar__search-toggle[aria-current="page"] {
   color: var(--color-brand);
+}
+
+/* 6 tabs on the smallest phones (320px: ~53px each): a touch smaller so "Upcoming" fits */
+@media (max-width: 359px) {
+  .tabbar__item {
+    font-size: 0.625rem;
+  }
+}
+
+/* small laptops / tablets in landscape (901-1199px): 6 links + the search field are tight, so the
+   field is narrower at rest (it still widens over its neighbours once used, see :focus-within) */
+@media (min-width: 901px) and (max-width: 1199px) {
+  .search-profile {
+    width: clamp(150px, 15vw, 200px);
+  }
 }

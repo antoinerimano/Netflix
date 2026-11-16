@@ -77,6 +77,8 @@
     "signOut": "Sign out",
     "signIn": "Sign in",
     "upcoming": "Upcoming",
+    "ask": "Ask Taurus",
+    "askShort": "Ask",
     "history": "Watch history",
     "stats": "Your year in review"
   }

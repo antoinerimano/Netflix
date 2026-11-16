@@ -13,7 +13,7 @@ import { setActiveProfile } from '../utils/activeProfile';
 import { useInstallApp } from '../pwa/installPrompt';
 import { tmdbImage, tmdbSrcSet } from '../utils/tmdbImage';
 import {
-  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, CalendarIcon, SearchIcon, ShareIcon, CheckIcon,
+  HomeIcon, FilmIcon, TvIcon, BookmarkIcon, CalendarIcon, WandIcon, SearchIcon, ShareIcon, CheckIcon,
 } from '../design/icons';
 
 const SITE_URL = 'https://tauruss.top/';
@@ -194,6 +194,7 @@ const Navbar = () => {
   const handleNavigateTV = () => navigate('/tv');
   const handleNavigateList = () => navigate('/list');
   const handleNavigateCalendar = () => navigate('/calendar');
+  const handleNavigateAsk = () => navigate('/ask');
   const handleLogin = () => navigate('/login');
   const toggleProfileDropdown = () => setIsProfileDropdownOpen((v) => !v);
 
@@ -236,6 +237,9 @@ const Navbar = () => {
     { path: '/tv', label: t('nav.tv'), icon: <TvIcon />, onClick: handleNavigateTV },
     { path: '/list', label: t('nav.myList'), icon: <BookmarkIcon />, onClick: handleNavigateList },
     { path: '/calendar', label: t('nav.upcoming'), icon: <CalendarIcon />, onClick: handleNavigateCalendar },
+    // "Ask Taurus" (reco/ask.py): shown as its short label ("Ask") in the bar and the phone tabs
+    // (the full one did not fit at 1024px, nor in French), full name for screen readers / tooltip
+    { path: '/ask', label: t('nav.ask'), short: t('nav.askShort'), icon: <WandIcon />, onClick: handleNavigateAsk },
   ];
 
   return (
@@ -258,8 +262,9 @@ const Navbar = () => {
       {/* desktop / TV: links in the bar (phones: the tab bar at the bottom) */}
       <ul className="nav-links">
         {links.map((l) => (
-          <li key={l.path} tabIndex={0} role="button" aria-current={current(l.path)} onClick={l.onClick}>
-            {l.label}
+          <li key={l.path} tabIndex={0} role="button" aria-current={current(l.path)} onClick={l.onClick}
+            aria-label={l.short ? l.label : undefined} title={l.short ? l.label : undefined}>
+            {l.short || l.label}
           </li>
         ))}
       </ul>
@@ -435,11 +440,12 @@ const Navbar = () => {
             key={l.path}
             type="button"
             className="tabbar__item"
+            aria-label={l.short ? l.label : undefined}
             aria-current={current(l.path)}
             onClick={l.onClick}
           >
             {l.icon}
-            <span>{l.label}</span>
+            <span>{l.short || l.label}</span>
           </button>
         ))}
       </nav>
