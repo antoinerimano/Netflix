@@ -353,10 +353,24 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         tags loaded in the same query: still 5 queries a page). Tests: reco/test_tags.py
         (ContentNotesApiTests), DetailHero.test.jsx, e2e/tests/content-notes.spec.js (remote only,
         French), and RecapButton.test.jsx (the recap button had no unit test).
-[ ] 8.5 Rows named by AI (weekly batch)
-        Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
-        Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
-        and its AI moods, show them as home rows.
+[~] 8.5 Rows named by AI (POSTPONED 2026-11-16: too few active viewers to be worth it yet)
+        Measured in production: 1,654 profiles but 35 active in 30 days; likes almost unused (4
+        profiles with 5+); 165 profiles ever watched 5+ titles. The home page already has many
+        personal rows (For you, Because you watched, More <genre>, Starring, Based on <keyword>,
+        studio, country, hidden gems...): a theme row would be one more angle for ~35 people, and
+        its effect couldn't be measured at that traffic.
+        When to pick it up: more active viewers (a few hundred a month), and/or 8.7's A/B test
+        showing that AI-tag moods get more plays than genres.
+        The cheap plan for then (not per profile: names would change at every rebuild):
+        - weekly, after build_embeddings: group the well-known titles (300+ votes, ~12,000) into
+          ~150 themes (k-means on the embeddings, scikit-learn is already installed);
+        - Claude names each theme once from its titles' TMDB genres / keywords / years and AI moods
+          ("Slow-burn Nordic crime"), in English + the languages profiles use (one JSON answer per
+          theme, ~US$0.02 in all); a theme keeps its name while its titles barely change, so later
+          weeks rename only the few that moved (~US$0);
+        - per profile: the 1-2 themes closest to its taste vector (_build_profile_vector) with
+          enough unseen titles, as a row "theme:<id>" ranked like the others, worded by the app;
+        - remote-only e2e test, and logged like 8.7 so its plays can be compared.
 [x] 8.6 Missing translations (batch, the lean way)
         Measured first (2026-11-16): profiles are en 1,579 / es 46 / fr 20 / de 7 / zh 2; the big TMDB
         gaps (ja, hi, ar, bn, ur: ~48,000 overviews, ~US$6) are in languages no profile uses, while the
