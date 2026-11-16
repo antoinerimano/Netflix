@@ -350,10 +350,17 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
         Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
         and its AI moods, show them as home rows.
-[ ] 8.6 Missing translations (batch)
-        TMDB first (sync_tmdb_translations, every 3 hours); only overviews TMDB still lacks in a
-        language (often Bengali, Urdu, Hindi) are translated from English into TitleTranslation,
-        marked as machine translated, and replaced when TMDB gets a real one.
+[x] 8.6 Missing translations (batch, the lean way)
+        Measured first (2026-11-16): profiles are en 1,579 / es 46 / fr 20 / de 7 / zh 2; the big TMDB
+        gaps (ja, hi, ar, bn, ur: ~48,000 overviews, ~US$6) are in languages no profile uses, while the
+        used ones miss ~540 among well-known titles (~US$0.07 once). So manage.py translate_titles
+        (users/ai_translate.py, cron 03:30) translates only into languages at least one profile uses
+        (a profile switching language starts it on that one), well-known titles only (300+ votes),
+        most popular first, as Message Batches within tonight's share of the jobs' budget
+        (ai_budget.jobs_daily_allowance, feature "translate"). TitleTranslation.machine_translated;
+        sync_tmdb_translations keeps Claude's overview while TMDB has none, replaces it with TMDB's
+        as soon as TMDB has one; a TMDB text arriving meanwhile wins at collection too.
+        Tests: users/test_ai_translate.py (10).
 [x] 8.7 Did the AI tags help? (no AI cost)
         Nothing was recorded before (/pick logged nothing, "More like this" only clicks), so there is
         no "before" to compare with: the app now records, and the halves are compared side by side.

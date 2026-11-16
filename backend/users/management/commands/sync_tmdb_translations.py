@@ -168,7 +168,22 @@ class Command(BaseCommand):
         model.objects.bulk_create(rows, update_conflicts=True, update_fields=fields, **target)
 
     def _save_titles(self, rows):
-        self._upsert(TitleTranslation, rows, ["title", "language"], ["name", "overview", "tagline", "synced_at"])
+        # TMDB still has no overview in that language: keep the one Claude translated
+        # (translate_titles); TMDB has one: it replaces Claude's (machine_translated back to False)
+        empty = [r for r in rows if not r.overview]
+        if empty:
+            kept = {
+                (tid, lang): text
+                for tid, lang, text in TitleTranslation.objects.filter(
+                    machine_translated=True, title_id__in={r.title_id for r in empty}
+                ).values_list("title_id", "language", "overview")
+            }
+            for r in empty:
+                text = kept.get((r.title_id, r.language))
+                if text:
+                    r.overview, r.machine_translated = text, True
+        self._upsert(TitleTranslation, rows, ["title", "language"],
+                     ["name", "overview", "tagline", "synced_at", "machine_translated"])
 
     def _save_episodes(self, rows):
         self._upsert(EpisodeTranslation, rows, ["episode", "language"], ["name", "overview", "synced_at"])
