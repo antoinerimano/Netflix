@@ -171,6 +171,15 @@ class CheckupTests(TestCase):
         self.run_cmd("--no-ai")
         self.assertEqual(mail.outbox[0].subject, "Check-up: 2 problems on the site")
 
+    def test_old_failure_not_repeated(self):
+        """A failure is reported the morning after, not every day until the job runs again (a
+        weekly job killed by a deploy alerted for a week, 2026-11-15)."""
+        run = JobRun.objects.create(name="clean_db", ok=False, error="killed by a deploy")
+        JobRun.objects.filter(id=run.id).update(finished_at=timezone.now() - timedelta(hours=10))
+        self.assertEqual(self.kinds(), ["job_failed"])  # this morning: reported
+        JobRun.objects.filter(id=run.id).update(finished_at=timezone.now() - timedelta(hours=30))
+        self.assertEqual(self.kinds(), [])  # tomorrow: not again
+
 
 class EveryTests(TestCase):
     def test_words(self):
@@ -179,3 +188,4 @@ class EveryTests(TestCase):
         self.assertEqual(checkup.every(timedelta(hours=30)), "30 hours")
         self.assertEqual(checkup.every(timedelta(days=1)), "day")
         self.assertEqual(checkup.every(timedelta(days=35)), "35 days")
+

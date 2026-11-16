@@ -294,6 +294,14 @@ Status: [ ] todo   [~] in progress   [x] done
         preload helper inside the bundle, so a lazy page (sign up) stayed blank ("reading 'href'" of
         undefined); random per build (production happened to be fine). vite.config.mjs now puts the
         helper in preload-helper-*.js, which obfuscate.js leaves as is (public Vite code).
+[x] 7.15 Deploys no longer kill running jobs
+        A deploy restarts the backend container, which killed the job running in it: on 2026-11-15
+        the weekly clean_db stopped at 61,200 / 106,102 (the daily check-up found it). The deploy
+        now runs scripts/deploy.sh: it takes every cron job's /tmp/*.lock first, so a running job
+        finishes (up to 20 min), a job due meanwhile skips this once; still busy after 20 min:
+        nothing restarted, the deploy says which job and can be re-run. Checked on the server
+        (--locks-only): free -> goes on; busy too long -> stops untouched; ends in time -> waits.
+        The check-up reports a failed job once (the morning after), not daily until its next run.
 
 8. AI: BACKGROUND FIRST, USER-TRIGGERED ONLY WITH CAPS
 ------------------------------------------------------

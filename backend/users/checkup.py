@@ -4,7 +4,8 @@ The daily check-up (manage.py daily_checkup, roadmap 8.2): is anything wrong wit
 jobs and server? An email to staff only when something is.
 
 1. find_problems(): plain checks, no AI, nothing paid:
-   - a scheduled job (dashboard JOBS) that failed, is late, or has been "running" for hours;
+   - a scheduled job (dashboard JOBS) that failed (reported the day it failed, not every day after),
+     is late, or has been "running" for hours;
    - home pages that failed to build, or none rebuilt for 12 hours;
    - an AI tag batch still not collected after 26 hours (batches end within 24);
    - the disk under 10 % or 5 GB free;
@@ -27,6 +28,8 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-5-5"
 STUCK_AFTER = timedelta(hours=6)          # a job "running" this long was killed or hangs
+FAILED_REPORTED_FOR = timedelta(hours=26) # a failure is reported once (the morning after), not every
+                                          # day until the job's next run (weekly jobs: a week of alerts)
 SNAPSHOTS_STALE = timedelta(hours=12)     # home pages are rebuilt every 2 hours
 TAG_BATCH_LATE = timedelta(hours=26)      # a Message Batch ends within 24 hours
 DISK_MIN_FREE_PCT = 10
@@ -85,7 +88,7 @@ def find_problems(now=None):
     for j in _jobs(now):
         last, name = j["last"], j["name"]
         fix = FIX_COMMANDS.get(name, f"{_EXEC} {name}")
-        if j["state"] == "failed":
+        if j["state"] == "failed" and now - (last.finished_at or last.started_at) <= FAILED_REPORTED_FOR:
             problems.append({"kind": "job_failed", "what": f"{labels[name]} ({name}) failed",
                              "detail": (last.error or last.summary or "")[-800:], "fix": fix})
         elif j["state"] == "running" and now - last.started_at > STUCK_AFTER:
