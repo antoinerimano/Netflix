@@ -333,6 +333,17 @@ class TitleTags(models.Model):
         return [n for n in self.content_notes.split(",") if n]
 
 
+class RecapBatch(models.Model):
+    """A Message Batch of "Catch me up" recaps written ahead (manage.py write_recaps), collected by a
+    later run."""
+    batch_id = models.CharField(max_length=64, unique=True)
+    model_name = models.CharField(max_length=64)
+    targets = models.JSONField(default=dict)         # {"<custom id>": [title id, season, episode, language]}
+    created_at = models.DateTimeField(auto_now_add=True)
+    collected_at = models.DateTimeField(null=True, blank=True)
+    summary = models.CharField(max_length=255, blank=True, default="")
+
+
 class TagBatch(models.Model):
     """A Message Batch sent to Claude: collected by a later tag_titles run (they take up to 24 h)."""
     batch_id = models.CharField(max_length=64, unique=True)

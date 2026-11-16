@@ -119,28 +119,48 @@ def _client():
     return anthropic.Anthropic(timeout=60.0, max_retries=1)
 
 
-def write_recap(title, season, episode, language, profile=None):
-    """Claude's recap text, "" when it declined or can't be reached. What it cost is recorded."""
+def profile_language(profile):
+    """The app language a profile's recaps are written in ("en" when unknown)."""
+    language = (profile.language_preference or "en").split("-")[0].lower()
+    return language if language in LANGUAGE_NAMES else "en"
+
+
+def request_params(title, season, episode, language):
+    """Messages API params for one recap (live, or a Message Batch request's params), None when
+    there is nothing to recap. The live button and the nightly job (write_recaps) share them."""
     text = prompt_text(title, season, episode)
     if not text:
+        return None
+    return {
+        "model": MODEL,
+        "max_tokens": MAX_TOKENS,
+        "system": SYSTEM.format(language=LANGUAGE_NAMES.get(language, "English")),
+        "output_config": {"effort": "low"},
+        "messages": [{"role": "user", "content": text}],
+    }
+
+
+def message_text(msg):
+    """The recap in Claude's answer, "" when it declined or was cut off."""
+    if msg.stop_reason != "end_turn":
+        return ""
+    return "\n\n".join(b.text.strip() for b in msg.content if b.type == "text" and b.text.strip())
+
+
+def write_recap(title, season, episode, language, profile=None):
+    """Claude's recap text, "" when it declined or can't be reached. What it cost is recorded."""
+    params = request_params(title, season, episode, language)
+    if not params:
         return ""
     import anthropic
 
     try:
-        msg = _client().messages.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM.format(language=LANGUAGE_NAMES.get(language, "English")),
-            output_config={"effort": "low"},
-            messages=[{"role": "user", "content": text}],
-        )
+        msg = _client().messages.create(**params)
     except anthropic.APIError as exc:  # no key, rate limited, down...: the page says try again later
         log.warning("recap for title %s failed: %s", title.id, exc)
         return ""
     ai_budget.record("recap", msg.usage, MODEL, profile=profile)  # billed even when declined
-    if msg.stop_reason != "end_turn":  # refusal, or cut off
-        return ""
-    return "\n\n".join(b.text.strip() for b in msg.content if b.type == "text" and b.text.strip())
+    return message_text(msg)
 
 
 class RecapView(APIView):
@@ -158,9 +178,7 @@ class RecapView(APIView):
         if not seen_episodes(title, season, episode):  # no summaries to go on
             return Response({"available": False})
         out = {"available": True, "season": season, "episode": episode}
-        language = (profile.language_preference or "en").split("-")[0].lower()
-        if language not in LANGUAGE_NAMES:
-            language = "en"
+        language = profile_language(profile)
         kept = ShowRecap.objects.filter(title=title, season=season, episode=episode, language=language).first()
         if kept:
             return Response(out if request.query_params.get("peek") else {**out, "text": kept.text, "cached": True})
