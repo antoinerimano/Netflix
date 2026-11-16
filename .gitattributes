@@ -1,0 +1,4 @@
+# Shell scripts run on the Linux server (cron, the deploy): always Unix line endings, also in
+# Windows checkouts (core.autocrlf would give them CRLF, and bash then fails on "\r").
+*.sh text eol=lf
+ops/crontab text eol=lf
