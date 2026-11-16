@@ -27,7 +27,7 @@ JOBS = [
     ("sync_tmdb_monthly", "Catalog sync (monthly)", timedelta(days=35)),
     ("train_ranker", "Ranker training", None),
     ("build_embeddings", "Embeddings build", None),
-    ("backfill_ratings", "Age ratings backfill", None),
+    ("backfill_ratings", "Age ratings from TMDB", timedelta(hours=30)),
     ("clean_db", "Database cleanup", None),
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),

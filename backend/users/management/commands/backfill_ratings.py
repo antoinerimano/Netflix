@@ -68,11 +68,18 @@ class Command(BaseCommand):
         done = rated = failed = 0
         started = time.time()
         last_id = 0
+        failed_ids = set()  # gave up this run: left for the next one (not fetched again and again now)
         with ThreadPoolExecutor(max_workers=opts["workers"]) as pool:
             while done < total:
-                batch = list(
-                    qs.filter(id__gt=last_id).only("id", "type", "tmdb_id")[: min(opts["batch"], total - done)]
-                )
+                size = min(opts["batch"], total - done)
+                if opts["all"]:  # every title: in id order
+                    batch = list(qs.filter(id__gt=last_id).only("id", "type", "tmdb_id")[:size])
+                else:
+                    # never asked: most popular first (the titles Kids / age-limited profiles open),
+                    # each one leaves this list once saved
+                    batch = list(
+                        qs.exclude(id__in=failed_ids).order_by("-popularity", "id").only("id", "type", "tmdb_id")[:size]
+                    )
                 if not batch:
                     break
                 last_id = batch[-1].id
@@ -82,6 +89,7 @@ class Command(BaseCommand):
                     done += 1
                     if result is None:
                         failed += 1
+                        failed_ids.add(title.id)
                         continue
                     title.certification, title.maturity = result
                     title.rating_synced_at = now

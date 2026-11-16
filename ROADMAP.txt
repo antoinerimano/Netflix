@@ -333,11 +333,18 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         jobs' AI budget (feature "checkup", ~US$0.001); budget used up / API down: the facts only, the
         alert never depends on the AI. --dry-run, --no-ai. On the dashboard's jobs list. Stream
         providers left out (their own hourly check + dashboard card). Tests: users/test_checkup.py (15).
-[ ] 8.3 Catalog quality pass (weekly batch, ~US$0.20 a month)
-        TMDB first: missing posters / overviews / age ratings are fetched again from TMDB
-        (clean_db --backfill-tmdb). Then Claude looks only at what TMDB can't settle: likely
-        duplicates, odd age ratings (a horror film rated G), titles in the wrong genre; fixes the
-        safe ones with the existing commands, lists the rest on the admin dashboard to approve.
+[x] 8.3 Catalog quality (no AI needed: measured first)
+        Production, 2026-11-16, 106,111 titles: 0 same-TMDB-id duplicates, 0 without a TMDB id; 284
+        "same name + year" groups are different films ("Ride" 2018 x4); missing poster / overview /
+        genre: a few hundred, 0-1 among the 11,958 well-known; odd ratings: 1 (Jaws PG, right). So no
+        AI pass. The real problem: 104,633 titles had never been asked TMDB for an age rating
+        (backfill_ratings had never run: not in the crontab), 11,075 of them well-known, so the 31
+        Kids profiles saw little more than rated titles + unrated family ones. Now backfill_ratings
+        runs nightly (02:00, 20,000 a night: the backlog in ~5 nights, then new titles), most popular
+        first, a title TMDB keeps failing on set aside until the next run (it was picked again at
+        every step). TMDB has a rating for ~80% of the titles asked. Lock in scripts/deploy.sh,
+        on the dashboard (late after 30 h). Tests: users/test_backfill_ratings.py (2, the command
+        had none).
 [x] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
         "Contains: violence and strong language" under the genres of a movie / show page, in the
         app's language (13; the list worded by Intl), always in the same order, only known values,
