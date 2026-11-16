@@ -13,6 +13,7 @@ from .collections import CollectionView
 from .lists import ListsView, ListView, ListItemView, PublicListView, PublicListCopyView
 from .pick import PickView
 from .recap import RecapView
+from .ask import AskView
 from .visits import VisitView
 
 urlpatterns = [
@@ -40,6 +41,7 @@ urlpatterns = [
     path("collections/<int:collection_id>/", CollectionView.as_view()),
     path("pick/", PickView.as_view()),
     path("recap/", RecapView.as_view()),
+    path("ask/", AskView.as_view()),
     path("lists/", ListsView.as_view()),
     path("lists/<int:list_id>/", ListView.as_view()),
     path("lists/<int:list_id>/items/<int:title_id>/", ListItemView.as_view()),

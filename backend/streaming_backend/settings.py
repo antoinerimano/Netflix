@@ -268,7 +268,11 @@ AI_MONTHLY_BUDGET_USD = env.float("AI_MONTHLY_BUDGET_USD", default=5.0)
 AI_JOBS_MONTHLY_BUDGET_USD = env.float("AI_JOBS_MONTHLY_BUDGET_USD", default=1.0)  # background jobs (tags of new titles...)
 AI_FEATURE_CAPS = {  # user-triggered features: (US$ a day for the whole site, calls a day per user)
     "recap": (env.float("AI_RECAP_DAILY_USD", default=0.05), env.int("AI_RECAP_PER_USER_DAY", default=3)),
+    # "Ask Taurus" (reco/ask.py): messages, not conversations (~3 short conversations a day)
+    "ask": (env.float("AI_ASK_DAILY_USD", default=0.05), env.int("AI_ASK_PER_USER_DAY", default=12)),
 }
+# end-to-end tests only (e2e/playwright.config.js): AI features answer from a scripted fake, never the API
+AI_FAKE = env.bool("AI_FAKE", default=False)
 AI_BUDGET_EXEMPT_UNTIL = env("AI_BUDGET_EXEMPT_UNTIL", default="2026-11-30")  # the catalog's first tagging isn't counted
 
 # A/B tests (reco/experiments.py, roadmap 8.7): name -> end date (yyyy-mm-dd, "" = off). Until then,

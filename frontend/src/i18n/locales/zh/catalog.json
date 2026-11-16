@@ -386,5 +386,25 @@
       "thoughtful": "引人深思",
       "romantic": "浪漫"
     }
+  },
+  "ask": {
+    "title": "问问 Taurus",
+    "subtitle": "说说你想看什么：我从片库里帮你挑。",
+    "startersLabel": "从这里开始",
+    "followUps": "接下来",
+    "placeholder": "简短有趣的内容、可以一口气追的剧…",
+    "inputLabel": "你想看什么？",
+    "send": "提问",
+    "thinking": "正在浏览片库…",
+    "error": "Taurus 暂时无法回答，请稍后再试。",
+    "limit": "Taurus 今天休息了，明天再来吧。",
+    "startOver": "重新开始",
+    "note": "由 AI 推荐，仅来自片库，并符合你的个人资料年龄限制。",
+    "starters": {
+      "funny": "今晚来点搞笑的",
+      "scary": "一部短的恐怖片",
+      "series": "一部可以追的剧",
+      "feelgood": "来点温暖治愈的"
+    }
   }
 }

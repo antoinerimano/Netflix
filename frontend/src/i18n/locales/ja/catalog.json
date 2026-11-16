@@ -386,5 +386,25 @@
       "thoughtful": "考えさせられる",
       "romantic": "ロマンチック"
     }
+  },
+  "ask": {
+    "title": "Taurusに聞く",
+    "subtitle": "観たい気分を教えてください。カタログから選びます。",
+    "startersLabel": "まずはこちら",
+    "followUps": "次は",
+    "placeholder": "短くて笑えるもの、一気見できるシリーズ…",
+    "inputLabel": "何が観たいですか？",
+    "send": "聞く",
+    "thinking": "カタログを探しています…",
+    "error": "Taurusは今お答えできません。少ししてからもう一度お試しください。",
+    "limit": "Taurusは今日はお休みです。また明日どうぞ。",
+    "startOver": "最初から",
+    "note": "AIによる提案です。カタログ内から、プロフィールの年齢制限に合わせて選んでいます。",
+    "starters": {
+      "funny": "今夜は笑えるもの",
+      "scary": "短いホラー映画",
+      "series": "一気見できるシリーズ",
+      "feelgood": "心温まるもの"
+    }
   }
 }

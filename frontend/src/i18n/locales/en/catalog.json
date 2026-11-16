@@ -398,5 +398,25 @@
       "thoughtful": "Thoughtful",
       "romantic": "Romantic"
     }
+  },
+  "ask": {
+    "title": "Ask Taurus",
+    "subtitle": "Say what you feel like watching: I'll pick from the catalog.",
+    "startersLabel": "Ideas to start",
+    "followUps": "Next",
+    "placeholder": "Something funny and short, a series to binge…",
+    "inputLabel": "What do you feel like watching?",
+    "send": "Ask",
+    "thinking": "Looking through the catalog…",
+    "error": "Taurus can't answer right now. Try again in a moment.",
+    "limit": "Taurus is resting for today. Come back tomorrow.",
+    "startOver": "Start over",
+    "note": "Suggestions by AI, only from the catalog and within your profile's age limit.",
+    "starters": {
+      "funny": "Something funny tonight",
+      "scary": "A short scary movie",
+      "series": "A series to binge",
+      "feelgood": "Something feel-good"
+    }
   }
 }

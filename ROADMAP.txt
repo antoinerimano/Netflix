@@ -353,10 +353,24 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         tags loaded in the same query: still 5 queries a page). Tests: reco/test_tags.py
         (ContentNotesApiTests), DetailHero.test.jsx, e2e/tests/content-notes.spec.js (remote only,
         French), and RecapButton.test.jsx (the recap button had no unit test).
-[ ] 8.5 Rows named by AI (weekly batch)
-        Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
-        Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
-        and its AI moods, show them as home rows.
+[~] 8.5 Rows named by AI (POSTPONED 2026-11-16: too few active viewers to be worth it yet)
+        Measured in production: 1,654 profiles but 35 active in 30 days; likes almost unused (4
+        profiles with 5+); 165 profiles ever watched 5+ titles. The home page already has many
+        personal rows (For you, Because you watched, More <genre>, Starring, Based on <keyword>,
+        studio, country, hidden gems...): a theme row would be one more angle for ~35 people, and
+        its effect couldn't be measured at that traffic.
+        When to pick it up: more active viewers (a few hundred a month), and/or 8.7's A/B test
+        showing that AI-tag moods get more plays than genres.
+        The cheap plan for then (not per profile: names would change at every rebuild):
+        - weekly, after build_embeddings: group the well-known titles (300+ votes, ~12,000) into
+          ~150 themes (k-means on the embeddings, scikit-learn is already installed);
+        - Claude names each theme once from its titles' TMDB genres / keywords / years and AI moods
+          ("Slow-burn Nordic crime"), in English + the languages profiles use (one JSON answer per
+          theme, ~US$0.02 in all); a theme keeps its name while its titles barely change, so later
+          weeks rename only the few that moved (~US$0);
+        - per profile: the 1-2 themes closest to its taste vector (_build_profile_vector) with
+          enough unseen titles, as a row "theme:<id>" ranked like the others, worded by the app;
+        - remote-only e2e test, and logged like 8.7 so its plays can be compared.
 [x] 8.6 Missing translations (batch, the lean way)
         Measured first (2026-11-16): profiles are en 1,579 / es 46 / fr 20 / de 7 / zh 2; the big TMDB
         gaps (ja, hi, ar, bn, ur: ~48,000 overviews, ~US$6) are in languages no profile uses, while the
@@ -423,12 +437,20 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
           works as usual (kept recaps, tags, genres).
         - This month's spend per feature on the admin dashboard, an email at 80 % of US$5.
         - "Catch me up" (7.11) moves behind it (was: 20 new recaps per user an hour, no site cap).
-[ ] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
-        "something short and funny we haven't seen, the kids are here": Claude with the site's own
-        actions as tools (search, the AI moods / themes, the profile's history and age limit, My
-        List, follow a show, open the player), answers with 4-6 titles and why each fits.
-        Remote: answers as cards + suggestion chips ("Shorter", "A show instead", "Surprise me"),
-        no typing needed on a TV. ~US$0.002 a conversation; within 8.9's caps (3 a day per user,
-        US$0.05 a day for the site).
+[x] 8.10 "Ask Taurus": find something to watch by asking (after 8.9, capped)
+        /ask ("Ask Taurus" on "What to watch?"): say what you feel like watching (4 starters, the
+        last answer's 3 follow-ups, or a typed message), get 4-6 titles + a short reply in the
+        profile's language. Backend reco/ask.py: Claude Haiku 5.5 with ONE read-only tool,
+        find_titles (the catalog within the profile's age limit, without what it watched / rated /
+        turned down; moods from the AI tags, genres, kind, length, years, free text, "like X";
+        ranked for the profile like the home page), up to 3 searches, then a JSON answer
+        (structured output). Only ids a search returned can be shown; others are dropped. Leaner
+        than planned: no actions (My List, follow, play) for the AI: the viewer does them on the
+        cards. History: the app sends the last turns back, nothing is stored.
+        Measured: ~US$0.0005 a message (3,500 tokens in, 360 out). Caps (8.9): 12 messages a day per
+        user (~3 conversations), US$0.05 a day for the site (~90 messages), then "come back
+        tomorrow". Logged as shown "ask" / clicked surface "ask" (8.7's report can add it).
+        Tests: reco/test_ask.py (13), AskPage.test.jsx (5), e2e/tests/ask.spec.js (remote only,
+        scripted fake: settings.AI_FAKE in the e2e servers, reco/ask_fake.py, never the API).
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.

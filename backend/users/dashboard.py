@@ -37,6 +37,7 @@ JOBS = [
 
 AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
     "recap": "Catch me up (users)",
+    "ask": "Ask Taurus (users)",
     "tags": "Title tags (job)",
     "tags_setup": "First catalog tagging (not counted)",
     "checkup": "Daily check-up (job)",

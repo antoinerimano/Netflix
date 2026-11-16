@@ -145,3 +145,11 @@ export async function fetchRecap(profileId, titleId, { peek = false } = {}) {
   const res = await api.get("/recap/", { params: { profileId, titleId, ...(peek ? { peek: 1 } : {}) } });
   return res.data;
 }
+
+// ---------- "Ask Taurus" (backend reco/ask.py) ----------
+// history: the earlier turns [{message, reply}] (the server keeps nothing)
+// -> {reply, items: [title + minutes], chips: [3 follow-ups]}; 429 code "ai_budget" = a cap is reached
+export async function askTaurus(profileId, message, history = []) {
+  const res = await api.post("/ask/", { profileId: Number(profileId), message, history });
+  return res.data;
+}
