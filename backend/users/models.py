@@ -267,6 +267,17 @@ class TitleKeyword(models.Model):
         return f"{self.title_id} kw {self.keyword_norm}"
 
 
+class TranslationBatch(models.Model):
+    """A Message Batch of overviews Claude translates where TMDB has none (manage.py
+    translate_titles), collected by a later run."""
+    batch_id = models.CharField(max_length=64, unique=True)
+    model_name = models.CharField(max_length=64)
+    targets = models.JSONField(default=dict)         # {"<custom id>": [title id, language]}
+    created_at = models.DateTimeField(auto_now_add=True)
+    collected_at = models.DateTimeField(null=True, blank=True)
+    summary = models.CharField(max_length=255, blank=True, default="")
+
+
 class TitleAltName(models.Model):
     """Another name of a title, from TMDB's alternative_titles (manage.py sync_tmdb_related): local
     release titles ("Die Hard" -> "Piège de cristal", "Stirb langsam"), so search finds them."""
@@ -426,6 +437,9 @@ class TitleTranslation(models.Model):
     name = models.CharField(max_length=255, blank=True, default="")  # movie title / show name
     overview = models.TextField(blank=True, default="")
     tagline = models.CharField(max_length=255, blank=True, default="")
+    # overview translated by Claude from the English one (manage.py translate_titles): only where TMDB
+    # has none; sync_tmdb_translations replaces it as soon as TMDB has a real one
+    machine_translated = models.BooleanField(default=False)
     synced_at = models.DateTimeField(auto_now=True)
 
     class Meta:

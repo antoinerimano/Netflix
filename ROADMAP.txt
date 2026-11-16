@@ -317,11 +317,13 @@ summaries, age ratings, credits, translations, images) is taken from TMDB; Claud
 TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
 leaves (a missing translation), and is told the TMDB data, never asked to guess it.
 
-[ ] 8.1 "Catch me up" written in the background (follows 7.11)
-        Today a recap is written the first time someone presses the button (throttled, then kept).
-        Instead: a nightly batch writes the recaps of the shows profiles are part way through
-        (their Continue watching), and the button only appears once one is ready (within 8.9's
-        background budget): pressing it then never costs anything.
+[-] 8.1 "Catch me up" written in the background (dropped 2026-11-16, built then removed)
+        Writing every in-progress show's recap at night costs more than writing it when someone
+        asks: half price, but paid for every show watched (and again after each new episode, so
+        nightly during a binge) whether the recap is read or not; it only pays off if over about
+        half the viewers press the button (production: 1 recap ever). Kept live (7.11 + 8.9 caps).
+        If live recaps start hitting the caps: pre-write only for shows "on a break" (untouched for
+        3-60 days), when a recap is actually useful.
 [x] 8.2 Daily check-up (cron 07:00, ~US$0 most days)
         manage.py daily_checkup (users/checkup.py): plain checks first, no AI: a scheduled job failed /
         late / "running" for 6 h+ (with its error text), home pages failed or none rebuilt for 12 h,
@@ -331,11 +333,18 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         jobs' AI budget (feature "checkup", ~US$0.001); budget used up / API down: the facts only, the
         alert never depends on the AI. --dry-run, --no-ai. On the dashboard's jobs list. Stream
         providers left out (their own hourly check + dashboard card). Tests: users/test_checkup.py (15).
-[ ] 8.3 Catalog quality pass (weekly batch, ~US$0.20 a month)
-        TMDB first: missing posters / overviews / age ratings are fetched again from TMDB
-        (clean_db --backfill-tmdb). Then Claude looks only at what TMDB can't settle: likely
-        duplicates, odd age ratings (a horror film rated G), titles in the wrong genre; fixes the
-        safe ones with the existing commands, lists the rest on the admin dashboard to approve.
+[x] 8.3 Catalog quality (no AI needed: measured first)
+        Production, 2026-11-16, 106,111 titles: 0 same-TMDB-id duplicates, 0 without a TMDB id; 284
+        "same name + year" groups are different films ("Ride" 2018 x4); missing poster / overview /
+        genre: a few hundred, 0-1 among the 11,958 well-known; odd ratings: 1 (Jaws PG, right). So no
+        AI pass. The real problem: 104,633 titles had never been asked TMDB for an age rating
+        (backfill_ratings had never run: not in the crontab), 11,075 of them well-known, so the 31
+        Kids profiles saw little more than rated titles + unrated family ones. Now backfill_ratings
+        runs nightly (02:00, 20,000 a night: the backlog in ~5 nights, then new titles), most popular
+        first, a title TMDB keeps failing on set aside until the next run (it was picked again at
+        every step). TMDB has a rating for ~80% of the titles asked. Lock in scripts/deploy.sh,
+        on the dashboard (late after 30 h). Tests: users/test_backfill_ratings.py (2, the command
+        had none).
 [x] 8.4 Content notes on title pages (no AI call: from 7.10's tags)
         "Contains: violence and strong language" under the genres of a movie / show page, in the
         app's language (13; the list worded by Intl), always in the same order, only known values,
@@ -348,10 +357,17 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         Group a profile's liked titles with the embeddings, have Claude name each group ("Slow-burn
         Nordic crime", "90s heist comedies") once per group from its TMDB genres / keywords / years
         and its AI moods, show them as home rows.
-[ ] 8.6 Missing translations (batch)
-        TMDB first (sync_tmdb_translations, every 3 hours); only overviews TMDB still lacks in a
-        language (often Bengali, Urdu, Hindi) are translated from English into TitleTranslation,
-        marked as machine translated, and replaced when TMDB gets a real one.
+[x] 8.6 Missing translations (batch, the lean way)
+        Measured first (2026-11-16): profiles are en 1,579 / es 46 / fr 20 / de 7 / zh 2; the big TMDB
+        gaps (ja, hi, ar, bn, ur: ~48,000 overviews, ~US$6) are in languages no profile uses, while the
+        used ones miss ~540 among well-known titles (~US$0.07 once). So manage.py translate_titles
+        (users/ai_translate.py, cron 03:30) translates only into languages at least one profile uses
+        (a profile switching language starts it on that one), well-known titles only (300+ votes),
+        most popular first, as Message Batches within tonight's share of the jobs' budget
+        (ai_budget.jobs_daily_allowance, feature "translate"). TitleTranslation.machine_translated;
+        sync_tmdb_translations keeps Claude's overview while TMDB has none, replaces it with TMDB's
+        as soon as TMDB has one; a TMDB text arriving meanwhile wins at collection too.
+        Tests: users/test_ai_translate.py (10).
 [x] 8.7 Did the AI tags help? (no AI cost)
         Nothing was recorded before (/pick logged nothing, "More like this" only clicks), so there is
         no "before" to compare with: the app now records, and the halves are compared side by side.

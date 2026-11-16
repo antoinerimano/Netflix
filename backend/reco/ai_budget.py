@@ -34,7 +34,7 @@ PRICES = {
 UNKNOWN_PRICE = PRICES["claude-opus-5-5"]  # an unlisted model: counted at the dearest price
 
 EXEMPT = ("tags_setup",)           # not counted in any total
-JOB_FEATURES = ("tags", "checkup")  # background jobs: share AI_JOBS_MONTHLY_BUDGET_USD
+JOB_FEATURES = ("tags", "checkup", "translate")  # background jobs: share AI_JOBS_MONTHLY_BUDGET_USD
 ALERT_FEATURE = "_budget_alert"    # a zero-cost row: the 80 % email was sent this month
 
 
@@ -121,6 +121,15 @@ def jobs_budget_left():
     jobs = jobs_monthly_budget() - spent_this_month(JOB_FEATURES)
     everything = monthly_budget() - spent_this_month()
     return max(0.0, min(jobs, everything))
+
+
+def jobs_daily_allowance(now=None):
+    """What a nightly job may spend tonight: the jobs' budget left this month spread over the days
+    left (today included), so an early-month night can't use up the whole month."""
+    now = timezone.localtime(now or timezone.now())
+    next_month = (now.replace(day=28) + dt.timedelta(days=4)).replace(day=1)
+    days_left = (next_month.date() - now.date()).days
+    return jobs_budget_left() / max(1, days_left)
 
 
 def record(feature, usage, model, profile=None, batch=False, usd=None):
