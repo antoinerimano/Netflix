@@ -251,7 +251,7 @@ jobs:
     needs: [backend, frontend, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50 # scripts/deploy.sh may wait up to 20 min for a running job
     environment: production
     concurrency:
       group: deploy-production
@@ -264,7 +264,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          command_timeout: 25m
+          command_timeout: 45m # up to 20 min waiting for jobs + the build
           script_stop: true
           script: |
             set -e
@@ -273,9 +273,9 @@ jobs:
             # only fast-forward: a server with local changes stops the deploy instead of losing them
             git merge --ff-only origin/main
             git log -1 --format='Deploying %h %s'
-            docker compose up -d --build backend frontend
-            docker compose exec -T backend python manage.py migrate --noinput
-            docker image prune -f
+            # waits for running cron jobs (their /tmp/*.lock) instead of killing them, then
+            # rebuilds, restarts and migrates (scripts/deploy.sh)
+            bash scripts/deploy.sh
 
       - name: Health check
         if: vars.HEALTHCHECK_URL != ''
