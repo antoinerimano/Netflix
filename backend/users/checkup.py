@@ -51,7 +51,6 @@ FIX_COMMANDS = {
     "clean_db": f"{_EXEC} clean_db --dedupe --backfill-links --backfill-tmdb --verbose",
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
-    "write_recaps": f"{_EXEC} write_recaps",
     "_logs": "cd /opt/taurus && docker compose logs --tail 200 backend",
     "_restart": "cd /opt/taurus && docker compose restart backend",
     "_disk": "df -h / && docker system df && docker image prune -f",

@@ -16,7 +16,7 @@ WAIT_SECONDS="${WAIT_SECONDS:-1200}"
 LOCKS=(
   /tmp/clean_db_weekly.lock /tmp/sync_tmdb_weekly.lock /tmp/taurus_heavy.lock
   /tmp/taurus_tags.lock /tmp/taurus_related.lock /tmp/taurus_checkup.lock
-  /tmp/taurus_episodes.lock /tmp/taurus_home.lock /tmp/taurus_backup.lock /tmp/taurus_recaps.lock
+  /tmp/taurus_episodes.lock /tmp/taurus_home.lock /tmp/taurus_backup.lock
 )
 
 deadline=$(( $(date +%s) + WAIT_SECONDS ))

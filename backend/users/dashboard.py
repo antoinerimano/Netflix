@@ -32,7 +32,6 @@ JOBS = [
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
     ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
-    ("write_recaps", "Catch me up recaps (nightly)", timedelta(hours=30)),
 ]
 
 AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
@@ -40,7 +39,6 @@ AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
     "tags": "Title tags (job)",
     "tags_setup": "First catalog tagging (not counted)",
     "checkup": "Daily check-up (job)",
-    "recap_job": "Catch me up written at night (job)",
 }
 
 

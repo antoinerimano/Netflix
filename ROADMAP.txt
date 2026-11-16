@@ -317,17 +317,13 @@ summaries, age ratings, credits, translations, images) is taken from TMDB; Claud
 TMDB doesn't have (moods, themes, pacing, recaps, names for groups of titles) or fills a gap TMDB
 leaves (a missing translation), and is told the TMDB data, never asked to guess it.
 
-[x] 8.1 "Catch me up" written in the background (follows 7.11)
-        manage.py write_recaps (cron 03:00): for every show a profile watched in the last 14 days,
-        the recap of everything before where it resumes, in its language, not already kept, most
-        recently watched first; sent as a Message Batch (half price), collected by the next run
-        into ShowRecap (the table the button reads): the button opens at once, no live AI call.
-        Same prompt as the button (reco/recap.py request_params / message_text). Budget: tonight's
-        share of the jobs' US$1 a month (ai_budget.jobs_daily_allowance: left / days left), feature
-        "recap_job". The live button stays as a fallback for a show started since (its own caps).
-        Production on 2026-11-16: 49 shows watched in 14 days by 20 profiles: ~US$0.02 a first night.
-        Also: users/test_ops.py checks every cron lock is one scripts/deploy.sh waits for.
-        Tests: reco/test_write_recaps.py (7), users/test_ops.py (2).
+[-] 8.1 "Catch me up" written in the background (dropped 2026-11-16, built then removed)
+        Writing every in-progress show's recap at night costs more than writing it when someone
+        asks: half price, but paid for every show watched (and again after each new episode, so
+        nightly during a binge) whether the recap is read or not; it only pays off if over about
+        half the viewers press the button (production: 1 recap ever). Kept live (7.11 + 8.9 caps).
+        If live recaps start hitting the caps: pre-write only for shows "on a break" (untouched for
+        3-60 days), when a recap is actually useful.
 [x] 8.2 Daily check-up (cron 07:00, ~US$0 most days)
         manage.py daily_checkup (users/checkup.py): plain checks first, no AI: a scheduled job failed /
         late / "running" for 6 h+ (with its error text), home pages failed or none rebuilt for 12 h,
