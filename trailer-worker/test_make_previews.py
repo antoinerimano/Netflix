@@ -21,6 +21,33 @@ class NameMatchTests(unittest.TestCase):
         self.assertFalse(name_matches("Top 10 movies of 2020", "Up"))
         self.assertFalse(name_matches("Superman Trailer", "Batman"))
 
+    def test_a_name_that_contains_the_titles(self):
+        # a spin-off / a plural: the title's last word changed, it's another show or film
+        self.assertFalse(name_matches("American Horror Stories Season 1 Trailer | Rotten Tomatoes TV",
+                                      "American Horror Story"))
+        self.assertFalse(name_matches("Aliens (1986) Trailer", "Alien"))
+        self.assertTrue(name_matches("American Horror Story: Season 2 Trailer", "American Horror Story"))
+        # a letter off inside the name is still the title
+        self.assertTrue(name_matches("Pirates of the Carribean Curse of the Black Pearl trailer",
+                                     "Pirates of the Caribbean: Curse of the Black Pearl"))
+
+    def test_a_films_sequel(self):
+        movie = {"type": "movie", "title": "Toy Story"}
+        with self.assertRaises(Rejected):
+            check_video({"title": "Toy Story 4 Official Trailer", "duration": 140}, movie)
+        for title, video in [("Dune", "Dune: Part Two - Official Trailer 3"),
+                             ("John Wick", "John Wick: Chapter 2 trailer"),
+                             ("Rocky", "ROCKY II (1979) Trailer")]:
+            with self.assertRaises(Rejected, msg=video):
+                check_video({"title": video, "duration": 140}, {"type": "movie", "title": title})
+        check_video({"title": "Toy Story (1995) Trailer #1", "duration": 140}, movie)
+        check_video({"title": "Toy Story - Official Trailer 2", "duration": 140}, movie)
+        check_video({"title": "Fast & Furious 6 Trailer", "duration": 140},
+                    {"type": "movie", "title": "Fast & Furious 6"})
+        # a show's season trailer is the show's
+        check_video({"title": "Stranger Things 4 | Official Trailer", "duration": 140},
+                    {"type": "tv", "title": "Stranger Things"})
+
     def test_not_a_trailer(self):
         job = {"title": "The Matrix"}
         with self.assertRaises(Rejected):
