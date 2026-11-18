@@ -21,8 +21,10 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-#* * * * * /opt/taurus/scripts/run_add_trailer_to_cdn.sh
-30 4 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/clean_db_weekly.lock docker compose exec -T backend python manage.py clean_db --dedupe --backfill-links --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --check-dups --verbose --progress-every 200 >> /var/log/clean_db_weekly.log 2>&1
+# catalog cleanup (users/management/commands/clean_db.py): duplicate titles, then missing TMDB fields for the
+# titles not read for 30 days (never read / most popular first), 150 min a night: the catalog once a month,
+# and a run cut off carries on the next night
+30 4 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/clean_db_weekly.lock docker compose exec -T backend python manage.py clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --stale-days 30 --max-minutes 150 --check-dups --progress-every 500 >> /var/log/taurus_clean_db.log 2>&1
 30 5 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/sync_tmdb_weekly.lock docker compose exec -T backend python manage.py sync_tmdb_monthly --pages 20 --min-votes 500 --verbose-adds --only-created >> /var/log/sync_tmdb_weekly.log 2>&1
 30 7 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_heavy.lock docker compose exec -T backend python manage.py train_ranker >> /var/log/train_ranker_weekly.log 2>&1
 # TMDB recommendations / similar + alternative titles (users/tmdb_related.py): 5,000 titles a night, free

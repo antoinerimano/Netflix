@@ -141,6 +141,10 @@ class Title(models.Model):
     # when manage.py sync_tmdb_related last fetched TMDB's recommendations / similar / alternative
     # titles for it (null = never): refreshed every 60 days
     related_synced_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # when manage.py clean_db --backfill-tmdb last read the title on TMDB (null = never): the
+    # nightly run takes the titles never read or read more than --stale-days ago, so a run cut off
+    # (deploy, --max-minutes) carries on where it stopped
+    tmdb_checked_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)

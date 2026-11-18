@@ -11,6 +11,18 @@ What lives on the server outside the app code, so the server can be rebuilt.
 
 Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`.
 
+## Watched jobs
+
+Every job in the dashboard's `JOBS` (`backend/users/dashboard.py`) records its runs (`JobRun`): the
+dashboard shows them and the daily check-up emails staff when one failed or is late. Django commands
+use `@tracked`; the shell scripts here call `manage.py record_job <name>` when they end
+(`backup_db.sh`: ok or failed, `weekly-cleanup.sh`); the mini PC's trailer clips are seen when it
+imports them (`import_trailer_results`). The check-up also warns when the HTTPS certificate has
+less than 14 days left (certbot renews at 30).
+
+`clean_db` runs every night for at most 150 minutes, on the titles not read on TMDB for 30 days
+(`Title.tmdb_checked_at`): a run cut off by a deploy carries on the next night.
+
 ## Database backups
 
 `scripts/backup_db.sh` runs nightly at 01:30 UTC (log: `/var/log/taurus_backup.log`):

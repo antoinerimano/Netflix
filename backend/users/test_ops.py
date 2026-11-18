@@ -19,3 +19,21 @@ class OpsFilesTests(SimpleTestCase):
 
     def test_deploy_script_has_unix_line_endings(self):
         self.assertNotIn(b"\r", (ROOT / "scripts" / "deploy.sh").read_bytes())
+
+    def test_every_dashboard_job_is_recorded_by_something(self):
+        # a JOBS name nothing records would always look "late" (or never be watched at all)
+        from .dashboard import JOBS
+
+        tracked = set()
+        for path in (ROOT / "backend").glob("*/management/commands/*.py"):
+            tracked |= set(re.findall(r'@tracked\("([\w-]+)"\)', path.read_text(encoding="utf-8")))
+        scripts = "\n".join(p.read_text(encoding="utf-8") for p in
+                            [ROOT / "scripts" / "backup_db.sh", ROOT / "ops" / "weekly-cleanup.sh"])
+        recorded = set(re.findall(r"record_job ([\w-]+)", scripts))
+        self.assertEqual({"backup_db", "weekly_cleanup"}, recorded)
+        missing = {name for name, _label, _late in JOBS} - tracked - recorded
+        self.assertEqual(missing, set(), "dashboard jobs nothing records: @tracked or record_job")
+
+    def test_server_scripts_have_unix_line_endings(self):
+        for path in ("scripts/backup_db.sh", "ops/weekly-cleanup.sh", "ops/crontab"):
+            self.assertNotIn(b"\r", (ROOT / path).read_bytes(), path)

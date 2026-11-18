@@ -1,4 +1,14 @@
 # users/management/commands/clean_db.py
+"""
+manage.py clean_db: duplicate titles, and the fields TMDB has that a title is missing.
+
+Nightly from cron (ops/crontab): --stale-days 30 --max-minutes 150 takes the titles never read on
+TMDB or read more than 30 days ago (Title.tmdb_checked_at; never read first, most popular first)
+and stops after 150 minutes: about the whole catalog a month, and a run cut off (deploy, time
+limit) carries on where it stopped the next night. Without --stale-days: every title, by id.
+A title is marked read when TMDB answered, or said it doesn't know it (404); any other error
+leaves it for the next run.
+"""
 import os
 import time
 import datetime
@@ -8,7 +18,8 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.db.models import Count, Min, Q
+from django.db.models import Count, F, Min, Q
+from django.utils import timezone
 
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 from users.trailers import pick_trailer_url
@@ -136,6 +147,11 @@ class Command(BaseCommand):
         parser.add_argument("--overwrite", action="store_true", help="Overwrite non-empty fields (default: fill only if empty).")
         parser.add_argument("--sleep", type=float, default=0.15, help="Delay between TMDb calls.")
         parser.add_argument("--limit", type=int, default=0, help="Limit titles processed in TMDb backfill (0=all).")
+        parser.add_argument("--stale-days", type=int, default=0,
+                            help="TMDb backfill: only titles never read on TMDb or read more than N days ago "
+                                 "(never read / most popular first). 0 = every title, by id.")
+        parser.add_argument("--max-minutes", type=float, default=0,
+                            help="Stop the TMDb backfill after N minutes (the next run carries on, with --stale-days). 0 = no limit.")
 
         parser.add_argument("--dedupe", action="store_true", help="Remove duplicates on (type,tmdb_id).")
         parser.add_argument("--backfill-links", action="store_true", help="Deprecated, no-op: links come from Provider templates.")
@@ -214,7 +230,8 @@ class Command(BaseCommand):
     def backfill_tmdb(self, tmdb: TMDbClient, dry_run: bool, overwrite: bool, sleep_s: float,
                       limit: int, verbose: bool, log_changes: bool, log_skips: bool,
                       progress_every: int, max_log: int,
-                      tv_sync_eps: bool, tv_max_seasons: int, skip_specials: bool) -> Dict[str, int]:
+                      tv_sync_eps: bool, tv_max_seasons: int, skip_specials: bool,
+                      stale_days: int = 0, max_minutes: float = 0) -> Dict[str, int]:
         stats = {
             "titles_scanned": 0,
             "titles_changed": 0,
@@ -222,8 +239,10 @@ class Command(BaseCommand):
             "tv_extras_upserted": 0,
             "seasons_upserted": 0,
             "episodes_upserted": 0,
+            "titles_left": 0,
         }
         printed = 0
+        started = now_s()
 
         def log_detail(msg: str):
             nonlocal printed
@@ -231,14 +250,26 @@ class Command(BaseCommand):
                 self.log(msg)
                 printed += 1
 
-        qs = Title.objects.filter(type__in=["movie", "tv"]).exclude(Q(tmdb_id__isnull=True) | Q(tmdb_id=0)).order_by("id")
+        qs = Title.objects.filter(type__in=["movie", "tv"]).exclude(Q(tmdb_id__isnull=True) | Q(tmdb_id=0))
+        if stale_days > 0:
+            stale = timezone.now() - datetime.timedelta(days=stale_days)
+            qs = (qs.filter(Q(tmdb_checked_at__isnull=True) | Q(tmdb_checked_at__lt=stale))
+                  .order_by(F("tmdb_checked_at").asc(nulls_first=True), F("popularity").desc(nulls_last=True), "id"))
+        else:
+            qs = qs.order_by("id")
         total = qs.count() if limit == 0 else min(limit, qs.count())
-        self.log(f"[backfill-tmdb] scanning titles total={total}")
+        self.log(f"[backfill-tmdb] scanning titles total={total}"
+                 + (f" (not read for {stale_days} days)" if stale_days > 0 else ""))
 
         if limit and limit > 0:
             qs = qs[:limit]
 
         for idx, t in enumerate(qs.iterator(chunk_size=100), start=1):
+            if max_minutes and now_s() - started >= max_minutes * 60:
+                stats["titles_left"] = total - stats["titles_scanned"]
+                self.log(f"[backfill-tmdb] stopped after {max_minutes:g} minutes, {stats['titles_left']} titles "
+                         f"left for the next run")
+                break
             stats["titles_scanned"] += 1
 
             try:
@@ -400,15 +431,21 @@ class Command(BaseCommand):
 
                                 stats["episodes_upserted"] += 1
 
+                if not dry_run:  # read (and its seasons synced): not again before --stale-days
+                    Title.objects.filter(id=t.id).update(tmdb_checked_at=timezone.now())
+
             except Exception as ex:
                 stats["titles_errors"] += 1
+                not_on_tmdb = isinstance(ex, requests.HTTPError) and getattr(ex.response, "status_code", None) == 404
+                if not_on_tmdb and not dry_run:  # TMDB doesn't know it: asking again tomorrow won't help
+                    Title.objects.filter(id=t.id).update(tmdb_checked_at=timezone.now())
                 if printed < max_log:
                     log_detail(f"[backfill-tmdb][ERROR] type={t.type} id={t.id} tmdb={t.tmdb_id} err={ex}")
 
             if progress_every and (idx % progress_every == 0):
                 self.log(f"[backfill-tmdb] progress scanned={stats['titles_scanned']}/{total} changed={stats['titles_changed']} errors={stats['titles_errors']}")
 
-        self.log(f"[backfill-tmdb] DONE scanned={stats['titles_scanned']} changed={stats['titles_changed']} errors={stats['titles_errors']} "
+        self.log(f"[backfill-tmdb] DONE scanned={stats['titles_scanned']} changed={stats['titles_changed']} errors={stats['titles_errors']} left={stats['titles_left']} "
                  f"tvextras={stats['tv_extras_upserted']} seasons={stats['seasons_upserted']} episodes={stats['episodes_upserted']}")
         return stats
 
@@ -594,6 +631,8 @@ class Command(BaseCommand):
         overwrite = bool(opts["overwrite"])
         sleep_s = float(opts["sleep"])
         limit = int(opts["limit"] or 0)
+        stale_days = int(opts["stale_days"] or 0)
+        max_minutes = float(opts["max_minutes"] or 0)
 
         do_dedupe = bool(opts["dedupe"])
         do_backfill_links = bool(opts["backfill_links"])
@@ -614,7 +653,8 @@ class Command(BaseCommand):
 
         self.log("===============================================")
         self.log("[clean_db] START")
-        self.log(f"dry_run={dry_run} overwrite={overwrite} sleep={sleep_s}s limit={limit or 'ALL'}")
+        self.log(f"dry_run={dry_run} overwrite={overwrite} sleep={sleep_s}s limit={limit or 'ALL'} "
+                 f"stale_days={stale_days or 'ALL'} max_minutes={max_minutes or 'none'}")
         self.log(f"dedupe={do_dedupe} backfill_links={do_backfill_links} backfill_tmdb={do_backfill_tmdb}")
         self.log(f"tv_sync_episodes={tv_sync_eps} tv_fix_missing_episodes={do_tv_fix_missing} tv_max_seasons={tv_max_seasons} skip_specials={skip_specials}")
         self.log(f"logs: verbose={verbose} log_changes={log_changes} log_skips={log_skips} progress_every={progress_every} max_log={max_log}")
@@ -647,6 +687,8 @@ class Command(BaseCommand):
                 tv_sync_eps=tv_sync_eps,
                 tv_max_seasons=tv_max_seasons,
                 skip_specials=skip_specials,
+                stale_days=stale_days,
+                max_minutes=max_minutes,
             )
 
         if do_tv_fix_missing:
