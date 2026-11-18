@@ -61,6 +61,12 @@ class CleanDbNightlyTests(TestCase):
         self.never.refresh_from_db()
         self.assertEqual(self.never.description, "About film 2.")  # the empty field filled
 
+    def test_popularity_and_votes_refreshed_the_rest_only_filled(self):
+        self.run_cmd(FakeTMDb(), "--stale-days", "30")
+        self.never_popular.refresh_from_db()
+        self.assertEqual(self.never_popular.popularity, 1.0)  # TMDB's value of today, not the day it was added
+        self.assertEqual(self.never_popular.title, "A")      # set already: kept (no --overwrite)
+
     def test_without_stale_days_every_title(self):
         tmdb = FakeTMDb()
         self.run_cmd(tmdb)

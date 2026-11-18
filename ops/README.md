@@ -6,8 +6,11 @@ What lives on the server outside the app code, so the server can be rebuilt.
 |---|---|---|
 | `crontab` | root's crontab | `crontab ops/crontab` |
 | `weekly-cleanup.sh` | `/usr/local/bin/weekly-cleanup.sh` | `install -m 755 ops/weekly-cleanup.sh /usr/local/bin/` |
+| `logrotate-taurus` | `/etc/logrotate.d/taurus` | `install -m 644 ops/logrotate-taurus /etc/logrotate.d/taurus` |
 
 `crontab` is a copy: after `crontab -e` on the server, refresh it with `crontab -l > ops/crontab`.
+Each deploy (`scripts/deploy.sh`) warns on the GitHub run when one of these three isn't installed as
+it is here.
 
 Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`.
 

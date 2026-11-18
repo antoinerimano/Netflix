@@ -34,6 +34,12 @@ class OpsFilesTests(SimpleTestCase):
         missing = {name for name, _label, _late in JOBS} - tracked - recorded
         self.assertEqual(missing, set(), "dashboard jobs nothing records: @tracked or record_job")
 
+    def test_deploy_warns_when_a_server_file_is_not_the_one_in_ops(self):
+        deploy = (ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
+        for path in sorted((ROOT / "ops").iterdir()):
+            if path.name != "README.md":
+                self.assertIn(f"installed_differs ops/{path.name} ", deploy, f"ops/{path.name}: check it in deploy.sh")
+
     def test_server_scripts_have_unix_line_endings(self):
-        for path in ("scripts/backup_db.sh", "ops/weekly-cleanup.sh", "ops/crontab"):
+        for path in ("scripts/backup_db.sh", "ops/weekly-cleanup.sh", "ops/crontab", "ops/logrotate-taurus"):
             self.assertNotIn(b"\r", (ROOT / path).read_bytes(), path)

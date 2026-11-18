@@ -24,7 +24,8 @@ JOBS = [
     ("sync_tmdb_daily_episodes", "New episodes sync", timedelta(hours=8)),
     ("notify_new_episodes", "New episode alerts", timedelta(hours=8)),
     ("build_home_snapshots", "Home pages build", timedelta(hours=6)),
-    ("sync_tmdb_monthly", "Catalog sync (monthly)", timedelta(days=35)),
+    # the command keeps its old name (its JobRun history, the crontab): it runs every Sunday
+    ("sync_tmdb_monthly", "New titles from TMDB (weekly)", timedelta(days=8)),
     ("train_ranker", "Ranker training", None),
     ("build_embeddings", "Embeddings build", None),
     ("backfill_ratings", "Age ratings from TMDB", timedelta(hours=30)),

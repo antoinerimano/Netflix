@@ -1,0 +1,21 @@
+# Taurus cron logs (crontab -l): weekly, 4 compressed weeks kept.
+# copytruncate: the cron jobs append with >>, so the file is emptied in place, nothing to restart.
+/var/log/taurus_*.log
+/var/log/clean_db_weekly.log
+/var/log/sync_tmdb_*.log
+/var/log/train_ranker_weekly.log
+/var/log/build_embeddings_weekly.log
+/var/log/fix_actor_duplicates.log
+/var/log/certbot-renew.log
+/var/log/weekly-cleanup.log
+/opt/taurus/logs/*.log
+{
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su root root
+}

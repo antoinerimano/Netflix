@@ -8,6 +8,9 @@ and stops after 150 minutes: about the whole catalog a month, and a run cut off 
 limit) carries on where it stopped the next night. Without --stale-days: every title, by id.
 A title is marked read when TMDB answered, or said it doesn't know it (404); any other error
 leaves it for the next run.
+The other fields are only filled when empty (--overwrite: replaced), but the ones that change over
+time (VOLATILE: popularity, votes, status) are always refreshed: the rows and recommendations
+sort by them, and they would otherwise keep the values of the day the title was added.
 """
 import os
 import time
@@ -71,6 +74,11 @@ def parse_ymd_date(s: Optional[str]) -> Optional[datetime.date]:
         return datetime.date.fromisoformat((s or "").strip())
     except ValueError:
         return None
+
+# fields TMDB changes over time: refreshed on every read (like sync_tmdb_daily_episodes does for
+# the shows on the air), when TMDB gives a value
+VOLATILE = ("rating", "vote_average", "vote_count", "popularity", "status")
+
 
 def fill_field(obj, field: str, new_val, overwrite: bool) -> bool:
     curr = getattr(obj, field, None)
@@ -344,7 +352,8 @@ class Command(BaseCommand):
                     }
 
                 for f, v in row.items():
-                    if hasattr(t, f) and fill_field(t, f, v, overwrite=overwrite):
+                    refresh = overwrite or (f in VOLATILE and not is_empty(v))
+                    if hasattr(t, f) and fill_field(t, f, v, overwrite=refresh):
                         changed = True
 
                 if changed:

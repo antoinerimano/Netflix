@@ -2,3 +2,4 @@
 # Windows checkouts (core.autocrlf would give them CRLF, and bash then fails on "\r").
 *.sh text eol=lf
 ops/crontab text eol=lf
+ops/logrotate-taurus text eol=lf
