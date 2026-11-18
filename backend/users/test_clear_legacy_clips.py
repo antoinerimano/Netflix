@@ -1,5 +1,6 @@
-"""manage.py clear_legacy_clips: the old trailers/{tmdb_id}.mp4 clips are removed (a movie and a show
-sharing a TMDB id shared one file: Breaking Bad played another title's preview), the new ones kept."""
+"""manage.py clear_legacy_clips: the old trailers/{tmdb_id}.mp4 clips of a TMDB id a movie and a show
+share are removed (one file for both: Breaking Bad played another title's preview); the other old
+clips stay unless --all, the new ones always."""
 from io import StringIO
 
 from django.core.management import call_command
@@ -35,17 +36,17 @@ class ClearLegacyClipsTests(TestCase):
         out = self.run_cmd("--dry-run")
         self.assertIn("Old-format clips: 3, 2 of them", out)
         self.assertIn("shared id 1396: tv 'Breaking Bad'", out)
-        self.assertIn("would clear 3", out)
+        self.assertIn("would clear 2", out)
         self.assertEqual(self.clips(), before)
 
-    def test_shared_only(self):
-        self.run_cmd("--shared-only")
+    def test_shared_ids_only_by_default(self):
+        self.assertIn("Cleared 2 clip(s)", self.run_cmd())
         clips = self.clips()
         self.assertEqual((clips["Breaking Bad"], clips["Other"]), ("", ""))
         self.assertTrue(clips["The Matrix"].endswith("/trailers/603.mp4"))
 
     def test_all_old_clips_cleared_new_ones_kept(self):
-        self.assertIn("Cleared 3 clip(s)", self.run_cmd())
+        self.assertIn("Cleared 3 clip(s)", self.run_cmd("--all"))
         clips = self.clips()
         self.assertEqual([clips["Breaking Bad"], clips["Other"], clips["The Matrix"]], ["", "", ""])
         self.assertTrue(clips["Inception"].endswith("/previews/movie/27205-AAAAAAAAAAA.mp4"))

@@ -1,5 +1,6 @@
 """
-Remove the old trailers/{tmdb_id}.mp4 preview clips from the titles (no preview rather than a wrong one):
+Remove the old trailers/{tmdb_id}.mp4 preview clips that are surely another title's (no preview
+rather than a wrong one):
 
     docker compose exec -T backend python manage.py clear_legacy_clips --dry-run
     docker compose exec -T backend python manage.py clear_legacy_clips
@@ -7,12 +8,13 @@ Remove the old trailers/{tmdb_id}.mp4 preview clips from the titles (no preview 
 The old server script (tools/add_trailer_to_cdn.py, removed in f460f06) named a clip after the
 TMDB id only, and TMDB numbers movies and shows separately: a movie and a show with the same id
 (Breaking Bad, show 1396, and movie 1396) shared one file, the second one made overwrote the
-first. It also took the first YouTube "Trailer" TMDB listed (fan uploads, later seasons). So any
-of these clips may be another title's. Cleared, the titles show their picture until trailer-worker/
-makes them a checked clip: export_trailer_jobs lists them again (they still have a trailer_url).
+first: one of the two plays the other's preview. Only those are cleared by default; the other
+old clips are most likely right and stay until trailer-worker/ replaces them (export_trailer_jobs
+lists every old clip; import_trailer_results --clear-rejected removes the ones it turns down).
+Cleared, a title shows its picture until the worker makes it a checked clip.
 
-The files stay on the CDN, nothing is deleted there. --shared-only: only the ids a movie and a show
-share (the clips that are surely wrong for one of the two).
+The files stay on the CDN, nothing is deleted there. --all: every old clip (the old script also
+took the first YouTube "Trailer" TMDB listed: fan uploads, later seasons), if many turn out wrong.
 """
 from django.core.management.base import BaseCommand
 from django.db.models import Count
@@ -21,12 +23,12 @@ from users.models import Title
 
 
 class Command(BaseCommand):
-    help = "Remove the old trailers/{tmdb_id}.mp4 preview clips (they may be another title's)."
+    help = "Remove the old trailers/{tmdb_id}.mp4 clips of TMDB ids a movie and a show share."
 
     def add_arguments(self, p):
         p.add_argument("--dry-run", action="store_true", help="count and list, change nothing")
-        p.add_argument("--shared-only", action="store_true",
-                       help="only the TMDB ids a movie and a show share")
+        p.add_argument("--all", action="store_true",
+                       help="every old-format clip, not only the shared ids")
 
     def handle(self, *args, **o):
         legacy = Title.objects.filter(trailer_clip_url__contains="/trailers/")
@@ -36,7 +38,7 @@ class Command(BaseCommand):
             .values_list("tmdb_id", flat=True)
         )
         shared = legacy.filter(tmdb_id__in=shared_ids)
-        target = shared if o["shared_only"] else legacy
+        target = legacy if o["all"] else shared
 
         self.stdout.write(f"Old-format clips: {legacy.count()}, {shared.count()} of them on a TMDB id "
                           f"a movie and a show share.")
