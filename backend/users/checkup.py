@@ -9,7 +9,12 @@ jobs and server? An email to staff only when something is.
    - home pages that failed to build, or none rebuilt for 12 hours;
    - an AI tag batch still not collected after 26 hours (batches end within 24);
    - the disk under 10 % or 5 GB free;
-   - the AI budget (reco/ai_budget.py) at 80 % or more of the month.
+   - the AI budget (reco/ai_budget.py) at 80 % or more of the month;
+   - more trailer preview clips that may be the wrong video than at the last check-up: old
+     trailers/{tmdb_id}.mp4 clips (the show / movie sharing the TMDB id could have overwritten
+     them), or clips that aren't the clip of the title's current trailer (users/trailers.py).
+     Counted every morning (the line "Preview clips: ..." of the run, kept on its JobRun), reported
+     only when a count goes up, so a known backlog doesn't send an email every day.
 2. Nothing found: no email, no AI ("All OK").
 3. Something found: Claude Haiku 5.5 turns the facts into a short email (what broke, the likely
    cause from the error text, the command to fix it, picked only from FIX_COMMANDS), within the
@@ -17,6 +22,7 @@ jobs and server? An email to staff only when something is.
    API error: the same email without the AI part. The alert never depends on the AI.
 """
 import logging
+import re
 import shutil
 from datetime import timedelta
 
@@ -52,6 +58,8 @@ FIX_COMMANDS = {
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
     "translate_titles": f"{_EXEC} translate_titles",
+"_previews": f"{_EXEC} export_trailer_jobs > jobs.json   (then trailer-worker/, then: "
+                 f"{_EXEC} import_trailer_results --clear-rejected - < results.json)",
     "_logs": "cd /opt/taurus && docker compose logs --tail 200 backend",
     "_restart": "cd /opt/taurus && docker compose restart backend",
     "_disk": "df -h / && docker system df && docker image prune -f",
@@ -75,8 +83,64 @@ def every(delta):
     return "hour" if hours == 1 else f"{hours} hours"
 
 
-def find_problems(now=None):
-    """[{"kind", "what", "detail", "fix"}]: everything wrong right now (no AI, nothing paid)."""
+_CLIPS_LINE_RE = re.compile(r"^Preview clips: (\d+) old-format, (\d+) not their trailer's clip$", re.MULTILINE)
+
+
+def preview_clip_counts():
+    """{"legacy", "mismatch"}: titles whose preview clip may not be the right video.
+    legacy: an old trailers/{tmdb_id}.mp4 clip. mismatch: any other clip that isn't
+    previews/{type}/{tmdb_id}-{key of the current trailer}.mp4 (made from an older trailer, the
+    trailer is gone, or another type's folder)."""
+    from .models import Title
+    from .trailers import preview_path, youtube_key
+
+    legacy = mismatch = 0
+    rows = Title.objects.exclude(trailer_clip_url="").values_list("type", "tmdb_id", "trailer_url", "trailer_clip_url")
+    for kind, tmdb_id, trailer, clip in rows.iterator(chunk_size=2000):
+        if "/trailers/" in clip:
+            legacy += 1
+            continue
+        key = youtube_key(trailer)
+        if not key or tmdb_id is None or not clip.endswith("/" + preview_path(kind, tmdb_id, key)):
+            mismatch += 1
+    return {"legacy": legacy, "mismatch": mismatch}
+
+
+def clips_line(counts):
+    """The line the command prints (and its JobRun keeps): the next check-up compares with it."""
+    return f"Preview clips: {counts['legacy']} old-format, {counts['mismatch']} not their trailer's clip"
+
+
+def previous_clip_counts():
+    """The counts of the last finished check-up that printed them, None if none did."""
+    from .models import JobRun
+
+    for summary in (JobRun.objects.filter(name="daily_checkup", ok=True).exclude(finished_at=None)
+                    .order_by("-started_at").values_list("summary", flat=True)[:5]):
+        m = _CLIPS_LINE_RE.search(summary or "")
+        if m:
+            return {"legacy": int(m.group(1)), "mismatch": int(m.group(2))}
+    return None
+
+
+def clip_problem(counts, previous):
+    """A problem when a count went up since the last check-up (or the first time, when not 0)."""
+    previous = previous or {"legacy": 0, "mismatch": 0}
+    up = [k for k in ("legacy", "mismatch") if counts[k] > previous[k]]
+    if not up:
+        return None
+    return {"kind": "preview_clips", "what": f"Trailer preview clips that may be the wrong video: "
+            f"{counts['legacy']} old-format (was {previous['legacy']}), {counts['mismatch']} not the clip "
+            f"of the title's trailer (was {previous['mismatch']})",
+            "detail": "Old trailers/{tmdb_id}.mp4 clips can be another title's (a show and a movie share "
+                      "TMDB ids); the others were made from an older trailer, or the trailer is gone. "
+                      "trailer-worker/ remakes them; --clear-rejected removes the old ones it turns down.",
+            "fix": FIX_COMMANDS["_previews"]}
+
+
+def find_problems(now=None, clips=None):
+    """[{"kind", "what", "detail", "fix"}]: everything wrong right now (no AI, nothing paid).
+    clips: preview_clip_counts(), when the caller already has them."""
     from reco import ai_budget
     from reco.models import RecoHomeSnapshot, TagBatch
 
@@ -134,6 +198,10 @@ def find_problems(now=None):
         problems.append({"kind": "ai_budget", "what": f"AI budget: US${spent:.2f} of US${budget:.2f} used "
                          "this month", "detail": "At 100 % every AI feature pauses until next month (the site "
                          "keeps working).", "fix": "Nothing to run: see the dashboard's AI spend card."})
+
+    problem = clip_problem(clips if clips is not None else preview_clip_counts(), previous_clip_counts())
+    if problem:
+        problems.append(problem)
     return problems
 
 

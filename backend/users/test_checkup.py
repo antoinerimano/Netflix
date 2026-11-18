@@ -16,7 +16,7 @@ from reco.models import AiUsage, RecoHomeSnapshot, TagBatch
 
 from . import checkup
 from .dashboard import JOBS
-from .models import JobRun, Profile, User
+from .models import JobRun, Profile, Title, User
 
 Disk = namedtuple("Disk", "total used free")
 
@@ -179,6 +179,42 @@ class CheckupTests(TestCase):
         self.assertEqual(self.kinds(), ["job_failed"])  # this morning: reported
         JobRun.objects.filter(id=run.id).update(finished_at=timezone.now() - timedelta(hours=30))
         self.assertEqual(self.kinds(), [])  # tomorrow: not again
+
+
+    # ---- trailer preview clips ----
+    def clip_title(self, tmdb_id, clip, kind="movie", trailer_key="AAAAAAAAAAA"):
+        return Title.objects.create(type=kind, tmdb_id=tmdb_id, title=f"T{tmdb_id}", trailer_clip_url=clip,
+                                    trailer_url=f"https://www.youtube.com/watch?v={trailer_key}" if trailer_key else "")
+
+    def test_preview_clip_counts(self):
+        cdn = "https://cdn.example.com"
+        self.clip_title(1, f"{cdn}/previews/movie/1-AAAAAAAAAAA.mp4")             # right
+        self.clip_title(2, f"{cdn}/trailers/2.mp4")                              # old format
+        self.clip_title(3, f"{cdn}/previews/movie/3-BBBBBBBBBBB.mp4")             # an older trailer's
+        self.clip_title(4, f"{cdn}/previews/movie/4-AAAAAAAAAAA.mp4", kind="tv")  # the movie's folder
+        self.clip_title(5, f"{cdn}/previews/movie/5-AAAAAAAAAAA.mp4", trailer_key="")  # trailer gone
+        self.clip_title(6, "")                                                   # no clip: not counted
+        self.assertEqual(checkup.preview_clip_counts(), {"legacy": 1, "mismatch": 3})
+
+    def test_preview_clips_reported_when_a_count_goes_up(self):
+        self.assertIn("Preview clips: 0 old-format, 0 not their trailer's clip", self.run_cmd())
+        self.assertEqual(mail.outbox, [])
+        self.clip_title(2, "https://cdn.example.com/trailers/2.mp4")
+        [p] = checkup.find_problems()
+        self.assertEqual(p["kind"], "preview_clips")
+        self.assertIn("1 old-format (was 0)", p["what"])
+        self.assertIn("export_trailer_jobs", p["fix"])
+        self.run_cmd("--dry-run")  # a dry run is not the baseline: still to report
+        self.assertEqual(self.kinds(), ["preview_clips"])
+        self.run_cmd("--no-ai")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("1 old-format (was 0)", mail.outbox[0].body)
+        self.assertEqual(self.kinds(), [])  # the same backlog the next morning: no email
+        self.clip_title(3, "https://cdn.example.com/previews/movie/3-BBBBBBBBBBB.mp4")
+        self.assertIn("1 not the clip of the title's trailer (was 0)", checkup.find_problems()[0]["what"])
+        self.run_cmd("--no-ai")
+        Title.objects.filter(tmdb_id=3).delete()
+        self.assertEqual(self.kinds(), [])  # going down: nothing to say
 
 
 class EveryTests(TestCase):

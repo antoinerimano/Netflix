@@ -21,13 +21,19 @@ class Command(BaseCommand):
 
     @tracked("daily_checkup")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **o):
-        problems = checkup.find_problems()
-        if not problems:
-            self.stdout.write("All OK: nothing to report.")
-            return
-        self.stdout.write(f"{len(problems)} problem(s):\n{checkup.facts_text(problems)}")
-        if o["dry_run"]:
-            return
-        summary = "" if o["no_ai"] else checkup.ai_summary(problems)
-        sent = checkup.send_report(problems, summary)
-        self.stdout.write(f"Emailed {sent} staff account(s){' with the AI summary' if summary else ' (facts only)'}.")
+        clips = checkup.preview_clip_counts()
+        problems = checkup.find_problems(clips=clips)
+        try:
+            if not problems:
+                self.stdout.write("All OK: nothing to report.")
+                return
+            self.stdout.write(f"{len(problems)} problem(s):\n{checkup.facts_text(problems)}")
+            if o["dry_run"]:
+                return
+            summary = "" if o["no_ai"] else checkup.ai_summary(problems)
+            sent = checkup.send_report(problems, summary)
+            self.stdout.write(f"Emailed {sent} staff account(s){' with the AI summary' if summary else ' (facts only)'}.")
+        finally:
+            # the last line, so the run's JobRun keeps it: tomorrow's check-up compares with it.
+            # Not a dry run's (prefixed): it reported nothing, the rise must still be emailed.
+            self.stdout.write(("(dry run) " if o["dry_run"] else "") + checkup.clips_line(clips))
