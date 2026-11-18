@@ -11,7 +11,7 @@ stop it any time, the next run carries on). manage.py import_trailer_results rea
 
 Statuses in results.json:
   ok           uploaded; the import saves it on the title
-  rejected     the video's name isn't the title's (or it's not a trailer): not uploaded
+  rejected     the video's name isn't the title's (another show, a sequel, or not a trailer): not uploaded
   unavailable  private / removed / blocked video: not tried again until TMDB has another one
   error        anything else (network, ffmpeg...): tried again on the next runs, 3 times at most
 
@@ -121,10 +121,27 @@ def norm(s: str) -> str:
     return " ".join(re.sub(r"[^\w]+", " ", s).split())
 
 
+def _compact_on_word_edges(n_compact: str, v_words: list) -> bool:
+    """n with its spaces removed is in v with its spaces removed, starting and ending where v's
+    words do: "Spider-Man" in "Spiderman Trailer", but not "Alien" in "Aliens Trailer"."""
+    v_compact = "".join(v_words)
+    starts, ends, pos = set(), set(), 0
+    for w in v_words:
+        starts.add(pos)
+        pos += len(w)
+        ends.add(pos)
+    i = v_compact.find(n_compact)
+    while i != -1:
+        if i in starts and i + len(n_compact) in ends:
+            return True
+        i = v_compact.find(n_compact, i + 1)
+    return False
+
+
 def name_matches(video_name: str, *names: str) -> bool:
     """The title (or its original title) is in the video's name, give or take punctuation."""
     v = norm(video_name)
-    v_compact = v.replace(" ", "")
+    words = v.split()
     for name in names:
         n = norm(name)
         if not n:
@@ -132,21 +149,43 @@ def name_matches(video_name: str, *names: str) -> bool:
         if re.search(rf"(?<!\w){re.escape(n)}(?!\w)", v):
             return True
         n_compact = n.replace(" ", "")
-        if len(n_compact) >= 5 and n_compact in v_compact:  # "Spider-Man" / "Spiderman"
+        if len(n_compact) >= 5 and _compact_on_word_edges(n_compact, words):  # "Spider-Man" / "Spiderman"
             return True
-        # one or two letters off ("Harry Potter and the Sorcerer's Stone" / "... Sorcerers Stone")
-        if len(n) >= 8:
-            words = v.split()
-            size = len(n.split())
-            for i in range(max(1, len(words) - size + 1)):
-                window = " ".join(words[i:i + size])
-                if SequenceMatcher(None, n, window).ratio() >= 0.88:
-                    return True
+        # a letter or two off inside the name ("Pirates of the Carribean"), never at its first or
+        # last word: "American Horror Stories" is another show than "American Horror Story"
+        n_words = n.split()
+        if len(n) >= 8 and len(n_words) >= 2:
+            size = len(n_words)
+            for width in (size - 1, size, size + 1):
+                for i in range(max(0, len(words) - width + 1)):
+                    window = words[i:i + width]
+                    if window[0] != n_words[0] or window[-1] != n_words[-1]:
+                        continue
+                    if SequenceMatcher(None, n, " ".join(window)).ratio() >= 0.88:
+                        return True
         # "Star Wars: Episode IV - A New Hope" vs a video called "Star Wars: A New Hope": the part
         # after the colon is enough when it is long
         for part in re.split(r"\s*[:\-–]\s*", name):
             p = norm(part)
             if len(p) >= 10 and re.search(rf"(?<!\w){re.escape(p)}(?!\w)", v):
+                return True
+    return False
+
+
+# what follows a film's name in its sequel's: "Toy Story 4", "Dune: Part Two", "John Wick: Chapter 2"
+SEQUEL = r"(?:[2-9]|1[0-9]|ii|iii|iv|vi|vii|viii|ix|x|part \w+|chapter \w+)"
+
+
+def is_sequel_of(video_name: str, *names: str) -> bool:
+    """The video's name is the film's name followed by a sequel's number / part (and that isn't
+    in the film's own name: "Fast & Furious 6" is fine for "Fast & Furious 6")."""
+    v = norm(video_name)
+    for name in names:
+        n = norm(name)
+        if not n:
+            continue
+        for m in re.finditer(rf"(?<!\w){re.escape(n)} ({SEQUEL})(?!\w)", v):
+            if not re.search(rf"(?<!\w){re.escape(n)} {re.escape(m.group(1))}(?!\w)", n):
                 return True
     return False
 
@@ -159,8 +198,12 @@ def check_video(info: dict, job: dict) -> None:
         raise Rejected(f"too long to be a trailer ({duration / 60:.0f} min)")
     if info.get("is_live") or info.get("was_live"):
         raise Rejected("a live stream")
-    if not name_matches(info.get("title") or "", job.get("title", ""), job.get("original_title", "")):
+    names = (job.get("title", ""), job.get("original_title", ""))
+    if not name_matches(info.get("title") or "", *names):
         raise Rejected(f"the video is called {info.get('title')!r}")
+    # a show's "Season 2 Trailer" is still the show's; a film's "... 2 Trailer" is another film
+    if job.get("type") == "movie" and is_sequel_of(info.get("title") or "", *names):
+        raise Rejected(f"the video is called {info.get('title')!r} (a sequel)")
 
 
 # ---------- one title ----------
