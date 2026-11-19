@@ -2,7 +2,7 @@
 """
 manage.py rebuild_title_indexes: the search / "more like this" index tables, from each title's own
 fields: TitleKeyword (keywords), TitleCompany (production_companies), TitleCountry
-(production_countries, ISO codes only), TitleNetwork (TVShowExtras.network_names). users/search.py
+(production_countries, as ISO codes), TitleNetwork (TVShowExtras.network_names). users/search.py
 and reco/views.py read them; nothing else writes them, so a title the syncs add or clean_db
 completes isn't found by keyword until this runs.
 
@@ -23,6 +23,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
+from users.countries import country_code
 from users.jobs import tracked
 from users.models import (
     Title,
@@ -118,38 +119,19 @@ def extract_company_names(value):
 
 
 def extract_country_codes(value):
-    """
-    production_countries can be:
-    - ["US","CA"]
-    - [{"iso_3166_1":"US","name":"United States"}, ...]
-    - ["United States", ...]  (worst case)
-    We prefer ISO2 codes if present; otherwise skip non-ISO2.
-    """
+    """production_countries -> ISO codes: TMDB's English names ("United States of America"), its
+    objects, or codes (users/countries.py). Unknown names are skipped."""
     out = []
-    if value is None:
-        return out
-
-    if isinstance(value, list):
-        for item in value:
-            if isinstance(item, str):
-                code = item.strip().upper()
-                if len(code) == 2 and code.isalpha():
-                    out.append(code)
-            elif isinstance(item, dict):
-                code = (item.get("iso_3166_1") or item.get("code") or "").strip().upper()
-                if len(code) == 2 and code.isalpha():
-                    out.append(code)
-    elif isinstance(value, dict):
-        code = (value.get("iso_3166_1") or value.get("code") or "").strip().upper()
-        if len(code) == 2 and code.isalpha():
+    for item in to_list(value):
+        code = country_code(item)
+        if code and code not in out:
             out.append(code)
-
     return out
 
 
 # ---------- Command ----------
 def titles_to_index(since_days: int):
-    """Titles with keywords / companies / networks but no index row for them, or read on TMDB by
+    """Titles with keywords / companies / countries / networks but no index row for them, or read on TMDB by
     clean_db in the last since_days days."""
     def has_rows(model):
         return Exists(model.objects.filter(title_id=OuterRef("pk")))
@@ -158,6 +140,7 @@ def titles_to_index(since_days: int):
     missing = (
         (~Q(keywords=[]) & ~has_rows(TitleKeyword))
         | (~Q(production_companies=[]) & ~has_rows(TitleCompany))
+        | (~Q(production_countries=[]) & ~has_rows(TitleCountry))
         | (Q(type="tv") & networks & ~has_rows(TitleNetwork))
     )
     if since_days > 0:

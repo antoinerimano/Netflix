@@ -165,3 +165,37 @@ class DashboardJobsTests(TestCase):
         self.assertEqual((rows["Findable by keyword"]["pct"], rows["Findable by keyword"]["missing"]), (100, 0))
         self.assertContains(res, "Catalog freshness")
         self.assertContains(res, "Behind")
+
+
+class CountryTests(TestCase):
+    """The "Made in <country>" home row: titles store TMDB's English country names, the index and
+    the row use ISO codes (users/countries.py)."""
+
+    def test_country_code(self):
+        from .countries import country_code
+
+        self.assertEqual(country_code("United States of America"), "US")
+        self.assertEqual(country_code("south korea"), "KR")
+        self.assertEqual(country_code({"iso_3166_1": "FR", "name": "France"}), "FR")
+        self.assertEqual(country_code("{'name': 'United Kingdom', 'iso_3166_1': 'GB'}"), "GB")
+        self.assertEqual(country_code("jp"), "JP")
+        self.assertEqual((country_code("Atlantis"), country_code(""), country_code("XX")), ("", "", ""))
+
+    def test_index_and_home_row(self):
+        from reco.views import _home_country, _row_params
+        from .models import TitleCountry
+
+        amelie = Title.objects.create(type="movie", title="Amelie", tmdb_id=194, popularity=40,
+                                      production_countries=["France", "Germany"])
+        lupin = Title.objects.create(type="tv", title="Lupin", tmdb_id=96677, popularity=60,
+                                     production_countries=["France"])
+        heat = Title.objects.create(type="movie", title="Heat", tmdb_id=949, popularity=90,
+                                    production_countries=["United States of America"])
+        call_command("rebuild_title_indexes", stdout=StringIO())
+        self.assertEqual(set(TitleCountry.objects.filter(title=amelie).values_list("country_code", flat=True)),
+                         {"FR", "DE"})
+
+        # a profile that watched Heat, Amelie and Lupin: the US doesn't count, France it is, most popular first
+        self.assertEqual(_home_country([heat.id, amelie.id, lupin.id]), ("FR", [lupin.id, amelie.id]))
+        self.assertEqual(_home_country([heat.id]), ("", []))
+        self.assertEqual(_row_params("country:FR", None), {"country": "FR"})  # the app names it in its language
