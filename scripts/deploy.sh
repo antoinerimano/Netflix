@@ -21,7 +21,7 @@ LOCKS=(
   /tmp/clean_db_weekly.lock /tmp/sync_tmdb_weekly.lock /tmp/taurus_heavy.lock
   /tmp/taurus_tags.lock /tmp/taurus_related.lock /tmp/taurus_checkup.lock
   /tmp/taurus_episodes.lock /tmp/taurus_home.lock /tmp/taurus_backup.lock /tmp/taurus_translate.lock
-  /tmp/taurus_ratings.lock
+  /tmp/taurus_ratings.lock /tmp/taurus_new_releases.lock /tmp/taurus_index.lock /tmp/taurus_restore_test.lock
 )
 
 deadline=$(( $(date +%s) + WAIT_SECONDS ))

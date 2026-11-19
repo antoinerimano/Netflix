@@ -4,7 +4,7 @@
 /var/log/clean_db_weekly.log
 /var/log/sync_tmdb_*.log
 /var/log/train_ranker_weekly.log
-/var/log/build_embeddings_weekly.log
+/var/log/build_embeddings_*.log
 /var/log/fix_actor_duplicates.log
 /var/log/certbot-renew.log
 /var/log/weekly-cleanup.log

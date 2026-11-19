@@ -28,9 +28,10 @@ class OpsFilesTests(SimpleTestCase):
         for path in (ROOT / "backend").glob("*/management/commands/*.py"):
             tracked |= set(re.findall(r'@tracked\("([\w-]+)"\)', path.read_text(encoding="utf-8")))
         scripts = "\n".join(p.read_text(encoding="utf-8") for p in
-                            [ROOT / "scripts" / "backup_db.sh", ROOT / "ops" / "weekly-cleanup.sh"])
+                            [ROOT / "scripts" / "backup_db.sh", ROOT / "scripts" / "test_backup_restore.sh",
+                             ROOT / "ops" / "weekly-cleanup.sh"])
         recorded = set(re.findall(r"record_job ([\w-]+)", scripts))
-        self.assertEqual({"backup_db", "weekly_cleanup"}, recorded)
+        self.assertEqual({"backup_db", "backup_restore_test", "weekly_cleanup"}, recorded)
         missing = {name for name, _label, _late in JOBS} - tracked - recorded
         self.assertEqual(missing, set(), "dashboard jobs nothing records: @tracked or record_job")
 
@@ -41,5 +42,14 @@ class OpsFilesTests(SimpleTestCase):
                 self.assertIn(f"installed_differs ops/{path.name} ", deploy, f"ops/{path.name}: check it in deploy.sh")
 
     def test_server_scripts_have_unix_line_endings(self):
-        for path in ("scripts/backup_db.sh", "ops/weekly-cleanup.sh", "ops/crontab", "ops/logrotate-taurus"):
+        for path in ("scripts/backup_db.sh", "scripts/test_backup_restore.sh", "ops/weekly-cleanup.sh", "ops/crontab", "ops/logrotate-taurus"):
             self.assertNotIn(b"\r", (ROOT / path).read_bytes(), path)
+
+    def test_every_dashboard_job_says_when_and_what(self):
+        from .dashboard import JOB_GROUPS, JOB_INFO, JOBS
+
+        for name, _label, _late in JOBS:
+            self.assertIn(name, JOB_INFO, f"{name}: add it to dashboard.JOB_INFO (group, when, what)")
+            group, when, what = JOB_INFO[name]
+            self.assertIn(group, JOB_GROUPS)
+            self.assertTrue(when and what, name)

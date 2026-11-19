@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from users.i18n import current_language, to_app_language
 from users.localize import title_names
+from users.countries import TMDB_COUNTRIES
 from users.models import (
     Title, Profile, TVShowExtras, Episode, Provider,
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
@@ -260,6 +261,23 @@ def _ids_from_index(model_cls, field_candidates, value, limit=CANDS_PER_SOURCE):
 
 def _ids_from_table(qs, limit=CANDS_PER_SOURCE):
     return list(qs.values_list("title_id", flat=True).distinct()[:limit])
+
+
+def _home_country(seed_title_ids):
+    """The "Made in <country>" row: the country (ISO code, TitleCountry / users/countries.py) the
+    profile's recent titles come from most, and titles made there. The US is left out: half the
+    catalog comes from there, a row that says nothing. ("", []) when there is none."""
+    codes = [c.upper() for c in _values_for_seed_titles(TitleCountry, seed_title_ids, ["country_code"], limit=4000)
+             if c and c.upper() != "US"]
+    if not codes:
+        return "", []
+    code = Counter(codes).most_common(1)[0][0]
+    ids = list(
+        Title.objects.filter(countries_rel__country_code=code)
+        .order_by("-popularity", "-vote_average")
+        .values_list("id", flat=True)[:CANDS_PER_SOURCE]
+    )
+    return code, ids
 
 
 # ============================================================
@@ -811,15 +829,9 @@ def build_home_payload_exact(profile, user_id=None, do_logs=True):
             net_ids = _ids_from_index(TitleNetwork, ["network_norm", "name_norm", "network", "name"], net)
             planned_rows.append((f"network:{net}", f"On {str(net).title()}", net_ids, 30))
 
-        country_vals = _values_for_seed_titles(
-            TitleCountry, seed_title_ids,
-            ["country_norm", "name_norm", "country", "name"],
-            limit=4000,
-        )
-        if country_vals:
-            ctry, _ = Counter(country_vals).most_common(1)[0]
-            ctry_ids = _ids_from_index(TitleCountry, ["country_norm", "name_norm", "country", "name"], ctry)
-            planned_rows.append((f"country:{ctry}", f"Made in {str(ctry).upper()}", ctry_ids, 30))
+        ctry, ctry_ids = _home_country(seed_title_ids)
+        if ctry:
+            planned_rows.append((f"country:{ctry}", f"Made in {TMDB_COUNTRIES.get(ctry, ctry)}", ctry_ids, 30))
 
         _plan_mark("studio_network_country", planned=len(planned_rows))
 

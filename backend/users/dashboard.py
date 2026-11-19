@@ -24,12 +24,14 @@ JOBS = [
     ("sync_tmdb_daily_episodes", "New episodes sync", timedelta(hours=8)),
     ("notify_new_episodes", "New episode alerts", timedelta(hours=8)),
     ("build_home_snapshots", "Home pages build", timedelta(hours=6)),
+    ("sync_tmdb_new_releases", "New movies (just released)", timedelta(hours=30)),
     # the command keeps its old name (its JobRun history, the crontab): it runs every Sunday
     ("sync_tmdb_monthly", "New titles from TMDB (weekly)", timedelta(days=8)),
     ("train_ranker", "Ranker training", None),
-    ("build_embeddings", "Embeddings build", None),
+    ("build_embeddings", "Embeddings / more like this", timedelta(hours=30)),
     ("backfill_ratings", "Age ratings from TMDB", timedelta(hours=30)),
     ("clean_db", "Database cleanup", timedelta(hours=30)),
+    ("rebuild_title_indexes", "Search index (keywords, studios, networks)", timedelta(hours=30)),
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
     ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
@@ -37,10 +39,38 @@ JOBS = [
     ("fix_actor_duplicates", "Actor duplicates (monthly)", timedelta(days=32)),
     # shell scripts, recorded by manage.py record_job
     ("backup_db", "Database backup (to Google Drive)", timedelta(hours=30)),
+    ("backup_restore_test", "Backup restore test", timedelta(days=8)),
     ("weekly_cleanup", "Server cleanup (Docker, logs)", timedelta(days=8)),
     # the mini PC's nightly trailer-worker/run.sh, seen when it imports its clips
     ("import_trailer_results", "Trailer clips (mini PC)", timedelta(hours=30)),
 ]
+
+# For the dashboard's jobs card: the group a job is shown in, when cron runs it (ops/crontab, UTC)
+# and what it does for the site, in a few words.
+JOB_GROUPS = ["Catalog", "Recommendations & home pages", "AI", "Health & safety"]
+JOB_INFO = {
+    "sync_tmdb_new_releases": ("Catalog", "Every night 00:30", "Adds the movies just out: trending today, in theatres, new on streaming"),
+    "sync_tmdb_monthly": ("Catalog", "Sundays 00:45", "Adds popular movies and shows the catalog lacks (500+ votes)"),
+    "sync_tmdb_daily_episodes": ("Catalog", "Every 3 hours", "New shows on the air and their new episodes, plus translations"),
+    "clean_db": ("Catalog", "Every night 04:30, 2 h 30 max", "Removes duplicates, refreshes each title from TMDB once a month"),
+    "backfill_ratings": ("Catalog", "Every night 02:00", "Age ratings of new titles (what Kids profiles may see)"),
+    "sync_tmdb_related": ("Catalog", "Every night 03:00", "TMDB's related titles and other names (search in every language)"),
+    "rebuild_title_indexes": ("Catalog", "Every night 07:15", "Makes new and refreshed titles findable by keyword, studio, network"),
+    "fix_actor_duplicates": ("Catalog", "1st of the month 02:30", "Merges actors listed twice on a title"),
+    "import_trailer_results": ("Catalog", "Every night (mini PC)", "Trailer preview clips cut by the mini PC"),
+    "build_embeddings": ("Recommendations & home pages", "Every night 08:00 (new titles), Sundays 09:30 (all)",
+                         '"More like this" and the taste vectors the recommendations use'),
+    "train_ranker": ("Recommendations & home pages", "Sundays 07:30", "Learns from last month's clicks how to order the rows"),
+    "build_home_snapshots": ("Recommendations & home pages", "Every 2 hours", "Builds each profile's home page"),
+    "notify_new_episodes": ("Recommendations & home pages", "Every 3 hours", "Alerts for new episodes of followed shows"),
+    "tag_titles": ("AI", "Every night 04:00", "Moods / themes / pacing tags by Claude (batch, within the AI budget)"),
+    "translate_titles": ("AI", "Every night 03:30", "Overviews TMDB lacks, translated by Claude (within the AI budget)"),
+    "check_providers": ("Health & safety", "Every 15 minutes", "Checks streaming providers are up, switches dead domains"),
+    "daily_checkup": ("Health & safety", "Every day 07:00", "Emails staff when something on this page goes wrong"),
+    "backup_db": ("Health & safety", "Every night 01:30", "Database backup, copied to Google Drive"),
+    "backup_restore_test": ("Health & safety", "Wednesdays 02:15", "Restores the newest backup in a test database and counts rows"),
+    "weekly_cleanup": ("Health & safety", "Sundays 03:00", "Frees disk space (old Docker images, system logs)"),
+}
 
 AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
     "recap": "Catch me up (users)",
@@ -140,6 +170,20 @@ def _providers(now):
     return sorted(rows, key=lambda r: (-r["plays"], r["p"].priority))
 
 
+def _duration(d):
+    if d is None:
+        return ""
+    secs = int(d.total_seconds())
+    if secs < 60:
+        return f"{secs} s"
+    if secs < 3600:
+        return f"{secs // 60} min"
+    return f"{secs // 3600} h {secs % 3600 // 60:02d}"
+
+
+STATE_ORDER = {"failed": 0, "running": 1, "late": 2, "never": 3, "ok": 4}
+
+
 def _jobs(now):
     since7 = now - timedelta(days=7)
     rows = []
@@ -156,9 +200,52 @@ def _jobs(now):
             state = "failed"
         else:
             state = "late" if late else "ok"
+        group, when, what = JOB_INFO.get(name, ("Other", "", ""))
+        lines = [ln for ln in ((last.error or last.summary) if last else "").splitlines() if ln.strip()]
         rows.append({"name": name, "label": label, "last": last, "runs": runs, "failures": failures,
-                     "state": state, "late_after": late_after})
+                     "state": state, "late_after": late_after, "group": group, "when": when, "what": what,
+                     "result": lines[-1] if lines else "", "details": "\n".join(lines),
+                     "duration": _duration(last.duration) if last else ""})
     return rows
+
+
+def _job_board(jobs):
+    """The jobs card: a count per status, then the jobs by group (problems first in each)."""
+    counts = {state: sum(1 for j in jobs if j["state"] == state) for state in STATE_ORDER}
+    groups = []
+    for group in JOB_GROUPS + ["Other"]:
+        rows = sorted((j for j in jobs if j["group"] == group), key=lambda j: STATE_ORDER[j["state"]])
+        if rows:
+            groups.append({"name": group, "jobs": rows,
+                           "problems": sum(1 for j in rows if j["state"] in ("failed", "late"))})
+    return {"counts": counts, "groups": groups, "all_ok": counts["ok"] == len(jobs)}
+
+
+def _freshness(titles_total):
+    """What the jobs keep up to date, in % of the catalog, and which job fills each line."""
+    from django.db.models import Exists, OuterRef
+
+    from reco.models import TitleEmbedding
+    from .models import TitleKeyword
+
+    def row(label, done, job, warn_below):
+        pct = _pct(done, titles_total)
+        return {"label": label, "done": done, "missing": max(titles_total - done, 0), "pct": pct, "job": job,
+                "ok": pct is None or pct >= warn_below}
+
+    month_ago = timezone.now() - timedelta(days=30)
+    no_index = (Title.objects.exclude(keywords=[])
+                .filter(~Exists(TitleKeyword.objects.filter(title_id=OuterRef("pk")))).count())
+    with_blob = TitleEmbedding.objects.filter(vector_blob__isnull=False).exclude(vector_blob=b"").count()
+    return [
+        row("Read on TMDB in the last 30 days", Title.objects.filter(tmdb_checked_at__gte=month_ago).count(),
+            "Database cleanup", 90),
+        row("Findable by keyword", titles_total - no_index, "Search index", 99),
+        row('In "more like this" and recommendations', with_blob, "Embeddings", 99),
+        row("With an age rating", Title.objects.exclude(maturity=None).count(), "Age ratings", 90),
+        row("With related titles / other names", Title.objects.exclude(related_synced_at=None).count(),
+            "TMDB related", 90),
+    ]
 
 
 def dashboard_view(request):
@@ -198,7 +285,9 @@ def dashboard_view(request):
         "plays_top": plays_top,
         "plays_total": sum(d["n"] for d in plays),
         "providers": _providers(now),
-        "jobs": _jobs(now),
+        "jobs": _job_board(_jobs(now)),
+        "freshness": _freshness(titles_total),
+        "titles_total": titles_total,
         "ai": _ai_spend(now),
         "ai_help": _ai_help(now),
         "snapshots_total": snapshots.count(),
@@ -210,7 +299,6 @@ def dashboard_view(request):
         "catalog": [
             ("Titles", titles_total),
             ("Episodes", Episode.objects.count()),
-            ("With an age rating", f"{_pct(Title.objects.exclude(maturity=None).count(), titles_total) or 0} %"),
             ("Accounts / profiles", f"{User.objects.count()} / {Profile.objects.count()}"),
         ],
     }

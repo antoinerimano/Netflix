@@ -23,6 +23,18 @@ use `@tracked`; the shell scripts here call `manage.py record_job <name>` when t
 imports them (`import_trailer_results`). The check-up also warns when the HTTPS certificate has
 less than 14 days left (certbot renews at 30).
 
+The dashboard's jobs card groups them (Catalog, Recommendations & home pages, AI, Health & safety)
+with their schedule and what they do (`JOB_INFO`, next to `JOBS`); a new job needs a line in both.
+Its "Catalog freshness" card shows what they keep up to date, in % of the titles.
+
+Fresh titles, every night: `sync_tmdb_new_releases` (00:30) adds the movies just out (TMDB's trending,
+in theatres, new on streaming; the weekly sync only takes 500+ votes), then the jobs that complete a
+new title: age rating, translations, related titles, `rebuild_title_indexes` (07:15: keyword / studio /
+network search) and `build_embeddings --missing` (08:00: "more like this"; the full build stays on Sundays).
+
+`scripts/test_backup_restore.sh` (Wednesdays 02:15) loads the newest dump into a throwaway MySQL
+container and checks the main tables came back (log: `/var/log/taurus_restore_test.log`).
+
 `clean_db` runs every night for at most 150 minutes, on the titles not read on TMDB for 30 days
 (`Title.tmdb_checked_at`): a run cut off by a deploy carries on the next night.
 
