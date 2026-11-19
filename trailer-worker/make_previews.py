@@ -207,10 +207,21 @@ def check_video(info: dict, job: dict) -> None:
 
 
 # ---------- one title ----------
-def make_clip(job: dict, workdir: Path) -> tuple[Path, dict]:
+def has_dubbed_audio(info: dict) -> bool:
+    """The video carries more than its own audio (YouTube's AI dubs, other language tracks)."""
+    audio = [f for f in info.get("formats") or [] if f.get("acodec") not in (None, "none")]
+    if any("original" in (f.get("format_note") or "").lower() for f in audio):
+        return True  # YouTube only says "original" when there are other tracks
+    langs = {(f.get("language") or "").split("-")[0].lower() for f in audio if f.get("language")}
+    return len(langs) > 1
+
+
+def make_clip(job: dict, workdir: Path, info: dict | None = None, check: bool = True) -> tuple[Path, dict]:
     url = job["trailer_url"]
-    info = json.loads(run(ytdlp("-J", "--skip-download", url), timeout=120) or "{}")
-    check_video(info, job)
+    if info is None:
+        info = json.loads(run(ytdlp("-J", "--skip-download", url), timeout=120) or "{}")
+    if check:
+        check_video(info, job)
 
     duration = float(info.get("duration") or 0)
     clip = min(CLIP_SECONDS, max(5.0, duration - 2)) if duration else CLIP_SECONDS
@@ -311,15 +322,72 @@ def lock(path: Path):
     return f
 
 
+# ---------- clips made before the original audio was asked for ----------
+def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, deadline, stopping) -> int:
+    """
+    Clips made before make_clip asked for the original audio could carry one of YouTube's AI
+    dubs (The Walking Dead came out in another language). For up to `limit` "ok" clips not
+    checked yet: when the video has other audio tracks, make the clip again (same path: the
+    CDN serves the new file once Bunny Storage replaces it); otherwise just note it is fine.
+    entry["audio"]: "single" (one track, the clip was right), "redone", "gone" (video removed).
+    """
+    results = data["results"]
+    todo = [(k, r) for k, r in results.items() if r.get("status") == "ok" and not r.get("audio")]
+    print(f"Audio re-check: {len(todo)} clip(s) not checked yet, {min(limit, len(todo))} now")
+    counts = {"single": 0, "redone": 0, "gone": 0, "error": 0}
+    for i, (key, entry) in enumerate(todo[:limit]):
+        if stopping["now"] or (deadline and time.monotonic() > deadline):
+            break
+        label = f"[audio {i + 1}] {entry['type']} {entry['tmdb_id']} {entry.get('title', '')!r}"
+        url = f"https://www.youtube.com/watch?v={entry['youtube_key']}"
+        workdir = Path(tempfile.mkdtemp(prefix="recheck_", dir=TMP_BASE))
+        try:
+            info = json.loads(run(ytdlp("-J", "--skip-download", url), timeout=120) or "{}")
+            if not has_dubbed_audio(info):
+                entry["audio"] = "single"
+            else:
+                # the name was checked when it was first made: only the audio is redone
+                job = {"type": entry["type"], "tmdb_id": entry["tmdb_id"], "title": entry.get("title", ""),
+                       "trailer_url": url, "path": entry["path"]}
+                clip, details = make_clip(job, workdir, info=info, check=False)
+                if not dry_run:
+                    bunny_upload(clip, entry["path"])
+                entry.update(details, audio="redone", at=time.strftime("%Y-%m-%dT%H:%M:%S"))
+            print(f"{label} {entry['audio']}")
+        except Blocked as e:
+            print(f"{label} YouTube refused ({e}): stopping, the next run carries on")
+            return EXIT_BLOCKED
+        except Unavailable:
+            entry["audio"] = "gone"  # the clip already made stays
+            print(f"{label} video gone, clip kept")
+        except Exception as e:  # noqa: BLE001
+            entry["audio_errors"] = entry.get("audio_errors", 0) + 1
+            if entry["audio_errors"] >= MAX_ATTEMPTS:
+                entry["audio"] = "error"
+            print(f"{label} error: {str(e).splitlines()[-1] if str(e) else e}")
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        counts[entry.get("audio") if entry.get("audio") in counts else "error"] += 1
+        if not dry_run:
+            save_results(results_path, data)
+        time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
+    print("Audio re-check done: " + ", ".join(f"{k} {v}" for k, v in counts.items()))
+    return 0
+
+
 # ---------- main ----------
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("jobs", help="jobs.json from manage.py export_trailer_jobs")
+    ap.add_argument("jobs", nargs="?", help="jobs.json from manage.py export_trailer_jobs")
     ap.add_argument("--results", default=str(HERE / "results.json"))
     ap.add_argument("--limit", type=int, default=0, help="Stop after this many titles.")
     ap.add_argument("--max-minutes", type=float, default=0, help="Stop after this long.")
     ap.add_argument("--dry-run", action="store_true", help="Make the clips, don't upload them.")
+    ap.add_argument("--recheck-audio", type=int, default=0, metavar="N",
+                    help="Instead of jobs: re-check N clips already made for a dubbed audio track.")
     args = ap.parse_args()
+    if not args.jobs and not args.recheck_audio:
+        ap.error("give jobs.json, or --recheck-audio N")
 
     if not args.dry_run and not (BUNNY_API_KEY and BUNNY_STORAGE_ZONE):
         print("Set BUNNY_API_KEY and BUNNY_STORAGE_ZONE in .env (see .env.example).")
@@ -330,15 +398,17 @@ def main() -> int:
 
     results_path = Path(args.results)
     _lock = lock(results_path.with_suffix(".lock"))  # noqa: F841 (held until exit)
-    jobs = json.loads(Path(args.jobs).read_text(encoding="utf-8")).get("jobs") or []
     data = load_results(results_path)
     results = data["results"]
-    todo = [j for j in jobs if not is_done(results.get(job_key(j)))]
-    print(f"{len(jobs)} job(s), {len(todo)} to do")
-
     stopping = {"now": False}
     signal.signal(signal.SIGTERM, lambda *_: stopping.update(now=True))
     deadline = time.monotonic() + args.max_minutes * 60 if args.max_minutes else None
+    if args.recheck_audio:
+        return recheck_audio(data, results_path, args.recheck_audio, args.dry_run, deadline, stopping)
+
+    jobs = json.loads(Path(args.jobs).read_text(encoding="utf-8")).get("jobs") or []
+    todo = [j for j in jobs if not is_done(results.get(job_key(j)))]
+    print(f"{len(jobs)} job(s), {len(todo)} to do")
     counts = {"ok": 0, "rejected": 0, "unavailable": 0, "error": 0}
     exit_code = 0
 

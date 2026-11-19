@@ -55,6 +55,12 @@ carries on the next night. `crontab -e`:
 The first time the whole catalogue is done again (old clips could belong to the wrong title):
 popular titles first, about 3 to 5 nights for 20,000 titles. Then a few minutes a night.
 
+Before the new clips, `run.sh` re-checks up to `RECHECK_AUDIO` (100) clips already made: clips
+made before the worker asked for the original audio could carry one of YouTube's AI dubs (a
+Russian *The Walking Dead*). A video with other audio tracks gets its clip made again, same
+path; `results.json` notes each clip's `audio` (`single`, `redone`, `gone`). Once all are
+checked, this step takes a few seconds.
+
 ## When something goes wrong
 
 | In the log | Meaning / what to do |

@@ -16,8 +16,14 @@ else
   echo "Couldn't get the job list from the server"; rm -f jobs.json.part; exit 1
 fi
 
-.venv/bin/python make_previews.py jobs.json --max-minutes "${MAX_MINUTES:-480}"
+# clips made before the original audio was asked for: a few a night, redone when the video has
+# AI-dubbed tracks (make_previews.py recheck_audio); nothing left to check = a few seconds
+.venv/bin/python make_previews.py --recheck-audio "${RECHECK_AUDIO:-100}" --max-minutes 90
 rc=$?
+if [ "$rc" -ne 75 ]; then  # YouTube refused: no point starting the new clips tonight
+  .venv/bin/python make_previews.py jobs.json --max-minutes "${MAX_MINUTES:-480}"
+  rc=$?
+fi
 [ "$rc" -eq 75 ] && echo "YouTube refused for now: the next run carries on" && rc=0
 
 if [ -f results.json ]; then
