@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from django.core.management.base import BaseCommand
 from django.db import transaction, IntegrityError
 
+from users.jobs import tracked
 from users.models import Title, Actor
 
 
@@ -74,6 +75,7 @@ class Command(BaseCommand):
         parser.add_argument("--log-every", type=int, default=500, help="Log every N titles processed")
         parser.add_argument("--dry-run", action="store_true", help="Don't write, only log counts")
 
+    @tracked("fix_actor_duplicates")  # JobRun (outside the transaction): shown on the admin dashboard
     @transaction.atomic
     def handle(self, *args, **opts):
         limit = int(opts["limit"])

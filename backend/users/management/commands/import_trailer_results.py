@@ -17,6 +17,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
+from users.jobs import tracked
 from users.models import Title
 from users.trailers import preview_path, youtube_key
 
@@ -30,6 +31,9 @@ class Command(BaseCommand):
         parser.add_argument("--clear-rejected", action="store_true",
                             help="Also remove the old clip of titles whose trailer was rejected.")
 
+    # JobRun: the dashboard / check-up see when the mini PC's nightly run (trailer-worker/run.sh)
+    # last brought its clips back, and say so when it stops
+    @tracked("import_trailer_results")
     def handle(self, *args, **opts):
         try:
             raw = sys.stdin.read() if opts["file"] == "-" else open(opts["file"], encoding="utf-8").read()

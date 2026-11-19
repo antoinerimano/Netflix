@@ -10,6 +10,10 @@
 #   - still busy after WAIT_SECONDS: the deploy stops without restarting anything, says which job,
 #     and can be run again from GitHub (Actions > the run > "Re-run failed jobs").
 #   --locks-only   take the locks, say so, release them, restart nothing (a check)
+#
+# Then it says (a warning on the GitHub run, nothing stops) when the server's cron files aren't the
+# ones in ops/ (root's crontab, weekly-cleanup.sh, the logrotate config): installing them is a manual
+# step (ops/README.md), and a job the code expects but cron doesn't run shows up "late" a day later.
 set -euo pipefail
 
 WAIT_SECONDS="${WAIT_SECONDS:-1200}"
@@ -43,3 +47,14 @@ fi
 docker compose up -d --build backend frontend
 docker compose exec -T backend python manage.py migrate --noinput
 docker image prune -f
+
+installed_differs() {  # $1: the file in ops/, $2: where it is installed ("crontab": root's crontab)
+  local installed
+  if [[ "$2" == crontab ]]; then installed=$(crontab -l 2>/dev/null || true); else installed=$(cat "$2" 2>/dev/null || true); fi
+  if [[ "$installed" != "$(cat "$1")" ]]; then
+    echo "::warning::$2 on the server is not $1 of this deploy: install it (ops/README.md)"
+  fi
+}
+installed_differs ops/crontab crontab
+installed_differs ops/weekly-cleanup.sh /usr/local/bin/weekly-cleanup.sh
+installed_differs ops/logrotate-taurus /etc/logrotate.d/taurus

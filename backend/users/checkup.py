@@ -5,7 +5,10 @@ jobs and server? An email to staff only when something is.
 
 1. find_problems(): plain checks, no AI, nothing paid:
    - a scheduled job (dashboard JOBS) that failed (reported the day it failed, not every day after),
-     is late, or has been "running" for hours;
+     is late, or has been "running" for hours. Also the server's shell scripts (the database
+     backup, the weekly cleanup: manage.py record_job) and the mini PC's trailer clips (seen when
+     it imports them): a backup that fails, or a machine that stops, is reported like a job;
+   - the site's HTTPS certificate expiring within 14 days (certbot renews it at 30: it failed);
    - home pages that failed to build, or none rebuilt for 12 hours;
    - an AI tag batch still not collected after 26 hours (batches end within 24);
    - the disk under 10 % or 5 GB free;
@@ -24,7 +27,10 @@ jobs and server? An email to staff only when something is.
 import logging
 import re
 import shutil
-from datetime import timedelta
+import socket
+import ssl
+from datetime import datetime, timedelta, timezone as dt_timezone
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -40,6 +46,7 @@ SNAPSHOTS_STALE = timedelta(hours=12)     # home pages are rebuilt every 2 hours
 TAG_BATCH_LATE = timedelta(hours=26)      # a Message Batch ends within 24 hours
 DISK_MIN_FREE_PCT = 10
 DISK_MIN_FREE_GB = 5
+CERT_MIN_DAYS = 14                        # certbot renews at 30 days left (weekly): it failed twice
 AI_COST_CAP = 0.01                        # US$: one check-up email never costs more than this
 
 # What to run on the server for each job (from ops/crontab / scripts/): the only commands the AI
@@ -54,7 +61,11 @@ FIX_COMMANDS = {
     "train_ranker": f"{_EXEC} train_ranker",
     "build_embeddings": f"{_EXEC} build_embeddings --type all --topk 80 --model-name all-MiniLM-L6-v2",
     "backfill_ratings": f"{_EXEC} backfill_ratings",
-    "clean_db": f"{_EXEC} clean_db --dedupe --backfill-links --backfill-tmdb --verbose",
+    "clean_db": f"{_EXEC} clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --stale-days 30 --max-minutes 150",
+    "fix_actor_duplicates": f"{_EXEC} fix_actor_duplicates",
+    "backup_db": "/opt/taurus/scripts/backup_db.sh   (log: /var/log/taurus_backup.log)",
+    "weekly_cleanup": "/usr/local/bin/weekly-cleanup.sh   (log: /var/log/weekly-cleanup.log)",
+    "import_trailer_results": "on the mini PC: tail -50 ~/taurus/trailer-worker/run.log   (then: crontab -l, ~/taurus/trailer-worker/run.sh)",
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
     "translate_titles": f"{_EXEC} translate_titles",
@@ -63,6 +74,7 @@ FIX_COMMANDS = {
     "_logs": "cd /opt/taurus && docker compose logs --tail 200 backend",
     "_restart": "cd /opt/taurus && docker compose restart backend",
     "_disk": "df -h / && docker system df && docker image prune -f",
+    "_cert": "cd /opt/taurus && docker compose run --rm certbot renew && docker compose exec -T nginx nginx -s reload",
 }
 
 SYSTEM = """You are the on-call assistant of a small streaming website (Django + MySQL in docker
@@ -138,6 +150,24 @@ def clip_problem(counts, previous):
             "fix": FIX_COMMANDS["_previews"]}
 
 
+def cert_days_left(url=None):
+    """Days before the HTTPS certificate of SITE_URL expires, None when it can't be read (not
+    https, a local address, the site unreachable: other checks see a site that is down)."""
+    parts = urlparse(url if url is not None else settings.SITE_URL)
+    host = parts.hostname or ""
+    if parts.scheme != "https" or host in ("", "localhost", "127.0.0.1") or host.endswith(".local"):
+        return None
+    try:
+        with socket.create_connection((host, parts.port or 443), timeout=10) as sock:
+            with ssl.create_default_context().wrap_socket(sock, server_hostname=host) as tls:
+                not_after = tls.getpeercert()["notAfter"]
+    except (OSError, KeyError, ValueError) as exc:  # ssl.SSLError (expired...) is an OSError
+        log.warning("check-up: can't read the HTTPS certificate of %s: %s", host, exc)
+        return None
+    expires = datetime.fromtimestamp(ssl.cert_time_to_seconds(not_after), tz=dt_timezone.utc)
+    return (expires - datetime.now(dt_timezone.utc)).days
+
+
 def find_problems(now=None, clips=None):
     """[{"kind", "what", "detail", "fix"}]: everything wrong right now (no AI, nothing paid).
     clips: preview_clip_counts(), when the caller already has them."""
@@ -192,6 +222,13 @@ def find_problems(now=None, clips=None):
                              "fix": FIX_COMMANDS["_disk"]})
     except OSError:
         pass
+
+    days = cert_days_left()
+    if days is not None and days < CERT_MIN_DAYS:
+        problems.append({"kind": "cert", "what": f"The HTTPS certificate expires in {max(days, 0)} days",
+                         "detail": "certbot renews it every Monday once 30 days are left: the renewals failed "
+                                   "(log: /var/log/certbot-renew.log). Expired, browsers block the site.",
+                         "fix": FIX_COMMANDS["_cert"]})
 
     budget, spent = ai_budget.monthly_budget(), ai_budget.spent_this_month()
     if budget and spent >= 0.8 * budget:

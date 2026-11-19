@@ -6,10 +6,25 @@ What lives on the server outside the app code, so the server can be rebuilt.
 |---|---|---|
 | `crontab` | root's crontab | `crontab ops/crontab` |
 | `weekly-cleanup.sh` | `/usr/local/bin/weekly-cleanup.sh` | `install -m 755 ops/weekly-cleanup.sh /usr/local/bin/` |
+| `logrotate-taurus` | `/etc/logrotate.d/taurus` | `install -m 644 ops/logrotate-taurus /etc/logrotate.d/taurus` |
 
 `crontab` is a copy: after `crontab -e` on the server, refresh it with `crontab -l > ops/crontab`.
+Each deploy (`scripts/deploy.sh`) warns on the GitHub run when one of these three isn't installed as
+it is here.
 
 Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`.
+
+## Watched jobs
+
+Every job in the dashboard's `JOBS` (`backend/users/dashboard.py`) records its runs (`JobRun`): the
+dashboard shows them and the daily check-up emails staff when one failed or is late. Django commands
+use `@tracked`; the shell scripts here call `manage.py record_job <name>` when they end
+(`backup_db.sh`: ok or failed, `weekly-cleanup.sh`); the mini PC's trailer clips are seen when it
+imports them (`import_trailer_results`). The check-up also warns when the HTTPS certificate has
+less than 14 days left (certbot renews at 30).
+
+`clean_db` runs every night for at most 150 minutes, on the titles not read on TMDB for 30 days
+(`Title.tmdb_checked_at`): a run cut off by a deploy carries on the next night.
 
 ## Database backups
 

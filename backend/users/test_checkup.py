@@ -19,6 +19,7 @@ from .dashboard import JOBS
 from .models import JobRun, Profile, Title, User
 
 Disk = namedtuple("Disk", "total used free")
+REAL_CERT_DAYS_LEFT = checkup.cert_days_left  # setUp mocks it
 
 
 def reply(text="Home pages failed: run cron_build_home.sh.", stop_reason="end_turn"):
@@ -44,6 +45,9 @@ class CheckupTests(TestCase):
         disk = mock.patch("users.checkup.shutil.disk_usage", return_value=Disk(100e9, 50e9, 50e9))
         disk.start()
         self.addCleanup(disk.stop)
+        cert = mock.patch("users.checkup.cert_days_left", return_value=60)  # never the network
+        cert.start()
+        self.addCleanup(cert.stop)
 
     def run_cmd(self, *args):
         out = StringIO()
@@ -104,6 +108,39 @@ class CheckupTests(TestCase):
             [p] = checkup.find_problems()
         self.assertEqual(p["kind"], "disk")
         self.assertIn("4.0 GB free", p["what"])
+
+    def test_backup_and_mini_pc_like_the_other_jobs(self):
+        # shell scripts (record_job) and the mini PC's imports are jobs too: failed or late
+        call_command("record_job", "backup_db", "--failed", "--summary", "ERROR: mysqldump failed (exit 1)",
+                     stdout=StringIO())
+        JobRun.objects.filter(name="import_trailer_results").update(started_at=timezone.now() - timedelta(hours=31))
+        problems = {p["kind"]: p for p in checkup.find_problems()}
+        self.assertEqual(set(problems), {"job_failed", "job_late"})
+        self.assertIn("mysqldump failed", problems["job_failed"]["detail"])
+        self.assertEqual(problems["job_failed"]["fix"], checkup.FIX_COMMANDS["backup_db"])
+        self.assertIn("mini PC", problems["job_late"]["fix"])
+
+    def test_record_job(self):
+        call_command("record_job", "weekly_cleanup", "--summary", "12G free (60% used)", stdout=StringIO())
+        run = JobRun.objects.filter(name="weekly_cleanup").latest("started_at")
+        self.assertEqual((run.ok, run.summary, run.error), (True, "12G free (60% used)", ""))
+        self.assertIsNotNone(run.finished_at)
+
+    def test_https_certificate(self):
+        with mock.patch("users.checkup.cert_days_left", return_value=20):
+            self.assertEqual(self.kinds(), [])  # certbot renews at 30: not yet worrying
+        with mock.patch("users.checkup.cert_days_left", return_value=9):
+            [p] = checkup.find_problems()
+        self.assertEqual(p["kind"], "cert")
+        self.assertIn("9 days", p["what"])
+        with mock.patch("users.checkup.cert_days_left", return_value=None):
+            self.assertEqual(self.kinds(), [])  # can't read it: nothing said
+
+    def test_cert_days_left_skips_local_sites(self):
+        with mock.patch("users.checkup.socket.create_connection") as connect:
+            for url in ("http://example.com", "https://localhost:8000", "https://127.0.0.1", ""):
+                self.assertIsNone(REAL_CERT_DAYS_LEFT(url))
+        connect.assert_not_called()
 
     def test_ai_budget(self):
         AiUsage.objects.create(feature="recap", cost_usd=4.1)

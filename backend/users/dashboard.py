@@ -24,15 +24,22 @@ JOBS = [
     ("sync_tmdb_daily_episodes", "New episodes sync", timedelta(hours=8)),
     ("notify_new_episodes", "New episode alerts", timedelta(hours=8)),
     ("build_home_snapshots", "Home pages build", timedelta(hours=6)),
-    ("sync_tmdb_monthly", "Catalog sync (monthly)", timedelta(days=35)),
+    # the command keeps its old name (its JobRun history, the crontab): it runs every Sunday
+    ("sync_tmdb_monthly", "New titles from TMDB (weekly)", timedelta(days=8)),
     ("train_ranker", "Ranker training", None),
     ("build_embeddings", "Embeddings build", None),
     ("backfill_ratings", "Age ratings from TMDB", timedelta(hours=30)),
-    ("clean_db", "Database cleanup", None),
+    ("clean_db", "Database cleanup", timedelta(hours=30)),
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
     ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
     ("translate_titles", "AI translations (missing overviews)", timedelta(hours=30)),
+    ("fix_actor_duplicates", "Actor duplicates (monthly)", timedelta(days=32)),
+    # shell scripts, recorded by manage.py record_job
+    ("backup_db", "Database backup (to Google Drive)", timedelta(hours=30)),
+    ("weekly_cleanup", "Server cleanup (Docker, logs)", timedelta(days=8)),
+    # the mini PC's nightly trailer-worker/run.sh, seen when it imports its clips
+    ("import_trailer_results", "Trailer clips (mini PC)", timedelta(hours=30)),
 ]
 
 AI_FEATURES = {  # AiUsage.feature -> label on the AI spend card
