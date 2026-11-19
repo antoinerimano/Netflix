@@ -218,7 +218,11 @@ def make_clip(job: dict, workdir: Path) -> tuple[Path, dict]:
     start = max(0.0, duration / 2 - clip / 2) if duration else 0.0
     section = f"*{max(0.0, start - 1):.1f}-{start + clip + 2:.1f}"
 
-    run(ytdlp("-f", "bv*+ba/b", "-S", f"res:{HEIGHT},+size", "--download-sections", section,
+    # the trailer's own audio: many videos now also carry YouTube's AI-dubbed tracks (Russian,
+    # Indonesian...), often a few KB smaller, so "+size" alone picked one. "original" is in the
+    # original track's format_note; "lang" sorts it first when the note is missing.
+    run(ytdlp("-f", "bv*+ba[format_note*=original]/bv*+ba/b", "-S", f"lang,res:{HEIGHT},+size",
+              "--download-sections", section,
               "--merge-output-format", "mkv", "-o", str(workdir / "src.%(ext)s"), url), timeout=600)
     sources = [p for p in workdir.iterdir() if p.name.startswith("src.") and p.stat().st_size > 0]
     if not sources:
