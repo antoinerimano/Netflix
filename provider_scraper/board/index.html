@@ -1,0 +1,376 @@
+<meta name="dash-one-writer">
+<style>
+  .pb { display: flex; flex-direction: column; gap: var(--cds-gap-xl); }
+  .pb h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .pb h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .pb-lede { color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 0; max-width: 68ch; }
+  .pb-lede b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+  .pb-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--cds-gap-md); }
+  .pb-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+  .pb-tile .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); letter-spacing: .02em; }
+  .pb-tile .val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .pb-tile .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pb-sec { display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+  .pb-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; max-width: 72ch; }
+  .pb-chart { position: relative; min-height: 280px; }
+  .pb-chart svg text { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); }
+  .pb-matrix { position: relative; overflow-x: auto; min-height: 240px; }
+  .pb-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); max-width: 260px; z-index: 5; }
+  .pb-tip strong { display: block; color: var(--color-fg); }
+  .pb-tip span { color: var(--cds-text-secondary); }
+  .pb-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .pb-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .pb-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+  .pb-search { flex: 1 1 220px; min-width: 0; padding: 6px 10px; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); font: inherit; }
+  .pb-wrap { overflow-x: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .pb-table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); }
+  .pb-table th, .pb-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .pb-table th { font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); white-space: nowrap; background: var(--color-panel); }
+  .pb-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  .pb-table code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; color: var(--color-fg); }
+  .pb-table .muted { color: var(--color-fg-muted); }
+  .pb-table a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .pb-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; white-space: nowrap; border: 1px solid currentColor; }
+  .pb-pill.ok { color: var(--color-ok); }
+  .pb-pill.direct { color: var(--color-fg); }
+  .pb-pill.warn { color: var(--color-warn); }
+  .pb-pill.bad { color: var(--color-bad); }
+  .pb-pill.muted { color: var(--color-fg-muted); }
+  .pb-prov { min-width: 110px; font-weight: var(--cds-font-weight-medium); }
+  .pb-fail { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-md) 0; }
+</style>
+
+<div class="pb">
+  <header id="top">
+    <h1>Embed Provider Board</h1>
+    <p class="pb-lede" data-read lang="en">
+      <b data-draw="s-prov" data-source="summary" data-field="providers" data-row="0">—</b> embed providers found on
+      <b data-draw="s-ok" data-source="summary" data-field="sites_with_providers" data-row="0">—</b> of
+      <b data-draw="s-sites" data-source="summary" data-field="sites" data-row="0">—</b> scanned streaming sites.
+      The most used is <b data-draw="s-top" data-source="summary" data-field="top_provider" data-row="0">—</b>, on
+      <b data-draw="s-topn" data-source="summary" data-field="top_sites" data-row="0">—</b> sites.
+    </p>
+  </header>
+
+  <section class="pb-tiles" id="tiles" aria-label="Summary">
+    <div class="pb-tile" id="tile-sites">
+      <span class="lbl">Sites scanned</span>
+      <span class="val" data-draw="t-sites" data-source="summary" data-field="sites" data-row="0">—</span>
+      <span class="sub">one test title each</span>
+    </div>
+    <div class="pb-tile" id="tile-ok">
+      <span class="lbl">Sites with providers</span>
+      <span class="val" data-draw="t-ok" data-source="summary" data-field="sites_with_providers" data-row="0">—</span>
+      <span class="sub"><span data-draw="t-direct" data-source="summary" data-field="direct_players" data-row="0">—</span> more play a stream directly</span>
+    </div>
+    <div class="pb-tile" id="tile-prov">
+      <span class="lbl">Distinct providers</span>
+      <span class="val" data-draw="t-prov" data-source="summary" data-field="providers" data-row="0">—</span>
+      <span class="sub"><span data-draw="t-shared" data-source="summary" data-field="shared_providers" data-row="0">—</span> used by 2+ sites</span>
+    </div>
+    <div class="pb-tile" id="tile-docs">
+      <span class="lbl">Providers with API docs</span>
+      <span class="val" data-draw="t-docs" data-source="summary" data-field="docs_found" data-row="0">—</span>
+      <span class="sub">public embed docs page found</span>
+    </div>
+    <div class="pb-tile" id="tile-blocked">
+      <span class="lbl">Sites not readable</span>
+      <span class="val" data-draw="t-blocked" data-source="summary" data-field="unreadable" data-row="0">—</span>
+      <span class="sub">bot checks, dead or no player found</span>
+    </div>
+  </section>
+
+  <section class="pb-sec" id="most-used">
+    <h2>Most used providers</h2>
+    <p class="pb-note">Number of scanned sites that embed each provider. Point at a bar for the sites.</p>
+    <div class="pb-chart" data-draw="bars" data-source="providers"></div>
+  </section>
+
+  <section class="pb-sec" id="matrix">
+    <h2>Which site uses which provider</h2>
+    <p class="pb-note">Each dot is one site embedding one provider, colored by how the scraper found it. Providers used by only one site are left out here; the catalog below lists them all.</p>
+    <div class="pb-legend" data-draw="legend" data-source="links"></div>
+    <div class="pb-matrix" data-draw="matrix" data-source="links"></div>
+  </section>
+
+  <section class="pb-sec" id="catalog">
+    <h2>Provider catalog</h2>
+    <p class="pb-note">Embed URL formats come from two places: the template seen in a real embed on a scanned site ({tmdb_id} is the movie's TMDB id), and the formats listed on the provider's own docs page.</p>
+    <div class="pb-controls">
+      <input id="prov-search" class="pb-search" type="search" placeholder="Filter providers, hosts or sites" aria-label="Filter providers">
+      <select id="prov-docs" class="dash-select" aria-label="Docs">
+        <option value="">All providers</option>
+        <option value="docs found">With docs page</option>
+        <option value="no docs page">No docs page</option>
+        <option value="cloudflare">Behind Cloudflare</option>
+        <option value="site down">Site down</option>
+      </select>
+    </div>
+    <div class="pb-wrap">
+      <table class="pb-table" data-source="providers" data-row-key="provider">
+        <thead>
+          <tr>
+            <th data-field="provider">Provider</th>
+            <th data-field="site_count">Sites</th>
+            <th data-field="hosts">Hosts</th>
+            <th data-field="observed_template">Seen embed URL</th>
+            <th data-field="doc_formats">Documented formats</th>
+            <th data-field="doc_params">Options</th>
+            <th data-field="docs_state">Docs</th>
+          </tr>
+        </thead>
+        <tbody data-draw="prov-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="pb-sec" id="sites">
+    <h2>Sites</h2>
+    <p class="pb-note">"Direct" sites play a stream from their own backend or CDN with no third-party embed. "Blocked" means a bot check (usually Cloudflare) answered instead of the site.</p>
+    <div class="pb-wrap">
+      <table class="pb-table" data-source="sites" data-row-key="site">
+        <thead>
+          <tr>
+            <th data-field="site">Site</th>
+            <th data-field="status">Status</th>
+            <th data-field="provider_count">Providers</th>
+            <th data-field="providers">Found</th>
+            <th data-field="found_title_by">Title page from</th>
+            <th data-field="reason">Notes</th>
+          </tr>
+        </thead>
+        <tbody data-draw="site-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+  // ---- shared helpers ----
+  window.pbMethods = [
+    {key: 'cycle', label: 'Clicked server'},
+    {key: 'attr', label: 'Embed URL in markup'},
+    {key: 'api', label: 'Player API response'},
+    {key: 'iframe', label: 'Loaded iframe'},
+    {key: 'text', label: 'Name in page text'},
+  ];
+  window.pbColor = (k) => {
+    const i = window.pbMethods.findIndex((m) => m.key === k);
+    return dash.colors[(i < 0 ? 4 : i) % dash.colors.length];
+  };
+  window.pbFilter = {q: '', docs: ''};
+
+  dash.calc('summary', {
+    title: 'Board summary',
+    description: 'Counts across the scan: sites, sites with providers, distinct providers, docs found.',
+    inputs: ['sites', 'providers'],
+    fn: (sites, providers) => {
+      const ok = sites.filter((s) => s.status === 'ok');
+      const top = providers.slice().sort((a, b) => b.site_count - a.site_count)[0] || {};
+      return [{
+        sites: sites.length,
+        sites_with_providers: ok.length,
+        direct_players: sites.filter((s) => s.status === 'direct').length,
+        unreadable: sites.filter((s) => !['ok', 'direct'].includes(s.status)).length,
+        providers: providers.length,
+        shared_providers: providers.filter((p) => +p.site_count >= 2).length,
+        docs_found: providers.filter((p) => p.docs_state === 'docs found').length,
+        top_provider: top.provider || '',
+        top_sites: +top.site_count || 0,
+      }];
+    },
+  });
+
+  // ---- summary numbers ----
+  const fields = {
+    's-prov': 'providers', 's-ok': 'sites_with_providers', 's-sites': 'sites', 's-top': 'top_provider',
+    's-topn': 'top_sites', 't-sites': 'sites', 't-ok': 'sites_with_providers', 't-direct': 'direct_players',
+    't-prov': 'providers', 't-shared': 'shared_providers', 't-docs': 'docs_found', 't-blocked': 'unreadable',
+  };
+  Object.entries(fields).forEach(([name, f]) => {
+    dash.draw(name, (el) => {
+      const d = dash.data('summary');
+      if (d.status !== 'ok' || !d.data || !d.data[0]) { el.textContent = '—'; return; }
+      const v = d.data[0][f];
+      el.textContent = typeof v === 'number' ? d3.format(',')(v) : v;
+    });
+  });
+</script>
+
+<script>
+  // ---- bar chart: sites per provider ----
+  dash.draw('bars', (el) => {
+    const d = dash.data('providers');
+    if (d.status !== 'ok') {
+      el.replaceChildren();
+      if (d.status === 'error') { const p = document.createElement('p'); p.className = 'pb-fail'; p.textContent = 'Failed to load'; el.append(p); }
+      return;
+    }
+    const rows = d.data.slice().sort((a, b) => b.site_count - a.site_count || d3.ascending(a.provider, b.provider)).slice(0, 24);
+    const W = Math.max(280, el.clientWidth || 600), bh = 20, gap = 6;
+    el.replaceChildren();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('role', 'img')
+      .attr('aria-label', 'Bar chart of the number of scanned sites using each provider');
+    const probe = svg.append('g');
+    let lw = 0;
+    rows.forEach((r) => { const t = probe.append('text').text(r.provider); lw = Math.max(lw, t.node().getComputedTextLength()); });
+    probe.remove();
+    const left = Math.ceil(lw) + 10, right = 28, H = rows.length * (bh + gap) + 24;
+    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const max = d3.max(rows, (r) => +r.site_count) || 1;
+    const x = d3.scaleLinear().domain([0, max]).range([left, W - right]);
+    svg.append('g').selectAll('line').data(x.ticks(Math.min(max, 6)).filter(Number.isInteger)).join('line')
+      .attr('x1', (v) => x(v)).attr('x2', (v) => x(v)).attr('y1', 0).attr('y2', H - 20)
+      .style('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(x.ticks(Math.min(max, 6)).filter(Number.isInteger)).join('text')
+      .attr('x', (v) => x(v)).attr('y', H - 4).attr('text-anchor', 'middle').text((v) => v);
+    const tip = d3.select(el).append('div').attr('class', 'pb-tip').attr('hidden', true);
+    const g = svg.append('g').selectAll('g').data(rows).join('g')
+      .attr('transform', (r, i) => `translate(0,${i * (bh + gap)})`)
+      .attr('data-source', 'providers').attr('data-field', 'site_count')
+      .attr('data-where', (r) => 'provider=' + encodeURIComponent(r.provider));
+    g.append('text').attr('x', left - 8).attr('y', bh / 2 + 4).attr('text-anchor', 'end').text((r) => r.provider);
+    g.append('rect').attr('x', left).attr('y', 0).attr('height', bh).attr('rx', 3)
+      .attr('width', (r) => Math.max(2, x(+r.site_count) - left))
+      .style('fill', (r) => +r.site_count >= 2 ? dash.colors[0] : 'var(--cds-chart-muted)');
+    g.append('text').attr('x', (r) => x(+r.site_count) + 6).attr('y', bh / 2 + 4).text((r) => r.site_count);
+    g.on('pointermove', (ev, r) => {
+      const [mx, my] = d3.pointer(ev, el);
+      tip.attr('hidden', null).html('');
+      tip.append('strong').text(`${r.provider} · ${r.site_count} site${+r.site_count === 1 ? '' : 's'}`);
+      tip.append('span').text(r.sites);
+      const tw = tip.node().offsetWidth;
+      tip.style('left', Math.min(mx + 12, el.clientWidth - tw - 4) + 'px').style('top', (my + 12) + 'px');
+    }).on('pointerleave', () => tip.attr('hidden', true));
+  });
+</script>
+
+<script>
+  // ---- legend + matrix ----
+  dash.draw('legend', (el) => {
+    el.replaceChildren();
+    window.pbMethods.forEach((m) => {
+      const s = document.createElement('span');
+      const i = document.createElement('i');
+      i.style.background = window.pbColor(m.key);
+      s.append(i, m.label);
+      el.append(s);
+    });
+  });
+
+  dash.draw('matrix', (el) => {
+    const d = dash.data('links');
+    if (d.status !== 'ok') {
+      el.replaceChildren();
+      if (d.status === 'error') { const p = document.createElement('p'); p.className = 'pb-fail'; p.textContent = 'Failed to load'; el.append(p); }
+      return;
+    }
+    const bySite = d3.rollup(d.data, (v) => v.length, (r) => r.site);
+    const byProv = d3.rollup(d.data, (v) => v.length, (r) => r.provider);
+    const provs = [...byProv].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1] || d3.ascending(a[0], b[0])).map(([p]) => p);
+    const sites = [...bySite].sort((a, b) => b[1] - a[1] || d3.ascending(a[0], b[0])).map(([s]) => s);
+    const rows = d.data.filter((r) => provs.includes(r.provider));
+    el.replaceChildren();
+    const cell = 22;
+    const svg = d3.select(el).append('svg').attr('role', 'img')
+      .attr('aria-label', 'Matrix of scanned sites against the providers they embed');
+    const probe = svg.append('g');
+    let sw = 0, pw = 0;
+    sites.forEach((s) => { sw = Math.max(sw, probe.append('text').text(s).node().getComputedTextLength()); });
+    provs.forEach((p) => { pw = Math.max(pw, probe.append('text').text(p).node().getComputedTextLength()); });
+    probe.remove();
+    const left = Math.ceil(sw) + 12, top = Math.ceil(pw * 0.72) + 14;
+    const W = left + provs.length * cell + 10, H = top + sites.length * cell + 6;
+    svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const x = (p) => left + provs.indexOf(p) * cell + cell / 2;
+    const y = (s) => top + sites.indexOf(s) * cell + cell / 2;
+    svg.append('g').selectAll('line').data(sites).join('line')
+      .attr('x1', left).attr('x2', W - 10).attr('y1', (s) => y(s)).attr('y2', (s) => y(s))
+      .style('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(sites).join('text')
+      .attr('x', left - 8).attr('y', (s) => y(s) + 4).attr('text-anchor', 'end').text((s) => s);
+    svg.append('g').selectAll('text').data(provs).join('text')
+      .attr('transform', (p) => `translate(${x(p) + 4},${top - 8}) rotate(-45)`).text((p) => p);
+    const tip = d3.select(el).append('div').attr('class', 'pb-tip').attr('hidden', true);
+    const method = (k) => (window.pbMethods.find((m) => m.key === k) || {label: k}).label;
+    svg.append('g').selectAll('circle').data(rows).join('circle')
+      .attr('cx', (r) => x(r.provider)).attr('cy', (r) => y(r.site)).attr('r', 6.5)
+      .style('fill', (r) => window.pbColor(r.detected_by))
+      .attr('data-source', 'links').attr('data-field', 'detected_by')
+      .attr('data-where', (r) => `site=${encodeURIComponent(r.site)}&provider=${encodeURIComponent(r.provider)}`)
+      .on('pointermove', (ev, r) => {
+        const [mx, my] = d3.pointer(ev, el);
+        tip.attr('hidden', null).html('');
+        tip.append('strong').text(`${r.site} → ${r.provider}`);
+        tip.append('span').text(method(r.detected_by) + (r.server_labels ? ` · servers: ${r.server_labels}` : ''));
+        const tw = tip.node().offsetWidth;
+        tip.style('left', Math.min(mx + 12 + el.scrollLeft, el.scrollLeft + el.clientWidth - tw - 4) + 'px').style('top', (my + 12) + 'px');
+      })
+      .on('pointerleave', () => tip.attr('hidden', true));
+  });
+</script>
+
+<script>
+  // ---- provider catalog table ----
+  document.querySelectorAll('#prov-search').forEach((inp) => {
+    inp.addEventListener('input', () => { window.pbFilter.q = inp.value.trim().toLowerCase(); dash.draw('prov-rows'); });
+  });
+  document.querySelectorAll('#prov-docs').forEach((sel) => {
+    sel.addEventListener('change', () => { window.pbFilter.docs = sel.value; dash.draw('prov-rows'); });
+  });
+
+  const pbPill = (text, cls) => { const s = document.createElement('span'); s.className = 'pb-pill ' + cls; s.textContent = text; return s; };
+  const pbCode = (text) => { const c = document.createElement('code'); c.textContent = text; return c; };
+
+  dash.draw('prov-rows', (tb) => {
+    const d = dash.data('providers');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    const {q, docs} = window.pbFilter;
+    const rows = d.data.filter((r) => (!docs || r.docs_state === docs) &&
+      (!q || [r.provider, r.hosts, r.sites, r.server_labels].join(' ').toLowerCase().includes(q)));
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = encodeURIComponent(r.provider);
+      const td = (cls) => { const c = document.createElement('td'); if (cls) c.className = cls; tr.append(c); return c; };
+      const p = td('pb-prov'); p.textContent = r.provider;
+      const n = td('num'); n.textContent = r.site_count;
+      const h = td('muted'); h.textContent = r.hosts;
+      const o = td(); if (r.observed_template) o.append(pbCode(r.observed_template)); else o.textContent = '—';
+      const f = td(); if (r.doc_formats) f.append(pbCode(r.doc_formats)); else { f.className = 'muted'; f.textContent = '—'; }
+      const op = td('muted'); op.textContent = r.doc_params || '—';
+      const dc = td();
+      const cls = {'docs found': 'ok', 'no docs page': 'muted', 'cloudflare': 'warn', 'site down': 'bad'}[r.docs_state] || 'muted';
+      if (/^https:\/\//.test(r.docs_url || '')) {
+        const a = document.createElement('a'); a.href = r.docs_url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.append(pbPill('docs', cls)); dc.append(a);
+      } else dc.append(pbPill(r.docs_state, cls));
+      tb.append(tr);
+    });
+    if (!rows.length) {
+      const tr = document.createElement('tr'); const c = document.createElement('td');
+      c.colSpan = 7; c.className = 'muted'; c.textContent = 'No provider matches this filter.'; tr.append(c); tb.append(tr);
+    }
+  });
+
+  // ---- sites table ----
+  dash.draw('site-rows', (tb) => {
+    const d = dash.data('sites');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    const cls = {ok: 'ok', direct: 'direct', blocked: 'warn', failed: 'bad', timeout: 'bad', no_providers: 'muted', no_title_link: 'muted'};
+    const label = {ok: 'providers', direct: 'direct', blocked: 'blocked', failed: 'dead', timeout: 'timeout', no_providers: 'none found', no_title_link: 'no title page'};
+    d.data.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = encodeURIComponent(r.site);
+      const td = (c2) => { const c = document.createElement('td'); if (c2) c.className = c2; tr.append(c); return c; };
+      td('pb-prov').textContent = r.site;
+      td().append(pbPill(label[r.status] || r.status, cls[r.status] || 'muted'));
+      td('num').textContent = r.provider_count;
+      td().textContent = r.providers || '—';
+      td('muted').textContent = r.found_title_by || '—';
+      td('muted').textContent = r.reason || (r.stream_cdn ? 'stream CDN: ' + r.stream_cdn : '');
+      tb.append(tr);
+    });
+  });
+</script>

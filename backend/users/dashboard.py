@@ -43,6 +43,8 @@ JOBS = [
     ("weekly_cleanup", "Server cleanup (Docker, logs)", timedelta(days=8)),
     # the mini PC's nightly trailer-worker/run.sh, seen when it imports its clips
     ("import_trailer_results", "Trailer clips (mini PC)", timedelta(hours=30)),
+    # the mini PC's nightly provider_scraper/run.sh: new providers / domains found on streaming sites
+    ("import_providers", "Provider scout (mini PC)", timedelta(hours=30)),
 ]
 
 # For the dashboard's jobs card: the group a job is shown in, when cron runs it (ops/crontab, UTC)
