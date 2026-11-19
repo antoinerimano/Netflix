@@ -47,15 +47,27 @@ TEXT_FIELDS = ("id", "title", "original_title", "description", "genre", "keyword
 
 def save_embeddings(ids, emb, model_name):
     """vector_blob (float32 bytes) is what the recommendations read (reco/views.py); vector (JSON)
-    is still read by train_ranker."""
+    is still read by train_ranker. Written 1,000 titles at a time (it was 2 queries per title)."""
     dim = int(emb.shape[1])
-    with transaction.atomic():
-        for i, tid in enumerate(ids):
-            TitleEmbedding.objects.update_or_create(
-                title_id=tid,
-                defaults={"dim": dim, "vector": emb[i].tolist(), "vector_blob": emb[i].tobytes(),
-                          "model_name": model_name},
-            )
+    pos = {tid: i for i, tid in enumerate(ids)}
+    for start in range(0, len(ids), 1000):
+        chunk = ids[start:start + 1000]
+        existing = {e.title_id: e for e in TitleEmbedding.objects.filter(title_id__in=chunk)
+                    .only("id", "title_id")}
+        updates, creates = [], []
+        for tid in chunk:
+            v = emb[pos[tid]]
+            fields = {"dim": dim, "vector": v.tolist(), "vector_blob": v.tobytes(), "model_name": model_name}
+            if tid in existing:
+                e = existing[tid]
+                for k, val in fields.items():
+                    setattr(e, k, val)
+                updates.append(e)
+            else:
+                creates.append(TitleEmbedding(title_id=tid, **fields))
+        with transaction.atomic():
+            TitleEmbedding.objects.bulk_update(updates, ["dim", "vector", "vector_blob", "model_name"], batch_size=500)
+            TitleEmbedding.objects.bulk_create(creates, batch_size=500)
 
 
 def top_similar(src_ids, src_emb, all_ids, all_emb, topk, model_name):
@@ -120,13 +132,14 @@ class Command(BaseCommand):
 
         save_embeddings(ids, emb, model_name)
 
-        # rebuild similar
-        TitleSimilar.objects.filter(model_name=model_name).delete()
-        with transaction.atomic():
-            for start in range(0, len(ids), 600):
-                TitleSimilar.objects.bulk_create(
-                    top_similar(ids[start:start + 600], emb[start:start + 600], ids, emb, topk, model_name),
-                    batch_size=5000)
+        # rebuild similar, 600 titles at a time: each one keeps its old list until its new one is
+        # written (deleting them all first left "more like this" empty for hours)
+        for start in range(0, len(ids), 600):
+            chunk = ids[start:start + 600]
+            rows = top_similar(chunk, emb[start:start + 600], ids, emb, topk, model_name)
+            with transaction.atomic():
+                TitleSimilar.objects.filter(model_name=model_name, title_id__in=chunk).delete()
+                TitleSimilar.objects.bulk_create(rows, batch_size=5000)
 
         self.stdout.write(self.style.SUCCESS(f"Embeddings + Similar done: {len(ids)} titles."))
 

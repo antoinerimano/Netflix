@@ -50,13 +50,13 @@ JOBS = [
 JOB_GROUPS = ["Catalog", "Recommendations & home pages", "AI", "Health & safety"]
 JOB_INFO = {
     "sync_tmdb_new_releases": ("Catalog", "Every night 00:30", "Adds the movies just out: trending today, in theatres, new on streaming"),
-    "sync_tmdb_monthly": ("Catalog", "Sundays 05:30", "Adds popular movies and shows the catalog lacks (500+ votes)"),
+    "sync_tmdb_monthly": ("Catalog", "Sundays 00:45", "Adds popular movies and shows the catalog lacks (500+ votes)"),
     "sync_tmdb_daily_episodes": ("Catalog", "Every 3 hours", "New shows on the air and their new episodes, plus translations"),
     "clean_db": ("Catalog", "Every night 04:30, 2 h 30 max", "Removes duplicates, refreshes each title from TMDB once a month"),
     "backfill_ratings": ("Catalog", "Every night 02:00", "Age ratings of new titles (what Kids profiles may see)"),
-    "sync_tmdb_related": ("Catalog", "Every night 05:00", "TMDB's related titles and other names (search in every language)"),
+    "sync_tmdb_related": ("Catalog", "Every night 03:00", "TMDB's related titles and other names (search in every language)"),
     "rebuild_title_indexes": ("Catalog", "Every night 07:15", "Makes new and refreshed titles findable by keyword, studio, network"),
-    "fix_actor_duplicates": ("Catalog", "1st of the month 06:30", "Merges actors listed twice on a title"),
+    "fix_actor_duplicates": ("Catalog", "1st of the month 02:30", "Merges actors listed twice on a title"),
     "import_trailer_results": ("Catalog", "Every night (mini PC)", "Trailer preview clips cut by the mini PC"),
     "build_embeddings": ("Recommendations & home pages", "Every night 08:00 (new titles), Sundays 09:30 (all)",
                          '"More like this" and the taste vectors the recommendations use'),

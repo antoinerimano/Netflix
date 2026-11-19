@@ -82,3 +82,14 @@ class BuildEmbeddingsTests(TestCase):
         FakeModel.encoded = []
         self.build("--missing")
         self.assertEqual(FakeModel.encoded, [])
+
+    def test_a_second_full_build_replaces_the_lists(self):
+        b = Title.objects.create(type="movie", title="Space B", tmdb_id=3)
+        self.build()
+        before = list(TitleSimilar.objects.order_by("title_id", "-score").values_list("title_id", "similar_id"))
+        self.build()
+        after = list(TitleSimilar.objects.order_by("title_id", "-score").values_list("title_id", "similar_id"))
+        self.assertEqual(before, after)
+        self.assertEqual(TitleEmbedding.objects.count(), 3)
+        self.assertEqual(list(TitleSimilar.objects.filter(title=b).order_by("-score").values_list("similar_id", flat=True)),
+                         [self.a.id, self.c.id])
