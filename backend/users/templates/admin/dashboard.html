@@ -94,6 +94,26 @@
   .dash-grid3 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 
   .dash details summary { cursor: pointer; color: var(--dash-quiet); font-size: 12px; margin-top: 10px; }
+
+  /* scheduled jobs: summary chips, one table per group, the row of a problem tinted */
+  .dash-jobsum { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; }
+  .dash-jobsum .dash-status { font-size: 13px; }
+  .dash h3.dash-group { margin: 18px 0 4px; font-size: 13px; font-weight: 600; color: var(--dash-ink); background: none; padding: 0; text-transform: none; letter-spacing: 0; display: flex; align-items: center; gap: 10px; }
+  .dash-scroll { overflow-x: auto; }
+  /* the same column widths in every group's table, so the groups line up */
+  .dash-jobs { table-layout: fixed; min-width: 860px; }
+  .dash-jobs th:nth-child(1) { width: 32%; }
+  .dash-jobs th:nth-child(2) { width: 15%; }
+  .dash-jobs th:nth-child(3) { width: 10%; }
+  .dash-jobs th:nth-child(4) { width: 29%; }
+  .dash-jobs th:nth-child(5) { width: 6%; }
+  .dash-jobs th:nth-child(6) { width: 8%; }
+  .dash-job--failed td { background: color-mix(in srgb, var(--dash-critical) 9%, transparent); }
+  .dash-job--late td, .dash-job--running td { background: color-mix(in srgb, var(--dash-warning) 10%, transparent); }
+  .dash-result { font-size: 12px; color: var(--dash-quiet); margin-top: 2px; max-width: 460px; overflow-wrap: anywhere; }
+  .dash-result--error { color: var(--dash-critical); }
+  .dash-jobs details summary { margin-top: 2px; }
+  .dash-hbar-fill--behind { background: var(--dash-warning); }
   .dash-links a { margin-right: 14px; }
 </style>
 {% endblock %}
@@ -301,29 +321,70 @@
     </table>
   </section>
 
-  {# ---------- scheduled jobs ---------- #}
-  <section class="dash-card">
+  {# ---------- scheduled jobs (dashboard.py JOBS / JOB_INFO) ---------- #}
+  <section class="dash-card" id="jobs">
     <h2>Scheduled jobs</h2>
-    <p class="dash-sub">Last run of each command (cron) · "late" = no run for longer than its usual schedule</p>
+    <div class="dash-jobsum">
+      {% if jobs.all_ok %}<span class="dash-status dash-status--good">All {{ jobs.counts.ok }} jobs OK</span>
+      {% else %}
+        {% if jobs.counts.failed %}<span class="dash-status dash-status--critical">{{ jobs.counts.failed }} failed</span>{% endif %}
+        {% if jobs.counts.running %}<span class="dash-status dash-status--serious">{{ jobs.counts.running }} running</span>{% endif %}
+        {% if jobs.counts.late %}<span class="dash-status dash-status--warning">{{ jobs.counts.late }} late</span>{% endif %}
+        {% if jobs.counts.never %}<span class="dash-status dash-status--none">{{ jobs.counts.never }} never ran</span>{% endif %}
+        <span class="dash-status dash-status--good">{{ jobs.counts.ok }} OK</span>
+      {% endif %}
+    </div>
+    <p class="dash-sub">Times are UTC (ops/crontab) · Late = no run for longer than its schedule · the daily check-up emails staff about failed and late jobs</p>
+
+    {% for g in jobs.groups %}
+      <h3 class="dash-group">{{ g.name }}{% if g.problems %} <span class="dash-status dash-status--warning">{{ g.problems }} to look at</span>{% endif %}</h3>
+      <div class="dash-scroll">
+      <table class="dash-jobs">
+        <tr><th>Job</th><th>When</th><th>Status</th><th>Last run</th><th class="num">Took</th><th class="num">Last 7 days</th></tr>
+        {% for j in g.jobs %}
+          <tr class="dash-job dash-job--{{ j.state }}">
+            <td><strong>{{ j.label }}</strong>{% if j.what %}<div class="quiet">{{ j.what }}</div>{% endif %}</td>
+            <td class="quiet">{{ j.when|default:"–" }}</td>
+            <td>
+              {% if j.state == "ok" %}<span class="dash-status dash-status--good">OK</span>
+              {% elif j.state == "failed" %}<span class="dash-status dash-status--critical">Failed</span>
+              {% elif j.state == "late" %}<span class="dash-status dash-status--warning">Late</span>
+              {% elif j.state == "running" %}<span class="dash-status dash-status--serious">Running</span>
+              {% else %}<span class="dash-status dash-status--none">Never ran</span>{% endif %}
+            </td>
+            <td>
+              {% if j.last %}{{ j.last.started_at|naturaltime }}
+                {% if j.result %}<div class="dash-result{% if j.last.error %} dash-result--error{% endif %}" title="{{ j.result }}">{{ j.result|truncatechars:110 }}</div>{% endif %}
+                {% if j.details != j.result %}<details><summary>Last lines</summary><pre>{{ j.details }}</pre></details>{% endif %}
+              {% else %}<span class="quiet">–</span>{% endif %}
+            </td>
+            <td class="num">{{ j.duration|default:"–" }}</td>
+            <td class="num">{{ j.runs }} run{{ j.runs|pluralize }}{% if j.failures %}<br><strong class="dash-result--error">{{ j.failures }} failed</strong>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      </div>
+    {% endfor %}
+  </section>
+
+  {# ---------- what the jobs keep up to date (dashboard.py _freshness) ---------- #}
+  <section class="dash-card" id="freshness">
+    <h2>Catalog freshness</h2>
+    <p class="dash-sub">Share of the {{ titles_total|intcomma }} titles each job has done · below its target, the job is behind</p>
     <table>
-      <tr><th>Job</th><th>Status</th><th>Last run</th><th class="num">Duration</th><th class="num">Runs / failures, 7 days</th></tr>
-      {% for j in jobs %}
+      <tr><th>Titles…</th><th>Done</th><th class="num">Missing</th><th>Filled by</th></tr>
+      {% for f in freshness %}
         <tr>
-          <td><strong>{{ j.label }}</strong><br><span class="quiet">{{ j.name }}</span></td>
+          <td>{{ f.label }}</td>
           <td>
-            {% if j.state == "ok" %}<span class="dash-status dash-status--good">OK</span>
-            {% elif j.state == "failed" %}<span class="dash-status dash-status--critical">Failed</span>
-            {% elif j.state == "late" %}<span class="dash-status dash-status--warning">Late</span>
-            {% elif j.state == "running" %}<span class="dash-status dash-status--serious">Running / stopped</span>
-            {% else %}<span class="dash-status dash-status--none">Never ran</span>{% endif %}
+            <div class="dash-hbar">
+              <div class="dash-hbar-track"><div class="dash-hbar-fill{% if not f.ok %} dash-hbar-fill--behind{% endif %}" style="width: {{ f.pct|default:0 }}%"></div></div>
+              <span class="dash-hbar-value">{{ f.pct|default:0 }} %</span>
+              {% if not f.ok %}<span class="dash-status dash-status--warning">Behind</span>{% endif %}
+            </div>
           </td>
-          <td>
-            {% if j.last %}{{ j.last.started_at|naturaltime }}
-              {% if j.last.error %}<pre>{{ j.last.error }}</pre>{% elif j.last.summary %}<pre>{{ j.last.summary }}</pre>{% endif %}
-            {% else %}<span class="quiet">–</span>{% endif %}
-          </td>
-          <td class="num">{% if j.last.duration %}{{ j.last.duration|stringformat:"s"|slice:":7" }}{% else %}<span class="quiet">–</span>{% endif %}</td>
-          <td class="num">{{ j.runs }} / {% if j.failures %}<strong>{{ j.failures }}</strong>{% else %}0{% endif %}</td>
+          <td class="num">{{ f.missing|intcomma }}</td>
+          <td class="quiet">{{ f.job }}</td>
         </tr>
       {% endfor %}
     </table>

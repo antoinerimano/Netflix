@@ -27,6 +27,16 @@
 30 4 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/clean_db_weekly.lock docker compose exec -T backend python manage.py clean_db --dedupe --backfill-tmdb --tv-sync-episodes --tv-max-seasons 2 --stale-days 30 --max-minutes 150 --check-dups --progress-every 500 >> /var/log/taurus_clean_db.log 2>&1
 30 5 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/sync_tmdb_weekly.lock docker compose exec -T backend python manage.py sync_tmdb_monthly --pages 20 --min-votes 500 --verbose-adds --only-created >> /var/log/sync_tmdb_weekly.log 2>&1
 30 7 * * 0 cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_heavy.lock docker compose exec -T backend python manage.py train_ranker >> /var/log/train_ranker_weekly.log 2>&1
+# movies just released (users/management/commands/sync_tmdb_new_releases.py): trending today, in theatres, new on
+# streaming, 50+ votes; before the nightly jobs that complete a new title (ratings, translations, related, index, embeddings)
+30 0 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_new_releases.lock docker compose exec -T backend python manage.py sync_tmdb_new_releases >> /var/log/taurus_new_releases.log 2>&1
+# search / reco index tables (users/management/commands/rebuild_title_indexes.py): titles not indexed yet + the ones
+# clean_db just read; after clean_db's 150 min
+15 7 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_index.lock docker compose exec -T backend python manage.py rebuild_title_indexes >> /var/log/taurus_index.log 2>&1
+# embeddings + "more like this" for the titles that have none yet (new titles); Sunday's full build_embeddings redoes all
+0 8 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_heavy.lock docker compose exec -T backend python manage.py build_embeddings --missing >> /var/log/build_embeddings_nightly.log 2>&1
+# weekly backup restore test (scripts/test_backup_restore.sh): the newest dump loaded into a throwaway MySQL, rows counted
+15 2 * * 3 /usr/bin/flock -n /tmp/taurus_restore_test.lock /opt/taurus/scripts/test_backup_restore.sh >> /var/log/taurus_restore_test.log 2>&1
 # TMDB recommendations / similar + alternative titles (users/tmdb_related.py): 5,000 titles a night, free
 0 5 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_related.lock docker compose exec -T backend python manage.py sync_tmdb_related >> /var/log/taurus_related.log 2>&1
 # daily check-up (users/checkup.py): emails staff only when a job / the disk / the AI budget has a problem

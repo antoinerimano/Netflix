@@ -1,4 +1,16 @@
 # users/management/commands/rebuild_title_indexes.py
+"""
+manage.py rebuild_title_indexes: the search / "more like this" index tables, from each title's own
+fields: TitleKeyword (keywords), TitleCompany (production_companies), TitleCountry
+(production_countries, ISO codes only), TitleNetwork (TVShowExtras.network_names). users/search.py
+and reco/views.py read them; nothing else writes them, so a title the syncs add or clean_db
+completes isn't found by keyword until this runs.
+
+Nightly from cron (ops/crontab): the titles that have keywords / companies / networks but no index
+row yet, and the titles clean_db read on TMDB in the last --since-days (their fields may have
+changed). --all: every title. Each title's rows are replaced, never the whole tables.
+(Actors are indexed by the syncs themselves: users.Actor.)
+"""
 import re
 import unicodedata
 from datetime import timedelta
@@ -8,17 +20,20 @@ import ast
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
+from users.jobs import tracked
 from users.models import (
     Title,
     TVShowExtras,
-    TitleActor,
     TitleKeyword,
     TitleCompany,
     TitleCountry,
     TitleNetwork,
 )
+
+INDEX_TABLES = (TitleKeyword, TitleCompany, TitleCountry, TitleNetwork)
 
 # ---------- Normalization ----------
 _space_re = re.compile(r"\s+")
@@ -133,141 +148,77 @@ def extract_country_codes(value):
 
 
 # ---------- Command ----------
+def titles_to_index(since_days: int):
+    """Titles with keywords / companies / networks but no index row for them, or read on TMDB by
+    clean_db in the last since_days days."""
+    def has_rows(model):
+        return Exists(model.objects.filter(title_id=OuterRef("pk")))
+
+    networks = Exists(TVShowExtras.objects.filter(title_id=OuterRef("pk")).exclude(network_names=[]))
+    missing = (
+        (~Q(keywords=[]) & ~has_rows(TitleKeyword))
+        | (~Q(production_companies=[]) & ~has_rows(TitleCompany))
+        | (Q(type="tv") & networks & ~has_rows(TitleNetwork))
+    )
+    if since_days > 0:
+        missing |= Q(tmdb_checked_at__gte=timezone.now() - timedelta(days=since_days))
+    return Title.objects.filter(missing)
+
+
+def index_rows(title, extra):
+    rows = []
+    for kw in to_list(title.keywords):
+        n = norm_text(kw)[:120]
+        if n:
+            rows.append(TitleKeyword(title_id=title.id, keyword_norm=n))
+    for name in extract_company_names(title.production_companies):
+        n = norm_text(name)[:160]
+        if n:
+            rows.append(TitleCompany(title_id=title.id, company_norm=n))
+    for code in extract_country_codes(title.production_countries):
+        rows.append(TitleCountry(title_id=title.id, country_code=code))
+    if extra is not None:
+        for name in to_list(extra.network_names):
+            n = norm_text(name)[:160]
+            if n:
+                rows.append(TitleNetwork(title_id=title.id, network_norm=n))
+    return rows
+
+
 class Command(BaseCommand):
-    help = "Rebuild / populate Title index tables (actors/keywords/companies/countries/networks) from JSON fields."
+    help = "Fill the title index tables (keywords / companies / countries / networks) for search and recommendations."
 
     def add_arguments(self, parser):
-        parser.add_argument("--batch", type=int, default=2000, help="Batch size (default 2000)")
-        parser.add_argument("--rebuild", action="store_true", help="Delete all index rows before rebuilding")
-        parser.add_argument("--since-days", type=int, default=None, help="Only process titles updated in the last N days")
-        parser.add_argument("--dry-run", action="store_true", help="Do not write to DB (print counts only)")
+        parser.add_argument("--all", action="store_true", help="Every title, not only the ones missing or just read.")
+        parser.add_argument("--since-days", type=int, default=2,
+                            help="Also the titles clean_db read on TMDB in the last N days (0: only missing ones).")
+        parser.add_argument("--batch", type=int, default=1000)
+        parser.add_argument("--dry-run", action="store_true", help="Count only, no writes.")
 
+    @tracked("rebuild_title_indexes")  # JobRun: shown on the admin dashboard
     def handle(self, *args, **opts):
+        qs = Title.objects.all() if opts["all"] else titles_to_index(opts["since_days"])
+        ids = list(qs.order_by("id").values_list("id", flat=True))
+        self.stdout.write(f"[index] titles to index: {len(ids)}")
+
+        written = 0
         batch = opts["batch"]
-        rebuild = opts["rebuild"]
-        since_days = opts["since_days"]
-        dry_run = opts["dry_run"]
+        for start in range(0, len(ids), batch):
+            chunk = list(Title.objects.filter(id__in=ids[start:start + batch]).only(
+                "id", "type", "keywords", "production_companies", "production_countries"))
+            extras = {e.title_id: e for e in TVShowExtras.objects.filter(
+                title_id__in=[t.id for t in chunk if t.type == "tv"]).only("title_id", "network_names")}
+            rows = [r for t in chunk for r in index_rows(t, extras.get(t.id))]
+            written += len(rows)
+            if opts["dry_run"]:
+                continue
+            chunk_ids = [t.id for t in chunk]
+            with transaction.atomic():  # replace each title's rows: a keyword TMDB dropped goes too
+                for model in INDEX_TABLES:
+                    model.objects.filter(title_id__in=chunk_ids).delete()
+                for model in INDEX_TABLES:
+                    model.objects.bulk_create([r for r in rows if type(r) is model],
+                                              ignore_conflicts=True, batch_size=5000)
 
-        if rebuild and since_days is not None:
-            self.stdout.write(self.style.WARNING("Using --rebuild with --since-days: --since-days will be ignored."))
-
-        qs = Title.objects.all().only(
-            "id",
-            "type",
-            "cast",
-            "keywords",
-            "production_companies",
-            "production_countries"
-        )
-
-        if since_days is not None and not rebuild:
-            cutoff = timezone.now() - timedelta(days=since_days)
-            qs = qs.filter(updated_at__gte=cutoff)
-
-        total = qs.count()
-        self.stdout.write(f"[INDEX] Titles to process: {total}")
-
-        if rebuild:
-            if dry_run:
-                self.stdout.write(self.style.WARNING("[DRY-RUN] Would delete all index tables."))
-            else:
-                self.stdout.write("[INDEX] Deleting existing index rows...")
-                with transaction.atomic():
-                    TitleActor.objects.all().delete()
-                    TitleKeyword.objects.all().delete()
-                    TitleCompany.objects.all().delete()
-                    TitleCountry.objects.all().delete()
-                    TitleNetwork.objects.all().delete()
-
-        created_counts = {
-            "actors": 0,
-            "keywords": 0,
-            "companies": 0,
-            "countries": 0,
-            "networks": 0,
-        }
-
-        offset = 0
-        while True:
-            chunk = list(qs.order_by("id")[offset : offset + batch])
-            if not chunk:
-                break
-
-            title_ids = [t.id for t in chunk]
-
-            # Preload TVShowExtras network_names for tv titles
-            extras_map = {}
-            tv_ids = [t.id for t in chunk if getattr(t, "type", "") == "tv"]
-            if tv_ids:
-                extras_map = {
-                    e.title_id: e for e in TVShowExtras.objects.filter(title_id__in=tv_ids).only("title_id", "network_names")
-                }
-
-            actors_rows = []
-            keyword_rows = []
-            company_rows = []
-            country_rows = []
-            network_rows = []
-
-            for t in chunk:
-                tid = t.id
-
-                # Actors
-                for a in to_list(getattr(t, "cast", None)):
-                    na = norm_text(a)
-                    if na:
-                        actors_rows.append(TitleActor(title_id=tid, name_norm=na))
-
-                # Keywords
-                for kw in to_list(getattr(t, "keywords", None)):
-                    nkw = norm_text(kw)
-                    if nkw:
-                        keyword_rows.append(TitleKeyword(title_id=tid, keyword_norm=nkw))
-
-                # Companies
-                for comp_name in extract_company_names(getattr(t, "production_companies", None)):
-                    nc = norm_text(comp_name)
-                    if nc:
-                        company_rows.append(TitleCompany(title_id=tid, company_norm=nc))
-
-                # Countries (ISO2 only)
-                for cc in extract_country_codes(getattr(t, "production_countries", None)):
-                    country_rows.append(TitleCountry(title_id=tid, country_code=cc))
-
-                # Networks from TVShowExtras
-                extra = extras_map.get(tid)
-                if extra:
-                    for n in to_list(getattr(extra, "network_names", None)):
-                        nn = norm_text(n)
-                        if nn:
-                            network_rows.append(TitleNetwork(title_id=tid, network_norm=nn))
-
-            if dry_run:
-                created_counts["actors"] += len(actors_rows)
-                created_counts["keywords"] += len(keyword_rows)
-                created_counts["companies"] += len(company_rows)
-                created_counts["countries"] += len(country_rows)
-                created_counts["networks"] += len(network_rows)
-            else:
-                with transaction.atomic():
-                    TitleActor.objects.bulk_create(actors_rows, ignore_conflicts=True, batch_size=5000)
-                    TitleKeyword.objects.bulk_create(keyword_rows, ignore_conflicts=True, batch_size=5000)
-                    TitleCompany.objects.bulk_create(company_rows, ignore_conflicts=True, batch_size=5000)
-                    TitleCountry.objects.bulk_create(country_rows, ignore_conflicts=True, batch_size=5000)
-                    TitleNetwork.objects.bulk_create(network_rows, ignore_conflicts=True, batch_size=5000)
-
-                created_counts["actors"] += len(actors_rows)
-                created_counts["keywords"] += len(keyword_rows)
-                created_counts["companies"] += len(company_rows)
-                created_counts["countries"] += len(country_rows)
-                created_counts["networks"] += len(network_rows)
-
-            offset += batch
-            self.stdout.write(
-                f"[OK] processed={min(offset, total)}/{total} "
-                f"actors+{len(actors_rows)} kw+{len(keyword_rows)} comp+{len(company_rows)} "
-                f"cty+{len(country_rows)} net+{len(network_rows)}"
-            )
-
-        self.stdout.write(self.style.SUCCESS("[DONE] Index build finished."))
-        self.stdout.write(f"Totals inserted-attempted (ignore_conflicts may skip duplicates): {created_counts}")
+        self.stdout.write(f"[index] done: {len(ids)} titles, {written} index rows"
+                          + (" (dry run, nothing written)" if opts["dry_run"] else ""))
