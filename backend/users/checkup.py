@@ -69,6 +69,7 @@ FIX_COMMANDS = {
     "backup_db": "/opt/taurus/scripts/backup_db.sh   (log: /var/log/taurus_backup.log)",
     "weekly_cleanup": "/usr/local/bin/weekly-cleanup.sh   (log: /var/log/weekly-cleanup.log)",
     "import_trailer_results": "on the mini PC: tail -50 ~/taurus/trailer-worker/run.log   (then: crontab -l, ~/taurus/trailer-worker/run.sh)",
+    "import_providers": "on the mini PC: tail -50 ~/taurus/provider_scraper/run.log   (then: crontab -l, ~/taurus/provider_scraper/run.sh)",
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
     "translate_titles": f"{_EXEC} translate_titles",

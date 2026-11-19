@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provider Scout</title>
+<style>
+  /* Layout: control bar on top, providers (domains + API docs) as the main pane, sites beside, live feed below */
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --line: #e1e4ea; --fg: #14171c; --muted: #5d6573;
+    --accent: #2d5bd7; --accent-soft: #e6ecfb; --ok: #18794e; --ok-soft: #e3f4ea;
+    --warn: #a35a00; --warn-soft: #fbefdc; --bad: #c0362c; --bad-soft: #fbe6e4;
+    --run: #6b46c1; --run-soft: #efe9fb; --flash: #fff6c7;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1115; --panel: #171a21; --line: #272c36; --fg: #e7e9ee; --muted: #8b93a3;
+      --accent: #7c9cff; --accent-soft: #1e2740; --ok: #4cc38a; --ok-soft: #13291f;
+      --warn: #f0a94b; --warn-soft: #2e2213; --bad: #ff7a6e; --bad-soft: #321816;
+      --run: #b39cff; --run-soft: #241d3a; --flash: #3a3412; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1115; --panel: #171a21; --line: #272c36; --fg: #e7e9ee; --muted: #8b93a3;
+    --accent: #7c9cff; --accent-soft: #1e2740; --ok: #4cc38a; --ok-soft: #13291f;
+    --warn: #f0a94b; --warn-soft: #2e2213; --bad: #ff7a6e; --bad-soft: #321816;
+    --run: #b39cff; --run-soft: #241d3a; --flash: #3a3412; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(--sans); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .mono { font-family: var(--mono); font-size: 12.5px; }
+  .muted { color: var(--muted); }
+
+  header.bar { position: sticky; top: 0; z-index: 10; background: var(--panel); border-bottom: 1px solid var(--line);
+    padding: 10px max(16px, env(safe-area-inset-left)); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+  .brand { font-weight: 650; letter-spacing: -0.01em; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+  .brand .dot.live { background: var(--run); box-shadow: 0 0 0 4px var(--run-soft); animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .brand .dot.live { animation: none; } .flash { animation: none !important; } }
+  .progress { flex: 1 1 220px; min-width: 160px; display: flex; flex-direction: column; gap: 4px; }
+  .progress .track { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress .fill { height: 100%; width: 0; background: var(--accent); transition: width .4s ease; }
+  .progress .txt { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.danger { color: var(--bad); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  main { padding: 16px max(16px, env(safe-area-inset-left)) 24px; display: flex; flex-direction: column; gap: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .stat b { display: block; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .stat span { font-size: 12px; color: var(--muted); }
+
+  .settings { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .settings summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
+  .settings .body { padding: 0 14px 14px; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
+  .settings textarea { width: 100%; min-height: 140px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 8px; font-family: var(--mono); font-size: 12px; resize: vertical; }
+  .settings label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .settings select, .settings input[type=number] { border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 4px 6px; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 1000px) { .grid, .settings .body { grid-template-columns: minmax(0, 1fr); } }
+  .pane { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; display: flex; flex-direction: column; }
+  .pane h2 { font-size: 14px; margin: 0; font-weight: 650; }
+  .pane .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .pane .head .grow { flex: 1; }
+  .filter { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 5px 10px; min-width: 0; flex: 1 1 160px; }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; cursor: pointer; font-size: 12px; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .scroll { overflow: auto; max-height: 68vh; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { position: sticky; top: 0; background: var(--panel); font-size: 12px; color: var(--muted); font-weight: 600; z-index: 1; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pname { font-weight: 650; white-space: nowrap; }
+  .domains { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-family: var(--mono); font-size: 12px; background: var(--bg); max-width: 100%; overflow-wrap: anywhere; }
+  .copy { border: 0; background: none; cursor: pointer; color: var(--muted); padding: 0 2px; font-size: 11px; }
+  .copy:hover { color: var(--accent); }
+  .docs a { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .tpl { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; color: var(--fg); }
+  .fmts { margin-top: 4px; font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pill { display: inline-block; border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .p-ok { background: var(--ok-soft); color: var(--ok); }
+  .p-run { background: var(--run-soft); color: var(--run); }
+  .p-warn { background: var(--warn-soft); color: var(--warn); }
+  .p-bad { background: var(--bad-soft); color: var(--bad); }
+  .p-mute { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+  .p-acc { background: var(--accent-soft); color: var(--accent); }
+  .flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: var(--flash); } to { background: transparent; } }
+
+  .sites { list-style: none; margin: 0; padding: 0; }
+  .site { border-bottom: 1px solid var(--line); }
+  .site > button { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 14px; cursor: pointer; }
+  .site > button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .site .dom { font-family: var(--mono); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+  .site .sub { grid-column: 1 / -1; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  .site .detail { padding: 0 14px 12px; font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .site .detail .row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .srv { font-family: var(--mono); font-size: 11.5px; }
+  .srv td { padding: 3px 8px 3px 0; border: 0; }
+  .sitelog { font-family: var(--mono); font-size: 11px; color: var(--muted); max-height: 160px; overflow: auto; background: var(--bg); border-radius: 6px; padding: 6px 8px; white-space: pre-wrap; }
+
+  .feed { font-family: var(--mono); font-size: 12px; max-height: 240px; overflow: auto; padding: 8px 14px; }
+  .feed div { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1px 0; }
+  .feed .t { color: var(--muted); }
+  .feed .s { color: var(--accent); }
+  .feed .e { color: var(--ok); }
+  .empty { padding: 24px 14px; color: var(--muted); text-align: center; }
+  .conn { font-size: 12px; }
+  .stat.key { border-color: var(--ok); background: var(--ok-soft); }
+  .stat.key b { color: var(--ok); }
+  .health { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+  .health .meta { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hist { display: flex; gap: 2px; align-items: center; }
+  .hist i { width: 6px; height: 12px; border-radius: 2px; background: var(--line); }
+  .h-live { background: var(--ok) !important; } .h-up { background: var(--accent) !important; }
+  .h-no_source, .h-protected { background: var(--warn) !important; } .h-down { background: var(--bad) !important; }
+  .recheck { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; font-size: 11px; padding: 0 6px; cursor: pointer; color: var(--muted); }
+  .recheck:hover { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><span class="dot" id="dot"></span>Provider Scout</div>
+  <div class="progress">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="txt" id="ptxt">Loading…</div>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="start">Start scan</button>
+    <button class="btn" id="health" title="Re-test every provider now">Check health</button>
+    <button class="btn danger" id="stop" disabled>Stop</button>
+    <a class="btn" href="/api/export/providers.csv">Providers CSV</a>
+    <a class="btn" href="/api/export/catalog.json">Catalog JSON</a>
+    <a class="btn" href="/api/export/report.json">Report JSON</a>
+    <span class="conn muted" id="conn">connecting…</span>
+  </div>
+</header>
+
+<main>
+  <section class="stats" aria-label="Totals">
+    <div class="stat key"><b id="st-livedocs">0</b><span>live providers with API docs</span></div>
+    <div class="stat"><b id="st-live">0</b><span>providers serving video now</span></div>
+    <div class="stat"><b id="st-docs">0</b><span>API docs URLs found</span></div>
+    <div class="stat"><b id="st-prov">0</b><span>providers found</span></div>
+    <div class="stat"><b id="st-down">0</b><span>providers down</span></div>
+    <div class="stat"><b id="st-ok">0</b><span>of <span id="st-sites">0</span> sites with providers</span></div>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>Scan settings</summary>
+    <div class="body">
+      <div>
+        <label for="sites-in" style="margin-bottom:6px">Sites to scan, one domain per line</label>
+        <textarea id="sites-in" spellcheck="false"></textarea>
+      </div>
+      <div>
+        <label>Sites in parallel
+          <select id="conc"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select>
+        </label>
+        <label><input type="checkbox" id="docs" checked> Find each provider's homepage and API docs URL</label>
+        <label><input type="checkbox" id="reprobe"> Re-check docs for providers already known</label>
+        <label><input type="checkbox" id="dohealth" checked> Test that each provider is live (plays a real movie)</label>
+        <p class="muted" style="margin:0;font-size:12px">A full 42-site scan takes about 10 minutes with 5 in parallel. Results are saved to providers_report.json and provider_catalog.json.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="grid">
+    <section class="pane" aria-labelledby="prov-h">
+      <div class="head">
+        <h2 id="prov-h">Providers: domains &amp; API docs</h2>
+        <span class="grow"></span>
+        <input class="filter" id="pf" type="search" placeholder="Filter by name, domain or site" aria-label="Filter providers">
+        <div class="seg" role="group" aria-label="Docs filter" id="seg">
+          <button aria-pressed="true" data-v="livedocs">Live + docs</button>
+          <button aria-pressed="false" data-v="live">Live</button>
+          <button aria-pressed="false" data-v="docs found">Has docs</button>
+          <button aria-pressed="false" data-v="down">Down</button>
+          <button aria-pressed="false" data-v="">All</button>
+        </div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Provider</th><th>Status</th><th>Domains</th><th>API docs URL</th><th>Embed URL</th><th>Sites</th></tr></thead>
+          <tbody id="ptb"></tbody>
+        </table>
+        <div class="empty" id="pempty" hidden>No providers yet. Start a scan and they appear here as they are found.</div>
+      </div>
+    </section>
+
+    <section class="pane" aria-labelledby="site-h">
+      <div class="head">
+        <h2 id="site-h">Sites</h2>
+        <span class="grow"></span>
+        <input class="filter" id="sf" type="search" placeholder="Filter sites" aria-label="Filter sites">
+      </div>
+      <div class="scroll"><ul class="sites" id="slist"></ul></div>
+    </section>
+  </div>
+
+  <section class="pane" aria-labelledby="feed-h">
+    <div class="head"><h2 id="feed-h">Live activity</h2><span class="grow"></span>
+      <label class="muted" style="font-size:12px"><input type="checkbox" id="follow" checked> Follow</label></div>
+    <div class="feed" id="feed"></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const S = { sites: new Map(), providers: new Map(), running: false, job: '', total: 0, done: 0, open: new Set(), docsFilter: 'livedocs' };
+const STATUS = {
+  queued: ['queued', 'p-mute'], running: ['scanning', 'p-run'], ok: ['providers', 'p-ok'], direct: ['direct player', 'p-acc'],
+  blocked: ['blocked', 'p-warn'], failed: ['dead', 'p-bad'], timeout: ['timeout', 'p-bad'], stopped: ['stopped', 'p-mute'],
+  no_providers: ['none found', 'p-mute'], no_title_link: ['no title page', 'p-mute'],
+};
+const DOCS = { 'docs found': 'p-ok', 'no docs page': 'p-mute', 'cloudflare': 'p-warn', 'site down': 'p-bad', 'pending': 'p-run', 'name only': 'p-mute', 'redirects away': 'p-bad' };
+const HEALTH = {
+  live: ['live', 'p-ok', 'Served a real stream for the test movie'],
+  up: ['up', 'p-acc', 'Embed page loads; no stream started headless (may need a real click)'],
+  no_source: ['no source', 'p-warn', 'Embed loads but has no video for the test movie'],
+  protected: ['protected', 'p-warn', 'A Cloudflare / bot check answered'],
+  down: ['down', 'p-bad', 'Domain or server not answering'],
+  untested: ['untested', 'p-mute', 'No domain or embed URL to test'],
+};
+const hstate = (p) => (p.health && p.health.state) || '';
+const isLive = (p) => hstate(p) === 'live' || hstate(p) === 'up';
+const hasDocs = (p) => p.docs_state === 'docs found';
+function ago(t) {
+  if (!t) return '';
+  const s = (Date.now() - new Date(t.replace(' ', 'T')).getTime()) / 1000;
+  return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago';
+}
+async function recheck(names) {
+  const r = await fetch('/api/health', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ providers: names }) });
+  if (r.status === 409) $('ptxt').textContent = 'Wait for the current job to finish.';
+}
+function healthCell(p) {
+  const h = p.health || {};
+  const st = h.state || (S.running ? '' : 'untested');
+  const td = el('td', { class: 'health' });
+  if (!st) { td.append(el('span', { class: 'pill p-run', text: 'testing…' })); return td; }
+  const [label, cls, tip] = HEALTH[st] || [st, 'p-mute', ''];
+  const top = el('div', {}, el('span', { class: 'pill ' + cls, title: (h.detail || tip), text: label }));
+  if (h.latency_ms) top.append(el('span', { class: 'meta', text: '  ' + h.latency_ms + ' ms' }));
+  td.append(top);
+  if (h.detail) td.append(el('div', { class: 'meta', text: h.detail }));
+  const hist = el('div', { class: 'hist', title: 'Last checks, oldest first' }, ...(p.history || []).slice(-12).map((x) => el('i', { class: 'h-' + x.state, title: `${x.t}: ${x.state}${x.ms ? ' · ' + x.ms + ' ms' : ''}` })));
+  hist.append(el('button', { class: 'recheck', title: 'Test this provider again', 'aria-label': 'Re-test ' + p.provider, text: '↻', onclick: () => recheck([p.provider]) }));
+  td.append(hist);
+  if (h.checked_at) td.append(el('div', { class: 'meta', text: 'checked ' + ago(h.checked_at) }));
+  if (h.test_url && safeUrl(h.test_url)) td.append(el('a', { class: 'meta', href: h.test_url, target: '_blank', rel: 'noopener noreferrer', text: 'test URL' }));
+  return td;
+}
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+}
+function copyBtn(text) {
+  return el('button', { class: 'copy', title: 'Copy', 'aria-label': 'Copy ' + text, text: 'copy', onclick: async (ev) => {
+    ev.stopPropagation();
+    try { await navigator.clipboard.writeText(text); ev.target.textContent = 'copied'; }
+    catch { ev.target.textContent = 'select'; }
+    setTimeout(() => (ev.target.textContent = 'copy'), 1200);
+  }});
+}
+const safeUrl = (u) => /^https?:\/\//.test(u || '') ? u : null;
+
+// ---------- providers ----------
+let pDirty = new Set(), pRaf = 0;
+function schedProviders(name) { if (name) pDirty.add(name); if (!pRaf) pRaf = requestAnimationFrame(renderProviders); }
+function renderProviders() {
+  pRaf = 0;
+  const q = $('pf').value.trim().toLowerCase();
+  const f = S.docsFilter;
+  const pass = {
+    livedocs: (p) => isLive(p) && hasDocs(p), live: isLive, 'docs found': hasDocs,
+    down: (p) => ['down', 'no_source'].includes(hstate(p)),
+  }[f] || (() => true);
+  const rank = { live: 0, up: 1, no_source: 2, protected: 3, '': 4, untested: 5, down: 6 };
+  const rows = [...S.providers.values()]
+    .filter(pass)
+    .filter((p) => !q || [p.provider, ...p.domains, ...p.sites, p.docs_url, p.homepage].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => (hasDocs(b) - hasDocs(a)) || (rank[hstate(a)] ?? 4) - (rank[hstate(b)] ?? 4)
+      || b.sites.length - a.sites.length || a.provider.localeCompare(b.provider));
+  const tb = $('ptb');
+  tb.replaceChildren(...rows.map((p) => {
+    const doms = el('div', { class: 'domains' }, ...p.domains.map((d) => el('span', { class: 'chip' }, d, copyBtn(d))));
+    if (!p.domains.length) doms.append(el('span', { class: 'muted', text: 'name seen in page text only' }));
+    const home = safeUrl(p.homepage);
+    const docsCell = el('td', { class: 'docs' });
+    if (safeUrl(p.docs_url)) {
+      docsCell.append(el('a', { href: p.docs_url, target: '_blank', rel: 'noopener noreferrer', text: p.docs_url }), ' ', copyBtn(p.docs_url));
+    } else {
+      docsCell.append(el('span', { class: 'pill ' + (DOCS[p.docs_state] || 'p-mute'), text: p.docs_state === 'pending' ? 'checking…' : p.docs_state }));
+    }
+    if (home) docsCell.append(el('div', { class: 'muted', style: 'font-size:11px;margin-top:3px' }, 'home: ',
+      el('a', { href: home, target: '_blank', rel: 'noopener noreferrer', text: new URL(home).host })));
+    const tpl = el('td');
+    if (p.template) tpl.append(el('div', { class: 'tpl', text: p.template }));
+    if (p.formats && p.formats.length) tpl.append(el('div', { class: 'fmts', text: p.formats.slice(0, 4).join('\n') }));
+    if (!tpl.childNodes.length) tpl.append(el('span', { class: 'muted', text: '—' }));
+    const tr = el('tr', {},
+      el('td', { class: 'pname', text: p.provider }), healthCell(p), el('td', {}, doms), docsCell, tpl,
+      el('td', { class: 'num', title: p.sites.join(', '), text: String(p.sites.length) }));
+    if (pDirty.has(p.provider)) tr.classList.add('flash');
+    return tr;
+  }));
+  pDirty.clear();
+  $('pempty').hidden = rows.length > 0;
+  $('pempty').textContent = S.providers.size ? 'No provider matches this filter yet.' : 'No providers yet. Start a scan and they appear here as they are found.';
+  renderStats();
+}
+
+// ---------- sites ----------
+let sRaf = 0;
+function schedSites() { if (!sRaf) sRaf = requestAnimationFrame(renderSites); }
+function renderSites() {
+  sRaf = 0;
+  const q = $('sf').value.trim().toLowerCase();
+  const order = { running: 0, ok: 1, direct: 2, queued: 3 };
+  const list = [...S.sites.values()].filter((s) => !q || (s.site + ' ' + s.final_domain + ' ' + s.providers.join(' ')).toLowerCase().includes(q))
+    .sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4) || b.providers.length - a.providers.length || a.site.localeCompare(b.site));
+  $('slist').replaceChildren(...list.map((s) => {
+    const [label, cls] = STATUS[s.status] || [s.status, 'p-mute'];
+    const moved = s.final_domain && s.final_domain !== s.domain;
+    const sub = s.status === 'ok' ? s.providers.join(', ')
+      : s.status === 'direct' ? 'own player · ' + (s.stream_cdn.join(', ') || s.providers.join(', '))
+      : s.reason || (s.status === 'running' ? 'working…' : '');
+    const head = el('button', { 'aria-expanded': String(S.open.has(s.site)), onclick: () => {
+        S.open.has(s.site) ? S.open.delete(s.site) : S.open.add(s.site); schedSites(); } },
+      el('span', { class: 'dom' }, s.domain, moved ? el('span', { class: 'muted', text: '  →  ' + s.final_domain }) : null),
+      el('span', {}, el('span', { class: 'pill ' + cls, text: label + (s.status === 'ok' ? ' · ' + s.providers.length : '') })),
+      sub ? el('span', { class: 'sub', text: sub }) : null);
+    const li = el('li', { class: 'site' }, head);
+    if (S.open.has(s.site)) {
+      const d = el('div', { class: 'detail' });
+      if (s.title_url && safeUrl(s.title_url)) d.append(el('div', {}, 'Title page: ', el('a', { href: s.title_url, target: '_blank', rel: 'noopener noreferrer', class: 'mono', text: s.title_url })));
+      if (s.servers.length) {
+        const t = el('table', { class: 'srv' });
+        s.servers.slice(0, 40).forEach((x) => t.append(el('tr', {}, el('td', { text: (x.mode ? `[${x.mode}] ` : '') + x.label }), el('td', { class: 'muted', text: '→' }), el('td', { text: x.host }), el('td', { class: 'muted', text: x.how }))));
+        d.append(el('div', { class: 'muted', text: 'Servers → domain' }), t);
+      }
+      if (s.backends.length) d.append(el('div', {}, el('span', { class: 'muted', text: 'Player backends: ' }), el('span', { class: 'mono', text: s.backends.join(', ') })));
+      if (s.log.length) d.append(el('div', { class: 'sitelog', text: s.log.map((l) => `${l.t}  ${l.msg}`).join('\n') }));
+      li.append(d);
+    }
+    return li;
+  }));
+  renderStats();
+}
+
+function renderStats() {
+  const sites = [...S.sites.values()];
+  const provs = [...S.providers.values()];
+  $('st-sites').textContent = sites.filter((s) => !['queued', 'running'].includes(s.status)).length;
+  $('st-ok').textContent = sites.filter((s) => s.status === 'ok').length;
+  $('st-prov').textContent = provs.length;
+  $('st-docs').textContent = provs.filter(hasDocs).length;
+  $('st-livedocs').textContent = provs.filter((p) => isLive(p) && hasDocs(p)).length;
+  $('st-live').textContent = provs.filter((p) => hstate(p) === 'live').length;
+  $('st-down').textContent = provs.filter((p) => hstate(p) === 'down').length;
+  const pct = S.total ? Math.round((S.done / S.total) * 100) : 0;
+  $('fill').style.width = pct + '%';
+  const running = sites.filter((s) => s.status === 'running').map((s) => s.domain);
+  $('ptxt').textContent = S.running && S.job === 'health'
+    ? `Testing providers · ${S.done} of ${S.total} · ${pct}%`
+    : S.running
+    ? `${S.done} of ${S.total} sites · ${pct}%` + (running.length ? ` · now: ${running.slice(0, 3).join(', ')}` : '')
+    : (S.finished ? `Last scan ${S.finished} · ${S.done} of ${S.total} sites` + (S.source === 'previous scan' ? ' (loaded from file)' : '') : 'Ready');
+  $('dot').classList.toggle('live', S.running);
+  $('start').disabled = S.running;
+  $('health').disabled = S.running;
+  $('stop').disabled = !S.running;
+}
+
+// ---------- feed ----------
+function feedLine(l) {
+  const f = $('feed');
+  const isEmbed = /^(embed|server|docs:)/.test(l.msg);
+  f.append(el('div', {}, el('span', { class: 't', text: l.t + '  ' }), l.site ? el('span', { class: 's', text: l.site + '  ' }) : null,
+    el('span', { class: isEmbed ? 'e' : '', text: l.msg })));
+  while (f.childNodes.length > 500) f.firstChild.remove();
+  if ($('follow').checked) f.scrollTop = f.scrollHeight;
+}
+
+// ---------- data ----------
+function load(snap) {
+  S.sites = new Map(snap.sites.map((s) => [s.site, s]));
+  S.providers = new Map(snap.providers.map((p) => [p.provider, p]));
+  Object.assign(S, { job: snap.job, running: snap.running, total: snap.total, done: snap.done, finished: snap.finished, source: snap.source });
+  if (!$('sites-in').value) $('sites-in').value = (snap.sites.length ? snap.sites.map((s) => s.site) : snap.default_sites).join('\n');
+  $('feed').replaceChildren(); (snap.log || []).forEach(feedLine);
+  renderProviders(); renderSites();
+}
+
+function connect() {
+  const es = new EventSource('/api/events');
+  es.onopen = () => { $('conn').textContent = 'live'; fetch('/api/state').then((r) => r.json()).then(load); };
+  es.onerror = () => { $('conn').textContent = 'reconnecting…'; };
+  es.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    switch (m.type) {
+      case 'reset': load(m); break;
+      case 'site': S.sites.set(m.site, m); schedSites(); break;
+      case 'provider': S.providers.set(m.provider, m); schedProviders(m.provider); break;
+      case 'progress': S.done = m.done; S.total = m.total; renderStats(); break;
+      case 'log': feedLine(m); { const s = S.sites.get(m.site); if (s) { s.log.push(m); if (S.open.has(m.site)) schedSites(); } } break;
+    }
+  };
+}
+
+$('start').onclick = async () => {
+  const sites = $('sites-in').value.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  const r = await fetch('/api/run', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sites, concurrency: +$('conc').value, docs: $('docs').checked, reprobe: $('reprobe').checked, health: $('dohealth').checked }) });
+  if (r.status === 409) $('ptxt').textContent = 'A scan is already running.';
+};
+$('stop').onclick = () => fetch('/api/stop', { method: 'POST' });
+$('health').onclick = () => recheck(null);
+$('pf').oninput = () => schedProviders();
+$('sf').oninput = () => schedSites();
+$('seg').querySelectorAll('button').forEach((b) => b.onclick = () => {
+  $('seg').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  S.docsFilter = b.dataset.v; schedProviders();
+});
+connect();
+</script>
+</body>
+</html>

@@ -43,6 +43,8 @@ JOBS = [
     ("weekly_cleanup", "Server cleanup (Docker, logs)", timedelta(days=8)),
     # the mini PC's nightly trailer-worker/run.sh, seen when it imports its clips
     ("import_trailer_results", "Trailer clips (mini PC)", timedelta(hours=30)),
+    # the mini PC's nightly provider_scraper/run.sh: new providers / domains found on streaming sites
+    ("import_providers", "Provider scout (mini PC)", timedelta(hours=30)),
 ]
 
 # For the dashboard's jobs card: the group a job is shown in, when cron runs it (ops/crontab, UTC)
@@ -66,6 +68,8 @@ JOB_INFO = {
     "tag_titles": ("AI", "Every night 04:00", "Moods / themes / pacing tags by Claude (batch, within the AI budget)"),
     "translate_titles": ("AI", "Every night 03:30", "Overviews TMDB lacks, translated by Claude (within the AI budget)"),
     "check_providers": ("Health & safety", "Every 15 minutes", "Checks streaming providers are up, switches dead domains"),
+    "import_providers": ("Health & safety", "Every night 04:30 (mini PC)",
+                         "New streaming providers / domains found on streaming sites by the mini PC"),
     "daily_checkup": ("Health & safety", "Every day 07:00", "Emails staff when something on this page goes wrong"),
     "backup_db": ("Health & safety", "Every night 01:30", "Database backup, copied to Google Drive"),
     "backup_restore_test": ("Health & safety", "Wednesdays 02:15", "Restores the newest backup in a test database and counts rows"),

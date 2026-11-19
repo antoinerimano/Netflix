@@ -1,0 +1,8 @@
+# made by every run (run.sh rewrites them: tracked, they would block git pull on the mini PC)
+providers_report.json
+provider_catalog.json
+board/*.json
+*.part
+run.log
+.venv/
+__pycache__/
