@@ -265,9 +265,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           command_timeout: 45m # up to 20 min waiting for jobs + the build
-          script_stop: true
           script: |
-            set -e
+            set -e  # stop at the first failing command (ssh-action v1 has no script_stop)
             cd "${{ vars.DEPLOY_PATH || '/opt/taurus' }}"
             git fetch origin main
             # only fast-forward: a server with local changes stops the deploy instead of losing them
