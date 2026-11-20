@@ -67,6 +67,16 @@ class OpsFilesTests(SimpleTestCase):
             self.assertTrue((ROOT / script).exists(), script)
 
 
+    def test_the_domain_is_written_in_one_place(self):
+        # SITE_DOMAIN (/opt/taurus/.env) is the only place: docs/CONFIG.md "Change the domain"
+        places = [ROOT / "docker-compose.yml", ROOT / "frontend" / "index.html", ROOT / "frontend" / "Dockerfile"]
+        for folder, pattern in (("nginx", "**/*"), ("scripts", "*.sh"), ("ops", "*"), ("frontend/public", "*.txt"),
+                                ("frontend/src", "**/*.js*")):
+            places += [p for p in (ROOT / folder).glob(pattern) if p.is_file()]
+        hardcoded = [str(p.relative_to(ROOT)) for p in places if "tauruss.top" in p.read_text(encoding="utf-8", errors="ignore")]
+        self.assertEqual(hardcoded, [], "use SITE_DOMAIN (nginx template, heartbeat) or __SITE_URL__ (frontend)")
+
+
 class HealthTests(SimpleTestCase):
     databases = {"default"}
 

@@ -62,7 +62,7 @@
     "searchLabel": "Search movies and TV shows",
     "seeAllResults": "See all results for “{{query}}”",
     "share": "Share site",
-    "shareHint": "Share tauruss.top (Ctrl+D to bookmark)",
+    "shareHint": "Share {{site}} (Ctrl+D to bookmark)",
     "shareText": "Check out Taurus",
     "shareApp": "Share Tauruss",
     "linkCopied": "Link copied!",

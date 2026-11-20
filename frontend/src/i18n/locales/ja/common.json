@@ -62,7 +62,7 @@
     "searchLabel": "映画とドラマを検索",
     "seeAllResults": "「{{query}}」の検索結果をすべて表示",
     "share": "サイトを共有",
-    "shareHint": "tauruss.top を共有（Ctrl+D でブックマーク）",
+    "shareHint": "{{site}} を共有（Ctrl+D でブックマーク）",
     "shareText": "Taurus をチェックしてみて",
     "shareApp": "Tauruss を共有",
     "linkCopied": "リンクをコピーしました",

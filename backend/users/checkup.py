@@ -13,6 +13,8 @@ jobs and server? An email to staff only when something is.
    - an AI tag batch still not collected after 26 hours (batches end within 24);
    - the disk under 10 % or 5 GB free;
    - the AI budget (reco/ai_budget.py) at 80 % or more of the month;
+   - settings (users/config_check.py, docs/CONFIG.md): one missing, the debug mode on in
+     production, or a key TMDB / Anthropic / the mail server now refuses;
    - more trailer preview clips that may be the wrong video than at the last check-up: old
      trailers/{tmdb_id}.mp4 clips (the show / movie sharing the TMDB id could have overwritten
      them), or clips that aren't the clip of the title's current trailer (users/trailers.py).
@@ -243,6 +245,10 @@ def find_problems(now=None, clips=None):
     problem = clip_problem(clips if clips is not None else preview_clip_counts(), previous_clip_counts())
     if problem:
         problems.append(problem)
+
+    # settings: missing ones, debug mode on, keys a service now refuses (users/config_check.py)
+    from .config_check import config_problems
+    problems += config_problems()
     return problems
 
 

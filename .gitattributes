@@ -3,3 +3,4 @@
 *.sh text eol=lf
 ops/crontab text eol=lf
 ops/logrotate-taurus text eol=lf
+nginx/** text eol=lf

@@ -62,7 +62,7 @@
     "searchLabel": "Buscar filmes e séries",
     "seeAllResults": "Ver todos os resultados para “{{query}}”",
     "share": "Compartilhar o site",
-    "shareHint": "Compartilhar tauruss.top (Ctrl+D para favoritar)",
+    "shareHint": "Compartilhar {{site}} (Ctrl+D para favoritar)",
     "shareText": "Conheça o Taurus",
     "shareApp": "Compartilhar o Tauruss",
     "linkCopied": "Link copiado!",

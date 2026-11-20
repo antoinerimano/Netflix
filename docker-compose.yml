@@ -30,6 +30,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./backend/.env
+    environment:
+      # the site's domain, set once in .env next to this file (docs/CONFIG.md)
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in /opt/taurus/.env (see .env.example)}
     depends_on:
       - db
     volumes:
@@ -44,6 +47,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in /opt/taurus/.env (see .env.example)}
     expose:
       - "80"
     restart: unless-stopped
@@ -54,8 +59,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in /opt/taurus/.env (see .env.example)}
+      # templates/*.template -> conf.d/ at start, with only SITE_DOMAIN filled in ($host & co. stay)
+      NGINX_ENVSUBST_FILTER: "^SITE_DOMAIN$"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
       - ./nginx/security-headers.inc:/etc/nginx/conf.d/security-headers.inc:ro
       - static_vol:/vol/static:ro
       - media_vol:/vol/media:ro

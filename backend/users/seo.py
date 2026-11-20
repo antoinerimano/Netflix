@@ -5,7 +5,7 @@ codes, and the sitemaps.
 
 The app renders in the browser, so every URL used to get the same index.html: one title, one
 description, one preview image, and status 200 even for pages that don't exist. nginx now sends
-every app URL that isn't a file (see nginx/default.conf, "@spa") here, and this module answers
+every app URL that isn't a file (see nginx/templates/default.conf.template, "@spa") here, and this module answers
 with the frontend's index.html, rewritten for that page:
 
   /movies/<id>, /tv/<id>   the title's name (in the page's language), synopsis, poster, canonical

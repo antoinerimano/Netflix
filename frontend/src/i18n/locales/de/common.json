@@ -62,7 +62,7 @@
     "searchLabel": "Filme und Serien suchen",
     "seeAllResults": "Alle Ergebnisse für „{{query}}“ anzeigen",
     "share": "Website teilen",
-    "shareHint": "tauruss.top teilen (Strg+D für ein Lesezeichen)",
+    "shareHint": "{{site}} teilen (Strg+D für ein Lesezeichen)",
     "shareText": "Schau dir Taurus an",
     "shareApp": "Tauruss teilen",
     "linkCopied": "Link kopiert!",
