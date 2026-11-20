@@ -62,7 +62,7 @@
     "searchLabel": "Cerca film e serie TV",
     "seeAllResults": "Vedi tutti i risultati per «{{query}}»",
     "share": "Condividi il sito",
-    "shareHint": "Condividi tauruss.top (Ctrl+D per aggiungerlo ai preferiti)",
+    "shareHint": "Condividi {{site}} (Ctrl+D per aggiungerlo ai preferiti)",
     "shareText": "Dai un'occhiata a Taurus",
     "shareApp": "Condividi Tauruss",
     "linkCopied": "Link copiato!",

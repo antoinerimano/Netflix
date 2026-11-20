@@ -62,7 +62,7 @@
     "searchLabel": "সিনেমা ও টিভি শো খুঁজুন",
     "seeAllResults": "“{{query}}”-এর সব ফলাফল দেখুন",
     "share": "সাইট শেয়ার করুন",
-    "shareHint": "tauruss.top শেয়ার করুন (বুকমার্কের জন্য Ctrl+D)",
+    "shareHint": "{{site}} শেয়ার করুন (বুকমার্কের জন্য Ctrl+D)",
     "shareText": "Taurus দেখে নাও",
     "shareApp": "Tauruss শেয়ার করুন",
     "linkCopied": "লিংক কপি হয়েছে!",

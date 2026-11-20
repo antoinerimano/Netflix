@@ -16,7 +16,8 @@ import {
   HomeIcon, FilmIcon, TvIcon, BookmarkIcon, CalendarIcon, WandIcon, SearchIcon, ShareIcon, CheckIcon,
 } from '../design/icons';
 
-const SITE_URL = 'https://tauruss.top/';
+// the address shared: the site's own (the domain is set once on the server, docs/CONFIG.md)
+const siteUrl = () => `${window.location.origin}/`;
 
 const Navbar = () => {
   const { t } = useTranslation();
@@ -172,11 +173,11 @@ const Navbar = () => {
         await navigator.share({
           title: 'Taurus',
           text: t('nav.shareText'),
-          url: SITE_URL,
+          url: siteUrl(),
         });
         setShareStatus('shared');
       } else {
-        await navigator.clipboard.writeText(SITE_URL);
+        await navigator.clipboard.writeText(siteUrl());
         setShareStatus('copied');
       }
     } catch (err) {
@@ -345,7 +346,7 @@ const Navbar = () => {
           type="button"
           className="navbar__icon-btn share-button"
           onClick={handleShare}
-          title={t('nav.shareHint')}
+          title={t('nav.shareHint', { site: window.location.host })}
           aria-label={t('nav.share')}
         >
           <ShareIcon />

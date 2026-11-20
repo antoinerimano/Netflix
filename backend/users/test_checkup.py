@@ -48,6 +48,9 @@ class CheckupTests(TestCase):
         cert = mock.patch("users.checkup.cert_days_left", return_value=60)  # never the network
         cert.start()
         self.addCleanup(cert.stop)
+        config = mock.patch("users.config_check.config_problems", return_value=[])  # tested in test_config_check
+        config.start()
+        self.addCleanup(config.stop)
 
     def run_cmd(self, *args):
         out = StringIO()

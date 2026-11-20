@@ -17,6 +17,12 @@
 set -euo pipefail
 
 WAIT_SECONDS="${WAIT_SECONDS:-1200}"
+
+# the site's domain (docs/CONFIG.md): docker compose refuses to run without it
+if ! grep -qE "^SITE_DOMAIN=.+" .env 2>/dev/null; then
+  echo "::error::SITE_DOMAIN is not set in $(pwd)/.env (see .env.example): nothing restarted."
+  exit 1
+fi
 # shellcheck source=job_locks.sh
 . "$(dirname "$0")/job_locks.sh"
 take_job_locks "$WAIT_SECONDS" || exit 1
@@ -28,6 +34,18 @@ fi
 
 docker compose up -d --build backend frontend
 docker compose exec -T backend python manage.py migrate --noinput
+
+# nginx renders its config from nginx/templates (SITE_DOMAIN filled in) only when it starts: when the
+# template, the headers, the domain or nginx's compose settings changed, check the new config in a
+# throwaway container first (a bad one fails the deploy, the running nginx keeps the old one), then
+# restart it (a second without answering).
+nginx_sig=$( { cat nginx/templates/* nginx/security-headers.inc; grep -E "^SITE_DOMAIN=" .env; docker compose config nginx; } | sha256sum | cut -d" " -f1)
+if [[ "$(cat /var/lib/taurus/nginx.sig 2>/dev/null)" != "$nginx_sig" ]]; then
+  docker compose run --rm --no-deps -T nginx nginx -t
+  docker compose up -d --force-recreate --no-deps nginx
+  mkdir -p /var/lib/taurus && echo "$nginx_sig" > /var/lib/taurus/nginx.sig
+  echo "::notice::nginx restarted with its new config"
+fi
 docker image prune -f
 
 install_ops_file() {  # $1: the file in ops/, $2: where it goes ("crontab": root's crontab)

@@ -1,4 +1,4 @@
-# robots.txt for tauruss.top
+# robots.txt (__SITE_URL__ is filled in by frontend/Dockerfile from SITE_DOMAIN)
 
 User-agent: *
 Allow: /
@@ -22,4 +22,4 @@ Disallow: /watch/
 Disallow: /admin/
 
 # Sitemap
-Sitemap: https://tauruss.top/sitemap.xml
+Sitemap: __SITE_URL__/sitemap.xml

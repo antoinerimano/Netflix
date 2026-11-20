@@ -62,7 +62,7 @@
     "searchLabel": "Поиск фильмов и сериалов",
     "seeAllResults": "Все результаты по запросу «{{query}}»",
     "share": "Поделиться сайтом",
-    "shareHint": "Поделиться tauruss.top (Ctrl+D — в закладки)",
+    "shareHint": "Поделиться {{site}} (Ctrl+D — в закладки)",
     "shareText": "Посмотри Taurus",
     "shareApp": "Поделиться Tauruss",
     "linkCopied": "Ссылка скопирована!",

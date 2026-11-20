@@ -62,7 +62,7 @@
     "searchLabel": "फ़िल्में और टीवी शो खोजें",
     "seeAllResults": "“{{query}}” के सभी परिणाम देखें",
     "share": "साइट शेयर करें",
-    "shareHint": "tauruss.top शेयर करें (बुकमार्क के लिए Ctrl+D)",
+    "shareHint": "{{site}} शेयर करें (बुकमार्क के लिए Ctrl+D)",
     "shareText": "Taurus देखिए",
     "shareApp": "Tauruss शेयर करें",
     "linkCopied": "लिंक कॉपी हो गया!",

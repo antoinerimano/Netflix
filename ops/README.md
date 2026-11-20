@@ -26,7 +26,8 @@ next deploy would put `ops/crontab` back.
   (`scripts/job_locks.sh`), then reboots. Docker restarts the containers (`restart: unless-stopped`).
   Log: `/var/log/taurus_reboot.log`.
 
-Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`.
+Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`. Every setting,
+where it lives and how to change it (a key, the domain, the server's IP): [`docs/CONFIG.md`](../docs/CONFIG.md).
 
 ## Watched jobs
 

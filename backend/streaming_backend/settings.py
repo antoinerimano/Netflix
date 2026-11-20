@@ -18,9 +18,16 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
+# The site's domain, in ONE place: /opt/taurus/.env (docker compose passes it to nginx, the
+# frontend build and here). The hosts, origins and links below follow it unless set on their
+# own in backend/.env. docs/CONFIG.md says how to change it.
+SITE_DOMAIN = env("SITE_DOMAIN", default="").strip().lower()
+_SITE_ORIGINS = [f"https://{SITE_DOMAIN}", f"https://www.{SITE_DOMAIN}"] if SITE_DOMAIN else []
+
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",
-    default=["localhost", "127.0.0.1"],
+    # "backend": the other containers' address for it
+    default=([SITE_DOMAIN, f"www.{SITE_DOMAIN}"] if SITE_DOMAIN else []) + ["localhost", "127.0.0.1", "backend"],
 )
 
 # ---- Apps ----
@@ -148,7 +155,7 @@ ADMINADMIN_URL = env("ADMINADMIN_URL", default="super-admin-7b0e/")
 # ex: http://localhost:3000 en dev, et ton domaine en prod
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
-    default=["http://localhost:3000"],
+    default=_SITE_ORIGINS or ["http://localhost:3000"],
 )
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
@@ -157,13 +164,13 @@ CORS_ALLOW_HEADERS = (*default_cors_headers, "x-profile-id", "x-original-content
 
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
-    default=["http://localhost:3000"],
+    default=_SITE_ORIGINS or ["http://localhost:3000"],
 )
 
 # Base of the links in emails (password reset, email change, new episodes): ONE address.
 # If a list was pasted here (like CORS_ALLOWED_ORIGINS), the first one is used: the whole
 # list in front of a link made every email link unusable.
-FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000").split(",")[0].strip().rstrip("/")
+FRONTEND_URL = env("FRONTEND_URL", default=(_SITE_ORIGINS or ["http://localhost:3000"])[0]).split(",")[0].strip().rstrip("/")
 
 # ---- SEO (users/seo.py): page shells with per-title tags, sitemaps ----
 # Public address of the site in canonical / hreflang / sitemap links

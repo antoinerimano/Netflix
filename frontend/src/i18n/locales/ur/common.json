@@ -62,7 +62,7 @@
     "searchLabel": "فلمیں اور ٹی وی شوز تلاش کریں",
     "seeAllResults": "“{{query}}” کے تمام نتائج دیکھیں",
     "share": "سائٹ شیئر کریں",
-    "shareHint": "tauruss.top شیئر کریں (بک مارک کے لیے Ctrl+D)",
+    "shareHint": "{{site}} شیئر کریں (بک مارک کے لیے Ctrl+D)",
     "shareText": "Taurus دیکھیں",
     "shareApp": "Tauruss شیئر کریں",
     "linkCopied": "لنک کاپی ہو گیا!",

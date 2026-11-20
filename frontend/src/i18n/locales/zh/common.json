@@ -62,7 +62,7 @@
     "searchLabel": "搜索电影和剧集",
     "seeAllResults": "查看“{{query}}”的全部结果",
     "share": "分享网站",
-    "shareHint": "分享 tauruss.top（按 Ctrl+D 添加书签）",
+    "shareHint": "分享 {{site}}（按 Ctrl+D 添加书签）",
     "shareText": "来看看 Taurus",
     "shareApp": "分享 Tauruss",
     "linkCopied": "链接已复制！",
