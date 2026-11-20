@@ -8,9 +8,23 @@ What lives on the server outside the app code, so the server can be rebuilt.
 | `weekly-cleanup.sh` | `/usr/local/bin/weekly-cleanup.sh` | `install -m 755 ops/weekly-cleanup.sh /usr/local/bin/` |
 | `logrotate-taurus` | `/etc/logrotate.d/taurus` | `install -m 644 ops/logrotate-taurus /etc/logrotate.d/taurus` |
 
-`crontab` is a copy: after `crontab -e` on the server, refresh it with `crontab -l > ops/crontab`.
-Each deploy (`scripts/deploy.sh`) warns on the GitHub run when one of these three isn't installed as
-it is here.
+Each deploy (`scripts/deploy.sh`) installs these three when they changed (the old crontab is kept in
+`/var/backups/crontab.before-*`). So edit them **here**, never with `crontab -e` on the server: the
+next deploy would put `ops/crontab` back.
+
+## Running without anyone
+
+- **healthchecks.io** emails when the server is down. Two checks:
+  - `HC_PING_SITE`: every 5 min, `scripts/heartbeat.sh` asks this server's nginx for `/api/health/`
+    (Django + MySQL) and pings it, or pings `/fail`. Period 5 min, grace 10 min (a deploy restarts the
+    backend for a minute).
+  - `HC_PING_CHECKUP`: the 07:00 daily check-up pings it when it ran. Period 1 day, grace 2 h.
+  The ping URLs go in `backend/.env` (`HC_PING_SITE=https://hc-ping.com/...`), not in git: the
+  repository is public. Without them `scripts/hc_ping.sh` does nothing.
+- **Reboots**: security updates install themselves (unattended-upgrades); when one needs a reboot,
+  `scripts/reboot_if_needed.sh` (Monday 10:30 UTC) waits for the running cron job like a deploy does
+  (`scripts/job_locks.sh`), then reboots. Docker restarts the containers (`restart: unless-stopped`).
+  Log: `/var/log/taurus_reboot.log`.
 
 Not in git (keep them in a password manager): `.env`, `backend/.env`, `frontend/.env`.
 

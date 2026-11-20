@@ -49,8 +49,13 @@ ssh user@your-server 'cd /opt/taurus && docker compose exec -T backend python ma
 carries on the next night. `crontab -e`:
 
 ```
-0 1 * * * /home/you/taurus/trailer-worker/run.sh >> /home/you/taurus/trailer-worker/run.log 2>&1
+0 1 * * * cd /home/you/taurus && (git pull -q --ff-only; trailer-worker/run.sh) >> /home/you/taurus/trailer-worker/run.log 2>&1
 ```
+
+`git pull` first: a fix merged on `main` reaches the mini PC the next night, nobody has to log in.
+Unattended reboots after security updates (`/etc/apt/apt.conf.d/52taurus-autoreboot`:
+`Unattended-Upgrade::Automatic-Reboot "true"` and `Automatic-Reboot-Time "12:30"`, after the night
+jobs) are safe: cron, ssh and Tailscale start at boot, nobody has to log in.
 
 The first time the whole catalogue is done again (old clips could belong to the wrong title):
 popular titles first, about 3 to 5 nights for 20,000 titles. Then a few minutes a night.

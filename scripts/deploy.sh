@@ -4,40 +4,22 @@
 #
 # Restarting the backend kills any job running inside it (the weekly clean_db was cut off at
 # 61,200 / 106,102 by a deploy on 2026-11-15). So the deploy first takes every cron job's lock
-# (the same /tmp/*.lock files ops/crontab runs them with `flock -n`):
+# (scripts/job_locks.sh: the same /tmp/*.lock files ops/crontab runs them with `flock -n`):
 #   - a job running now: the deploy waits for it to finish (up to WAIT_SECONDS in all);
 #   - a job due during the deploy: it finds its lock taken and skips this time (runs next time);
 #   - still busy after WAIT_SECONDS: the deploy stops without restarting anything, says which job,
 #     and can be run again from GitHub (Actions > the run > "Re-run failed jobs").
 #   --locks-only   take the locks, say so, release them, restart nothing (a check)
 #
-# Then it says (a warning on the GitHub run, nothing stops) when the server's cron files aren't the
-# ones in ops/ (root's crontab, weekly-cleanup.sh, the logrotate config): installing them is a manual
-# step (ops/README.md), and a job the code expects but cron doesn't run shows up "late" a day later.
+# Then it installs the server's cron files from ops/ (root's crontab, weekly-cleanup.sh, the logrotate
+# config) when they changed: a job a PR adds runs without anyone touching the server. Edit them in
+# ops/, never with `crontab -e` on the server (the next deploy puts ops/crontab back).
 set -euo pipefail
 
 WAIT_SECONDS="${WAIT_SECONDS:-1200}"
-LOCKS=(
-  /tmp/clean_db_weekly.lock /tmp/sync_tmdb_weekly.lock /tmp/taurus_heavy.lock
-  /tmp/taurus_tags.lock /tmp/taurus_related.lock /tmp/taurus_checkup.lock
-  /tmp/taurus_episodes.lock /tmp/taurus_home.lock /tmp/taurus_backup.lock /tmp/taurus_translate.lock
-  /tmp/taurus_ratings.lock /tmp/taurus_new_releases.lock /tmp/taurus_index.lock /tmp/taurus_restore_test.lock
-)
-
-deadline=$(( $(date +%s) + WAIT_SECONDS ))
-for lock in "${LOCKS[@]}"; do
-  exec {fd}>>"$lock"  # kept open (and locked) until this script ends
-  left=$(( deadline - $(date +%s) ))
-  (( left < 1 )) && left=1
-  if ! flock -n "$fd"; then
-    echo "Waiting for the job holding $lock to finish (up to ${left}s)..."
-    if ! flock -w "$left" "$fd"; then
-      echo "::error::A job still holds $lock: nothing restarted. Run the deploy again once it is done."
-      exit 1
-    fi
-  fi
-done
-echo "Every job lock taken: no job is running, none will start until the deploy ends."
+# shellcheck source=job_locks.sh
+. "$(dirname "$0")/job_locks.sh"
+take_job_locks "$WAIT_SECONDS" || exit 1
 
 if [[ "${1:-}" == "--locks-only" ]]; then
   echo "--locks-only: nothing restarted."
@@ -48,13 +30,18 @@ docker compose up -d --build backend frontend
 docker compose exec -T backend python manage.py migrate --noinput
 docker image prune -f
 
-installed_differs() {  # $1: the file in ops/, $2: where it is installed ("crontab": root's crontab)
+install_ops_file() {  # $1: the file in ops/, $2: where it goes ("crontab": root's crontab)
   local installed
   if [[ "$2" == crontab ]]; then installed=$(crontab -l 2>/dev/null || true); else installed=$(cat "$2" 2>/dev/null || true); fi
-  if [[ "$installed" != "$(cat "$1")" ]]; then
-    echo "::warning::$2 on the server is not $1 of this deploy: install it (ops/README.md)"
+  [[ "$installed" == "$(cat "$1")" ]] && return 0
+  if [[ "$2" == crontab ]]; then
+    crontab -l > "/var/backups/crontab.before-$(date +%Y%m%d-%H%M)" 2>/dev/null || true
+    crontab "$1"  # checks the syntax first: a bad file changes nothing and fails the deploy
+  else
+    install -m "$3" "$1" "$2"
   fi
+  echo "::notice::installed $1 as $2"
 }
-installed_differs ops/crontab crontab
-installed_differs ops/weekly-cleanup.sh /usr/local/bin/weekly-cleanup.sh
-installed_differs ops/logrotate-taurus /etc/logrotate.d/taurus
+install_ops_file ops/crontab crontab
+install_ops_file ops/weekly-cleanup.sh /usr/local/bin/weekly-cleanup.sh 755
+install_ops_file ops/logrotate-taurus /etc/logrotate.d/taurus 644

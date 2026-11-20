@@ -11,11 +11,16 @@ ROOT = Path(__file__).resolve().parents[2]
 class OpsFilesTests(SimpleTestCase):
     def test_deploy_waits_for_every_cron_job(self):
         crontab = (ROOT / "ops" / "crontab").read_text(encoding="utf-8")
-        deploy = (ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
+        job_locks = (ROOT / "scripts" / "job_locks.sh").read_text(encoding="utf-8")
         cron_locks = set(re.findall(r"flock -n (/tmp/[\w.-]+\.lock)", crontab))
-        deploy_locks = set(re.findall(r"(/tmp/[\w.-]+\.lock)", deploy.split("LOCKS=(", 1)[1].split(")", 1)[0]))
+        deploy_locks = set(re.findall(r"(/tmp/[\w.-]+\.lock)", job_locks.split("LOCKS=(", 1)[1].split(")", 1)[0]))
         self.assertTrue(cron_locks)
-        self.assertEqual(cron_locks - deploy_locks, set(), "cron jobs the deploy would kill: add their lock to deploy.sh")
+        self.assertEqual(cron_locks - deploy_locks, set(), "cron jobs the deploy would kill: add their lock to scripts/job_locks.sh")
+        # the deploy and the weekly reboot both take them
+        for script in ("deploy.sh", "reboot_if_needed.sh"):
+            text = (ROOT / "scripts" / script).read_text(encoding="utf-8")
+            self.assertIn("job_locks.sh", text, script)
+            self.assertIn("take_job_locks", text, script)
 
     def test_deploy_script_has_unix_line_endings(self):
         self.assertNotIn(b"\r", (ROOT / "scripts" / "deploy.sh").read_bytes())
@@ -35,14 +40,16 @@ class OpsFilesTests(SimpleTestCase):
         missing = {name for name, _label, _late in JOBS} - tracked - recorded
         self.assertEqual(missing, set(), "dashboard jobs nothing records: @tracked or record_job")
 
-    def test_deploy_warns_when_a_server_file_is_not_the_one_in_ops(self):
+    def test_deploy_installs_every_server_file_in_ops(self):
         deploy = (ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
         for path in sorted((ROOT / "ops").iterdir()):
             if path.name != "README.md":
-                self.assertIn(f"installed_differs ops/{path.name} ", deploy, f"ops/{path.name}: check it in deploy.sh")
+                self.assertIn(f"install_ops_file ops/{path.name} ", deploy, f"ops/{path.name}: install it in deploy.sh")
 
     def test_server_scripts_have_unix_line_endings(self):
-        for path in ("scripts/backup_db.sh", "scripts/test_backup_restore.sh", "ops/weekly-cleanup.sh", "ops/crontab", "ops/logrotate-taurus"):
+        for path in ("scripts/backup_db.sh", "scripts/test_backup_restore.sh", "ops/weekly-cleanup.sh", "ops/crontab",
+                     "ops/logrotate-taurus", "scripts/job_locks.sh", "scripts/hc_ping.sh", "scripts/heartbeat.sh",
+                     "scripts/reboot_if_needed.sh"):
             self.assertNotIn(b"\r", (ROOT / path).read_bytes(), path)
 
     def test_every_dashboard_job_says_when_and_what(self):
@@ -53,3 +60,23 @@ class OpsFilesTests(SimpleTestCase):
             group, when, what = JOB_INFO[name]
             self.assertIn(group, JOB_GROUPS)
             self.assertTrue(when and what, name)
+
+    def test_every_script_cron_runs_exists(self):
+        crontab = (ROOT / "ops" / "crontab").read_text(encoding="utf-8")
+        for script in set(re.findall(r"(?:/opt/taurus/|\s)(scripts/[\w.-]+\.sh)", crontab)):
+            self.assertTrue((ROOT / script).exists(), script)
+
+
+class HealthTests(SimpleTestCase):
+    databases = {"default"}
+
+    def test_ok_without_login(self):
+        r = self.client.get("/api/health/")
+        self.assertEqual((r.status_code, r.json()), (200, {"ok": True}))
+        self.assertIn("no-cache", r.headers.get("Cache-Control", ""))
+
+    def test_database_down(self):
+        from unittest import mock
+        with mock.patch("users.health.connection.cursor", side_effect=Exception("gone")):
+            r = self.client.get("/api/health/")
+        self.assertEqual((r.status_code, r.json()), (503, {"ok": False}))

@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework_nested import routers
-from users import seo, views
+from users import health, seo, views
 from users.dashboard import dashboard_live_view, dashboard_view
 from users.views import (
     ActorListView,
@@ -44,6 +44,7 @@ urlpatterns = [
     path(settings.ADMINADMIN_URL, admin.site.urls),
 
     # ✅ Use the imported views directly (not views.TokenObtainPairView)
+    path('api/health/', health.health_view, name='health'),  # scripts/heartbeat.sh
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
