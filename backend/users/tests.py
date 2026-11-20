@@ -193,3 +193,30 @@ class QueryCountTests(TestCase):
     def test_title_detail_constant_queries(self):
         with self.assertNumQueries(5):  # title+extras, seasons, episodes, actors, appearance counts
             self.assertEqual(self.client.get(f"/api/titles/{self.show.id}/").status_code, 200)
+
+
+class AdminBlockTests(TestCase):
+    """users/middleware.py: the Django admin (ADMINADMIN_URL) is for staff only."""
+
+    def setUp(self):
+        from django.conf import settings
+        self.base = "/" + settings.ADMINADMIN_URL.strip("/") + "/"
+
+    def test_sign_in_page_with_or_without_the_final_slash(self):
+        self.assertEqual(self.client.get(self.base + "login/").status_code, 200)
+        res = self.client.get(self.base + "login")  # was "Forbidden"
+        self.assertNotEqual(res.status_code, 403)
+        self.assertEqual(self.client.get(self.base + "login", follow=True).status_code, 200)
+
+    def test_not_signed_in_goes_to_the_sign_in_page(self):
+        res = self.client.get(self.base + "dashboard/")
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res["Location"], f"{self.base}login/?next={self.base}dashboard/")
+
+    def test_members_are_refused_staff_get_in(self):
+        member = User.objects.create_user("m@example.com", "M", "pw-m-123456!")
+        self.client.force_login(member)
+        self.assertEqual(self.client.get(self.base + "dashboard/").status_code, 403)
+        admin = User.objects.create_superuser("admin@example.com", "Admin", "pw-admin-123!")
+        self.client.force_login(admin)
+        self.assertEqual(self.client.get(self.base + "dashboard/").status_code, 200)
