@@ -65,3 +65,23 @@ class NameMatchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DubbedAudioTests(unittest.TestCase):
+    def test_original_plus_dubs(self):
+        from make_previews import has_dubbed_audio
+        info = {"formats": [
+            {"acodec": "opus", "language": "en-US", "format_note": "English (US) original (default), low"},
+            {"acodec": "opus", "language": "id", "format_note": "Indonesian, low"},
+            {"acodec": "none", "vcodec": "avc1", "format_note": "480p"},
+        ]}
+        self.assertTrue(has_dubbed_audio(info))
+
+    def test_one_track(self):
+        from make_previews import has_dubbed_audio
+        self.assertFalse(has_dubbed_audio({"formats": [
+            {"acodec": "opus", "language": "en", "format_note": "medium"},
+            {"acodec": "mp4a", "language": "en-US", "format_note": "low"},
+            {"acodec": "none", "format_note": "1080p"},
+        ]}))
+        self.assertFalse(has_dubbed_audio({}))
