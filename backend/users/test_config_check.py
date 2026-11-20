@@ -67,16 +67,27 @@ class LiveTests(SimpleTestCase):
             self.assertIsNone(config_check.check_tmdb("k"))
 
     def test_anthropic_refused_key_and_outage(self):
-        import anthropic
-        import httpx
+        # stand-in error classes: the SDK's need an HTTP response object to be built
+        class APIError(Exception):
+            pass
 
-        response = httpx.Response(401, request=httpx.Request("GET", "https://api.anthropic.com/v1/models/x"))
-        refused = anthropic.AuthenticationError("invalid x-api-key", response=response, body=None)
-        with mock.patch("anthropic.Anthropic") as client:
-            client.return_value.models.retrieve.side_effect = refused
+        class AuthenticationError(APIError):
+            pass
+
+        class PermissionDeniedError(APIError):
+            pass
+
+        class APIConnectionError(APIError):
+            pass
+
+        errors = {"APIError": APIError, "AuthenticationError": AuthenticationError,
+                  "PermissionDeniedError": PermissionDeniedError}
+        with mock.patch.multiple("anthropic", **errors), mock.patch("anthropic.Anthropic") as client:
+            client.return_value.models.retrieve.side_effect = AuthenticationError("invalid x-api-key")
             self.assertEqual(config_check.check_anthropic("bad")["what"], "Anthropic refuses ANTHROPIC_API_KEY")
-            client.return_value.models.retrieve.side_effect = anthropic.APIConnectionError(
-                request=httpx.Request("GET", "https://api.anthropic.com"))
+            client.return_value.models.retrieve.side_effect = PermissionDeniedError("forbidden")
+            self.assertEqual(config_check.check_anthropic("bad")["kind"], "config_refused")
+            client.return_value.models.retrieve.side_effect = APIConnectionError("no network")
             self.assertIsNone(config_check.check_anthropic("k"))
             client.return_value.models.retrieve.side_effect = None
             self.assertIsNone(config_check.check_anthropic("k"))
