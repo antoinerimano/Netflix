@@ -81,7 +81,7 @@ class Command(BaseCommand):
                     continue
 
                 # the worker's own URL isn't trusted: rebuilt from the CDN address and the path
-                path = preview_path(kind, tmdb_id, key)
+                path = preview_path(kind, tmdb_id, key, r.get("rev") or "")  # rev: a clip made again
                 url = f"{cdn}/{path}" if cdn else (r.get("url") or "")
                 if not url.startswith("https://") or not url.endswith("/" + path):
                     stats["skipped"] += 1

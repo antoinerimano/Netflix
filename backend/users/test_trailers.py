@@ -106,6 +106,17 @@ class TrailerJobsTests(TestCase):
         self.assertEqual(self.export(), [])  # nothing left to do
         self.assertIn("unchanged: 2", self.import_results({"a": self.result(self.movie), "b": self.result(self.show)}))
 
+    def test_a_clip_made_again_gets_a_new_name_and_still_counts_as_done(self):
+        # trailer-worker's audio re-check: same trailer, new file (the CDN keeps the old one 30 days)
+        self.import_results({"a": self.result(self.show)})
+        redone = dict(self.result(self.show), rev="a")
+        self.assertIn("saved: 1", self.import_results({"a": redone}))
+        self.show.refresh_from_db()
+        self.assertEqual(self.show.trailer_clip_url, f"{CDN}/previews/tv/1399-showKey0001-a.mp4")
+        self.assertNotIn(("tv", 1399), [(j["type"], j["tmdb_id"]) for j in self.export()])
+        # a rev that isn't a short name is ignored, never put in a path
+        self.assertEqual(preview_path("tv", 1, "k", "../x"), "previews/tv/1-k.mp4")
+
     def test_import_skips_errors_stale_trailers_and_dry_runs(self):
         out = self.import_results({
             "a": self.result(self.show, status="error"),

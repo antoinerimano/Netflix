@@ -108,7 +108,7 @@ def preview_clip_counts():
     previews/{type}/{tmdb_id}-{key of the current trailer}.mp4 (made from an older trailer, the
     trailer is gone, or another type's folder)."""
     from .models import Title
-    from .trailers import preview_path, youtube_key
+    from .trailers import is_clip_of, youtube_key
 
     legacy = mismatch = 0
     rows = Title.objects.exclude(trailer_clip_url="").values_list("type", "tmdb_id", "trailer_url", "trailer_clip_url")
@@ -117,7 +117,7 @@ def preview_clip_counts():
             legacy += 1
             continue
         key = youtube_key(trailer)
-        if not key or tmdb_id is None or not clip.endswith("/" + preview_path(kind, tmdb_id, key)):
+        if not key or tmdb_id is None or not is_clip_of(clip, kind, tmdb_id, key):
             mismatch += 1
     return {"legacy": legacy, "mismatch": mismatch}
 

@@ -80,7 +80,21 @@ def _published(video: dict) -> float:
     return float(digits) if digits else 99999999999999.0  # undated: after the dated ones
 
 
-def preview_path(title_type: str, tmdb_id: int, key: str) -> str:
-    """Where a title's preview clip goes in the storage zone (and on the CDN)."""
+REV_RE = re.compile(r"^[a-z0-9]{1,8}$")
+
+
+def preview_path(title_type: str, tmdb_id: int, key: str, rev: str = "") -> str:
+    """
+    Where a title's preview clip goes in the storage zone (and on the CDN). rev: a clip made
+    again from the same trailer (trailer-worker's audio re-check) gets "-{rev}" in its name: the
+    CDN and browsers keep a file 30 days, so the same name would go on serving the old clip.
+    """
     kind = "tv" if str(title_type).lower() == "tv" else "movie"
-    return f"previews/{kind}/{int(tmdb_id)}-{key}.mp4"
+    suffix = f"-{rev}" if rev and REV_RE.match(rev) else ""
+    return f"previews/{kind}/{int(tmdb_id)}-{key}{suffix}.mp4"
+
+
+def is_clip_of(clip_url: str, title_type: str, tmdb_id: int, key: str) -> bool:
+    """clip_url is a preview clip of this trailer (any rev of it)."""
+    base = preview_path(title_type, tmdb_id, key)[: -len(".mp4")]
+    return bool(re.search(r"/" + re.escape(base) + r"(-[a-z0-9]{1,8})?\.mp4$", clip_url or ""))
