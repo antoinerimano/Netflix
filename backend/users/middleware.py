@@ -1,5 +1,6 @@
 # users/middleware.py
 from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 
@@ -18,6 +19,8 @@ ADMIN_ALLOWLIST = (
 )
 
 class AdminBlockMiddleware(MiddlewareMixin):
+    """The Django admin is for staff only: everyone else gets its sign-in page, nothing more."""
+
     def process_request(self, request):
         path = request.path
 
@@ -30,10 +33,16 @@ class AdminBlockMiddleware(MiddlewareMixin):
             # Staff is fine everywhere
             return None
 
-        # Non-staff/anonymous: allow only the allowlist (login, logout, static, etc.)
+        # Non-staff/anonymous: allow only the allowlist (login, logout, static, etc.), with or
+        # without the final slash ("/login" used to be Forbidden instead of the sign-in page)
+        slashed = path if path.endswith("/") else path + "/"
         for allowed in ADMIN_ALLOWLIST:
-            if path.startswith(allowed):
+            if slashed.startswith(allowed):
                 return None
 
-        # Everything else: block
+        # not signed in: the admin's sign-in page, then back here
+        if not (user and user.is_authenticated):
+            return redirect_to_login(request.get_full_path(), f"{ADMIN_PREFIX}login/")
+
+        # signed in but not staff
         return HttpResponseForbidden("Forbidden")

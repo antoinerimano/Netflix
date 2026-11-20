@@ -1,12 +1,12 @@
 # Tests
 
-**255 automated tests** protect the app: 130 backend, 78 frontend, 47 end-to-end. GitHub runs
+**258 automated tests** protect the app: 133 backend, 78 frontend, 47 end-to-end. GitHub runs
 all of them on every pull request and again on `main` after a merge (`.github/workflows/ci-cd.yml`).
 `main` is protected: nothing is merged, and nothing is deployed, unless the three test jobs pass.
 
 | Suite | Count | Where | What it runs on |
 |---|---|---|---|
-| Backend (Django) | 130 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py`, `backend/reco/test_visits.py` | the real API, a real MySQL 8 database built from the migrations |
+| Backend (Django) | 133 | `backend/users/tests.py`, `backend/users/test_i18n.py`, `backend/users/test_seo.py`, `backend/users/test_trailers.py`, `backend/reco/tests.py`, `backend/reco/test_imports.py`, `backend/reco/test_calendar.py`, `backend/reco/test_history.py`, `backend/reco/test_stats.py`, `backend/reco/test_collections.py`, `backend/reco/test_lists.py`, `backend/reco/test_pick.py`, `backend/reco/test_visits.py` | the real API, a real MySQL 8 database built from the migrations |
 | Frontend (Vitest) | 78 | `frontend/src/**/*.test.{js,jsx}` | app modules and components in a simulated browser (jsdom) |
 | End-to-end (Playwright) | 47 | `e2e/tests/*.spec.js` | the whole app (production build + Django + MySQL) in a real Chromium, driven with the keyboard like a TV remote |
 
@@ -36,7 +36,7 @@ database whose name doesn't contain `e2e`, so it can't touch the dev or producti
 
 | Job | Steps | Time |
 |---|---|---|
-| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 130 tests | ~1 min 30 |
+| **Backend** | Django system checks · no model change without its migration (`makemigrations --check`) · translation files compile (`msgfmt --check`) · 133 tests | ~1 min 30 |
 | **Frontend** | translations check · lint (warnings fail it) · 78 tests · production build | ~1 min 10 |
 | **End-to-end** | starts MySQL, the backend and the production frontend · 47 tests in Chromium · on failure: screenshots, videos and traces kept 14 days (Actions → the run → Artifacts) | ~4 min |
 | **Deploy** | only on `main`, only when the three jobs passed and `DEPLOY_ENABLED` is set | |
@@ -46,7 +46,7 @@ one that passes on its retry shows as "flaky" and deserves a look.
 
 ---
 
-## Backend tests (130)
+## Backend tests (133)
 
 ### Security and permissions: `backend/users/tests.py`, `PermissionTests` (13)
 
@@ -65,6 +65,16 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_subscribe_ignores_client_billing_fields` | price, currency and transaction id come from the server, never from the request |
 | `test_logout_without_access_token` | signing out with a bad token gets a clear 400, not a crash |
 | `test_titles_public_read` | the catalog can be read |
+
+### Admin pages for staff only: `AdminBlockTests` (3)
+
+`users/middleware.py` guards the Django admin (`ADMINADMIN_URL`).
+
+| Test | Verifies |
+|---|---|
+| `test_sign_in_page_with_or_without_the_final_slash` | the admin sign-in page opens with or without the final slash (regression: `/login` answered "Forbidden") |
+| `test_not_signed_in_goes_to_the_sign_in_page` | an admin page opened without being signed in leads to the sign-in page, then back to it |
+| `test_members_are_refused_staff_get_in` | a signed-in member gets "Forbidden", staff get in |
 
 ### Sign-in hardening: `AuthHardeningTests` (6)
 
