@@ -13,7 +13,7 @@ import json
 from django.core.management.base import BaseCommand
 
 from users.models import Title
-from users.trailers import preview_path, youtube_key
+from users.trailers import is_clip_of, preview_path, youtube_key
 
 
 class Command(BaseCommand):
@@ -39,8 +39,8 @@ class Command(BaseCommand):
             if not key:
                 continue
             path = preview_path(kind, tmdb_id, key)
-            if (clip or "").endswith("/" + path):
-                continue  # already the clip of this trailer
+            if is_clip_of(clip, kind, tmdb_id, key):
+                continue  # already a clip of this trailer
             jobs.append({
                 "type": "tv" if kind == "tv" else "movie",
                 "tmdb_id": tmdb_id,

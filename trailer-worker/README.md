@@ -57,8 +57,10 @@ popular titles first, about 3 to 5 nights for 20,000 titles. Then a few minutes 
 
 Before the new clips, `run.sh` re-checks up to `RECHECK_AUDIO` (100) clips already made: clips
 made before the worker asked for the original audio could carry one of YouTube's AI dubs (a
-Russian *The Walking Dead*). A video with other audio tracks gets its clip made again, same
-path; `results.json` notes each clip's `audio` (`single`, `redone`, `gone`). Once all are
+Russian *The Walking Dead*). A video with other audio tracks gets its clip made again under a
+new name (`...-a.mp4`: the CDN and browsers keep a file 30 days, the same name would go on
+serving the old clip); `results.json` notes each clip's `audio` (`single`, `redone`, `gone`)
+and `rev`, and the import saves the new address on the title. Once all are
 checked, this step takes a few seconds.
 
 ## When something goes wrong
