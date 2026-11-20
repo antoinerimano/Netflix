@@ -323,12 +323,24 @@ def lock(path: Path):
 
 
 # ---------- clips made before the original audio was asked for ----------
+def next_rev(rev: str) -> str:
+    """'' -> 'a' -> 'b'...: the name suffix of a clip made again (see recheck_audio)."""
+    return chr(ord(rev) + 1) if len(rev) == 1 and "a" <= rev < "z" else "a"
+
+
+def redo_path(entry: dict, rev: str) -> str:
+    """Same name as the server's users/trailers.preview_path(type, tmdb_id, key, rev)."""
+    kind = "tv" if entry["type"] == "tv" else "movie"
+    return f"previews/{kind}/{int(entry['tmdb_id'])}-{entry['youtube_key']}-{rev}.mp4"
+
 def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, deadline, stopping) -> int:
     """
     Clips made before make_clip asked for the original audio could carry one of YouTube's AI
     dubs (The Walking Dead came out in another language). For up to `limit` "ok" clips not
-    checked yet: when the video has other audio tracks, make the clip again (same path: the
-    CDN serves the new file once Bunny Storage replaces it); otherwise just note it is fine.
+    checked yet: when the video has other audio tracks, make the clip again under a new name
+    ("{tmdb_id}-{key}-a.mp4", entry["rev"]: the CDN and browsers keep a file 30 days, so the same
+    name would go on serving the old clip; import_trailer_results saves the new URL); otherwise
+    just note it is fine.
     entry["audio"]: "single" (one track, the clip was right), "redone", "gone" (video removed).
     """
     results = data["results"]
@@ -347,12 +359,15 @@ def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, dea
                 entry["audio"] = "single"
             else:
                 # the name was checked when it was first made: only the audio is redone
+                rev = next_rev(entry.get("rev", ""))
+                path = redo_path(entry, rev)
                 job = {"type": entry["type"], "tmdb_id": entry["tmdb_id"], "title": entry.get("title", ""),
-                       "trailer_url": url, "path": entry["path"]}
+                       "trailer_url": url, "path": path}
                 clip, details = make_clip(job, workdir, info=info, check=False)
                 if not dry_run:
-                    bunny_upload(clip, entry["path"])
-                entry.update(details, audio="redone", at=time.strftime("%Y-%m-%dT%H:%M:%S"))
+                    bunny_upload(clip, path)
+                entry.update(details, audio="redone", rev=rev, path=path, url=f"{BUNNY_CDN_BASE}/{path}",
+                             at=time.strftime("%Y-%m-%dT%H:%M:%S"))
             print(f"{label} {entry['audio']}")
         except Blocked as e:
             print(f"{label} YouTube refused ({e}): stopping, the next run carries on")

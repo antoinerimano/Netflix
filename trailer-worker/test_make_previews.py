@@ -85,3 +85,9 @@ class DubbedAudioTests(unittest.TestCase):
             {"acodec": "none", "format_note": "1080p"},
         ]}))
         self.assertFalse(has_dubbed_audio({}))
+
+    def test_a_clip_made_again_gets_a_new_name(self):
+        from make_previews import next_rev, redo_path
+        self.assertEqual([next_rev(""), next_rev("a"), next_rev("b")], ["a", "b", "c"])
+        entry = {"type": "tv", "tmdb_id": 1402, "youtube_key": "cu2ApTImB-a"}  # a key may end like a rev
+        self.assertEqual(redo_path(entry, "a"), "previews/tv/1402-cu2ApTImB-a-a.mp4")
