@@ -40,7 +40,7 @@
 # TMDB recommendations / similar + alternative titles (users/tmdb_related.py): 5,000 titles a night, free
 0 3 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_related.lock docker compose exec -T backend python manage.py sync_tmdb_related >> /var/log/taurus_related.log 2>&1
 # daily check-up (users/checkup.py): emails staff only when a job / the disk / the AI budget has a problem
-0 7 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_checkup.lock docker compose exec -T backend python manage.py daily_checkup >> /var/log/taurus_checkup.log 2>&1
+0 7 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_checkup.lock docker compose exec -T backend python manage.py daily_checkup >> /var/log/taurus_checkup.log 2>&1 && scripts/hc_ping.sh HC_PING_CHECKUP
 # age ratings from TMDB for titles never asked (users/maturity.py: what Kids / age-limited profiles may see), free
 0 2 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_ratings.lock docker compose exec -T backend python manage.py backfill_ratings --limit 20000 >> /var/log/taurus_ratings.log 2>&1
 # overviews TMDB lacks in the languages profiles use, translated by Claude (users/ai_translate.py), within the AI budget
@@ -58,3 +58,8 @@
 0 2 * * 1 cd /opt/taurus && docker compose run --rm certbot renew >> /var/log/certbot-renew.log 2>&1 && docker compose exec -T nginx nginx -s reload >> /var/log/certbot-renew.log 2>&1
 # nightly DB backup -> /var/backups/taurus + Google Drive (scripts/backup_db.sh)
 30 1 * * * /usr/bin/flock -n /tmp/taurus_backup.lock /opt/taurus/scripts/backup_db.sh >> /var/log/taurus_backup.log 2>&1
+# healthchecks.io (scripts/hc_ping.sh, ping URLs in backend/.env): the site answers, every 5 min; the
+# daily check-up above pings when it ran. A dead server sends nothing: healthchecks.io emails.
+*/5 * * * * /opt/taurus/scripts/heartbeat.sh >> /var/log/taurus_heartbeat.log 2>&1
+# a reboot when security updates need one (scripts/reboot_if_needed.sh), after the running job
+30 10 * * 1 /opt/taurus/scripts/reboot_if_needed.sh >> /var/log/taurus_reboot.log 2>&1
