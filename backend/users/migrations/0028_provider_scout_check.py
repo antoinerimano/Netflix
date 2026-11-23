@@ -7,17 +7,19 @@ SEEDED = {"videasy", "vidsrc", "vidfast", "111movies", "cinesrc", "vidcore"}  # 
 
 def mark_scout_providers(apps, schema_editor):
     """
-    Providers the scout created before this field existed: named in an import_providers run
-    ("xpass: NEW, ..."), or still carrying its "added by provider scout" status (the 15-min health
-    check rewrites it on enabled ones).
+    Providers the scout created before this field existed. Every provider outside the hand-made
+    starting set (0012) came from the scout; on a site that never ran an import, only the ones
+    named in an import ("xpass: NEW, ...") or still carrying its "added by provider scout" status.
+    (An import's JobRun keeps only its last 6 lines, so names can be missing from it.)
     """
     Provider = apps.get_model("users", "Provider")
     JobRun = apps.get_model("users", "JobRun")
+    imports = list(JobRun.objects.filter(name="import_providers").values_list("summary", flat=True))
     keys = set()
-    for summary in JobRun.objects.filter(name="import_providers").values_list("summary", flat=True):
+    for summary in imports:
         keys |= set(re.findall(r"^([a-z0-9-]+): NEW,", summary or "", re.M))
     for p in Provider.objects.exclude(key__in=SEEDED):
-        if p.key in keys or p.status_detail.startswith("added by provider scout"):
+        if imports or p.key in keys or p.status_detail.startswith("added by provider scout"):
             p.added_by_scout = True
             p.save(update_fields=["added_by_scout"])
 
