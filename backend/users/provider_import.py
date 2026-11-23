@@ -2,17 +2,18 @@
 # Brings provider_scraper/'s catalog (provider_catalog.json, made every night on the mini PC by
 # provider_scraper/run.sh) into the Provider table, so working providers don't have to be added
 # by hand:
-#   * a known provider found playing on another domain, with the same link format: that domain
-#     becomes a backup, and the main domain if the health check has it down (auto_switch on)
-#   * a new provider that played EVERY test film ("live": several well-known movies, each stream
-#     as long as the film and moving, see provider_scraper/provider_health.py) is created;
-#     enabled only when 2+ scanned sites use it (an established provider), otherwise left
-#     disabled for a look in the admin
-#   * a provider the scout added (added_by_scout) stays enabled only while it plays every test
-#     film: one miss and it is turned off (disabled_by_scout), back on when they all play again
-# Other rows keep their enabled / priority / paths: what was set in the admin wins (a provider
-# of yours that fails the check is only reported). Ticking a scout-disabled provider back on in
-# the admin makes it yours (added_by_scout off).
+#   * "live" = played EVERY test film (several well-known movies, each stream as long as the film
+#     and moving, see provider_scraper/provider_health.py), with the provider's current link
+#     tried first, then its docs' formats, the usual structures and its other domains
+#   * every provider (the scout checks all the site's providers, export_providers): live with
+#     another domain / link structure -> that one becomes its link (old domain kept as backup);
+#     its TV link becomes the one an episode played with, or is removed when none did
+#   * a provider that doesn't play every test film is turned off (disabled_by_scout), back on the
+#     night they all play again. "Couldn't check" (a Cloudflare page in the scout's browser)
+#     changes nothing.
+#   * a new provider that is live is created: enabled only when 2+ scanned sites use it (an
+#     established provider), otherwise left disabled for a look in the admin
+# Priority and providers turned off by hand (not by the scout) are left as they are.
 import re
 from urllib.parse import urlsplit
 
@@ -131,6 +132,60 @@ def _find_existing(entry, by_key, by_host):
     return None
 
 
+NOT_PLAYING = {"partial", "up", "no_source", "down"}  # checked, and a film didn't play
+UNKNOWN = {"protected", "unverified", "untested"}  # couldn't be checked (bot check, player silent for robots): no change
+
+
+def is_checked(entry):
+    """
+    Checked with the film test, the site's current link included: a night the scout couldn't read
+    the site's providers, only its own formats were tried, and those failing says nothing.
+    """
+    health = entry.get("health") or {}
+    return health.get("current_tried") is True and (bool(health.get("films")) or health.get("state") == "down")
+
+
+def _path_of(domain, path):
+    t = to_template(domain + path) if path else None
+    return t[1] if t else path
+
+
+def _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now):
+    """
+    Every test film played with domain + movie_path: make it the provider's link when its own is
+    another domain or structure (its current link is tried first, so a different one means it
+    didn't play). The TV link: the one an episode played with, removed when none did.
+    """
+    changed = False
+    if domain != known.domain:
+        _switch_domain(known, domain, "provider scout: the films play on this domain")
+        stats["switched"] += 1
+        lines.append(f"{known.key}: domain -> {domain} (films play there)")
+        changed = True
+    # same structure once both drop their placeholder-less parameters (autoplay...): keep the admin's
+    if _path_of(domain, known.movie_path) != movie_path:
+        lines.append(f"{known.key}: movie link {known.movie_path!r} -> {movie_path!r} (the one that plays)")
+        known.movie_path = movie_path
+        stats["fixed_link"] += 1
+        changed = True
+    if "episode" in health:  # an episode was tried
+        if episode_path and _path_of(domain, known.episode_path) != episode_path:
+            lines.append(f"{known.key}: TV link {known.episode_path!r} -> {episode_path!r} (the one that plays)")
+            known.episode_path = episode_path
+            stats["tv_fixed"] += 1
+            changed = True
+        elif not episode_path and known.episode_path:
+            lines.append(f"{known.key}: TV link {known.episode_path!r} removed: no episode plays "
+                         f"({(health.get('episode') or {}).get('detail', '')})")
+            known.episode_path = ""
+            stats["tv_fixed"] += 1
+            changed = True
+    if changed:
+        known.status, known.status_detail, known.checked_at = Provider.UP, f"fixed by provider scout {stamp}", now
+    else:
+        stats["known_ok"] += 1
+
+
 def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     """Apply a provider_catalog.json (dict). Returns (lines, stats)."""
     probe = catalog.get("probe_title") or {}
@@ -145,7 +200,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     lines = []
     stats = {"created": 0, "created_enabled": 0, "new_backup": 0, "switched": 0,
              "known_ok": 0, "skipped_not_live": 0, "skipped_no_link": 0,
-             "disabled": 0, "reenabled": 0, "known_failing": 0, "fixed_link": 0}
+             "disabled": 0, "reenabled": 0, "unchecked": 0, "fixed_link": 0, "tv_fixed": 0}
     now = timezone.now()
     stamp = (catalog.get("generated") or now.strftime("%Y-%m-%d %H:%M"))[:16]
 
@@ -158,71 +213,30 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
             live = is_live(entry)
             domain, movie_path, episode_path = paths_for(entry, probe) if live else ("", "", "")
             known = _find_existing(entry, by_key, by_host)
-            checked = bool(health.get("films")) or health.get("state") in ("down", "protected", "untested")
-            note = " ".join(x for x in (stamp, health.get("state", ""), health.get("verified", ""),
+            state = health.get("state", "")
+            note = " ".join(x for x in (stamp, state, health.get("verified", ""),
                                         "-", health.get("detail", "")) if x)[:300]
 
             if known:
-                if checked:
-                    known.scout_check = note
-                if known.added_by_scout and checked:
-                    if known.disabled_by_scout and known.enabled:
-                        # ticked back on in the admin: the user's provider from now on
-                        known.added_by_scout = known.disabled_by_scout = False
-                        lines.append(f"{known.key}: turned back on in the admin, no longer managed by the scout")
-                    elif not (live and domain) and known.enabled:
-                        known.enabled, known.disabled_by_scout = False, True
-                        stats["disabled"] += 1
-                        lines.append(f"{known.key}: OFF, doesn't play every test film - {health.get('detail', '')}")
-                    elif live and domain and known.disabled_by_scout:
+                if not health:
+                    continue  # not checked tonight
+                known.scout_check = note
+                if live and domain:
+                    _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now)
+                    if known.disabled_by_scout:
                         known.enabled, known.disabled_by_scout = True, False
                         stats["reenabled"] += 1
                         lines.append(f"{known.key}: back ON, plays every test film again")
-                elif checked and not live and known.enabled:
-                    stats["known_failing"] += 1
-                    lines.append(f"{known.key}: yours, left on, but doesn't play every test film - "
-                                 f"{health.get('detail', '')}")
-                if not live or not domain:
-                    if not dry_run:
-                        known.save()
-                    continue  # nothing proven: the 15-min check_providers keeps watching it
-                # same format once both drop their placeholder-less query parameters (autoplay...)
-                known_t = to_template(known.domain + known.movie_path) if known.movie_path else None
-                same_link = bool(known_t) and known_t[1] == movie_path
-                if not same_link and known.added_by_scout:
-                    # the scout's own provider had the wrong link structure (or domain): take the
-                    # one that played every film
-                    if domain != known.domain:
-                        _switch_domain(known, domain, "provider scout: films play with this link")
-                    known.movie_path, known.episode_path = movie_path, episode_path
-                    stats["fixed_link"] += 1
-                    lines.append(f"{known.key}: link fixed to {domain}{movie_path}"
-                                 + (f" | {episode_path}" if episode_path else " | no TV link"))
-                    if not dry_run:
-                        known.save()
-                    continue
-                if domain == known.domain or not same_link:
-                    if same_link:
-                        stats["known_ok"] += 1
-                    else:
-                        lines.append(f"{known.key}: yours, plays with {domain}{movie_path}, another link format "
-                                     f"than {known.domain}{known.movie_path}: left as is, have a look")
-                    if not dry_run:
-                        known.save()
-                    continue
-                if domain not in known.backups():
-                    known.backup_domains = "\n".join([domain] + known.backups())
-                    stats["new_backup"] += 1
-                    lines.append(f"{known.key}: new working domain {domain} added as backup")
-                # films don't play on its domain (wrong extension, old domain...) but do on this one
-                not_playing = _bare(host_of(known.domain)) in {_bare(h) for h in health.get("failed_hosts") or []}
-                if (known.status == Provider.DOWN or not_playing) and known.auto_switch:
-                    why = "down here" if known.status == Provider.DOWN else "films don't play here"
-                    _switch_domain(known, domain, f"provider scout: {why}, playing there")
-                    known.status, known.status_detail = Provider.UP, f"live in provider scout {stamp}"
-                    known.checked_at = now
-                    stats["switched"] += 1
-                    lines.append(f"{known.key}: {why}, switched to {domain}")
+                elif state in NOT_PLAYING and not is_checked(entry) and known.enabled:
+                    lines.append(f"{known.key}: its current link wasn't checked tonight, left as is")
+                elif state in NOT_PLAYING and known.enabled:
+                    known.enabled, known.disabled_by_scout = False, True
+                    stats["disabled"] += 1
+                    lines.append(f"{known.key}: OFF, doesn't play every test film - {health.get('detail', '')}")
+                elif state in UNKNOWN and known.enabled:
+                    # a bot check in a headless browser is not "doesn't play": changes nothing
+                    stats["unchecked"] += 1
+                    lines.append(f"{known.key}: couldn't be checked ({health.get('detail', state)}), left as is")
                 if not dry_run:
                     known.save()
                 continue
@@ -242,7 +256,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 key=key, label=name[:1].upper() + name[1:], domain=domain,
                 movie_path=movie_path, episode_path=episode_path,
                 enabled=enabled, priority=min(next_priority, 32767), auto_switch=True,
-                added_by_scout=True, scout_check=note,
+                scout_check=note,
                 status=Provider.UP, status_detail=f"added by provider scout {stamp}: plays every test film, "
                                                   f"used by {sites} site(s)",
                 checked_at=now,

@@ -10,7 +10,7 @@ Builds provider_catalog.json from providers_report.json:
 Usage:  python provider_docs.py [-r providers_report.json] [-o provider_catalog.json]
 """
 
-import argparse, asyncio, json, re, time
+import argparse, asyncio, json, os, re, time
 from collections import defaultdict
 from urllib.parse import urlparse
 
@@ -19,6 +19,9 @@ DOC_PATH = re.compile(r"/(api|docs?|documentation|embed-?(api|docs?))(/|$|\.|#)"
 FMT = re.compile(r"(https?://[^\s\"'<>]*?(tmdb|imdb|\{id\}|\$id|season|episode|/movie/|/tv/)[^\s\"'<>]*)", re.I)
 PARAM = re.compile(r"\b(autoplay|autoPlay|color|theme|primaryColor|startAt|progress|sub_?url|ds_?lang|"
                    r"overlay|nextEpisode|episodeSelector|title|poster|server|lang|fallback|serverOrder)\b")
+# with a screen (run.sh: xvfb-run), a normal Chrome window: Cloudflare stops headless Chrome
+HEADLESS = not os.environ.get("DISPLAY") or os.environ.get("HEADLESS") == "1"
+NO_AUTOMATION = ["--disable-blink-features=AutomationControlled"]
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
@@ -83,6 +86,26 @@ def collect(report):
             if p in cat:
                 cat[p]["how"].add("text")
     return probe, cat
+
+
+def merge_site_providers(cat, site):
+    """
+    Adds the site's providers to the catalog (matched by key, else by domain), with their current
+    link: every provider of the site gets checked every night, not only the ones a scanned site
+    uses. -> {provider: {"key", "movie", "episode"}} (full URL templates).
+    """
+    links = {}
+    for sp in site or []:
+        hosts = [host_of(d) for d in [sp.get("domain")] + list(sp.get("backups") or []) if d]
+        if not hosts:
+            continue
+        name = sp["key"] if sp["key"] in cat else next(
+            (p for p, c in cat.items() if {root_host(h) for h in c["hosts"]} & {root_host(h) for h in hosts}), sp["key"])
+        cat[name]["hosts"].update(hosts)
+        dom = sp["domain"].rstrip("/")
+        links[name] = {"key": sp["key"], "movie": dom + sp["movie_path"] if sp.get("movie_path") else None,
+                       "episode": dom + sp["episode_path"] if sp.get("episode_path") else None}
+    return links
 
 
 async def probe_docs(ctx, host):
@@ -165,10 +188,13 @@ async def main():
     ap.add_argument("-r", "--report", default="providers_report.json")
     ap.add_argument("-o", "--out", default="provider_catalog.json")
     ap.add_argument("--no-web", action="store_true", help="skip visiting provider sites")
+    ap.add_argument("-s", "--site", help="the site's providers (manage.py export_providers): checked too, "
+                                         "their current link first")
     cfg = ap.parse_args()
 
     report = json.load(open(cfg.report, encoding="utf-8"))
     probe, cat = collect(report)
+    site_links = merge_site_providers(cat, json.load(open(cfg.site, encoding="utf-8")) if cfg.site else [])
 
     docs = {}
     if not cfg.no_web:
@@ -177,9 +203,9 @@ async def main():
         sem = asyncio.Semaphore(6)
         async with async_playwright() as pw:
             try:
-                b = await pw.chromium.launch(headless=True, channel="chrome")
+                b = await pw.chromium.launch(headless=HEADLESS, channel="chrome", args=NO_AUTOMATION)
             except Exception:
-                b = await pw.chromium.launch(headless=True)
+                b = await pw.chromium.launch(headless=HEADLESS, args=NO_AUTOMATION)
             ctx = await b.new_context(user_agent=UA, ignore_https_errors=True)
             await ctx.add_init_script("window.open = () => null;")
 
@@ -205,6 +231,7 @@ async def main():
             "homepage": d.get("site"), "homepage_title": d.get("title"),
             "docs_url": d.get("docs_url"), "doc_formats": d.get("formats", []),
             "doc_params": d.get("params", []), "docs_error": d.get("error"),
+            **({"site_link": site_links[p]} if p in site_links else {}),
         })
     providers.sort(key=lambda x: (-x["site_count"], x["provider"]))
     json.dump({"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "probe_title": probe,

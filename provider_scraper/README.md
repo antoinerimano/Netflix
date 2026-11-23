@@ -44,27 +44,31 @@ film (TMDB runtime, a few minutes either way: not a trailer, an ad, a "not avail
 same default movie for every id) and really move. 4 out of 5 = `partial`: not imported. The TV
 link is kept only when Breaking Bad 1x01 plays too.
 
-A wrong link is not a dead provider, so before saying "doesn't play" the check tries, in order:
-the link formats of the provider's **API docs** (`provider_docs.py` follows every docs link of its
-homepage, else tries /docs, /api, /documentation..., and reads full URLs, `${tmdbId}` and
-"/movie/{id}" written apart from the base URL), the links seen on streaming sites, its docs'
-example URLs, the usual structures (/movie/{id}, /embed/movie/{id}, ?tmdb=...), then its other
-known domains and its name on other extensions (.net, .top, .to, .pro... that exist). The catalog
-says which one played (`template_source`); a scout provider whose saved link or domain was wrong
-gets the one that played. Check a few providers by hand:
-`python provider_health.py -p xpass,vidlink` (doesn't rewrite the catalog).
+**Every provider of the site is checked every night** (`manage.py export_providers`), not only
+the ones a scanned site uses, **its current link first**. A wrong link is not a dead provider, so
+before saying "doesn't play" the check tries, in order: the current link, the link formats of
+the provider's **API docs** (`provider_docs.py` follows every docs link of its homepage, else
+tries /docs, /api, /documentation..., and reads full URLs, `${tmdbId}` and "/movie/{id}" written
+apart from the base URL), the links seen on streaming sites, its docs' example URLs, the usual
+structures (/movie/{id}, /embed/movie/{id}, ?tmdb=...), then its other known domains and its name
+on other extensions (.net, .top, .to, .pro... that exist). The catalog says which one played
+(`template_source`).
 
-- **new provider that plays** (`live`) -> created on the site. **Enabled** when 2+ scanned sites
-  use it, otherwise **disabled**: have a look in the admin (Providers) and tick *enabled*.
-  It comes after your own providers (higher priority number).
-- **known provider seen playing on another domain** (same link format) -> that domain is added to
-  its backup domains, and becomes its domain if the 15-min health check has it down.
-- **provider the scout added** (*Added by scout* in the admin) -> stays enabled only while it plays
-  every test film: one miss (or down) and it is turned off, back on the night they all play again.
-  Tick it back on in the admin yourself and it becomes yours (the scout no longer touches it).
-- your own providers: what you set in the admin (enabled, priority, paths) is never overwritten;
-  the import only reports the ones that don't play every test film (and the admin shows the
-  scout's last check under *Provider scout*).
+Chrome runs as a normal window on a virtual screen (`xvfb-run`, needs the `xvfb` package):
+headless Chrome gets Cloudflare pages on players that open fine in a real browser (vidfast).
+Check a few providers by hand: `xvfb-run -a python provider_health.py -p xpass,vidlink`
+(doesn't rewrite the catalog).
+
+Then on the site (every provider, whoever added it):
+- **plays with another domain / link structure** -> that one becomes its link (the old domain
+  stays as a backup); its TV link becomes the one an episode played with, removed if none did.
+- **doesn't play every test film** (or down) -> turned off, back on the night they all play again.
+- **couldn't be checked** (a Cloudflare page even so) -> nothing changes.
+- **new provider that plays** -> created. **Enabled** when 2+ scanned sites use it, otherwise
+  **disabled**: have a look in the admin (Providers) and tick *enabled*. It comes after the
+  others (higher priority number).
+- the priority, and a provider you turned off yourself, are left as they are. The admin shows the
+  scout's last check under *Provider scout*.
 
 Same machine as `trailer-worker/` (Debian / Ubuntu):
 
@@ -72,6 +76,7 @@ Same machine as `trailer-worker/` (Debian / Ubuntu):
 cd ~/taurus/provider_scraper
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 sudo .venv/bin/playwright install --with-deps chrome   # real Chrome: Chromium can't play H.264
+sudo apt install -y xvfb                                # a virtual screen: Chrome as a normal window
 cp .env.example .env && nano .env                      # the server's SSH address (same key as trailer-worker)
 chmod +x run.sh && ./run.sh                            # first run by hand: ~30-60 min
 ```

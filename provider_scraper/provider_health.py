@@ -20,7 +20,9 @@ checked on EPISODE too: a provider whose episodes don't play is imported without
 States, strongest first:
   live       - every film played (see above)
   partial    - some films played, not all (not imported)
-  up         - the embed page loads but no film played
+  up         - the embed page loads, a stream starts but not the film (wrong video, never moves)
+  unverified - the page loads and the player asks for nothing: maybe it blocks automated browsers
+               (vidfast plays for people, not here). No verdict: the import changes nothing
   no_source  - the embed page loads and says the title isn't available
   protected  - a Cloudflare / bot check answered
   down       - DNS failure, connection error, timeout or HTTP 5xx
@@ -29,7 +31,7 @@ States, strongest first:
 Usage (standalone):  python provider_health.py [-c provider_catalog.json] [-p xpass,vidlink]
 """
 
-import argparse, asyncio, json, re, time
+import argparse, asyncio, json, os, re, time
 from urllib.parse import urlparse, urljoin
 
 # Well-known movies, with their TMDB runtime in minutes. Distinct enough runtimes that a provider
@@ -131,9 +133,13 @@ def templates(p: dict) -> tuple[list[tuple[str, str]], list[str]]:
     """
     fmts = p.get("formats") or p.get("doc_formats") or []
     seen = [p.get("template")] + list(p.get("observed_templates") or [])
-    cands = ([(_sub_ids(f), "docs") for f in fmts] + [(_sub_ids(f), "site") for f in seen if f]
-             + [(_concrete(f), "docs example") for f in fmts])
+    current = p.get("site_link") or {}  # the link our site uses now: first, a working one stays
+    cands = ([(_sub_ids(current["movie"]), "current")] if current.get("movie") else [])
+    cands += ([(_sub_ids(f), "docs") for f in fmts] + [(_sub_ids(f), "site") for f in seen if f]
+              + [(_concrete(f), "docs example") for f in fmts])
     movie, episode = [], []
+    if current.get("episode") and _sub_ids(current["episode"]):
+        episode.append(_sub_ids(current["episode"]))
     for t, src in cands:
         if not t:
             continue
@@ -141,7 +147,7 @@ def templates(p: dict) -> tuple[list[tuple[str, str]], list[str]]:
             movie.append((t, src))
         elif is_episode(t) and t not in episode:
             episode.append(t)
-    movie = movie[:6]
+    movie = movie[:7]
     hosts = [urlparse(t).hostname for t, _ in movie] + list(p.get("hosts") or []) + list(p.get("domains") or [])
     host = next((h for h in hosts if h), None)
     if host:
@@ -298,7 +304,9 @@ async def play_title(ctx, url: str, title: dict, timeout_ms: int = 25000) -> dic
             return {**out, "state": "no_source", "detail": m.group(0) if m else f"HTTP {resp.status}"}
         if resp and resp.status >= 400:
             return {**out, "state": "down" if resp.status != 403 else "protected", "detail": f"HTTP {resp.status}"}
-        return {**out, "state": "up", "detail": "page loads, nothing plays"}
+        # nothing at all: no stream asked for, no error shown. Some players do that for an
+        # automated browser (vidfast) and play fine for people: can't tell, so no verdict
+        return {**out, "state": "unverified", "detail": "page loads, the player asks for nothing (blocks automated browsers?)"}
     except Exception as e:
         msg = str(e).splitlines()[0] if str(e) else type(e).__name__
         kind = ("DNS: domain not found" if "ERR_NAME_NOT_RESOLVED" in msg else
@@ -364,13 +372,13 @@ async def other_domains(p: dict, movie_ts: list[str], tried: list[str], max_gues
     return out
 
 
-RANK = {"live": 6, "partial": 5, "up": 4, "no_source": 3, "protected": 2, "down": 1, "untested": 0}
+RANK = {"live": 7, "partial": 6, "up": 5, "no_source": 4, "unverified": 3, "protected": 2, "down": 1, "untested": 0}
 
 
 async def play_with_retry(ctx, template: str, title: dict) -> dict:
     """A miss is tried once more (slow CDN, a click that didn't land)."""
     r = await play_title(ctx, fill(template, title), title)
-    if r["state"] != "live" and r["state"] not in ("down", "protected"):
+    if r["state"] != "live" and r["state"] not in ("down", "protected", "unverified"):
         r2 = await play_title(ctx, fill(template, title), title)
         if RANK[r2["state"]] >= RANK[r["state"]]:
             r = r2
@@ -379,7 +387,9 @@ async def play_with_retry(ctx, template: str, title: dict) -> dict:
 
 async def check_provider(ctx, p: dict, timeout_ms: int = 25000) -> dict:
     """Live only when every film of FILMS plays with one link format."""
-    stamp = lambda h: {**h, "checked_at": time.strftime("%Y-%m-%d %H:%M:%S")}
+    # the site's current link was among the ones tried: only then may the import turn it off
+    current = bool((p.get("site_link") or {}).get("movie"))
+    stamp = lambda h: {**h, "current_tried": current, "checked_at": time.strftime("%Y-%m-%d %H:%M:%S")}
     movie_ts, episode_ts = templates(p)
     if not movie_ts:
         hosts = p.get("domains") or p.get("hosts") or []
@@ -403,13 +413,13 @@ async def check_provider(ctx, p: dict, timeout_ms: int = 25000) -> dict:
             return False
         tried.append(t)
         # documented / seen formats get a second chance; guesses and other domains one try
-        r = await (play_with_retry(ctx, t, FILMS[0]) if src in ("docs", "site", "docs example")
+        r = await (play_with_retry(ctx, t, FILMS[0]) if src in ("current", "docs", "site", "docs example")
                    else play_title(ctx, fill(t, FILMS[0]), FILMS[0], timeout_ms))
         if r["state"] == "down" and re.search(r"DNS|refused|certificate", r["detail"]):
             dead_hosts.add(host)
         if best is None or RANK[r["state"]] > RANK[best["state"]]:
             best = r
-        if src in ("docs", "site", "docs example") and first is None:
+        if src in ("current", "docs", "site", "docs example") and first is None:
             first = r
         if r["state"] == "live":
             template, source = t, src
@@ -444,17 +454,16 @@ async def check_provider(ctx, p: dict, timeout_ms: int = 25000) -> dict:
     failed = [r for r in films if r["state"] != "live"]
     h = {"test_url": best["test_url"], "latency_ms": best.get("latency_ms"), "stream_host": best.get("stream_host"),
          "films": films, "verified": f"{len(ok)}/{len(FILMS)}", "movie_template": template,
-         "template_source": source, "docs_url": p.get("docs_url"),
-         # domains where the first film didn't play: the import moves a provider off them
-         "failed_hosts": sorted({urlparse(t).hostname for t in tried if t != template} - {urlparse(template).hostname})}
+         "template_source": source, "docs_url": p.get("docs_url")}
     if failed:
         h.update(state="partial", detail="does not play " + ", ".join(f"{r['title']} ({r['detail']})" for r in failed))
         return stamp(h)
     h.update(state="live", detail=f"plays all {len(FILMS)} test films (link from: {source})")
 
     # TV: kept only when an episode plays too
-    for t in episode_ts:
-        r = await play_title(ctx, fill(t, EPISODE), EPISODE, timeout_ms)
+    for i, t in enumerate(episode_ts):
+        # the current / documented ones get a second chance, the usual structures one try
+        r = await (play_with_retry(ctx, t, EPISODE) if i < 2 else play_title(ctx, fill(t, EPISODE), EPISODE, timeout_ms))
         h["episode"] = r
         if r["state"] == "live":
             h["episode_template"] = t
@@ -475,11 +484,16 @@ async def main():
     only = {x.strip() for x in cfg.providers.split(",") if x.strip()}
     todo = [p for p in cat["providers"] if not only or p["provider"] in only]
     sem = asyncio.Semaphore(cfg.concurrency)
+    # with a screen (run.sh: xvfb-run), a normal Chrome window: Cloudflare stops headless Chrome
+    # on players that open fine in a real browser (vidfast...)
+    headless = not os.environ.get("DISPLAY") or os.environ.get("HEADLESS") == "1"
+    print(f"Chrome {'headless' if headless else 'with a (virtual) screen'}", flush=True)
+    args = ["--mute-audio", "--autoplay-policy=no-user-gesture-required", "--disable-blink-features=AutomationControlled"]
     async with async_playwright() as pw:
         try:
-            b = await pw.chromium.launch(headless=True, channel="chrome", args=["--mute-audio", "--autoplay-policy=no-user-gesture-required"])
+            b = await pw.chromium.launch(headless=headless, channel="chrome", args=args)
         except Exception:
-            b = await pw.chromium.launch(headless=True, args=["--mute-audio", "--autoplay-policy=no-user-gesture-required"])
+            b = await pw.chromium.launch(headless=headless, args=args)
         ctx = await b.new_context(ignore_https_errors=True)
         await ctx.add_init_script("window.open = () => null;")
 

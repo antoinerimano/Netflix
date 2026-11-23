@@ -237,6 +237,7 @@ const HEALTH = {
   up: ['up', 'p-acc', 'Embed page loads; no film played headless (may need a real click)'],
   no_source: ['no source', 'p-warn', 'Embed loads but has no video for the test movie'],
   protected: ['protected', 'p-warn', 'A Cloudflare / bot check answered'],
+  unverified: ['unverified', 'p-mute', 'The player asks for nothing in the test browser (may block robots): no verdict'],
   down: ['down', 'p-bad', 'Domain or server not answering'],
   untested: ['untested', 'p-mute', 'No domain or embed URL to test'],
 };
@@ -300,7 +301,7 @@ function renderProviders() {
     livedocs: (p) => isLive(p) && hasDocs(p), live: isLive, 'docs found': hasDocs,
     down: (p) => ['down', 'no_source'].includes(hstate(p)),
   }[f] || (() => true);
-  const rank = { live: 0, partial: 1, up: 2, no_source: 3, protected: 4, '': 5, untested: 6, down: 7 };
+  const rank = { live: 0, partial: 1, up: 2, no_source: 3, unverified: 4, protected: 5, '': 6, untested: 7, down: 8 };
   const rows = [...S.providers.values()]
     .filter(pass)
     .filter((p) => !q || [p.provider, ...p.domains, ...p.sites, p.docs_url, p.homepage].join(' ').toLowerCase().includes(q))
