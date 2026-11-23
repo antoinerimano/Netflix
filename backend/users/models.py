@@ -124,6 +124,10 @@ class Title(models.Model):
     # playback: stream links are built from Provider templates, not stored here
     trailer_url = models.URLField(blank=True, default="")
     trailer_clip_url = models.URLField(blank=True, default="")
+    # the clip was made from another video than trailer_url, because that one couldn't be used
+    # (gone, blocked, not the title's): trailer_url's key at the time, "-" = TMDB had no trailer
+    # (trailer-worker/, users/trailers.py clip_answers / shown_trailer_url)
+    trailer_clip_for = models.CharField(max_length=16, blank=True, default="")
 
     # taxonomy / people
     genre = models.CharField(max_length=255, blank=True, default="")

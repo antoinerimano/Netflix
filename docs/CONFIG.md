@@ -14,7 +14,7 @@ on in production. A key that stops working is reported the same day instead of a
 | 1 | `/opt/taurus/.env` | server | `SITE_DOMAIN`, `MYSQL_ROOT_PASSWORD` (read by `docker-compose.yml`) |
 | 2 | `/opt/taurus/backend/.env` | server | everything Django and the cron jobs use (table below) |
 | 3 | `/opt/taurus/frontend/.env` | server | `REACT_APP_API_BASE` (empty: the API is on the same domain) |
-| 4 | `~/Desktop/Netflix/trailer-worker/.env` | mini PC | Bunny Storage zone + key, `SERVER_SSH`, `SERVER_DIR` |
+| 4 | `~/Desktop/Netflix/trailer-worker/.env` | mini PC | Bunny Storage zone + key, `SERVER_SSH`, `SERVER_DIR`, `TMDB_API_KEY` (same as the server's), `YTDLP_COOKIES_FILE` |
 | 5 | `~/provider-scout/provider_scraper/.env` | mini PC | `SERVER_SSH`, `SERVER_DIR` |
 | 6 | GitHub > Settings > Environments > `production` | GitHub | secrets `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_PORT`; variables `DEPLOY_ENABLED`, `DEPLOY_PATH`, `HEALTHCHECK_URL` |
 | 7 | rclone remote `gdrive` (`rclone config`) | server | the Google Drive token of the nightly backups (`ops/README.md`) |

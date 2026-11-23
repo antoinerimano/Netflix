@@ -145,6 +145,17 @@ class TitleSerializer(serializers.ModelSerializer):
             a.appearances = counts.get(a.tmdb_id, 0)
         return ActorSerializer(actors_sorted, many=True).data
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        # the trailer the title page plays: TMDB's, or the video the trailer worker used instead
+        # when TMDB's is gone / blocked / not the title's (users/trailers.py shown_trailer_url)
+        if "trailer_url" in data:
+            from .trailers import shown_trailer_url
+
+            data["trailer_url"] = shown_trailer_url(obj.trailer_url, obj.trailer_clip_url, obj.trailer_clip_for)
+        data.pop("trailer_clip_for", None)
+        return data
+
     class Meta:
         model = Title
         fields = "__all__"

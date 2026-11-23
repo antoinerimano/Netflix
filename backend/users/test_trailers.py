@@ -135,3 +135,93 @@ class TrailerJobsTests(TestCase):
         self.import_results({"a": self.result(self.movie, status="rejected")}, "--clear-rejected")
         self.movie.refresh_from_db()
         self.assertEqual(self.movie.trailer_clip_url, "")
+
+
+class OtherVideoTests(TestCase):
+    """trailer-worker/ made the clip from another video than the one asked for (TMDB's was gone,
+    blocked in its country or not the title's), or found one for a title TMDB has no trailer for."""
+
+    def setUp(self):
+        self.yt = "https://www.youtube.com/watch?v="
+        self.film = Title.objects.create(type="movie", tmdb_id=35019, title="Nanny McPhee and the Big Bang",
+                                         trailer_url=self.yt + "goneVideo01", popularity=9, vote_count=900)
+        self.bare = Title.objects.create(type="movie", tmdb_id=99, title="No TMDB trailer", popularity=5,
+                                         vote_count=40)
+        Title.objects.create(type="movie", tmdb_id=98, title="Unknown film", popularity=4, vote_count=3)
+
+    def export(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        call_command("export_trailer_jobs", *args, stdout=out, stderr=err)
+        return json.loads(out.getvalue())["jobs"]
+
+    def import_results(self, *results):
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump({"version": 1, "results": {str(i): r for i, r in enumerate(results)}}, f)
+        out = io.StringIO()
+        call_command("import_trailer_results", f.name, stdout=out)
+        return out.getvalue()
+
+    def ok(self, title, used, asked):
+        return {"type": title.type, "tmdb_id": title.tmdb_id, "status": "ok", "youtube_key": used,
+                "asked_key": asked, "path": preview_path(title.type, title.tmdb_id, used)}
+
+    def test_titles_without_a_tmdb_trailer_are_searched_when_enough_people_rated_them(self):
+        jobs = {j["tmdb_id"]: j for j in self.export()}
+        self.assertEqual(set(jobs), {35019, 99})  # 3 votes: too little known, a search goes wrong
+        self.assertTrue(jobs[99]["search"])
+        self.assertEqual((jobs[99]["youtube_key"], jobs[99]["path"]), ("", ""))
+        self.assertNotIn("search", jobs[35019])
+        self.assertEqual({j["tmdb_id"] for j in self.export("--search-min-votes", "-1")}, {35019})
+
+    @override_settings(BUNNY_CDN_BASE=CDN)
+    def test_a_clip_from_another_video_is_saved_and_the_title_page_plays_that_video(self):
+        from .serializers import TitleSerializer
+
+        out = self.import_results(self.ok(self.film, "otherVideo1", "goneVideo01"),
+                                  self.ok(self.bare, "foundVideo1", ""))
+        self.assertIn("saved: 2", out)
+        self.assertIn("other_video: 2", out)
+        self.film.refresh_from_db()
+        self.bare.refresh_from_db()
+        self.assertEqual(self.film.trailer_clip_url, f"{CDN}/previews/movie/35019-otherVideo1.mp4")
+        self.assertEqual((self.film.trailer_clip_for, self.bare.trailer_clip_for), ("goneVideo01", "-"))
+        self.assertEqual(self.export(), [])  # both answered
+        self.assertEqual(TitleSerializer(self.film).data["trailer_url"], self.yt + "otherVideo1")
+        self.assertEqual(TitleSerializer(self.bare).data["trailer_url"], self.yt + "foundVideo1")
+        self.assertNotIn("trailer_clip_for", TitleSerializer(self.film).data)
+
+        # TMDB picks a new trailer: asked again, and the page plays TMDB's new one meanwhile
+        Title.objects.filter(pk=self.film.pk).update(trailer_url=self.yt + "newTrailer1")
+        self.film.refresh_from_db()
+        self.assertEqual([j["youtube_key"] for j in self.export()], ["newTrailer1"])
+        self.assertEqual(TitleSerializer(self.film).data["trailer_url"], self.yt + "newTrailer1")
+
+    @override_settings(BUNNY_CDN_BASE=CDN)
+    def test_the_trailer_asked_for_after_all(self):
+        self.import_results(self.ok(self.film, "otherVideo1", "goneVideo01"))
+        self.import_results(self.ok(self.film, "goneVideo01", "goneVideo01"))  # it came back
+        self.film.refresh_from_db()
+        self.assertEqual(self.film.trailer_clip_for, "")
+        self.assertEqual(self.film.trailer_clip_url, f"{CDN}/previews/movie/35019-goneVideo01.mp4")
+
+    @override_settings(BUNNY_CDN_BASE=CDN)
+    def test_stale_or_odd_results_are_skipped(self):
+        out = self.import_results(self.ok(self.film, "otherVideo1", "olderTrail1"),  # asked about an old trailer
+                                  self.ok(self.bare, "../../x", ""))                   # not a YouTube key
+        self.assertIn("saved: 0", out)
+        self.assertIn("stale: 1", out)
+        self.assertIn("skipped: 1", out)
+
+    def test_ranked_keys_and_clip_helpers(self):
+        from .trailers import clip_answers, clip_youtube_key, ranked_trailer_keys, shown_trailer_url
+
+        full = tmdb(video("teaser00001", kind="Teaser"), video("trailer0001"), video("clip0000001", kind="Clip"))
+        self.assertEqual(ranked_trailer_keys(full), ["trailer0001", "teaser00001"])
+        self.assertEqual(pick_trailer_url(full), self.yt + "trailer0001")
+        clip = f"{CDN}/previews/movie/5-otherVideo1-a.mp4"
+        self.assertEqual(clip_youtube_key(clip), "otherVideo1")
+        self.assertEqual(clip_youtube_key(f"{CDN}/trailers/5.mp4"), "")
+        self.assertTrue(clip_answers(clip, "goneVideo01", "movie", 5, self.yt + "goneVideo01"))
+        self.assertFalse(clip_answers(clip, "goneVideo01", "movie", 5, self.yt + "newTrailer1"))
+        self.assertFalse(clip_answers(clip, "", "movie", 5, self.yt + "goneVideo01"))
+        self.assertEqual(shown_trailer_url(self.yt + "goneVideo01", clip, ""), self.yt + "goneVideo01")
