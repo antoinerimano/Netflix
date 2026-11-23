@@ -58,20 +58,31 @@ def _score(video: dict, original_language: str) -> Optional[float]:
     return score
 
 
-def pick_trailer_url(full: dict, original_language: str = "") -> str:
-    """Best YouTube trailer of a TMDB movie / show (fetched with append_to_response=videos)."""
+def ranked_trailer_keys(full: dict, original_language: str = "") -> list:
+    """The YouTube keys of a TMDB movie / show's trailers, best first (videos that aren't
+    trailers or teasers left out). trailer-worker/ tries the next one when the best is gone,
+    blocked in its country or not the title's (it loads this file, no Django needed)."""
     videos: Iterable[dict] = (full.get("videos") or {}).get("results") or []
     original_language = original_language or full.get("original_language") or ""
-    best = None
+    ranked = []
     for v in videos:
         s = _score(v, original_language)
         if s is None:
             continue
         # equal scores: the oldest one (the original trailer, not a re-release or a late season)
-        rank = (s, -_published(v))
-        if best is None or rank > best[0]:
-            best = (rank, v)
-    return f"https://www.youtube.com/watch?v={best[1]['key']}" if best else ""
+        ranked.append(((s, -_published(v)), v["key"]))
+    ranked.sort(key=lambda x: x[0], reverse=True)
+    keys = []
+    for _, key in ranked:
+        if key not in keys:
+            keys.append(key)
+    return keys
+
+
+def pick_trailer_url(full: dict, original_language: str = "") -> str:
+    """Best YouTube trailer of a TMDB movie / show (fetched with append_to_response=videos)."""
+    keys = ranked_trailer_keys(full, original_language)
+    return f"https://www.youtube.com/watch?v={keys[0]}" if keys else ""
 
 
 def _published(video: dict) -> float:
@@ -98,3 +109,32 @@ def is_clip_of(clip_url: str, title_type: str, tmdb_id: int, key: str) -> bool:
     """clip_url is a preview clip of this trailer (any rev of it)."""
     base = preview_path(title_type, tmdb_id, key)[: -len(".mp4")]
     return bool(re.search(r"/" + re.escape(base) + r"(-[a-z0-9]{1,8})?\.mp4$", clip_url or ""))
+
+
+CLIP_KEY_RE = re.compile(r"/previews/(?:movie|tv)/\d+-([A-Za-z0-9_-]{11})(?:-[a-z0-9]{1,8})?\.mp4$")
+
+
+def clip_youtube_key(clip_url: str) -> str:
+    """The YouTube key a previews/ clip was made from, '' for anything else."""
+    m = CLIP_KEY_RE.search(clip_url or "")
+    return m.group(1) if m else ""
+
+
+def clip_answers(clip_url: str, clip_for: str, title_type: str, tmdb_id: int, trailer_url: str) -> bool:
+    """The title's clip is the one for its current trailer: made from that trailer, or made from
+    another video because that trailer couldn't be used (gone, blocked, not the title's; clip_for
+    = the trailer's key then, "-" for a title TMDB has no trailer for)."""
+    key = youtube_key(trailer_url)
+    if key and is_clip_of(clip_url, title_type, tmdb_id, key):
+        return True
+    return bool(clip_url and clip_for and clip_youtube_key(clip_url) and clip_for == (key or "-"))
+
+
+def shown_trailer_url(trailer_url: str, clip_url: str, clip_for: str) -> str:
+    """The trailer the title page plays: TMDB's, unless the worker found it couldn't be used and
+    made the clip from another video (then that video)."""
+    if clip_for and clip_for == (youtube_key(trailer_url) or "-"):
+        key = clip_youtube_key(clip_url)
+        if key:
+            return f"https://www.youtube.com/watch?v={key}"
+    return trailer_url

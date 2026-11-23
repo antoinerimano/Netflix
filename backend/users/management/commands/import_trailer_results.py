@@ -3,14 +3,20 @@ Save the preview clips trailer-worker/ made (its results.json) on their titles:
 
     docker compose exec -T backend python manage.py import_trailer_results - < results.json
 
-Only "ok" results are used, and only when they are the clip of the title's current trailer
-(TMDB may have changed it since the export: the next export asks for the new one). Running it
-again with the same file changes nothing.
+Only "ok" results are used, and only when they answer the title's current trailer (TMDB may
+have changed it since the export: the next export asks for the new one). Running it again with
+the same file changes nothing.
+
+The worker may have made the clip from another video than the one asked for (asked_key, "" for
+a title without a TMDB trailer): TMDB's was gone, blocked in its country or not the title's, so
+it took TMDB's next trailer or searched YouTube. The clip is saved with trailer_clip_for = the
+asked key ("-" for none), and the title page plays that video (users/trailers.py).
 
 --clear-rejected: titles whose trailer the worker turned down (its YouTube name isn't the
 title's) lose their old trailers/{tmdb_id}.mp4 clip too: it was most likely the wrong video.
 """
 import json
+import re
 import sys
 
 from django.conf import settings
@@ -20,6 +26,8 @@ from django.db import transaction
 from users.jobs import tracked
 from users.models import Title
 from users.trailers import preview_path, youtube_key
+
+KEY_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 
 class Command(BaseCommand):
@@ -45,7 +53,7 @@ class Command(BaseCommand):
             raise CommandError('Not a trailer-worker results file (no "results" object).')
 
         cdn = (getattr(settings, "BUNNY_CDN_BASE", "") or "").rstrip("/")
-        stats = {"saved": 0, "unchanged": 0, "stale": 0, "unknown": 0, "cleared": 0, "skipped": 0}
+        stats = {"saved": 0, "other_video": 0, "unchanged": 0, "stale": 0, "unknown": 0, "cleared": 0, "skipped": 0}
 
         with transaction.atomic():
             for r in results.values():
@@ -61,12 +69,13 @@ class Command(BaseCommand):
                     continue
 
                 title = Title.objects.filter(type=kind, tmdb_id=tmdb_id).only(
-                    "id", "trailer_url", "trailer_clip_url").first()
+                    "id", "trailer_url", "trailer_clip_url", "trailer_clip_for").first()
                 if not title:
                     stats["unknown"] += 1
                     continue
-                key = youtube_key(title.trailer_url)
-                if not key or key != r.get("youtube_key"):
+                current = youtube_key(title.trailer_url)
+                asked = r.get("asked_key", r.get("youtube_key")) or ""  # results.json v1: no asked_key
+                if asked != current:
                     stats["stale"] += 1  # the trailer changed since the export
                     continue
 
@@ -80,18 +89,25 @@ class Command(BaseCommand):
                         stats["skipped"] += 1
                     continue
 
+                used = r.get("youtube_key") or ""
+                if not KEY_RE.match(used):
+                    stats["skipped"] += 1
+                    continue
                 # the worker's own URL isn't trusted: rebuilt from the CDN address and the path
-                path = preview_path(kind, tmdb_id, key, r.get("rev") or "")  # rev: a clip made again
+                path = preview_path(kind, tmdb_id, used, r.get("rev") or "")  # rev: a clip made again
                 url = f"{cdn}/{path}" if cdn else (r.get("url") or "")
                 if not url.startswith("https://") or not url.endswith("/" + path):
                     stats["skipped"] += 1
                     continue
-                if title.trailer_clip_url == url:
+                clip_for = "" if used == current else (current or "-")
+                if title.trailer_clip_url == url and title.trailer_clip_for == clip_for:
                     stats["unchanged"] += 1
                     continue
                 stats["saved"] += 1
+                if clip_for:
+                    stats["other_video"] += 1
                 if not opts["dry_run"]:
-                    Title.objects.filter(pk=title.pk).update(trailer_clip_url=url)
+                    Title.objects.filter(pk=title.pk).update(trailer_clip_url=url, trailer_clip_for=clip_for)
 
             if opts["dry_run"]:
                 transaction.set_rollback(True)

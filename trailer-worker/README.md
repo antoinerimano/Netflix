@@ -11,11 +11,22 @@ server: manage.py export_trailer_jobs  ──jobs.json──▶  mini PC: make_p
 server: manage.py import_trailer_results  ◀──results.json──┘
 ```
 
-For each title it reads the YouTube video's details, **checks the video's name is the title's**
-(otherwise: `rejected`, nothing uploaded), downloads only the ~17 s it keeps at 540p, encodes a
-15 s clip (~2 MB, starts playing while it downloads) and uploads it to
-`previews/{movie|tv}/{tmdb_id}-{youtube id}.mp4`. Which video is a title's trailer is chosen on
-the server when TMDB is synced (`backend/users/trailers.py`).
+For each title it reads the YouTube video's details, **checks the video is the title's trailer**
+(its name is the title's or one of its other names on TMDB, not a sequel, not another year's film,
+20 s to 10 min), downloads only the ~17 s it keeps at 540p (the whole video when cutting while
+downloading fails), encodes a 15 s clip (~2 MB, starts playing while it downloads) and uploads it
+to `previews/{movie|tv}/{tmdb_id}-{youtube id}.mp4`.
+
+Which video: the trailer the server chose when TMDB was synced (`backend/users/trailers.py`)
+first. When it can't be used (removed, private, blocked in this country, not the title's), the
+title's other TMDB trailers and teasers in the server's order, then a YouTube search. Titles TMDB
+has no trailer for at all (with 20+ votes: `export_trailer_jobs --search-min-votes`) go straight
+to those two. The import saves a clip made from another video with `trailer_clip_for`, and the
+title page then plays that video instead of TMDB's broken one. Titles where nothing fitted are
+tried again after `RECHECK_DAYS` (60): TMDB and YouTube get new videos.
+
+TMDB's other trailers and the title's other names need `TMDB_API_KEY` in `.env` (the same key as
+`backend/.env`); without it, only the search is tried.
 
 ## Setup (Debian / Ubuntu)
 
@@ -45,8 +56,12 @@ ssh user@your-server 'cd /opt/taurus && docker compose exec -T backend python ma
 
 ## Every night
 
-`run.sh` does all three steps (export, make, import), stops after `MAX_MINUTES` (8 h) and
-carries on the next night. `crontab -e`:
+`run.sh` does all three steps (export, make, import), stops after `MAX_MINUTES` (8 h by
+default; a machine that does nothing else can run ~21 h, `MAX_MINUTES=1260`) and carries on the
+next night. When YouTube refuses, it gives the site what is done so far, waits
+`BLOCKED_PAUSE_MINUTES` (30) and tries again, rather than stopping for the night.
+If YouTube keeps refusing, give yt-dlp a YouTube account's cookies (`YTDLP_COOKIES_FILE`, a
+secondary account: exported from a browser where it is signed in). `crontab -e`:
 
 ```
 0 1 * * * cd /home/you/taurus && (git pull -q --ff-only; trailer-worker/run.sh) >> /home/you/taurus/trailer-worker/run.log 2>&1
