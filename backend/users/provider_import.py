@@ -2,9 +2,11 @@
 # Brings provider_scraper/'s catalog (provider_catalog.json, made every night on the mini PC by
 # provider_scraper/run.sh) into the Provider table, so working providers don't have to be added
 # by hand:
-#   * "live" = played EVERY test film (several well-known movies, each stream as long as the film
-#     and moving, see provider_scraper/provider_health.py), with the provider's current link
-#     tried first, then its docs' formats, the usual structures and its other domains
+#   * "live" = in the scout's test, which plays each provider the way tauruss does (in an iframe on
+#     the site's origin, the 15 s rule, the players' postMessage events), it played >= 90 % of the
+#     test titles (what the viewers watch lately) that some provider plays, with the provider's
+#     current link tried first, then its docs' formats, the usual structures and its other domains
+#     (see provider_scraper/provider_health.py)
 #   * every provider (the scout checks all the site's providers, export_providers): live with
 #     another domain / link structure -> that one becomes its link (old domain kept as backup);
 #     its TV link becomes the one an episode played with, or is removed when none did
@@ -180,6 +182,11 @@ def _apply_working_link(known, domain, movie_path, episode_path, health, lines, 
             known.episode_path = ""
             stats["tv_fixed"] += 1
             changed = True
+    if health.get("sends_events") and not known.sends_events:
+        # it reported playback to the page in the scout's test: the site can tell when it plays
+        known.sends_events = True
+        lines.append(f"{known.key}: reports playback (postMessage): sends_events on")
+        changed = True
     if changed:
         known.status, known.status_detail, known.checked_at = Provider.UP, f"fixed by provider scout {stamp}", now
     else:
@@ -256,7 +263,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 key=key, label=name[:1].upper() + name[1:], domain=domain,
                 movie_path=movie_path, episode_path=episode_path,
                 enabled=enabled, priority=min(next_priority, 32767), auto_switch=True,
-                scout_check=note,
+                scout_check=note, sends_events=bool(health.get("sends_events")),
                 status=Provider.UP, status_detail=f"added by provider scout {stamp}: plays every test film, "
                                                   f"used by {sites} site(s)",
                 checked_at=now,

@@ -124,6 +124,14 @@ class ImportTests(TestCase):
                          ("https://vidsrc.party", "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}", True))
         self.assertEqual((stats["switched"], stats["fixed_link"], stats["tv_fixed"]), (1, 1, 1))
 
+    def test_a_player_that_reports_playback_gets_sends_events(self):
+        e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
+        e["health"]["sends_events"] = True
+        lines, _ = import_catalog(catalog(e))
+        self.vidfast.refresh_from_db()
+        self.assertTrue(self.vidfast.sends_events)
+        self.assertIn("sends_events on", lines[0])
+
     def test_tv_link_removed_when_no_episode_plays(self):
         self.vidfast.episode_path = "/tv/{tmdb_id}/{season}/{episode}"
         self.vidfast.save()
@@ -236,15 +244,30 @@ class CommandTests(TestCase):
         self.assertTrue(Provider.objects.get(key="vidly").enabled)
         self.assertTrue(JobRun.objects.get(name="import_providers").ok)
 
-    def test_export_gives_the_scout_every_provider_and_its_link(self):
+    def test_export_gives_the_scout_the_site_its_providers_and_test_titles(self):
+        from users.models import Episode, Season, Title
         Provider.objects.create(key="vidfast", label="VidFast", domain="https://vidfast.vc", backup_domains="https://vidfast.pro",
                                 movie_path="/movie/{tmdb_id}", episode_path="/tv/{tmdb_id}/{season}/{episode}", enabled=False)
+        Title.objects.create(type=Title.MOVIE, title="Fight Club", tmdb_id=550, imdb_code="tt0137523",
+                             runtime_minutes=139, release_year=1999, popularity=50)
+        Title.objects.create(type=Title.MOVIE, title="Short", tmdb_id=1, runtime_minutes=20, release_year=1999, popularity=99)
+        show = Title.objects.create(type=Title.TV, title="Breaking Bad", tmdb_id=1396, imdb_code="tt0903747", popularity=40)
+        Episode.objects.create(season=Season.objects.create(tv=show, season_number=1), episode_number=1, runtime=58)
         out = io.StringIO()
         call_command("export_providers", stdout=out)
-        self.assertEqual(json.loads(out.getvalue()), [{
+        data = json.loads(out.getvalue())
+        self.assertTrue(data["site_origin"].startswith("http"))
+        self.assertEqual(data["providers"], [{
             "key": "vidfast", "domain": "https://vidfast.vc", "backups": ["https://vidfast.pro"],
             "movie_path": "/movie/{tmdb_id}", "episode_path": "/tv/{tmdb_id}/{season}/{episode}",
-            "enabled": False, "disabled_by_scout": False}])
+            "enabled": False, "disabled_by_scout": False, "sends_events": False}])
+        # the classics first, then the catalog's (no short film)
+        self.assertEqual([m["name"] for m in data["test_titles"]["movies"]],
+                         ["The Godfather", "Pulp Fiction", "Casablanca", "Fight Club"])
+        self.assertEqual(data["test_titles"]["movies"][-1], {"tmdb": 550, "imdb": "tt0137523", "name": "Fight Club", "minutes": 139})
+        self.assertEqual(data["test_titles"]["episodes"][-1], {"tmdb": 1396, "imdb": "tt0903747", "season": 1, "episode": 1,
+                                                               "name": "Breaking Bad 1x01", "minutes": 58})
+        self.assertEqual(data["test_titles"]["episodes"][0]["name"], "Friends 1x01")
 
     def test_not_a_catalog(self):
         from django.core.management.base import CommandError

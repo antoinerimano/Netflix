@@ -38,11 +38,21 @@ Chromium can't play H.264, so direct HLS players never start in it).
 hands `provider_catalog.json` to the site (`manage.py import_providers`, see
 `backend/users/provider_import.py`).
 
-**"Plays" (`live`) = every test film plays** (`provider_health.py`: Fight Club, Inception,
-Interstellar, The Dark Knight, Dune: Part Two). For each one the stream must last as long as the
-film (TMDB runtime, a few minutes either way: not a trailer, an ad, a "not available" clip or the
-same default movie for every id) and really move. 4 out of 5 = `partial`: not imported. The TV
-link is kept only when Breaking Bad 1x01 plays too.
+**Tested the way tauruss plays them** (`provider_health.py`): each player is loaded in an
+iframe of a page on the site's own origin (`site_origin` from `export_providers`), with the
+site's iframe attributes and referrer policy, the link built like the frontend builds it, and the
+frontend's rules: a page not loaded after 15 s is a failure (the site moves on to the next source),
+and the players' postMessage events the site reads (Videasy, CineSrc, VidCore) count as proof.
+Run it from the mini PC's network: an office network blocks some providers.
+
+**The test titles are what the viewers watch** (`export_providers`: the latest movies and episodes
+opened on the site, plus classics: The Godfather, Pulp Fiction, Casablanca, Friends 1x01, topped
+up with popular ones). A title plays when a feature-length video (40 min+ for a movie, 10 min+ for
+an episode: not a trailer, an ad or a "not available" clip) moves, or the player reports it. Not
+compared with the TMDB runtime: director's cuts, credits and other edits differ. One default video
+for every id shows up as 3+ titles of the very same length. **`live` = plays at least 90 % of
+the titles that some provider plays** (a title nobody plays is nobody's fault): a limited catalog
+shows up as `partial`. Same rule for the episodes, or the TV link is left out.
 
 **Every provider of the site is checked every night** (`manage.py export_providers`), not only
 the ones a scanned site uses, **its current link first**. A wrong link is not a dead provider, so
@@ -50,8 +60,8 @@ before saying "doesn't play" the check tries, in order: the current link, the li
 the provider's **API docs** (`provider_docs.py` follows every docs link of its homepage, else
 tries /docs, /api, /documentation..., and reads full URLs, `${tmdbId}` and "/movie/{id}" written
 apart from the base URL), the links seen on streaming sites, its docs' example URLs, the usual
-structures (/movie/{id}, /embed/movie/{id}, ?tmdb=...), then its other known domains and its name
-on other extensions (.net, .top, .to, .pro... that exist). The catalog says which one played
+structures (/movie/{id}, /embed/movie/{id}, ?tmdb=...), then its other KNOWN domains (backups,
+seen on streaming sites, in its docs). Domains are never guessed: vidlink.ru is not vidlink. The catalog says which one played
 (`template_source`).
 
 Chrome runs as a normal window on a virtual screen (`xvfb-run`, needs the `xvfb` package):
@@ -63,7 +73,10 @@ Then on the site (every provider, whoever added it):
 - **plays with another domain / link structure** -> that one becomes its link (the old domain
   stays as a backup); its TV link becomes the one an episode played with, removed if none did.
 - **doesn't play every test film** (or down) -> turned off, back on the night they all play again.
-- **couldn't be checked** (a Cloudflare page even so) -> nothing changes.
+- **couldn't be checked** (a Cloudflare page, or a player that asks for nothing in the test
+  browser: vidfast and 111movies do that, and play for people) -> nothing changes.
+- **reports its playback to the page** (postMessage) -> *sends events* on, so the site can tell
+  when it plays and offer the next source when it stays silent.
 - **new provider that plays** -> created. **Enabled** when 2+ scanned sites use it, otherwise
   **disabled**: have a look in the admin (Providers) and tick *enabled*. It comes after the
   others (higher priority number).

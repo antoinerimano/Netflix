@@ -104,7 +104,8 @@ def merge_site_providers(cat, site):
         cat[name]["hosts"].update(hosts)
         dom = sp["domain"].rstrip("/")
         links[name] = {"key": sp["key"], "movie": dom + sp["movie_path"] if sp.get("movie_path") else None,
-                       "episode": dom + sp["episode_path"] if sp.get("episode_path") else None}
+                       "episode": dom + sp["episode_path"] if sp.get("episode_path") else None,
+                       "sends_events": bool(sp.get("sends_events"))}
     return links
 
 
@@ -194,7 +195,10 @@ async def main():
 
     report = json.load(open(cfg.report, encoding="utf-8"))
     probe, cat = collect(report)
-    site_links = merge_site_providers(cat, json.load(open(cfg.site, encoding="utf-8")) if cfg.site else [])
+    site = json.load(open(cfg.site, encoding="utf-8")) if cfg.site else {}
+    if isinstance(site, list):  # older export_providers: the providers only
+        site = {"providers": site}
+    site_links = merge_site_providers(cat, site.get("providers") or [])
 
     docs = {}
     if not cfg.no_web:
@@ -235,6 +239,8 @@ async def main():
         })
     providers.sort(key=lambda x: (-x["site_count"], x["provider"]))
     json.dump({"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "probe_title": probe,
+               # how tauruss plays them (provider_health.py tests in that setting)
+               "site_origin": site.get("site_origin"), "test_titles": site.get("test_titles"),
                "providers": providers}, open(cfg.out, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     print(f"[+] {len(providers)} providers -> {cfg.out}")
 

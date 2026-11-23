@@ -40,7 +40,7 @@ fi
 mv site_providers.json.part site_providers.json
 on_screen $PY provider_docs.py -r providers_report.json -s site_providers.json -o provider_catalog.json || exit 1
 # 3. does every test film really play on it ("live"), with which link
-on_screen $PY provider_health.py -c provider_catalog.json -n "${CONCURRENCY:-4}" || exit 1
+on_screen $PY provider_health.py -c provider_catalog.json -n "${HEALTH_CONCURRENCY:-4}" || exit 1
 $PY export_board.py >/dev/null || true   # the local board, for a look
 
 # 4. to the site
