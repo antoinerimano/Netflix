@@ -256,3 +256,15 @@ msgstr "Filme und Serien mit %(name)s."
 #: users/seo.py
 msgid "Page not found"
 msgstr "Seite nicht gefunden"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "Kontosicherheit"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "Dein Konto"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "Deine Serien"

@@ -38,6 +38,15 @@ export const updateProfile = async (userId, profileId, updatedProfile) => {
   return res.data;
 };
 
+/** Partial update: only the fields given (e.g. { appearance }) */
+export const patchProfile = async (userId, profileId, fields) => {
+  const res = await http.patch(
+    `/users/${encodeURIComponent(userId)}/profiles/${encodeURIComponent(profileId)}/`,
+    fields
+  );
+  return res.data;
+};
+
 export const createProfile = async (userId, newProfile) => {
   const res = await http.post(`/users/${encodeURIComponent(userId)}/profiles/`, newProfile);
   return res.data;

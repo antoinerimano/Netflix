@@ -150,5 +150,53 @@
     "loadError": "Não foi possível carregar seu ano",
     "emptyTitle": "Nada para contar ainda",
     "emptyText": "Assista a alguns títulos neste perfil e seu ano aparece aqui."
+  },
+  "appearance": {
+    "title": "Aparência",
+    "intro": "Fontes e cores de {{name}}. As mudanças aparecem na hora e acompanham este perfil em todos os dispositivos.",
+    "preview": "Prévia",
+    "previewEyebrow": "A escolha da noite",
+    "previewTitle": "Sua próxima noite de cinema",
+    "previewText": "Títulos, texto, botões e destaques mudam conforme você escolhe.",
+    "previewPlay": "Assistir",
+    "previewList": "Minha lista",
+    "fonts": "Fontes",
+    "systemFont": "A fonte do seu dispositivo",
+    "accent": "Cor de destaque",
+    "background": "Fundo",
+    "reset": "Voltar ao padrão",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "saveFailed": "Não foi possível salvar sua aparência. Tente de novo.",
+    "entryLabel": "Fontes e cores",
+    "entryValue": "Deixe do seu jeito: fontes, cor de destaque, fundo",
+    "entryAction": "Personalizar",
+    "font": {
+      "default": "Original",
+      "cinema": "Cinema",
+      "classic": "Clássica",
+      "bold": "Marcante",
+      "editorial": "Editorial",
+      "friendly": "Amigável",
+      "readable": "Fácil de ler",
+      "system": "Fonte do dispositivo"
+    },
+    "color": {
+      "red": "Vermelho",
+      "orange": "Laranja",
+      "amber": "Dourado",
+      "green": "Verde",
+      "teal": "Azul-petróleo",
+      "blue": "Azul",
+      "violet": "Roxo",
+      "pink": "Rosa"
+    },
+    "bg": {
+      "graphite": "Grafite",
+      "black": "Preto puro",
+      "midnight": "Azul meia-noite",
+      "espresso": "Café",
+      "forest": "Floresta"
+    }
   }
 }

@@ -95,7 +95,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(8, 8, 10, 0.35);
+  background: rgba(var(--color-bg-deep-rgb), 0.35);
   color: #fff;
   opacity: 0;
   transition: opacity var(--duration-fast);
@@ -116,7 +116,7 @@
   font-weight: var(--weight-bold);
 }
 .watch-ep__playing--soon {
-  background: rgba(8, 8, 10, 0.75);
+  background: rgba(var(--color-bg-deep-rgb), 0.75);
 }
 .watch-ep__title {
   overflow: hidden;

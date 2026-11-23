@@ -150,5 +150,53 @@
     "loadError": "Impossible de charger votre année",
     "emptyTitle": "Rien à compter pour l'instant",
     "emptyText": "Regardez quelques titres sur ce profil et votre année apparaîtra ici."
+  },
+  "appearance": {
+    "title": "Apparence",
+    "intro": "Polices et couleurs de {{name}}. Les changements s'affichent tout de suite et suivent ce profil sur tous les appareils.",
+    "preview": "Aperçu",
+    "previewEyebrow": "La sélection du soir",
+    "previewTitle": "Votre prochaine soirée cinéma",
+    "previewText": "Les titres, le texte, les boutons et les accents changent selon vos choix.",
+    "previewPlay": "Lecture",
+    "previewList": "Ma liste",
+    "fonts": "Polices",
+    "systemFont": "La police de votre appareil",
+    "accent": "Couleur d'accent",
+    "background": "Fond",
+    "reset": "Revenir au style par défaut",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré",
+    "saveFailed": "Impossible d'enregistrer votre apparence. Réessayez.",
+    "entryLabel": "Polices et couleurs",
+    "entryValue": "Personnalisez : polices, couleur d'accent, fond",
+    "entryAction": "Personnaliser",
+    "font": {
+      "default": "Original",
+      "cinema": "Cinéma",
+      "classic": "Classique",
+      "bold": "Audacieux",
+      "editorial": "Éditorial",
+      "friendly": "Convivial",
+      "readable": "Facile à lire",
+      "system": "Police de l'appareil"
+    },
+    "color": {
+      "red": "Rouge",
+      "orange": "Orange",
+      "amber": "Or",
+      "green": "Vert",
+      "teal": "Turquoise",
+      "blue": "Bleu",
+      "violet": "Violet",
+      "pink": "Rose"
+    },
+    "bg": {
+      "graphite": "Graphite",
+      "black": "Noir pur",
+      "midnight": "Bleu nuit",
+      "espresso": "Expresso",
+      "forest": "Forêt"
+    }
   }
 }

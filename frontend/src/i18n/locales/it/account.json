@@ -150,5 +150,53 @@
     "loadError": "Impossibile caricare il tuo anno",
     "emptyTitle": "Ancora niente da contare",
     "emptyText": "Guarda qualche titolo con questo profilo e qui comparirà il tuo anno."
+  },
+  "appearance": {
+    "title": "Aspetto",
+    "intro": "Caratteri e colori di {{name}}. Le modifiche si vedono subito e seguono questo profilo su tutti i dispositivi.",
+    "preview": "Anteprima",
+    "previewEyebrow": "La scelta di stasera",
+    "previewTitle": "La tua prossima serata film",
+    "previewText": "Titoli, testo, pulsanti ed evidenziazioni cambiano in base alle tue scelte.",
+    "previewPlay": "Riproduci",
+    "previewList": "La mia lista",
+    "fonts": "Caratteri",
+    "systemFont": "Il carattere del tuo dispositivo",
+    "accent": "Colore principale",
+    "background": "Sfondo",
+    "reset": "Torna allo stile predefinito",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "saveFailed": "Impossibile salvare l'aspetto. Riprova.",
+    "entryLabel": "Caratteri e colori",
+    "entryValue": "Rendilo tuo: caratteri, colore principale, sfondo",
+    "entryAction": "Personalizza",
+    "font": {
+      "default": "Originale",
+      "cinema": "Cinema",
+      "classic": "Classico",
+      "bold": "Deciso",
+      "editorial": "Editoriale",
+      "friendly": "Amichevole",
+      "readable": "Facile da leggere",
+      "system": "Carattere del dispositivo"
+    },
+    "color": {
+      "red": "Rosso",
+      "orange": "Arancione",
+      "amber": "Oro",
+      "green": "Verde",
+      "teal": "Verde acqua",
+      "blue": "Blu",
+      "violet": "Viola",
+      "pink": "Rosa"
+    },
+    "bg": {
+      "graphite": "Grafite",
+      "black": "Nero puro",
+      "midnight": "Blu notte",
+      "espresso": "Espresso",
+      "forest": "Foresta"
+    }
   }
 }

@@ -51,7 +51,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-3);
-  background: radial-gradient(120% 80% at 20% 0%, rgba(229, 9, 20, 0.28), transparent 60%),
+  background: radial-gradient(120% 80% at 20% 0%, rgba(var(--color-brand-rgb), 0.28), transparent 60%),
     linear-gradient(160deg, var(--color-surface-2), var(--color-surface-1));
   color: var(--color-text);
   font-size: var(--text-md);
@@ -83,7 +83,7 @@
   padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: rgba(8, 8, 10, 0.65);
+  background: rgba(var(--color-bg-deep-rgb), 0.65);
   color: var(--color-text);
   cursor: pointer;
   opacity: 0;
@@ -101,7 +101,7 @@
   pointer-events: auto;
 }
 .poster-card__more:hover {
-  background: rgba(8, 8, 10, 0.9);
+  background: rgba(var(--color-bg-deep-rgb), 0.9);
 }
 @media (hover: none) {
   .poster-card__more {

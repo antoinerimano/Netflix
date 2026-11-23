@@ -132,5 +132,53 @@
     "loadError": "1年のデータを読み込めませんでした",
     "emptyTitle": "まだ数えるものがありません",
     "emptyText": "このプロフィールで作品を見ると、ここに1年が表示されます。"
+  },
+  "appearance": {
+    "title": "外観",
+    "intro": "{{name}} のフォントと色。変更はすぐに反映され、すべてのデバイスでこのプロフィールに適用されます。",
+    "preview": "プレビュー",
+    "previewEyebrow": "今夜のおすすめ",
+    "previewTitle": "次の映画の夜に",
+    "previewText": "タイトル、テキスト、ボタン、アクセントが選択に合わせて変わります。",
+    "previewPlay": "再生",
+    "previewList": "マイリスト",
+    "fonts": "フォント",
+    "systemFont": "お使いのデバイスのフォント",
+    "accent": "アクセントカラー",
+    "background": "背景",
+    "reset": "デフォルトに戻す",
+    "saving": "保存中…",
+    "saved": "保存しました",
+    "saveFailed": "外観を保存できませんでした。もう一度お試しください。",
+    "entryLabel": "フォントと色",
+    "entryValue": "自分好みに：フォント、アクセントカラー、背景",
+    "entryAction": "カスタマイズ",
+    "font": {
+      "default": "オリジナル",
+      "cinema": "シネマ",
+      "classic": "クラシック",
+      "bold": "ボールド",
+      "editorial": "エディトリアル",
+      "friendly": "フレンドリー",
+      "readable": "読みやすい",
+      "system": "デバイスのフォント"
+    },
+    "color": {
+      "red": "レッド",
+      "orange": "オレンジ",
+      "amber": "ゴールド",
+      "green": "グリーン",
+      "teal": "ティール",
+      "blue": "ブルー",
+      "violet": "パープル",
+      "pink": "ピンク"
+    },
+    "bg": {
+      "graphite": "グラファイト",
+      "black": "ピュアブラック",
+      "midnight": "ミッドナイトブルー",
+      "espresso": "エスプレッソ",
+      "forest": "フォレスト"
+    }
   }
 }

@@ -20,6 +20,7 @@ const TastePage = lazy(() => import('./components/profiles/TastePage'));
 const ImportPage = lazy(() => import('./components/import/ImportPage'));
 const CalendarPage = lazy(() => import('./components/calendar/CalendarPage'));
 const HistoryPage = lazy(() => import('./components/history/HistoryPage'));
+const AppearancePage = lazy(() => import('./components/appearance/AppearancePage'));
 const StatsPage = lazy(() => import('./components/stats/StatsPage'));
 const CollectionPage = lazy(() => import('./components/collection/CollectionPage'));
 const ListPage = lazy(() => import('./components/lists/ListPage'));
@@ -123,6 +124,16 @@ function App() {
           element={
             <ProtectedRoute>
               <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* "Appearance": the active profile's fonts, accent color and background (design/theme.js) */}
+        <Route
+          path="/appearance"
+          element={
+            <ProtectedRoute>
+              <AppearancePage />
             </ProtectedRoute>
           }
         />

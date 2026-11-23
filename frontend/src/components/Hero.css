@@ -66,9 +66,9 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.6) 18%, transparent 45%),
-    linear-gradient(to right, rgba(8, 8, 10, 0.88) 0%, rgba(8, 8, 10, 0.55) 32%, transparent 62%),
-    linear-gradient(to bottom, rgba(8, 8, 10, 0.55) 0%, transparent 22%);
+    linear-gradient(to top, var(--color-bg) 0%, rgba(var(--color-bg-rgb), 0.6) 18%, transparent 45%),
+    linear-gradient(to right, rgba(var(--color-bg-deep-rgb), 0.88) 0%, rgba(var(--color-bg-deep-rgb), 0.55) 32%, transparent 62%),
+    linear-gradient(to bottom, rgba(var(--color-bg-deep-rgb), 0.55) 0%, transparent 22%);
 }
 
 /* ---------- Text ---------- */
@@ -167,8 +167,8 @@
   }
   .hero__scrim {
     background:
-      linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.85) 35%, transparent 70%),
-      linear-gradient(to bottom, rgba(8, 8, 10, 0.6) 0%, transparent 25%);
+      linear-gradient(to top, var(--color-bg) 0%, rgba(var(--color-bg-rgb), 0.85) 35%, transparent 70%),
+      linear-gradient(to bottom, rgba(var(--color-bg-deep-rgb), 0.6) 0%, transparent 25%);
   }
   .hero__description {
     font-size: var(--text-md);

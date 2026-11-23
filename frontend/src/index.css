@@ -5,16 +5,16 @@
    ========================= */
 
 :root {
-  --nf-bg: #0b0b0f;
+  --nf-bg: var(--color-bg);
   --nf-panel: rgba(20, 20, 24, 0.72);
   --nf-panel-border: rgba(255, 255, 255, 0.08);
   --nf-text: rgba(255, 255, 255, 0.92);
   --nf-subtext: rgba(255, 255, 255, 0.68);
 
   --nf-red: var(--color-brand);
-  --nf-red2: #ff2a2a;
-  --nf-red-soft: rgba(229, 9, 20, 0.25);
-  --nf-glow: rgba(229, 9, 20, 0.35);
+  --nf-red2: var(--color-brand-hover);
+  --nf-red-soft: rgba(var(--color-brand-rgb), 0.25);
+  --nf-glow: rgba(var(--color-brand-rgb), 0.35);
 }
 
 /* Fullscreen */
@@ -25,9 +25,9 @@
   place-items: center;
 
   background:
-    radial-gradient(1000px 600px at 50% 20%, rgba(229, 9, 20, 0.10), transparent 55%),
-    radial-gradient(900px 500px at 20% 80%, rgba(255, 42, 42, 0.06), transparent 60%),
-    linear-gradient(180deg, #050508 0%, var(--nf-bg) 100%);
+    radial-gradient(1000px 600px at 50% 20%, rgba(var(--color-brand-rgb), 0.10), transparent 55%),
+    radial-gradient(900px 500px at 20% 80%, rgba(var(--color-brand-rgb), 0.06), transparent 60%),
+    linear-gradient(180deg, var(--color-bg-deep) 0%, var(--nf-bg) 100%);
   color: var(--nf-text);
 }
 
@@ -118,7 +118,7 @@
 .progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--nf-red) 0%, var(--nf-red2) 60%, #ff6a6a 100%);
+  background: linear-gradient(90deg, var(--nf-red) 0%, var(--nf-red2) 60%, var(--color-brand-hover) 100%);
   box-shadow: 0 0 18px var(--nf-red-soft);
   transition: width 120ms linear;
 }
@@ -163,13 +163,13 @@
 /* active row highlight */
 .loading-step.active {
   color: rgba(255, 255, 255, 0.94);
-  border-color: rgba(229, 9, 20, 0.28);
-  background: rgba(229, 9, 20, 0.08);
+  border-color: rgba(var(--color-brand-rgb), 0.28);
+  background: rgba(var(--color-brand-rgb), 0.08);
 }
 
 .loading-step.active .loading-step-dot {
   background: var(--nf-red);
-  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.18);
+  box-shadow: 0 0 0 3px rgba(var(--color-brand-rgb), 0.18);
 }
 
 /* done row */
@@ -178,7 +178,7 @@
 }
 
 .loading-step.done .loading-step-dot {
-  background: rgba(229, 9, 20, 0.55);
+  background: rgba(var(--color-brand-rgb), 0.55);
 }
 
 /* =========================

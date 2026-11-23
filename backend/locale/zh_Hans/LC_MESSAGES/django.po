@@ -238,3 +238,15 @@ msgstr "%(name)s 参演的电影和电视剧。"
 #: users/seo.py
 msgid "Page not found"
 msgstr "找不到页面"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "账户安全"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "你的账户"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "你关注的剧集"

@@ -15,13 +15,13 @@
   width: 84px; height: 84px; border-radius: 50%;
   background: conic-gradient(from 0deg,
     var(--color-brand) 0 90deg,
-    #b20710 90deg 180deg,
-    #8f0a12 180deg 270deg,
-    #4d0b0f 270deg 360deg);
+    var(--color-brand-pressed) 90deg 180deg,
+    rgba(var(--color-brand-rgb), 0.55) 180deg 270deg,
+    rgba(var(--color-brand-rgb), 0.25) 270deg 360deg);
   -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
           mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
   animation: nf-spin 900ms linear infinite, nf-glow 1300ms ease-in-out infinite alternate;
-  filter: drop-shadow(0 0 12px rgba(229,9,20,.45));
+  filter: drop-shadow(0 0 12px rgba(var(--color-brand-rgb), .45));
 }
 
 /* Subtle brand “N” with a sweeping sheen */
@@ -32,10 +32,10 @@
 }
 
 .nf-n {
-  font-family: var(--font-sans);
-  font-weight: 900; font-size: 86px; letter-spacing: 2px;
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 86px; letter-spacing: 2px;
   color: var(--color-brand);
-  text-shadow: 0 0 28px rgba(229,9,20,.25), 0 10px 40px rgba(229,9,20,.18);
+  text-shadow: 0 0 28px rgba(var(--color-brand-rgb), .25), 0 10px 40px rgba(var(--color-brand-rgb), .18);
   transform: translateY(4px);
 }
 
@@ -52,8 +52,8 @@
 @keyframes nf-spin { to { transform: rotate(360deg); } }
 
 @keyframes nf-glow {
-  from { filter: drop-shadow(0 0 10px rgba(229,9,20,.25)); }
-  to   { filter: drop-shadow(0 0 22px rgba(229,9,20,.55)); }
+  from { filter: drop-shadow(0 0 10px rgba(var(--color-brand-rgb), .25)); }
+  to   { filter: drop-shadow(0 0 22px rgba(var(--color-brand-rgb), .55)); }
 }
 
 @keyframes nf-sheen {
