@@ -4,7 +4,9 @@
 #      Tables in $SKIP_DATA are dumped as empty tables (structure only): they are derived data the
 #      cron jobs rebuild (build_embeddings -> titlesimilar/titleembedding, cron_build_home.sh ->
 #      recohomesnapshot) and are ~2/3 of the database. After a restore, run those two to refill them.
-#   2. copied to Google Drive via the rclone remote in $REMOTE (files older than $KEEP_REMOTE_DAYS deleted)
+#   2. copied to Google Drive via the rclone remote in $REMOTE (newest $KEEP_REMOTE kept: the Drive is 15 GB).
+#      Older ones are deleted for good, not sent to the Drive trash (the trash counts toward the 15 GB),
+#      and only after the new upload is confirmed on the Drive.
 # A dump is only kept and uploaded when both parts completed ("-- Dump completed" trailers).
 # Each run is recorded (manage.py record_job backup_db, with its last log line): the dashboard shows
 # it and the daily check-up emails when a backup failed or none ran for 30 hours.
@@ -17,7 +19,7 @@ APP_DIR=/opt/taurus
 LOCAL_DIR=${LOCAL_DIR:-/var/backups/taurus}
 REMOTE=${REMOTE:-gdrive:taurus-backups}
 KEEP_LOCAL=${KEEP_LOCAL:-3}
-KEEP_REMOTE_DAYS=${KEEP_REMOTE_DAYS:-10}
+KEEP_REMOTE=${KEEP_REMOTE:-7}
 SKIP_DATA=${SKIP_DATA:-"reco_titlesimilar reco_titleembedding reco_recohomesnapshot"}
 
 STATUS="stopped before the dump"
@@ -57,8 +59,14 @@ ls -1t "$LOCAL_DIR"/db-*.sql.* | tail -n +$((KEEP_LOCAL + 1)) | xargs -r rm -f
 
 if rclone listremotes | grep -qx "${REMOTE%%:*}:"; then
   rclone copy "$OUT" "$REMOTE" --retries 3
-  rclone delete "$REMOTE" --min-age "${KEEP_REMOTE_DAYS}d" --include "db-*.sql.*"
-  log "uploaded to $REMOTE: $(du -h "$OUT" | cut -f1)"
+  # names are db-YYYYMMDD-HHMM: sorted by name = sorted by date
+  REMOTE_FILES=$(rclone lsf "$REMOTE" --files-only --include "db-*.sql.*" | sort)
+  if ! grep -qx "$(basename "$OUT")" <<< "$REMOTE_FILES"; then
+    log "ERROR: $(basename "$OUT") not found on $REMOTE after upload, old backups kept"; exit 1
+  fi
+  OLD=$(head -n -"$KEEP_REMOTE" <<< "$REMOTE_FILES")
+  for f in $OLD; do rclone deletefile "$REMOTE/$f" --drive-use-trash=false; done
+  log "uploaded to $REMOTE: $(du -h "$OUT" | cut -f1), $(grep -c . <<< "$OLD") old deleted, newest $KEEP_REMOTE kept"
 else
   log "ERROR: rclone remote '${REMOTE%%:*}' not configured, backup is LOCAL ONLY"; exit 2
 fi
