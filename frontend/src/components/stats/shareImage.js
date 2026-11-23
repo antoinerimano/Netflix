@@ -5,8 +5,8 @@
 const W = 1080;
 const H = 1350;
 const RED = '#e50914';
-const TEXT = 'Barlow, system-ui, sans-serif';
-const TITLE = 'Oswald, "Arial Narrow", Barlow, system-ui, sans-serif';
+const TEXT = '"IBM Plex Sans", system-ui, sans-serif';
+const TITLE = '"Space Grotesk", "IBM Plex Sans", system-ui, sans-serif';
 
 function fit(ctx, text, max, size, weight = 700, family = TEXT) {
   let s = size;
@@ -25,7 +25,7 @@ function fit(ctx, text, max, size, weight = 700, family = TEXT) {
 export async function drawShareImage(lines) {
   // a canvas only draws with a web font once it is loaded (else it silently falls back)
   try {
-    await Promise.all(['700 132px Oswald', '600 34px Barlow', '700 44px Barlow', '500 44px Barlow']
+    await Promise.all(['700 132px "Space Grotesk"', '600 34px "IBM Plex Sans"', '700 44px "IBM Plex Sans"', '500 44px "IBM Plex Sans"']
       .map((f) => document.fonts?.load(f)));
   } catch { /* no font: system fallback */ }
   const canvas = document.createElement('canvas');
