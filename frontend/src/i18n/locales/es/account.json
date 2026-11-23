@@ -150,5 +150,53 @@
     "loadError": "No se pudo cargar tu año",
     "emptyTitle": "Aún no hay nada que contar",
     "emptyText": "Mira algunos títulos en este perfil y tu año aparecerá aquí."
+  },
+  "appearance": {
+    "title": "Apariencia",
+    "intro": "Fuentes y colores de {{name}}. Los cambios se ven al instante y siguen a este perfil en todos los dispositivos.",
+    "preview": "Vista previa",
+    "previewEyebrow": "La elección de esta noche",
+    "previewTitle": "Tu próxima noche de cine",
+    "previewText": "Los títulos, el texto, los botones y los detalles cambian según elijas.",
+    "previewPlay": "Reproducir",
+    "previewList": "Mi lista",
+    "fonts": "Fuentes",
+    "systemFont": "La fuente de tu dispositivo",
+    "accent": "Color de acento",
+    "background": "Fondo",
+    "reset": "Volver al estilo predeterminado",
+    "saving": "Guardando…",
+    "saved": "Guardado",
+    "saveFailed": "No se pudo guardar tu apariencia. Inténtalo de nuevo.",
+    "entryLabel": "Fuentes y colores",
+    "entryValue": "Hazlo tuyo: fuentes, color de acento, fondo",
+    "entryAction": "Personalizar",
+    "font": {
+      "default": "Original",
+      "cinema": "Cine",
+      "classic": "Clásica",
+      "bold": "Audaz",
+      "editorial": "Editorial",
+      "friendly": "Amigable",
+      "readable": "Fácil de leer",
+      "system": "Fuente del dispositivo"
+    },
+    "color": {
+      "red": "Rojo",
+      "orange": "Naranja",
+      "amber": "Dorado",
+      "green": "Verde",
+      "teal": "Turquesa",
+      "blue": "Azul",
+      "violet": "Morado",
+      "pink": "Rosa"
+    },
+    "bg": {
+      "graphite": "Grafito",
+      "black": "Negro puro",
+      "midnight": "Azul medianoche",
+      "espresso": "Espresso",
+      "forest": "Bosque"
+    }
   }
 }

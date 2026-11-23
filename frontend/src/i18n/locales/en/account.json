@@ -141,5 +141,53 @@
     "loadError": "Couldn't load your year",
     "emptyTitle": "Nothing to count yet",
     "emptyText": "Watch a few titles on this profile and your year shows up here."
+  },
+  "appearance": {
+    "title": "Appearance",
+    "intro": "Fonts and colors for {{name}}. Changes show right away and follow this profile on every device.",
+    "preview": "Preview",
+    "previewEyebrow": "Tonight's pick",
+    "previewTitle": "Your next movie night",
+    "previewText": "Titles, text, buttons and highlights change as you choose.",
+    "previewPlay": "Play",
+    "previewList": "My List",
+    "fonts": "Fonts",
+    "systemFont": "Your device's own font",
+    "accent": "Accent color",
+    "background": "Background",
+    "reset": "Back to default",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveFailed": "Couldn't save your appearance. Try again.",
+    "entryLabel": "Fonts and colors",
+    "entryValue": "Make it yours: fonts, accent color, background",
+    "entryAction": "Customize",
+    "font": {
+      "default": "Original",
+      "cinema": "Cinema",
+      "classic": "Classic",
+      "bold": "Bold",
+      "editorial": "Editorial",
+      "friendly": "Friendly",
+      "readable": "Easy to read",
+      "system": "Device font"
+    },
+    "color": {
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Gold",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "violet": "Purple",
+      "pink": "Pink"
+    },
+    "bg": {
+      "graphite": "Graphite",
+      "black": "Pure black",
+      "midnight": "Midnight blue",
+      "espresso": "Espresso",
+      "forest": "Forest"
+    }
   }
 }

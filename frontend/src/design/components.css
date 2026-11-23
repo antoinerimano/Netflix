@@ -93,7 +93,7 @@
 .ui-btn--primary {
   background: var(--color-brand);
   color: var(--color-text-on-brand);
-  box-shadow: 0 6px 18px rgba(229, 9, 20, 0.28);
+  box-shadow: 0 6px 18px rgba(var(--color-brand-rgb), 0.28);
 }
 .ui-btn--primary:hover:not(:disabled) {
   background: var(--color-brand-hover);
@@ -345,7 +345,7 @@
 }
 .ui-empty--error .ui-empty__icon {
   background: var(--color-brand-soft);
-  border-color: rgba(229, 9, 20, 0.35);
+  border-color: rgba(var(--color-brand-rgb), 0.35);
   color: var(--color-brand);
 }
 .ui-empty__title {
@@ -860,13 +860,13 @@
 @keyframes ui-bl-glow {
   0%,
   40% {
-    filter: drop-shadow(0 0 0 rgba(229, 9, 20, 0));
+    filter: drop-shadow(0 0 0 rgba(var(--color-brand-rgb), 0));
   }
   62% {
-    filter: drop-shadow(0 0 calc(var(--loader-size, 72px) * 0.14) rgba(229, 9, 20, 0.55));
+    filter: drop-shadow(0 0 calc(var(--loader-size, 72px) * 0.14) rgba(var(--color-brand-rgb), 0.55));
   }
   100% {
-    filter: drop-shadow(0 0 0 rgba(229, 9, 20, 0));
+    filter: drop-shadow(0 0 0 rgba(var(--color-brand-rgb), 0));
   }
 }
 /* the whole screen, centered (start-up, waiting on a redirect...) */
@@ -876,7 +876,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   padding: var(--space-6);
-  background: radial-gradient(60% 50% at 50% 45%, rgba(229, 9, 20, 0.1), transparent 70%), var(--color-bg-deep);
+  background: radial-gradient(60% 50% at 50% 45%, rgba(var(--color-brand-rgb), 0.1), transparent 70%), var(--color-bg-deep);
 }
 @media (prefers-reduced-motion: reduce) {
   .ui-brand-loader__mark,
@@ -914,7 +914,7 @@
   width: auto;
   height: 100%;
   fill: var(--color-brand);
-  filter: drop-shadow(0 0 calc(var(--logo-height) * 0.18) rgba(229, 9, 20, 0.35));
+  filter: drop-shadow(0 0 calc(var(--logo-height) * 0.18) rgba(var(--color-brand-rgb), 0.35));
 }
 .ui-logo__word {
   color: var(--color-text);

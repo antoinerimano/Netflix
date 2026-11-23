@@ -54,8 +54,8 @@
   line-height: var(--leading-snug, 1.4);
 }
 .auth__alert--error {
-  border: 1px solid rgba(229, 9, 20, 0.45);
-  background: rgba(229, 9, 20, 0.12);
+  border: 1px solid rgba(var(--color-brand-rgb), 0.45);
+  background: rgba(var(--color-brand-rgb), 0.12);
   color: #ffd7d9;
 }
 .auth__alert--success {

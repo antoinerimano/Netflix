@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.db import models
 from django.db.models import Count
 from .models import User, Subscription, Profile, PaymentHistory, Title, TVShowExtras, Season, Episode, Actor
+import re
 import time
 
 from .i18n import DEFAULT_LANGUAGE, to_app_language
@@ -39,7 +40,24 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user']
 
+APPEARANCE_KEYS = ("font", "accent", "background")
+APPEARANCE_VALUE = re.compile(r"^[a-z0-9-]{1,24}$")
+
+
 class ProfileSerializer(serializers.ModelSerializer):
+    def validate_appearance(self, value):
+        # ids only (the frontend knows what they mean): no free CSS can be stored or sent back
+        if value in (None, ""):
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Expected an object.")
+        clean = {}
+        for key, val in value.items():
+            if key not in APPEARANCE_KEYS or not isinstance(val, str) or not APPEARANCE_VALUE.match(val):
+                raise serializers.ValidationError(f"Invalid appearance value: {key}.")
+            clean[key] = val
+        return clean
+
     def validate_language_preference(self, value):
         # one code per language, the app's (users/i18n.py): "fr-FR" -> "fr", "jp" -> "ja"
         return to_app_language(value, DEFAULT_LANGUAGE)

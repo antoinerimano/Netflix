@@ -399,6 +399,9 @@ const Navbar = () => {
                 <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/stats')}>
                   {t('nav.stats')}
                 </div>
+                <div className="profile-option" tabIndex={0} role="menuitem" onClick={() => navigate('/appearance')}>
+                  {t('nav.appearance')}
+                </div>
                 <div className="dropdown-divider"></div>
                 <div className="profile-option profile-option--phone" tabIndex={0} role="menuitem" onClick={handleShare}>
                   {shareStatus === 'copied' ? t('nav.linkCopied') : t('nav.shareApp')}

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchUserProfiles } from '../api/userApi';
+import { fetchUserProfile, fetchUserProfiles } from '../api/userApi';
 import { setActiveProfile } from '../utils/activeProfile';
+import { DEFAULT_APPEARANCE, setAppearance } from '../design/theme';
 
 export const AuthContext = createContext();
 
@@ -21,6 +22,17 @@ export const AuthProvider = ({ children }) => {
       const existing = localStorage.getItem('activeProfileId');
       if (existing) {
         setActiveProfileId(existing);
+        // its look may have changed on another device (Appearance page): take the saved one
+        const uid = localStorage.getItem('userId');
+        if (uid) {
+          fetchUserProfile(uid, existing)
+            .then((p) => {
+              if (localStorage.getItem('activeProfileId') !== existing || !p) return;
+              localStorage.setItem('activeProfile', JSON.stringify(p));
+              setAppearance(p.appearance);
+            })
+            .catch(() => {});
+        }
         return;
       }
 
@@ -49,6 +61,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('isStaff');
     localStorage.removeItem('activeProfileId');
     localStorage.removeItem('activeProfile');
+    setAppearance(DEFAULT_APPEARANCE); // the sign-in page: the app's own look
     setActiveProfileId(null);
     setIsAuthenticated(false);
   };

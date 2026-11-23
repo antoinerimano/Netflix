@@ -3,6 +3,9 @@
    use these variables instead of raw values, so the whole app stays one product and can be
    restyled from here. Preview: /design-system (development builds).
 
+   A profile can change the accent, background and fonts (Appearance page, design/theme.js sets
+   these variables on <html>): use the tokens, never a raw brand red.
+
    Naming: --color-<role>, --font-*, --text-<step>, --space-<n> (4 px grid), --radius-*,
    --shadow-*, --ease-* / --duration-*, --z-*. */
 
@@ -11,11 +14,13 @@
 
   /* ---------- Color: surfaces (darkest -> lightest) ---------- */
   --color-bg: #0f0f12; /* page */
+  --color-bg-rgb: 15, 15, 18; /* rgba(var(--color-bg-rgb), a): fades into the page */
   --color-bg-deep: #08080a; /* behind the hero, player, full-screen pages */
+  --color-bg-deep-rgb: 8, 8, 10;
   --color-surface-1: #18181c; /* cards, panels */
   --color-surface-2: #222228; /* raised: menus, inputs, hovered rows */
   --color-surface-3: #2e2e36; /* pressed / selected surfaces */
-  --color-overlay: rgba(8, 8, 10, 0.72); /* scrims over images, modals backdrop */
+  --color-overlay: rgba(var(--color-bg-deep-rgb), 0.72); /* scrims over images, modals backdrop */
   --color-glass: rgba(255, 255, 255, 0.08); /* translucent buttons / chips on images */
   --color-glass-hover: rgba(255, 255, 255, 0.16);
 
@@ -35,7 +40,8 @@
   --color-brand: #e50914;
   --color-brand-hover: #f6121d;
   --color-brand-pressed: #c10710;
-  --color-brand-soft: rgba(229, 9, 20, 0.16);
+  --color-brand-rgb: 229, 9, 20; /* for rgba(var(--color-brand-rgb), a): glows, tints */
+  --color-brand-soft: rgba(var(--color-brand-rgb), 0.16);
   --color-success: #46d369;
   --color-warning: #f5b50a;
   --color-danger: #ff4d4f;

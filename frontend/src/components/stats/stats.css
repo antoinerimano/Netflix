@@ -81,7 +81,7 @@
 /* the headline */
 .stats-card--hero {
   background:
-    radial-gradient(80% 120% at 0% 0%, rgba(229, 9, 20, 0.28), transparent 60%),
+    radial-gradient(80% 120% at 0% 0%, rgba(var(--color-brand-rgb), 0.28), transparent 60%),
     var(--color-surface-1);
 }
 .stats-hero__year {

@@ -83,11 +83,11 @@
 }
 .row .row-arrow--next {
   inset-inline-end: 0;
-  background: linear-gradient(to left, rgba(8, 8, 10, 0.85), transparent);
+  background: linear-gradient(to left, rgba(var(--color-bg-deep-rgb), 0.85), transparent);
 }
 .row .row-arrow--prev {
   inset-inline-start: 0;
-  background: linear-gradient(to right, rgba(8, 8, 10, 0.85), transparent);
+  background: linear-gradient(to right, rgba(var(--color-bg-deep-rgb), 0.85), transparent);
 }
 .row:hover .row-arrow {
   opacity: 1;
@@ -169,7 +169,7 @@ html.tv-keys .row .row-arrow {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-8) var(--space-3) var(--space-3);
-  background: linear-gradient(to top, rgba(8, 8, 10, 0.92) 0%, rgba(8, 8, 10, 0.6) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(var(--color-bg-deep-rgb), 0.92) 0%, rgba(var(--color-bg-deep-rgb), 0.6) 60%, transparent 100%);
   color: var(--color-text);
   opacity: 0;
   transition: opacity var(--duration-normal) var(--ease-standard);
@@ -221,7 +221,7 @@ html.tv-keys .row .row-arrow {
   z-index: 4;
   padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
-  background: rgba(8, 8, 10, 0.75);
+  background: rgba(var(--color-bg-deep-rgb), 0.75);
   color: var(--color-text);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
@@ -270,7 +270,7 @@ html.tv-keys .row .row-arrow {
   padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: rgba(8, 8, 10, 0.65);
+  background: rgba(var(--color-bg-deep-rgb), 0.65);
   color: var(--color-text);
   cursor: pointer;
   -webkit-backdrop-filter: blur(6px);
@@ -282,7 +282,7 @@ html.tv-keys .row .row-arrow {
   height: 1rem;
 }
 .row-card-btn:hover {
-  background: rgba(8, 8, 10, 0.9);
+  background: rgba(var(--color-bg-deep-rgb), 0.9);
 }
 .row-options-btn {
   inset-inline-start: var(--space-2);
@@ -395,7 +395,7 @@ html.tv-keys .row .row-arrow {
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  background: radial-gradient(120% 90% at 20% 0%, rgba(229, 9, 20, 0.28), transparent 60%),
+  background: radial-gradient(120% 90% at 20% 0%, rgba(var(--color-brand-rgb), 0.28), transparent 60%),
     linear-gradient(135deg, var(--color-surface-2), var(--color-surface-1));
   color: var(--color-text);
   font-size: var(--text-lg);

@@ -141,5 +141,53 @@
     "loadError": "Dein Jahr konnte nicht geladen werden",
     "emptyTitle": "Noch nichts zu zählen",
     "emptyText": "Schau ein paar Titel in diesem Profil, dann erscheint hier dein Jahr."
+  },
+  "appearance": {
+    "title": "Darstellung",
+    "intro": "Schriften und Farben für {{name}}. Änderungen sind sofort sichtbar und gelten für dieses Profil auf allen Geräten.",
+    "preview": "Vorschau",
+    "previewEyebrow": "Der Tipp für heute Abend",
+    "previewTitle": "Dein nächster Filmabend",
+    "previewText": "Titel, Text, Schaltflächen und Akzente ändern sich mit deiner Auswahl.",
+    "previewPlay": "Abspielen",
+    "previewList": "Meine Liste",
+    "fonts": "Schriften",
+    "systemFont": "Die Schrift deines Geräts",
+    "accent": "Akzentfarbe",
+    "background": "Hintergrund",
+    "reset": "Auf Standard zurücksetzen",
+    "saving": "Wird gespeichert…",
+    "saved": "Gespeichert",
+    "saveFailed": "Deine Darstellung konnte nicht gespeichert werden. Versuch es noch einmal.",
+    "entryLabel": "Schriften und Farben",
+    "entryValue": "Mach es zu deinem: Schriften, Akzentfarbe, Hintergrund",
+    "entryAction": "Anpassen",
+    "font": {
+      "default": "Original",
+      "cinema": "Kino",
+      "classic": "Klassisch",
+      "bold": "Kräftig",
+      "editorial": "Redaktionell",
+      "friendly": "Freundlich",
+      "readable": "Gut lesbar",
+      "system": "Geräteschrift"
+    },
+    "color": {
+      "red": "Rot",
+      "orange": "Orange",
+      "amber": "Gold",
+      "green": "Grün",
+      "teal": "Türkis",
+      "blue": "Blau",
+      "violet": "Lila",
+      "pink": "Pink"
+    },
+    "bg": {
+      "graphite": "Graphit",
+      "black": "Tiefschwarz",
+      "midnight": "Mitternachtsblau",
+      "espresso": "Espresso",
+      "forest": "Wald"
+    }
   }
 }

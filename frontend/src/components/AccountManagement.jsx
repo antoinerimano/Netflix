@@ -196,6 +196,15 @@ export default function AccountManagement() {
           </Row>
         </section>
 
+        <section className="account-card" aria-labelledby="account-appearance">
+          <SectionTitle as="h2" id="account-appearance">{t('appearance.title')}</SectionTitle>
+          <Row label={t('appearance.entryLabel')} value={t('appearance.entryValue')}>
+            <Button variant="glass" size="sm" to="/appearance">
+              {t('appearance.entryAction')}
+            </Button>
+          </Row>
+        </section>
+
         <section className="account-card" aria-labelledby="account-import">
           <SectionTitle as="h2" id="account-import">{t('import.entryTitle')}</SectionTitle>
           <Row label={t('import.entryLabel')} value={t('import.entryValue')}>

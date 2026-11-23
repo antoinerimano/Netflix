@@ -61,6 +61,9 @@ class Profile(models.Model):
     language_preference = models.CharField(max_length=10)
     # "Pause watch history" (reco/history.py): nothing about what this profile watches is saved
     history_paused = models.BooleanField(default=False)
+    # "Appearance" page: {"font", "accent", "background"} ids chosen by the profile (frontend
+    # design/theme.js); missing keys = the default look. Follows the profile on every device.
+    appearance = models.JSONField(default=dict, blank=True)
 
 class PaymentHistory(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
