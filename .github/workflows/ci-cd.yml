@@ -249,7 +249,11 @@ jobs:
   deploy:
     name: Deploy
     needs: [backend, frontend, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    # !cancelled() + explicit results: without it, a skipped e2e-shard (nothing the app runs changed,
+    # e.g. only scripts/ or ops/) skips the deploy too, even though e2e itself passed
+    if: >-
+      !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+      && needs.backend.result == 'success' && needs.frontend.result == 'success' && needs.e2e.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 50 # scripts/deploy.sh may wait up to 20 min for a running job
     environment: production
