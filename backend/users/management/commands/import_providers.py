@@ -4,9 +4,11 @@ the mini PC by provider_scraper/run.sh) into the Provider table:
 
     docker compose exec -T backend python manage.py import_providers - < provider_catalog.json
 
-New providers seen playing a movie are added (enabled when 2+ scanned sites use them, otherwise
-disabled for a look in the admin); known ones get the new domains they were seen playing on as
-backups, and move there when the health check has them down. See users/provider_import.py.
+New providers that play every test film (several well-known movies) are added (enabled when 2+
+scanned sites use them, otherwise disabled for a look in the admin); known ones get the new
+domains they were seen playing on as backups, and move there when the health check has them
+down. Providers the scout added are turned off when a test film stops playing, back on when they
+all play again. See users/provider_import.py.
 Running it again with the same file changes nothing.
 """
 import json
@@ -46,5 +48,7 @@ class Command(BaseCommand):
             + f"catalog {catalog.get('generated', '?')}: {stats['created']} new "
               f"({stats['created_enabled']} enabled), {stats['new_backup']} new backup domain(s), "
               f"{stats['switched']} switched, {stats['known_ok']} known and playing, "
-              f"{stats['skipped_not_live']} new not playing, {stats['skipped_no_link']} without a link"
+              f"{stats['skipped_not_live']} new not playing, {stats['skipped_no_link']} without a link, "
+              f"{stats['disabled']} scout provider(s) turned off, {stats['reenabled']} back on, {stats['fixed_link']} link(s) fixed, "
+              f"{stats['known_failing']} of yours not playing every test film"
         )

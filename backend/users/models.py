@@ -392,6 +392,19 @@ class Provider(models.Model):
         help_text="Let the health check move to a backup domain, or follow a redirect to a new domain.",
     )
 
+    # provider scout (provider_scraper/ on the mini PC, manage.py import_providers): its nightly
+    # check plays several well-known films on each provider
+    added_by_scout = models.BooleanField(
+        default=False,
+        help_text="Added by the provider scout: it stays enabled only while the scout's nightly check plays "
+                  "every test film on it. Untick to manage it yourself.",
+    )
+    disabled_by_scout = models.BooleanField(
+        default=False, help_text="Turned off by the scout (a test film didn't play); back on when they all play again.",
+    )
+    scout_check = models.CharField(max_length=300, blank=True, default="",
+                                   help_text="The scout's last nightly playback check.")
+
     # filled by the health check (check_providers)
     status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)
     status_detail = models.CharField(max_length=300, blank=True, default="")

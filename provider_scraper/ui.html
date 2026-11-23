@@ -130,7 +130,7 @@
   .hist { display: flex; gap: 2px; align-items: center; }
   .hist i { width: 6px; height: 12px; border-radius: 2px; background: var(--line); }
   .h-live { background: var(--ok) !important; } .h-up { background: var(--accent) !important; }
-  .h-no_source, .h-protected { background: var(--warn) !important; } .h-down { background: var(--bad) !important; }
+  .h-partial, .h-no_source, .h-protected { background: var(--warn) !important; } .h-down { background: var(--bad) !important; }
   .recheck { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; font-size: 11px; padding: 0 6px; cursor: pointer; color: var(--muted); }
   .recheck:hover { color: var(--accent); border-color: var(--accent); }
 </style>
@@ -232,8 +232,9 @@ const STATUS = {
 };
 const DOCS = { 'docs found': 'p-ok', 'no docs page': 'p-mute', 'cloudflare': 'p-warn', 'site down': 'p-bad', 'pending': 'p-run', 'name only': 'p-mute', 'redirects away': 'p-bad' };
 const HEALTH = {
-  live: ['live', 'p-ok', 'Served a real stream for the test movie'],
-  up: ['up', 'p-acc', 'Embed page loads; no stream started headless (may need a real click)'],
+  live: ['live', 'p-ok', 'Played every test film (a stream as long as the film, and moving)'],
+  partial: ['partial', 'p-warn', 'Played some test films, not all: not imported'],
+  up: ['up', 'p-acc', 'Embed page loads; no film played headless (may need a real click)'],
   no_source: ['no source', 'p-warn', 'Embed loads but has no video for the test movie'],
   protected: ['protected', 'p-warn', 'A Cloudflare / bot check answered'],
   down: ['down', 'p-bad', 'Domain or server not answering'],
@@ -299,7 +300,7 @@ function renderProviders() {
     livedocs: (p) => isLive(p) && hasDocs(p), live: isLive, 'docs found': hasDocs,
     down: (p) => ['down', 'no_source'].includes(hstate(p)),
   }[f] || (() => true);
-  const rank = { live: 0, up: 1, no_source: 2, protected: 3, '': 4, untested: 5, down: 6 };
+  const rank = { live: 0, partial: 1, up: 2, no_source: 3, protected: 4, '': 5, untested: 6, down: 7 };
   const rows = [...S.providers.values()]
     .filter(pass)
     .filter((p) => !q || [p.provider, ...p.domains, ...p.sites, p.docs_url, p.homepage].join(' ').toLowerCase().includes(q))

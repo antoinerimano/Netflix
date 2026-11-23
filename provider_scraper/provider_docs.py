@@ -23,6 +23,20 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
 
+REL_FMT = re.compile(r"(?<![\w/:.])(/[\w\-./]*(?:movie|tv|embed|e)\b[\w\-./?=&]*"
+                     r"(?:\{\{?\s*\w+\s*\}?\}|\$\{\w+\}|:id\b)[^\s\"'<>`]*)", re.I)
+DOC_GUESSES = ["/docs", "/api", "/documentation", "/api-docs", "/docs/embed", "/embed", "/developers", "/#docs"]
+PAGE_TEXT_JS = """() => (document.body ? document.body.innerText : '') + '\\n' +
+    [...document.querySelectorAll('code,pre')].map(e => e.innerText).join('\\n')"""
+
+
+async def page_text(page):
+    try:
+        return await page.evaluate(PAGE_TEXT_JS)
+    except Exception:
+        return ""
+
+
 def host_of(url):
     return (urlparse(url).hostname or "").lower().removeprefix("www.")
 
@@ -94,24 +108,50 @@ async def probe_docs(ctx, host):
             return out
         links = await page.evaluate("""() => [...document.querySelectorAll('a[href]')]
             .map(a => ({href: a.href, text: (a.innerText||'').trim().slice(0,40)}))""")
-        texts = [await page.evaluate("() => document.body ? document.body.innerText : ''")]
-        doc = next((l["href"] for l in links
-                    if (DOC_LINK.search(l["text"]) or DOC_PATH.search(urlparse(l["href"]).path + "#" + urlparse(l["href"]).fragment))
-                    and root_host(host_of(l["href"])) == root_host(host_of(page.url))), None)
-        if doc:
-            out["docs_url"] = doc
-            if urlparse(doc).path != urlparse(page.url).path:
-                await page.goto(doc, timeout=20000, wait_until="domcontentloaded")
-                await page.wait_for_timeout(3000)
-                texts.append(await page.evaluate("() => document.body ? document.body.innerText : ''"))
-        texts.append(await page.evaluate("() => [...document.querySelectorAll('code,pre')].map(e=>e.innerText).join('\\n')"))
+        texts = [await page_text(page)]
+        home = urlparse(page.url)
+        has_fmt = lambda t: bool(FMT.search(t) or REL_FMT.search(t))
+        doc_links = []
+        for l in links:
+            u = urlparse(l["href"])
+            if ((DOC_LINK.search(l["text"]) or DOC_PATH.search(u.path + "#" + u.fragment))
+                    and root_host(host_of(l["href"])) == root_host(host_of(page.url)) and l["href"] not in doc_links):
+                doc_links.append(l["href"])
+        # docs in a section of the homepage (/#docs): already read
+        same_page = [d for d in doc_links if urlparse(d).path in ("", "/", home.path)]
+        if same_page and has_fmt(texts[0]):
+            out["docs_url"] = same_page[0]
+        # the docs are the only way to know the right link structure: no link to them on the
+        # homepage -> the usual places
+        others = [d.split("#")[0] for d in doc_links if d not in same_page]
+        guessed = not doc_links
+        for url in list(dict.fromkeys(others))[:4] or [f"{home.scheme}://{home.netloc}{p}" for p in DOC_GUESSES]:
+            try:
+                resp = await page.goto(url, timeout=15000, wait_until="domcontentloaded")
+                if not resp or resp.status >= 400:
+                    continue
+                await page.wait_for_timeout(2500)
+                t = await page_text(page)
+            except Exception:
+                continue
+            texts.append(t)
+            if not out["docs_url"] and (has_fmt(t) or not guessed):
+                out["docs_url"] = page.url
+        if not out["docs_url"] and has_fmt(texts[0]):
+            out["docs_url"] = f"{home.scheme}://{home.netloc}/"
+        base = f"https://{host}"
         fm = []
         for t in texts:
             for m in FMT.finditer(t):
-                u = m.group(1).rstrip(".,);")
+                u = m.group(1).rstrip(".,);`'\"")
                 if u not in fm and len(u) < 160:
                     fm.append(u)
-        out["formats"] = fm[:12]
+            # "/movie/{tmdb_id}" written without the domain (a "Base URL" given apart)
+            for m in REL_FMT.finditer(t):
+                u = base + m.group(1).rstrip(".,);`'\"")
+                if u not in fm and len(u) < 160:
+                    fm.append(u)
+        out["formats"] = fm[:16]
         out["params"] = sorted(set(PARAM.findall("\n".join(texts))))
     except Exception as e:
         out["error"] = f"{type(e).__name__}: {str(e).splitlines()[0][:100]}"
@@ -146,7 +186,7 @@ async def main():
             async def run(p, h):
                 async with sem:
                     try:
-                        docs[p] = await asyncio.wait_for(probe_docs(ctx, h), 60)
+                        docs[p] = await asyncio.wait_for(probe_docs(ctx, h), 180)
                     except asyncio.TimeoutError:
                         docs[p] = {"error": "timeout"}
                     print(f"  {p:16s} {h:28s} docs={docs[p].get('docs_url') or '-'}  "

@@ -11,11 +11,21 @@ from users.provider_import import import_catalog, paths_for, to_template
 PROBE = {"tmdb": 1368337, "imdb": "tt33764258"}
 
 
-def entry(name, state="live", test_url=None, observed=(), formats=(), sites=2, hosts=()):
+def entry(name, state="live", test_url=None, observed=(), formats=(), sites=2, hosts=(), episode=None):
+    """A catalog provider as provider_health.py leaves it: "live" = played every test film."""
+    health = {"state": state, "test_url": test_url} if state else {}
+    if state in ("live", "partial"):
+        ok = 5 if state == "live" else 2
+        health.update(films=[{"state": "live"}] * ok + [{"state": "up"}] * (5 - ok), verified=f"{ok}/5",
+                      detail="plays all 5 test films" if ok == 5 else "does not play Inception (wrong video)")
+        if test_url:
+            health["movie_template"] = test_url.replace(str(PROBE["tmdb"]), "{tmdb}")
+        if episode:
+            health["episode_template"] = episode
     return {
         "provider": name, "site_count": sites, "sites": [f"s{i}.com" for i in range(sites)],
         "hosts": list(hosts), "observed_templates": list(observed), "doc_formats": list(formats),
-        "health": {"state": state, "test_url": test_url} if state else {},
+        "health": health,
     }
 
 
@@ -42,11 +52,16 @@ class TemplateTests(TestCase):
         self.assertIsNone(to_template("https://vaplayer.ru/"))
         self.assertIsNone(to_template("/movie/{id}"))
 
-    def test_paths_from_what_played_then_templates(self):
+    def test_paths_are_the_formats_that_played(self):
         e = entry("xpass", test_url="https://play.xpass.top/e/movie/1368337",
-                  formats=["https://play.xpass.top/e/tv/{tmdb_id}/{season}/{episode}"])
+                  episode="https://play.xpass.top/e/tv/{tmdb}/{season}/{episode}")
         self.assertEqual(paths_for(e, PROBE),
                          ("https://play.xpass.top", "/e/movie/{tmdb_id}", "/e/tv/{tmdb_id}/{season}/{episode}"))
+
+    def test_no_tv_link_when_no_episode_played(self):
+        e = entry("xpass", test_url="https://play.xpass.top/e/movie/1368337",
+                  formats=["https://play.xpass.top/e/tv/{tmdb_id}/{season}/{episode}"])
+        self.assertEqual(paths_for(e, PROBE), ("https://play.xpass.top", "/e/movie/{tmdb_id}", ""))
 
 
 class ImportTests(TestCase):
@@ -58,7 +73,7 @@ class ImportTests(TestCase):
     def test_new_provider_on_two_sites_is_enabled_after_the_known_ones(self):
         lines, stats = import_catalog(catalog(
             entry("cinesrc", test_url="https://cinesrc.st/embed/movie/1368337", sites=3,
-                  formats=["https://cinesrc.st/embed/tv/{id}/{season}/{episode}"])))
+                  episode="https://cinesrc.st/embed/tv/{tmdb}/{season}/{episode}")))
         p = Provider.objects.get(key="cinesrc")
         self.assertTrue(p.enabled)
         self.assertEqual((p.domain, p.movie_path, p.episode_path),
@@ -99,6 +114,17 @@ class ImportTests(TestCase):
         self.assertEqual(self.vidfast.domain, "https://vidfast.pro")
         self.assertEqual(self.vidfast.backups(), ["https://vidfast.vc"])
 
+    def test_known_provider_up_but_not_playing_on_its_domain_moves_where_films_play(self):
+        self.vidfast.status = Provider.UP
+        self.vidfast.save()
+        e = entry("vidfast", test_url="https://vidfast.vc/movie/1368337")
+        e["health"]["failed_hosts"] = ["vidfast.pro"]
+        lines, stats = import_catalog(catalog(e))
+        self.vidfast.refresh_from_db()
+        self.assertEqual((self.vidfast.domain, stats["switched"]), ("https://vidfast.vc", 1))
+        self.assertIn("https://vidfast.pro", self.vidfast.backups())
+        self.assertIn("films don't play here", lines[-1])
+
     def test_known_provider_found_by_host_and_other_link_format_is_left_alone(self):
         self.vidfast.status = Provider.DOWN
         self.vidfast.save()
@@ -117,6 +143,59 @@ class ImportTests(TestCase):
         p = Provider.objects.get(key="cinesrc")
         self.assertEqual((p.enabled, p.priority), (False, 5))
         self.assertEqual((stats["created"], stats["known_ok"]), (0, 1))
+
+    def test_playing_one_film_is_not_enough(self):
+        old = catalog(entry("vidly", test_url="https://vidly.pro/movie/1368337"))
+        old["providers"][0]["health"] = {"state": "live", "test_url": "https://vidly.pro/movie/1368337"}
+        _, stats = import_catalog(old)  # the old one-title check
+        self.assertEqual(stats["skipped_not_live"], 1)
+        _, stats = import_catalog(catalog(entry("vidly", state="partial", test_url="https://vidly.pro/movie/1368337")))
+        self.assertEqual(stats["skipped_not_live"], 1)
+        self.assertFalse(Provider.objects.filter(key="vidly").exists())
+
+    def test_scout_provider_goes_off_when_a_film_stops_playing_and_back_on(self):
+        import_catalog(catalog(entry("xpass", test_url="https://play.xpass.top/e/movie/1368337", sites=3)))
+        p = Provider.objects.get(key="xpass")
+        self.assertTrue(p.enabled and p.added_by_scout)
+
+        lines, stats = import_catalog(catalog(entry("xpass", state="partial", test_url="https://play.xpass.top/e/movie/1368337")))
+        p.refresh_from_db()
+        self.assertEqual((p.enabled, p.disabled_by_scout, stats["disabled"]), (False, True, 1))
+        self.assertIn("2/5", p.scout_check)
+        self.assertIn("xpass: OFF", lines[0])
+
+        import_catalog(catalog(entry("xpass", state="down", test_url="https://play.xpass.top/e/movie/1368337")))
+        p.refresh_from_db()
+        self.assertFalse(p.enabled)
+
+        _, stats = import_catalog(catalog(entry("xpass", test_url="https://play.xpass.top/e/movie/1368337", sites=3)))
+        p.refresh_from_db()
+        self.assertEqual((p.enabled, p.disabled_by_scout, stats["reenabled"]), (True, False, 1))
+
+    def test_scout_provider_turned_back_on_in_the_admin_becomes_yours(self):
+        Provider.objects.create(key="xpass", label="Xpass", domain="https://play.xpass.top", movie_path="/e/movie/{tmdb_id}",
+                                added_by_scout=True, disabled_by_scout=True, enabled=True)
+        import_catalog(catalog(entry("xpass", state="partial", test_url="https://play.xpass.top/e/movie/1368337")))
+        p = Provider.objects.get(key="xpass")
+        self.assertEqual((p.enabled, p.added_by_scout, p.disabled_by_scout), (True, False, False))
+
+    def test_scout_provider_with_a_wrong_link_structure_gets_the_one_that_plays(self):
+        Provider.objects.create(key="vidlink", label="Vidlink", domain="https://vidlink.pro",
+                                movie_path="/embed/{tmdb_id}", episode_path="/embed/tv/{tmdb_id}/{season}/{episode}",
+                                added_by_scout=True)
+        _, stats = import_catalog(catalog(entry("vidlink", test_url="https://vidlink.net/movie/1368337",
+                                                episode="https://vidlink.net/tv/{tmdb}/{season}/{episode}")))
+        p = Provider.objects.get(key="vidlink")
+        self.assertEqual((p.domain, p.movie_path, p.episode_path, p.enabled, stats["fixed_link"]),
+                         ("https://vidlink.net", "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}", True, 1))
+
+    def test_your_provider_failing_is_only_reported(self):
+        lines, stats = import_catalog(catalog(entry("vidfast", state="partial", test_url="https://vidfast.pro/movie/1368337")))
+        self.vidfast.refresh_from_db()
+        self.assertTrue(self.vidfast.enabled)
+        self.assertEqual(stats["known_failing"], 1)
+        self.assertIn("vidfast: yours, left on", lines[0])
+        self.assertIn("partial 2/5", self.vidfast.scout_check)
 
     def test_dry_run_changes_nothing(self):
         self.vidfast.status = Provider.DOWN

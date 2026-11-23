@@ -177,7 +177,7 @@ async def health_of(ctx, name: str):
     with lock:
         p = json.loads(json.dumps(STATE["providers"][name]))
     try:
-        h = await asyncio.wait_for(ph.check_provider(ctx, p), 90)
+        h = await asyncio.wait_for(ph.check_provider(ctx, p), 900)
     except Exception as e:
         h = {"state": "down", "detail": f"check failed: {type(e).__name__}",
              "checked_at": time.strftime("%Y-%m-%d %H:%M:%S")}
