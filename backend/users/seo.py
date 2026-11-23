@@ -61,7 +61,7 @@ HREFLANGS = {"zh": "zh-Hans", "pt": "pt-BR"}
 APP_ROUTES = [re.compile(p) for p in (
     r"^/$",
     r"^/(profiles|search|movies|tv|list|register|login|create-profile|choose-subscription)/?$",
-    r"^/(taste|import|calendar|history|stats|pick|ask)/?$",
+    r"^/(taste|import|calendar|history|stats|pick|ask|appearance)/?$",
     r"^/(collection|lists)/[^/]+/?$",
     r"^/account/[^/]+/?$",
     r"^/watch/[^/]+/?$",
