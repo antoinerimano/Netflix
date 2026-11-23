@@ -1,31 +1,56 @@
 {% load i18n %}<!DOCTYPE html>
-<html lang="{{ lang|default:'en' }}">
+<html lang="{{ lang|default:'en' }}" dir="{{ text_dir|default:'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>{% block subject %}{{ company_name }}{% endblock %}</title>
+  {# Apple Mail, iOS, Thunderbird, Outlook app load these; Gmail falls back to the system stack in each style #}
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
+    a { color: #e50914; }
+    @media (max-width: 600px) {
+      .tx-card { padding: 30px 22px 26px 22px !important; }
+      .tx-head { padding: 26px 22px 0 22px !important; }
+      .tx-h1 { font-size: 24px !important; line-height: 30px !important; }
+    }
+  </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f4f4f4;">
+<body style="margin:0; padding:0; background-color:#ece9e4;">
+  {# preview line shown next to the subject in the inbox; the spacers stop clients from padding it with body text #}
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; mso-hide:all;">{% block preheader %}{% endblock %}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
   {# tables + inline styles: what Gmail / Outlook / phone apps render the same way #}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece9e4;">
     <tr>
-      <td align="center" style="padding:24px 12px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-               style="max-width:560px; background-color:#ffffff; border-radius:8px;">
+      <td align="center" style="padding:32px 12px 40px 12px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
           <tr>
-            <td style="padding:28px 28px 8px 28px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:24px; color:#222222;">
-              <h1 style="margin:0 0 16px 0; font-size:22px; line-height:28px; color:#e50914;">{% block heading %}{% endblock %}</h1>
-              <p style="margin:0 0 16px 0;">{% if user.name %}{% blocktranslate with name=user.name %}Hello {{ name }},{% endblocktranslate %}{% else %}{% translate "Hello," %}{% endif %}</p>
+            <td height="5" bgcolor="#e50914" style="background-color:#e50914; height:5px; border-radius:16px 16px 0 0; font-size:0; line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td class="tx-head" bgcolor="#ffffff" style="background-color:#ffffff; padding:30px 40px 0 40px;">
+              <a href="{{ site_url }}" target="_blank" style="text-decoration:none;">
+                <img src="{{ site_url }}/logo/taurus_wordmark.png" width="128" height="14" alt="TAURUS"
+                     style="display:block; border:0; outline:none; width:128px; height:auto; color:#e50914; font-family:'Archivo', 'Arial Black', Arial, sans-serif; font-size:18px; font-weight:800; letter-spacing:6px;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td class="tx-card" bgcolor="#ffffff" style="background-color:#ffffff; border-radius:0 0 16px 16px; padding:34px 40px 36px 40px; font-family:'Figtree', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size:16px; line-height:26px; color:#3b3b42;">
+              <p style="margin:0 0 10px 0; font-family:'Archivo', 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:16px; font-weight:700; letter-spacing:{% if text_dir == "rtl" %}0{% else %}2px{% endif %}; text-transform:uppercase; color:#e50914;">{% block eyebrow %}{% endblock %}</p>
+              <h1 class="tx-h1" style="margin:0 0 22px 0; font-family:'Archivo', 'Segoe UI', Helvetica, Arial, sans-serif; font-size:28px; line-height:34px; font-weight:800; letter-spacing:-0.4px; color:#111114;">{% block heading %}{% endblock %}</h1>
+              <p style="margin:0 0 14px 0; font-weight:600; color:#111114;">{% if user.name %}{% blocktranslate with name=user.name %}Hello {{ name }},{% endblocktranslate %}{% else %}{% translate "Hello," %}{% endif %}</p>
               {% block content %}{% endblock %}
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 28px 28px; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:#777777; border-top:1px solid #eeeeee;">
+            <td align="center" style="padding:26px 32px 0 32px; font-family:'Figtree', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size:12px; line-height:19px; color:#85828b;">
               {% block footer_note %}{% endblock %}
               {% blocktranslate with company=company_name %}This email was sent by {{ company }}. For help, contact{% endblocktranslate %}
-              <a href="mailto:{{ support_email }}" style="color:#777777;">{{ support_email }}</a>.
+              <a href="mailto:{{ support_email }}" style="color:#5f5c66; text-decoration:underline;">{{ support_email }}</a>.
             </td>
           </tr>
         </table>

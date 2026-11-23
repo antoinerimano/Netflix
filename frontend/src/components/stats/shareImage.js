@@ -5,13 +5,15 @@
 const W = 1080;
 const H = 1350;
 const RED = '#e50914';
+const TEXT = 'Figtree, system-ui, sans-serif';
+const TITLE = 'Archivo, Figtree, system-ui, sans-serif';
 
-function fit(ctx, text, max, size, weight = 700) {
+function fit(ctx, text, max, size, weight = 700, family = TEXT) {
   let s = size;
-  ctx.font = `${weight} ${s}px Inter, system-ui, sans-serif`;
+  ctx.font = `${weight} ${s}px ${family}`;
   while (s > 20 && ctx.measureText(text).width > max) {
     s -= 2;
-    ctx.font = `${weight} ${s}px Inter, system-ui, sans-serif`;
+    ctx.font = `${weight} ${s}px ${family}`;
   }
   return s;
 }
@@ -20,7 +22,12 @@ function fit(ctx, text, max, size, weight = 700) {
  * lines: { year, name, headline, sub, facts: [[label, value], ...], brand }  (already translated)
  * -> Promise<Blob> (image/png)
  */
-export function drawShareImage(lines) {
+export async function drawShareImage(lines) {
+  // a canvas only draws with a web font once it is loaded (else it silently falls back)
+  try {
+    await Promise.all(['900 132px Archivo', '800 64px Archivo', '700 44px Figtree', '500 44px Figtree', '600 34px Figtree']
+      .map((f) => document.fonts?.load(f)));
+  } catch { /* no font: system fallback */ }
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -37,10 +44,10 @@ export function drawShareImage(lines) {
 
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#ffffff';
-  ctx.font = '700 44px Inter, system-ui, sans-serif';
+  ctx.font = `700 44px ${TEXT}`;
   ctx.fillText(`${lines.year} · ${lines.name}`, 80, 210);
 
-  fit(ctx, lines.headline, W - 160, 132, 900);
+  fit(ctx, lines.headline, W - 160, 132, 900, TITLE);
   ctx.fillText(lines.headline, 80, 390);
   ctx.fillStyle = 'rgba(255,255,255,0.72)';
   fit(ctx, lines.sub, W - 160, 44, 500);
@@ -49,19 +56,19 @@ export function drawShareImage(lines) {
   let y = 600;
   for (const [label, value] of lines.facts) {
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = '600 34px Inter, system-ui, sans-serif';
+    ctx.font = `600 34px ${TEXT}`;
     ctx.fillText(label.toUpperCase(), 80, y);
     ctx.fillStyle = '#ffffff';
-    fit(ctx, value, W - 160, 64, 800);
+    fit(ctx, value, W - 160, 64, 800, TITLE);
     ctx.fillText(value, 80, y + 72);
     y += 170;
   }
 
   ctx.fillStyle = RED;
-  ctx.font = '800 40px Inter, system-ui, sans-serif';
+  ctx.font = `800 40px ${TITLE}`;
   ctx.fillText(lines.brand, 80, H - 90);
 
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
 }
 
 /** Share sheet when the device has one for files, else a download. Returns "shared" | "saved". */

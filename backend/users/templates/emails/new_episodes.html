@@ -1,19 +1,22 @@
 {% extends "emails/base.html" %}
 {% load i18n %}
 {% block subject %}{% translate "New episodes are out" %}{% endblock %}
+{% block preheader %}{% for ep in episodes|slice:":3" %}{{ ep.show }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endblock %}
+{% block eyebrow %}{% translate "Your shows" %}{% endblock %}
 {% block heading %}{% translate "New episodes are out" %}{% endblock %}
 {% block content %}
-<p style="margin:0 0 12px 0;">{% blocktranslate with company=company_name %}Shows you follow on {{ company }} have new episodes:{% endblocktranslate %}</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
+<p style="margin:0 0 18px 0;">{% blocktranslate with company=company_name %}Shows you follow on {{ company }} have new episodes:{% endblocktranslate %}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px 0; border-top:1px solid #eeebe6;">
   {% for ep in episodes %}
   <tr>
-    <td style="padding:10px 0; border-bottom:1px solid #eeeeee; font-family:Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; color:#222222;">
-      <strong>{{ ep.show }}</strong><br>
-      <span style="color:#555555;">{% blocktranslate with season=ep.season episode=ep.episode %}Season {{ season }}, episode {{ episode }}{% endblocktranslate %}</span>
+    <td width="4" bgcolor="#e50914" style="background-color:#e50914; width:4px; font-size:0; line-height:0; border-bottom:1px solid #eeebe6;">&nbsp;</td>
+    <td style="padding:16px 14px; border-bottom:1px solid #eeebe6;">
+      <span style="display:block; font-family:'Archivo', 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:23px; font-weight:700; color:#111114;">{{ ep.show }}</span>
+      <span style="display:block; margin-top:2px; font-size:14px; line-height:20px; color:#6b6873;">{% blocktranslate with season=ep.season episode=ep.episode %}Season {{ season }}, episode {{ episode }}{% endblocktranslate %}</span>
     </td>
-    <td align="right" style="padding:10px 0; border-bottom:1px solid #eeeeee; white-space:nowrap;">
+    <td align="{% if text_dir == 'rtl' %}left{% else %}right{% endif %}" style="padding:16px 0; border-bottom:1px solid #eeebe6; white-space:nowrap;">
       <a href="{{ ep.link }}" target="_blank"
-         style="display:inline-block; padding:8px 14px; background-color:#e50914; border-radius:5px; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:bold; color:#ffffff; text-decoration:none;">{% translate "Watch" %}</a>
+         style="display:inline-block; padding:9px 18px; background-color:#e50914; border-radius:999px; font-family:'Archivo', 'Segoe UI', Helvetica, Arial, sans-serif; font-size:14px; line-height:18px; font-weight:700; color:#ffffff; text-decoration:none;">&#9654;&nbsp;{% translate "Watch" %}</a>
     </td>
   </tr>
   {% endfor %}

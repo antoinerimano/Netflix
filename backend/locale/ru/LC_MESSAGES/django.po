@@ -250,3 +250,15 @@ msgstr "Фильмы и сериалы с участием %(name)s."
 #: users/seo.py
 msgid "Page not found"
 msgstr "Страница не найдена"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "Безопасность аккаунта"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "Ваш аккаунт"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "Ваши сериалы"

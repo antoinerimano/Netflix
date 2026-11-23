@@ -239,3 +239,15 @@ msgstr "انتهت صلاحية رابط إعادة التعيين هذا أو �
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "تم تغيير كلمة المرور."
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "أمان الحساب"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "حسابك"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "مسلسلاتك"

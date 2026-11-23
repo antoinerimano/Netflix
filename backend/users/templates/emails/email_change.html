@@ -1,10 +1,12 @@
 {% extends "emails/base.html" %}
 {% load i18n %}
 {% block subject %}{% translate "Confirm your new email address" %}{% endblock %}
+{% block preheader %}{{ new_email }}{% endblock %}
+{% block eyebrow %}{% translate "Your account" %}{% endblock %}
 {% block heading %}{% translate "Confirm your new email address" %}{% endblock %}
 {% block content %}
-<p style="margin:0 0 16px 0;">{% blocktranslate %}We received a request to change your account email to <strong>{{ new_email }}</strong>. Click the button below to confirm:{% endblocktranslate %}</p>
+<p style="margin:0;">{% blocktranslate %}We received a request to change your account email to <strong>{{ new_email }}</strong>. Click the button below to confirm:{% endblocktranslate %}</p>
 {% translate "Confirm email change" as button_label %}
 {% include "emails/_button.html" with url=confirm_url label=button_label %}
-<p style="margin:0 0 16px 0;">{% translate "If you didn't ask for this, you can ignore this email: nothing will change." %}</p>
+<p style="margin:22px 0 0 0; padding-top:20px; border-top:1px solid #eeebe6; font-size:14px; line-height:22px; color:#6b6873;">{% translate "If you didn't ask for this, you can ignore this email: nothing will change." %}</p>
 {% endblock %}
