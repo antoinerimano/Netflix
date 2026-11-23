@@ -57,7 +57,8 @@ container and checks the main tables came back (log: `/var/log/taurus_restore_te
 
 `scripts/backup_db.sh` runs nightly at 01:30 UTC (log: `/var/log/taurus_backup.log`):
 zstd-compressed `mysqldump` into `/var/backups/taurus` (newest 3 kept), copied to Google Drive
-folder `taurus-backups` through the rclone remote `gdrive` (10 days kept, ~210 MB each: ~2 GB of Drive).
+folder `taurus-backups` through the rclone remote `gdrive` (newest 7 kept, ~230 MB each: ~1.6 GB of the 15 GB Drive;
+older ones are deleted for good, not left in the Drive trash, which counts toward the 15 GB).
 `reco_titlesimilar`, `reco_titleembedding` and `reco_recohomesnapshot` are saved as empty tables:
 they are derived data (~2/3 of the database) the cron jobs rebuild.
 MySQL binary logs are off (`--skip-log-bin`), so these dumps are the only restore points.
