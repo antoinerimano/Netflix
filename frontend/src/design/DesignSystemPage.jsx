@@ -65,7 +65,7 @@ export default function DesignSystemPage() {
         ))}
       </Section>
 
-      <Section title="Typography" note="Figtree for text, Archivo for titles. Sizes in rem: they grow on TVs (html.tv-device).">
+      <Section title="Typography" note="Barlow for text, Oswald for titles. Sizes in rem: they grow on TVs (html.tv-device).">
         {TYPE.map(([v, text, weight]) => (
           <div key={v} className="ds-type">
             <code>{v}</code>

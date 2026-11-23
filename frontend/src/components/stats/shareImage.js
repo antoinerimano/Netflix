@@ -5,8 +5,8 @@
 const W = 1080;
 const H = 1350;
 const RED = '#e50914';
-const TEXT = 'Figtree, system-ui, sans-serif';
-const TITLE = 'Archivo, Figtree, system-ui, sans-serif';
+const TEXT = 'Barlow, system-ui, sans-serif';
+const TITLE = 'Oswald, "Arial Narrow", Barlow, system-ui, sans-serif';
 
 function fit(ctx, text, max, size, weight = 700, family = TEXT) {
   let s = size;
@@ -25,7 +25,7 @@ function fit(ctx, text, max, size, weight = 700, family = TEXT) {
 export async function drawShareImage(lines) {
   // a canvas only draws with a web font once it is loaded (else it silently falls back)
   try {
-    await Promise.all(['900 132px Archivo', '800 64px Archivo', '700 44px Figtree', '500 44px Figtree', '600 34px Figtree']
+    await Promise.all(['700 132px Oswald', '600 34px Barlow', '700 44px Barlow', '500 44px Barlow']
       .map((f) => document.fonts?.load(f)));
   } catch { /* no font: system fallback */ }
   const canvas = document.createElement('canvas');
@@ -47,7 +47,7 @@ export async function drawShareImage(lines) {
   ctx.font = `700 44px ${TEXT}`;
   ctx.fillText(`${lines.year} · ${lines.name}`, 80, 210);
 
-  fit(ctx, lines.headline, W - 160, 132, 900, TITLE);
+  fit(ctx, lines.headline, W - 160, 132, 700, TITLE);
   ctx.fillText(lines.headline, 80, 390);
   ctx.fillStyle = 'rgba(255,255,255,0.72)';
   fit(ctx, lines.sub, W - 160, 44, 500);
@@ -59,13 +59,13 @@ export async function drawShareImage(lines) {
     ctx.font = `600 34px ${TEXT}`;
     ctx.fillText(label.toUpperCase(), 80, y);
     ctx.fillStyle = '#ffffff';
-    fit(ctx, value, W - 160, 64, 800, TITLE);
+    fit(ctx, value, W - 160, 64, 700, TITLE);
     ctx.fillText(value, 80, y + 72);
     y += 170;
   }
 
   ctx.fillStyle = RED;
-  ctx.font = `800 40px ${TITLE}`;
+  ctx.font = `700 40px ${TITLE}`;
   ctx.fillText(lines.brand, 80, H - 90);
 
   return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));

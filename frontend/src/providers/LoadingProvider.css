@@ -33,7 +33,7 @@
 
 .nf-n {
   font-family: var(--font-display);
-  font-weight: 900; font-size: 86px; letter-spacing: 2px;
+  font-weight: 700; font-size: 86px; letter-spacing: 2px;
   color: var(--color-brand);
   text-shadow: 0 0 28px rgba(229,9,20,.25), 0 10px 40px rgba(229,9,20,.18);
   transform: translateY(4px);
