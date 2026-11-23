@@ -48,9 +48,9 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.75) 22%, transparent 55%),
-    linear-gradient(to right, rgba(8, 8, 10, 0.92) 0%, rgba(8, 8, 10, 0.6) 35%, transparent 68%),
-    linear-gradient(to bottom, rgba(8, 8, 10, 0.55) 0%, transparent 20%);
+    linear-gradient(to top, var(--color-bg) 0%, rgba(var(--color-bg-rgb), 0.75) 22%, transparent 55%),
+    linear-gradient(to right, rgba(var(--color-bg-deep-rgb), 0.92) 0%, rgba(var(--color-bg-deep-rgb), 0.6) 35%, transparent 68%),
+    linear-gradient(to bottom, rgba(var(--color-bg-deep-rgb), 0.55) 0%, transparent 20%);
 }
 
 .detail-hero__content {
@@ -257,7 +257,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(8, 8, 10, 0.35);
+  background: rgba(var(--color-bg-deep-rgb), 0.35);
   opacity: 0;
   transition: opacity var(--duration-normal) var(--ease-standard);
 }
@@ -268,7 +268,7 @@
   height: 3rem;
   border: 2px solid var(--color-text);
   border-radius: 50%;
-  background: rgba(8, 8, 10, 0.55);
+  background: rgba(var(--color-bg-deep-rgb), 0.55);
 }
 .tvd-ep-card__play svg {
   width: 1.25rem;
@@ -292,7 +292,7 @@
   bottom: var(--space-2);
   padding: 1px var(--space-2);
   border-radius: var(--radius-xs);
-  background: rgba(8, 8, 10, 0.75);
+  background: rgba(var(--color-bg-deep-rgb), 0.75);
   color: var(--color-text);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
@@ -328,7 +328,7 @@
   display: flex;
   align-items: flex-end;
   padding: var(--space-4);
-  background: linear-gradient(to top, rgba(8, 8, 10, 0.94) 0%, rgba(8, 8, 10, 0.82) 60%, rgba(8, 8, 10, 0.55) 100%);
+  background: linear-gradient(to top, rgba(var(--color-bg-deep-rgb), 0.94) 0%, rgba(var(--color-bg-deep-rgb), 0.82) 60%, rgba(var(--color-bg-deep-rgb), 0.55) 100%);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-normal) var(--ease-standard);
@@ -525,8 +525,8 @@
   }
   .detail-hero__scrim {
     background:
-      linear-gradient(to top, var(--color-bg) 0%, rgba(15, 15, 18, 0.88) 38%, transparent 72%),
-      linear-gradient(to bottom, rgba(8, 8, 10, 0.6) 0%, transparent 25%);
+      linear-gradient(to top, var(--color-bg) 0%, rgba(var(--color-bg-rgb), 0.88) 38%, transparent 72%),
+      linear-gradient(to bottom, rgba(var(--color-bg-deep-rgb), 0.6) 0%, transparent 25%);
   }
   .detail-hero__title {
     font-size: clamp(2rem, 9vw, 2.75rem);

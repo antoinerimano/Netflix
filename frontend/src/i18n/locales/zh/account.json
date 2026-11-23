@@ -132,5 +132,53 @@
     "loadError": "无法加载你的年度数据",
     "emptyTitle": "还没有可统计的内容",
     "emptyText": "在这个个人资料里看几部作品，你的一年就会出现在这里。"
+  },
+  "appearance": {
+    "title": "外观",
+    "intro": "{{name}} 的字体和颜色。更改立即生效，并在所有设备上跟随此个人资料。",
+    "preview": "预览",
+    "previewEyebrow": "今晚推荐",
+    "previewTitle": "你的下一个电影之夜",
+    "previewText": "标题、文字、按钮和强调色会随你的选择而变化。",
+    "previewPlay": "播放",
+    "previewList": "我的片单",
+    "fonts": "字体",
+    "systemFont": "设备自带字体",
+    "accent": "强调色",
+    "background": "背景",
+    "reset": "恢复默认",
+    "saving": "正在保存…",
+    "saved": "已保存",
+    "saveFailed": "无法保存外观设置，请重试。",
+    "entryLabel": "字体和颜色",
+    "entryValue": "打造你的专属风格：字体、强调色、背景",
+    "entryAction": "自定义",
+    "font": {
+      "default": "原版",
+      "cinema": "影院",
+      "classic": "经典",
+      "bold": "醒目",
+      "editorial": "杂志",
+      "friendly": "亲和",
+      "readable": "易读",
+      "system": "设备字体"
+    },
+    "color": {
+      "red": "红色",
+      "orange": "橙色",
+      "amber": "金色",
+      "green": "绿色",
+      "teal": "青色",
+      "blue": "蓝色",
+      "violet": "紫色",
+      "pink": "粉色"
+    },
+    "bg": {
+      "graphite": "石墨",
+      "black": "纯黑",
+      "midnight": "午夜蓝",
+      "espresso": "浓缩咖啡",
+      "forest": "森林"
+    }
   }
 }

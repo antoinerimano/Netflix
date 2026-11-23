@@ -4,7 +4,11 @@
 
 const W = 1080;
 const H = 1350;
-const RED = '#e50914';
+// the profile's accent (Appearance page), red by default
+function accent() {
+  const css = (v, d) => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || d;
+  return { color: css('--color-brand', '#e50914'), rgb: css('--color-brand-rgb', '229, 9, 20') };
+}
 const TEXT = '"IBM Plex Sans", system-ui, sans-serif';
 const TITLE = '"Space Grotesk", "IBM Plex Sans", system-ui, sans-serif';
 
@@ -32,11 +36,14 @@ export async function drawShareImage(lines) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
+  const { color: RED, rgb } = accent();
 
+  ctx.fillStyle = '#0a0a0c'; // opaque under the tinted gradient
+  ctx.fillRect(0, 0, W, H);
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#2a0507');
-  bg.addColorStop(0.45, '#111114');
-  bg.addColorStop(1, '#0a0a0c');
+  bg.addColorStop(0, `rgba(${rgb}, 0.3)`);
+  bg.addColorStop(0.45, 'rgba(17, 17, 20, 0.9)');
+  bg.addColorStop(1, 'rgba(10, 10, 12, 1)');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = RED;

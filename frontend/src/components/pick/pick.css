@@ -141,8 +141,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(10, 10, 12, 0.95) 10%, rgba(10, 10, 12, 0.5) 55%, rgba(10, 10, 12, 0.15)),
-    linear-gradient(to right, rgba(10, 10, 12, 0.85), transparent 70%);
+    linear-gradient(to top, rgba(var(--color-bg-deep-rgb), 0.95) 10%, rgba(var(--color-bg-deep-rgb), 0.5) 55%, rgba(var(--color-bg-deep-rgb), 0.15)),
+    linear-gradient(to right, rgba(var(--color-bg-deep-rgb), 0.85), transparent 70%);
 }
 .pick-surprise__content {
   position: relative;
