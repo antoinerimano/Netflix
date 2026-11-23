@@ -16,17 +16,33 @@ else
   echo "Couldn't get the job list from the server"; rm -f jobs.json.part; exit 1
 fi
 
+give_results() { [ ! -f results.json ] || remote import_trailer_results - < results.json; }
+end=$(( $(date +%s) + ${MAX_MINUTES:-480} * 60 ))
+pause=${BLOCKED_PAUSE_MINUTES:-30}
+minutes_left() { echo $(( (end - $(date +%s)) / 60 )); }
+
 # clips made before the original audio was asked for: a few a night, redone when the video has
 # AI-dubbed tracks (make_previews.py recheck_audio); nothing left to check = a few seconds
 .venv/bin/python make_previews.py --recheck-audio "${RECHECK_AUDIO:-100}" --max-minutes 90
 rc=$?
-if [ "$rc" -ne 75 ]; then  # YouTube refused: no point starting the new clips tonight
-  .venv/bin/python make_previews.py jobs.json --max-minutes "${MAX_MINUTES:-480}"
-  rc=$?
-fi
-[ "$rc" -eq 75 ] && echo "YouTube refused for now: the next run carries on" && rc=0
 
-if [ -f results.json ]; then
-  remote import_trailer_results - < results.json || rc=1
-fi
+# the new clips until MAX_MINUTES is used up. YouTube refused (exit 75): give the site what is
+# done so far, wait BLOCKED_PAUSE_MINUTES and try again, rather than losing the rest of the night
+while :; do
+  if [ "$rc" -eq 75 ]; then
+    if [ "$(minutes_left)" -le "$pause" ]; then
+      echo "YouTube refused for now: the next run carries on"; rc=0; break
+    fi
+    echo "YouTube refused: trying again in $pause min ($(date '+%T'))"
+    give_results || echo "Couldn't give the results to the server (tried again at the end)"
+    sleep $(( pause * 60 ))
+  fi
+  left=$(minutes_left)
+  [ "$left" -le 0 ] && { rc=0; break; }
+  .venv/bin/python make_previews.py jobs.json --max-minutes "$left"
+  rc=$?
+  [ "$rc" -ne 75 ] && break
+done
+
+give_results || rc=1
 exit "$rc"

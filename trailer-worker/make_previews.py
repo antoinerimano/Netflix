@@ -71,7 +71,10 @@ MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
 COOKIES_FILE = os.getenv("YTDLP_COOKIES_FILE", "").strip()  # optional, if YouTube insists
 TMP_BASE = os.getenv("TMP_BASE", "").strip() or None
 
-BLOCKED_RE = re.compile(r"confirm you.re not a bot|HTTP Error 429|Too Many Requests|rate.limit", re.I)
+# "Please sign in" and "use a VPN or a proxy" are YouTube refusing this machine too: counted as a
+# title's error, they used up its 3 attempts and the title was never tried again
+BLOCKED_RE = re.compile(r"confirm you.re not a bot|HTTP Error 429|Too Many Requests|rate.limit|"
+                        r"Please sign in|use a VPN or a proxy", re.I)
 UNAVAILABLE_RE = re.compile(
     r"Video unavailable|Private video|has been removed|account .* terminated|not available in your country|"
     r"members-only|age.restricted|Sign in to confirm your age|copyright", re.I)

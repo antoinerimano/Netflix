@@ -1,7 +1,9 @@
 """python -m unittest test_make_previews  (no network, no ffmpeg needed)"""
+import subprocess
 import unittest
+from unittest import mock
 
-from make_previews import Rejected, check_video, is_done, name_matches
+from make_previews import Blocked, Rejected, check_video, is_done, name_matches, run
 
 
 class NameMatchTests(unittest.TestCase):
@@ -91,3 +93,26 @@ class DubbedAudioTests(unittest.TestCase):
         self.assertEqual([next_rev(""), next_rev("a"), next_rev("b")], ["a", "b", "c"])
         entry = {"type": "tv", "tmdb_id": 1402, "youtube_key": "cu2ApTImB-a"}  # a key may end like a rev
         self.assertEqual(redo_path(entry, "a"), "previews/tv/1402-cu2ApTImB-a-a.mp4")
+
+
+class BlockedTests(unittest.TestCase):
+    """YouTube refusing the machine stops the run (it waits and tries again), it isn't a title's error."""
+
+    def _fails_with(self, stderr):
+        done = subprocess.CompletedProcess([], 1, stdout="", stderr=stderr)
+        with mock.patch("make_previews.subprocess.run", return_value=done):
+            run(["yt-dlp"])
+
+    def test_youtube_refusing_the_machine(self):
+        for err in ("ERROR: [youtube] x: Sign in to confirm you’re not a bot. Use --cookies",
+                    "ERROR: [youtube] x: Please sign in. This helps protect our community.",
+                    "ERROR: [youtube] x: The following content is not available on this app. "
+                    "You might want to use a VPN or a proxy server (with --proxy) to workaround.",
+                    "ERROR: unable to download video data: HTTP Error 429: Too Many Requests"):
+            with self.assertRaises(Blocked, msg=err):
+                self._fails_with(err)
+
+    def test_a_titles_own_problem(self):
+        with self.assertRaises(RuntimeError) as cm:
+            self._fails_with("ERROR: ffmpeg exited with code 8")
+        self.assertNotIsInstance(cm.exception, Blocked)

@@ -45,8 +45,12 @@ ssh user@your-server 'cd /opt/taurus && docker compose exec -T backend python ma
 
 ## Every night
 
-`run.sh` does all three steps (export, make, import), stops after `MAX_MINUTES` (8 h) and
-carries on the next night. `crontab -e`:
+`run.sh` does all three steps (export, make, import), stops after `MAX_MINUTES` (8 h by
+default; a machine that does nothing else can run ~21 h, `MAX_MINUTES=1260`) and carries on the
+next night. When YouTube refuses, it gives the site what is done so far, waits
+`BLOCKED_PAUSE_MINUTES` (30) and tries again, rather than stopping for the night.
+If YouTube keeps refusing, give yt-dlp a YouTube account's cookies (`YTDLP_COOKIES_FILE`, a
+secondary account: exported from a browser where it is signed in). `crontab -e`:
 
 ```
 0 1 * * * cd /home/you/taurus && (git pull -q --ff-only; trailer-worker/run.sh) >> /home/you/taurus/trailer-worker/run.log 2>&1
