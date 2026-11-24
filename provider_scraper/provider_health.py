@@ -453,6 +453,11 @@ async def play_title(ctx, url: str, title: dict, site: str | None = None, timeou
             frame_titles = ""
         if CHALLENGE.search(text) or CHALLENGE.search(frame_titles):
             return {**out, "state": "protected", "detail": "Cloudflare / bot check"}
+        if any("challenges.cloudflare.com" in f.url for f in page.frames):
+            # an invisible Cloudflare Turnstile check in the player (111movies -> vidmario): passes
+            # for people, stops an automated browser. No verdict, never passed by force
+            return {**out, "state": "protected", "detail": "Cloudflare Turnstile bot check in the player "
+                                                           "(passes for people, not for the test browser)"}
         if status and status >= 500:
             return {**out, "state": "down", "detail": f"HTTP {status}"}
         if status == 404 or NO_SOURCE.search(text):
