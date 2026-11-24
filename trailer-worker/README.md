@@ -60,6 +60,10 @@ ssh user@your-server 'cd /opt/taurus && docker compose exec -T backend python ma
 default; a machine that does nothing else can run ~21 h, `MAX_MINUTES=1260`) and carries on the
 next night. When YouTube refuses, it gives the site what is done so far, waits
 `BLOCKED_PAUSE_MINUTES` (30) and tries again, rather than stopping for the night.
+Every `PROGRESS_MINUTES` (60) it also gives the site the clips made so far, and the admin
+dashboard's "Trailer clips (mini PC)" row shows the run as *Running* with one line of progress
+(`manage.py record_job trailer_worker --start / --progress`, then the end, ok or failed): a run
+that is still going isn't mistaken for one that didn't work.
 If YouTube keeps refusing, give yt-dlp a YouTube account's cookies (`YTDLP_COOKIES_FILE`, a
 secondary account: exported from a browser where it is signed in). `crontab -e`:
 

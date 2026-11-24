@@ -34,9 +34,9 @@ class OpsFilesTests(SimpleTestCase):
             tracked |= set(re.findall(r'@tracked\("([\w-]+)"\)', path.read_text(encoding="utf-8")))
         scripts = "\n".join(p.read_text(encoding="utf-8") for p in
                             [ROOT / "scripts" / "backup_db.sh", ROOT / "scripts" / "test_backup_restore.sh",
-                             ROOT / "ops" / "weekly-cleanup.sh"])
+                             ROOT / "ops" / "weekly-cleanup.sh", ROOT / "trailer-worker" / "run.sh"])
         recorded = set(re.findall(r"record_job ([\w-]+)", scripts))
-        self.assertEqual({"backup_db", "backup_restore_test", "weekly_cleanup"}, recorded)
+        self.assertEqual({"backup_db", "backup_restore_test", "weekly_cleanup", "trailer_worker"}, recorded)
         missing = {name for name, _label, _late in JOBS} - tracked - recorded
         self.assertEqual(missing, set(), "dashboard jobs nothing records: @tracked or record_job")
 

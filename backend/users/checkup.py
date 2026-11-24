@@ -42,6 +42,7 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-5-5"
 STUCK_AFTER = timedelta(hours=6)          # a job "running" this long was killed or hangs
+STUCK_AFTER_JOB = {"trailer_worker": timedelta(hours=23)}  # runs ~21 h a night (MAX_MINUTES=1260)
 FAILED_REPORTED_FOR = timedelta(hours=26) # a failure is reported once (the morning after), not every
                                           # day until the job's next run (weekly jobs: a week of alerts)
 SNAPSHOTS_STALE = timedelta(hours=12)     # home pages are rebuilt every 2 hours
@@ -70,7 +71,7 @@ FIX_COMMANDS = {
     "fix_actor_duplicates": f"{_EXEC} fix_actor_duplicates",
     "backup_db": "/opt/taurus/scripts/backup_db.sh   (log: /var/log/taurus_backup.log)",
     "weekly_cleanup": "/usr/local/bin/weekly-cleanup.sh   (log: /var/log/weekly-cleanup.log)",
-    "import_trailer_results": "on the mini PC: tail -50 ~/taurus/trailer-worker/run.log   (then: crontab -l, ~/taurus/trailer-worker/run.sh)",
+    "trailer_worker": "on the mini PC: tail -50 ~/Desktop/Netflix/trailer-worker/run.log   (then: crontab -l, ~/Desktop/Netflix/trailer-worker/run.sh)",
     "import_providers": "on the mini PC: tail -50 ~/taurus/provider_scraper/run.log   (then: crontab -l, ~/taurus/provider_scraper/run.sh)",
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
@@ -193,7 +194,7 @@ def find_problems(now=None, clips=None):
         if j["state"] == "failed" and now - (last.finished_at or last.started_at) <= FAILED_REPORTED_FOR:
             problems.append({"kind": "job_failed", "what": f"{labels[name]} ({name}) failed",
                              "detail": (last.error or last.summary or "")[-800:], "fix": fix})
-        elif j["state"] == "running" and now - last.started_at > STUCK_AFTER:
+        elif j["state"] == "running" and now - last.started_at > STUCK_AFTER_JOB.get(name, STUCK_AFTER):
             problems.append({"kind": "job_stuck", "what": f"{labels[name]} ({name}) has been running "
                              f"since {timezone.localtime(last.started_at):%Y-%m-%d %H:%M}",
                              "detail": "Killed, or hanging (no end recorded).", "fix": fix})
