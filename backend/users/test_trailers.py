@@ -205,6 +205,27 @@ class OtherVideoTests(TestCase):
         self.assertEqual(self.film.trailer_clip_url, f"{CDN}/previews/movie/35019-goneVideo01.mp4")
 
     @override_settings(BUNNY_CDN_BASE=CDN)
+    def test_a_withdrawn_search_clip_is_taken_off_the_title(self):
+        # make_previews.py --recheck-search: "NOVA" had a 1974 Chevrolet Nova from a YouTube search
+        self.import_results(self.ok(self.bare, "wrongVideo1", ""))
+        self.bare.refresh_from_db()
+        bad = self.ok(self.bare, "wrongVideo1", "")
+        withdrawn = {**bad, "status": "withdrawn", "withdrawn": bad["path"]}
+        out = self.import_results(withdrawn)
+        self.assertIn("withdrawn: 1", out)
+        self.bare.refresh_from_db()
+        self.assertEqual((self.bare.trailer_clip_url, self.bare.trailer_clip_for), ("", ""))
+        self.assertIn(99, {j["tmdb_id"] for j in self.export()})  # looked for again
+        # the same file again, or a "rejected" carrying it: nothing more to take off
+        self.assertIn("skipped: 1", self.import_results(withdrawn))
+        self.assertIn("withdrawn: 0", self.import_results({**withdrawn, "status": "rejected"}))
+        # a newer clip is never taken off by an old withdrawal
+        self.import_results(self.ok(self.bare, "goodVideo01", ""))
+        self.assertIn("withdrawn: 0", self.import_results(withdrawn))
+        self.bare.refresh_from_db()
+        self.assertTrue(self.bare.trailer_clip_url.endswith("99-goodVideo01.mp4"))
+
+    @override_settings(BUNNY_CDN_BASE=CDN)
     def test_stale_or_odd_results_are_skipped(self):
         out = self.import_results(self.ok(self.film, "otherVideo1", "olderTrail1"),  # asked about an old trailer
                                   self.ok(self.bare, "../../x", ""))                   # not a YouTube key

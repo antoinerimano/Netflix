@@ -41,8 +41,9 @@ JOBS = [
     ("backup_db", "Database backup (to Google Drive)", timedelta(hours=30)),
     ("backup_restore_test", "Backup restore test", timedelta(days=8)),
     ("weekly_cleanup", "Server cleanup (Docker, logs)", timedelta(days=8)),
-    # the mini PC's nightly trailer-worker/run.sh, seen when it imports its clips
-    ("import_trailer_results", "Trailer clips (mini PC)", timedelta(hours=30)),
+    # the mini PC's nightly trailer-worker/run.sh (~21 h): record_job trailer_worker --start, then its
+    # progress every hour (it gives the site the clips made so far each time), then the end
+    ("trailer_worker", "Trailer clips (mini PC)", timedelta(hours=30)),
     # the mini PC's nightly provider_scraper/run.sh: new providers / domains found on streaming sites
     ("import_providers", "Provider scout (mini PC)", timedelta(hours=30)),
 ]
@@ -59,7 +60,8 @@ JOB_INFO = {
     "sync_tmdb_related": ("Catalog", "Every night 03:00", "TMDB's related titles and other names (search in every language)"),
     "rebuild_title_indexes": ("Catalog", "Every night 07:15", "Makes new and refreshed titles findable by keyword, studio, network"),
     "fix_actor_duplicates": ("Catalog", "1st of the month 02:30", "Merges actors listed twice on a title"),
-    "import_trailer_results": ("Catalog", "Every night (mini PC)", "Trailer preview clips cut by the mini PC"),
+    "trailer_worker": ("Catalog", "Every night 01:00, ~21 h (mini PC)",
+                       "Trailer preview clips cut by the mini PC, given to the site every hour"),
     "build_embeddings": ("Recommendations & home pages", "Every night 08:00 (new titles), Sundays 09:30 (all)",
                          '"More like this" and the taste vectors the recommendations use'),
     "train_ranker": ("Recommendations & home pages", "Sundays 07:30", "Learns from last month's clicks how to order the rows"),
