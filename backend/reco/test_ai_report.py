@@ -75,6 +75,7 @@ class PickGroupsTests(TestCase):
         self.assertEqual(self.funny("control"), ("control", {"Grim Comedy"}))  # by genre, as before
 
 
+@override_settings(AI_EXPERIMENTS=RUNNING)
 class ReportTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("a@example.com", "A", "pw-a-123456!")
@@ -121,6 +122,15 @@ class ReportTests(TestCase):
         self.click(t0, "more_like_this", hours_ago=4)
         self.assertEqual(self.group("more_like_this", "tmdb")["clicked"], 1)
         self.assertEqual(self.group("more_like_this", "embeddings")["clicked"], 0)
+
+    def test_a_test_that_is_not_running_is_left_out(self):
+        # pick_moods without an end date (prod, 2026-11-24): everyone has the AI moods, no control group
+        self.shown(self.titles[0], "pick:ai", hours_ago=5)
+        with override_settings(AI_EXPERIMENTS={"pick_moods": ""}):
+            self.assertEqual([c["key"] for c in ai_report.report(now=self.now)], ["more_like_this"])
+        with override_settings(AI_EXPERIMENTS={"pick_moods": "2026-01-01"}):  # ended
+            self.assertEqual([c["key"] for c in ai_report.report(now=self.now)], ["more_like_this"])
+        self.assertEqual([c["key"] for c in ai_report.report(now=self.now)], ["pick_moods", "more_like_this"])
 
     def test_old_data_left_out(self):
         self.shown(self.titles[0], "pick:ai", hours_ago=24 * 30)
