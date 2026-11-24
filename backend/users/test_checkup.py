@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from reco.models import AiUsage, RecoHomeSnapshot, TagBatch
 
-from . import checkup
+from . import checkup, dashboard
 from .dashboard import JOBS
 from .models import JobRun, Profile, Title, User
 
@@ -116,7 +116,7 @@ class CheckupTests(TestCase):
         # shell scripts (record_job) and the mini PC's imports are jobs too: failed or late
         call_command("record_job", "backup_db", "--failed", "--summary", "ERROR: mysqldump failed (exit 1)",
                      stdout=StringIO())
-        JobRun.objects.filter(name="import_trailer_results").update(started_at=timezone.now() - timedelta(hours=31))
+        JobRun.objects.filter(name="trailer_worker").update(started_at=timezone.now() - timedelta(hours=31))
         problems = {p["kind"]: p for p in checkup.find_problems()}
         self.assertEqual(set(problems), {"job_failed", "job_late"})
         self.assertIn("mysqldump failed", problems["job_failed"]["detail"])
@@ -128,6 +128,31 @@ class CheckupTests(TestCase):
         run = JobRun.objects.filter(name="weekly_cleanup").latest("started_at")
         self.assertEqual((run.ok, run.summary, run.error), (True, "12G free (60% used)", ""))
         self.assertIsNotNone(run.finished_at)
+
+    def test_record_job_start_progress_end(self):
+        # the mini PC's trailer worker runs ~21 h: running on the dashboard, its progress, then the end
+        JobRun.objects.filter(name="trailer_worker").delete()
+        call_command("record_job", "trailer_worker", "--start", stdout=StringIO())
+        call_command("record_job", "trailer_worker", "--progress", "--summary", "954 clips made since 01:00",
+                     stdout=StringIO())
+        [run] = JobRun.objects.filter(name="trailer_worker")
+        self.assertEqual((run.ok, run.finished_at, run.summary), (None, None, "954 clips made since 01:00"))
+        [job] = [j for j in dashboard._jobs(timezone.now()) if j["name"] == "trailer_worker"]
+        self.assertEqual((job["state"], job["result"]), ("running", "954 clips made since 01:00"))
+        # running 20 h is normal for this one (not for the others: test_stuck_job)
+        JobRun.objects.filter(id=run.id).update(started_at=timezone.now() - timedelta(hours=20))
+        self.assertEqual(self.kinds(), [])
+        JobRun.objects.filter(id=run.id).update(started_at=timezone.now() - timedelta(hours=24))
+        self.assertEqual(self.kinds(), ["job_stuck"])
+
+        call_command("record_job", "trailer_worker", "--failed", "--summary", "Couldn't give the results",
+                     stdout=StringIO())
+        [run] = JobRun.objects.filter(name="trailer_worker")  # the same run, closed
+        self.assertEqual((run.ok, run.error), (False, "Couldn't give the results"))
+        self.assertIsNotNone(run.finished_at)
+        # progress without a --start (the server was down then): a running run all the same
+        call_command("record_job", "trailer_worker", "--progress", "--summary", "12 clips", stdout=StringIO())
+        self.assertEqual(JobRun.objects.filter(name="trailer_worker", ok=None).count(), 1)
 
     def test_https_certificate(self):
         with mock.patch("users.checkup.cert_days_left", return_value=20):

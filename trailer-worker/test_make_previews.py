@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from make_previews import Blocked, Rejected, check_video, is_done, name_matches, run
+from make_previews import (Blocked, Rejected, check_video, is_done, name_matches, progress, recheck_search, run,
+                           search_problem)
 
 
 class NameMatchTests(unittest.TestCase):
@@ -289,3 +290,73 @@ class ChooseVideoTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProgressTests(unittest.TestCase):
+    def test_counts_this_run_and_what_is_left(self):
+        jobs = [{"type": "movie", "tmdb_id": n, "youtube_key": f"k{n:010d}"} for n in range(5)]
+        key = lambda n: f"movie:{n}:k{n:010d}"  # noqa: E731
+        results = {
+            key(0): {"status": "ok", "at": "2026-11-23T03:00:00"},  # last night's
+            key(1): {"status": "ok", "at": "2026-11-24T02:00:00"},
+            key(2): {"status": "rejected", "v": 2, "at": "2026-11-24T02:10:00"},
+            key(3): {"status": "error", "attempts": 1, "at": "2026-11-24T02:20:00"},
+        }
+        with mock.patch("make_previews.time.time", return_value=1795600000):  # 2026-11-24, rejected is recent
+            line = progress(jobs, results, "2026-11-24T01:00:02")
+        self.assertEqual(line, "1 clips made since 01:00, 1 without a usable video, 1 errors; 2 titles left")
+
+
+class SearchVideoTests(unittest.TestCase):
+    """A YouTube search's video: stricter rules (wrong clips seen on 2026-11-24)."""
+
+    def problem(self, kind, name, year, video):
+        if not name_matches(video, name, fuzzy=False):
+            return "name"
+        return search_problem(video, {"type": kind, "title": name, "year": year}, [name])
+
+    def test_wrong_videos_are_turned_down(self):
+        for kind, name, year, video in [
+            ("tv", "NOVA", 1974, "1974 Chevrolet Nova Spirit of America Walk-Around and Drive for Bring a Trailer"),
+            ("tv", "How It's Made", 2001, "How It`s Made   Semi trailers"),
+            ("tv", "Snapped", 2004, "Snapped (2021) - Official Trailer - Stallion Pictures"),
+            ("tv", "Yowamushi Pedal", 2013, "Yowamushi Pedal The Movie - Official Theatrical Trailer"),
+            ("tv", "Monster High", 2022, '"Welcome to Monster High" Official Movie Trailer | Monster High'),
+            ("tv", "The Demon Hunter", 2025, "The Demon Hunter Season 1 Trailer In Hindi Dubbed"),
+            ("tv", "Escape to the Country", 2002, "TRAILER Escape In The Country"),
+            ("movie", "Up", 2009, "Up Close and Personal Trailer"),  # another film
+            ("tv", "Spider-Man", 1994, "Spider Man: The Venom Saga DVD trailer"),
+        ]:
+            self.assertTrue(self.problem(kind, name, year, video), video)
+
+    def test_right_videos_are_kept(self):
+        for kind, name, year, video in [
+            ("tv", "ALF", 1986, "ALF (1986) Official Trailer"),
+            ("tv", "Newhart", 1982, "CBS Newhart/Kate & Allie promo 1988"),  # a later season's promo
+            ("tv", "Trailer Park Boys", 2001, "Trailer Park Boys Season 1 Trailer"),
+            ("tv", "Clarence", 2014, "Cartoon Network Clarence Trailer"),
+            ("tv", "Gotham", 2014, "Gotham Trailer"),  # just the name: fine
+            ("tv", "TaleSpin", 1990, "TaleSpin - VHS Trailer"),
+            ("tv", "Attack on Titan", 2013, "Attack on Titan English Dubbed Trailer"),
+            ("tv", "Quantum Leap", 1989, "Quantum Leap (1989) season 1 BLURAY Trailer #1 - Scott Bakula"),
+            ("movie", "Logan", 2017, "Logan Official Trailer 1 (2017) - Hugh Jackman Movie"),
+        ]:
+            self.assertIsNone(self.problem(kind, name, year, video), video)
+
+    def test_recheck_withdraws_only_wrong_search_clips(self):
+        def entry(title, video, source="search", status="ok"):
+            return {"type": "tv", "tmdb_id": 1, "title": title, "status": status, "source": source,
+                    "video_title": video, "path": f"previews/tv/1-{title[:4]}.mp4"}
+        results = {
+            "tv:1:": entry("NOVA", "1974 Chevrolet Nova Walk-Around for Bring a Trailer"),
+            "tv:2:": entry("ALF", "ALF (1986) Official Trailer"),
+            "tv:3:": entry("How It's Made", "How It's Made Semi trailers", source="asked"),  # TMDB's own: kept
+        }
+        jobs = [{"type": "tv", "tmdb_id": 1, "youtube_key": "", "title": "NOVA", "year": 1974},
+                {"type": "tv", "tmdb_id": 2, "youtube_key": "", "title": "ALF", "year": 1986}]
+        self.assertEqual([t for t, _ in recheck_search(results, jobs)], ["NOVA"])
+        nova = results["tv:1:"]
+        self.assertEqual((nova["status"], nova["withdrawn"]), ("withdrawn", "previews/tv/1-NOVA.mp4"))
+        self.assertFalse(is_done(nova))  # looked for again
+        self.assertEqual(results["tv:2:"]["status"], "ok")
+        self.assertEqual(recheck_search(results, jobs), [])  # once

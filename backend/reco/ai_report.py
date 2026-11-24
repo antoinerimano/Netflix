@@ -11,6 +11,9 @@ Comparisons:
                    reco/experiments.py; shown as "pick:ai" / "pick:control")
   more_like_this   "More like this": TMDB's recommendations vs the embeddings' neighbours
                    (shown as "more_like_this:tmdb" / "more_like_this:embeddings", on the same pages)
+pick_moods is only reported while its A/B test runs (settings.AI_EXPERIMENTS has an end date in the
+future, reco/experiments.py): afterwards everyone gets the AI version, there is no control group
+left to compare with.
 A verdict only once each group has MIN_SHOWN suggestions shown and MIN_EVENTS clicks / plays in
 all, and a two-proportion z-test says the gap is unlikely to be chance (p < 0.05).
 Shown on the admin dashboard and by manage.py ai_report.
@@ -92,13 +95,21 @@ def verdict(groups, metric):
     return f"{better} does better than {worse} ({max(ra, rb):.1%} vs {min(ra, rb):.1%} {metric})", p
 
 
+# comparisons that are an A/B test (reco/experiments.py): left out when the test isn't running
+EXPERIMENT_OF = {"pick_moods": "pick_moods"}
+
+
 def report(days=28, now=None):
     """[{key, label, metric, groups: [{group, label, shown, clicked, played, click_rate, play_rate}],
     verdict, p}] for the last `days` days."""
     now = now or timezone.now()
     since = now - timedelta(days=days)
     out = []
+    from . import experiments
+
     for key, label, surface, groups, metric in COMPARISONS:
+        if key in EXPERIMENT_OF and not experiments.running(EXPERIMENT_OF[key], timezone.localdate(now)):
+            continue
         rows, pairs = [], []
         for group, group_label in groups:
             stats = _group_stats(f"{surface}:{group}", surface, since, now)
