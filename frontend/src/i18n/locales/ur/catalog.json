@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · E{{episode}}",
   "home": {
+    "loadError": "آپ کا ہوم پیج لوڈ نہیں ہو سکا",
     "recommended": "تجویز کردہ",
     "rows": {
       "popular": "ابھی مقبول",

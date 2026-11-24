@@ -97,6 +97,8 @@ const Navbar = () => {
 
   // Debounced cross-type search (Movies + TV)
   useEffect(() => {
+    // an answer for an older query arriving after the newer one's must not replace it
+    let alive = true;
     const timer = setTimeout(async () => {
       const q = (query || '').trim();
       if (!q) {
@@ -106,6 +108,7 @@ const Navbar = () => {
 
       try {
         const data = await searchTitles({ q, type: 'all', limit: 15 });
+        if (!alive) return;
 
         const merged = (data || []).map((item) => ({
           id: item.id,
@@ -118,12 +121,16 @@ const Navbar = () => {
 
         setResults(merged);
       } catch (e) {
+        if (!alive) return;
         console.error(e);
         setResults([]);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
   }, [query]);
 
   // Close results when clicking outside the search box/results

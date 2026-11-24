@@ -93,44 +93,37 @@ export default function TVShowDetail() {
         setSpecials(specialsList);
         setSeasonsState(normalList);
 
+        // the season open stays (a new language reloads the page), else the first one; another
+        // show without seasons must not keep the previous show's season number
         const first = normalList[0] || specialsList[0] || null;
-        if (first) {
-          setActiveSeasonNumber(first.season_number);
-        }
+        setActiveSeasonNumber((prev) =>
+          all.some((s) => s.season_number === prev) ? prev : first ? first.season_number : null
+        );
       })
-      .catch((e) => setErr(friendlyError(e, 'show')))
+      .catch((e) => alive && setErr(friendlyError(e, 'show')))
       .finally(() => alive && setLoading(false));
 
     return () => { alive = false; };
   }, [tvId, lng]); // the title, synopsis and season names come back in the app's language
 
-  // Load episodes
-  const loadEpisodes = useCallback(async (titleId, seasonNumber) => {
-    if (seasonNumber == null) {
-      setEpisodes([]);
-      setEpisodesLoading(false);
-      return;
-    }
-    setEpisodesLoading(true);
-    try {
-      const eps = await fetchEpisodesBySeasonNumber(titleId, seasonNumber);
-      setEpisodes(Array.isArray(eps) ? eps : []);
-    } catch {
-      setEpisodes([]);
-    } finally {
-      setEpisodesLoading(false);
-    }
-  }, []);
-
+  // Load episodes. Only the season still open may show its answer: switching seasons quickly
+  // listed the previous season's episodes under the new one when its answer came in last
   useEffect(() => {
-    if (activeSeasonNumber == null) return;
-    let cancelled = false;
-    (async () => {
-      await loadEpisodes(tvId, activeSeasonNumber);
-      if (cancelled) return;
-    })();
-    return () => { cancelled = true; };
-  }, [tvId, activeSeasonNumber, loadEpisodes, lng]);
+    if (activeSeasonNumber == null) {
+      setEpisodes([]);
+      setEpisodesLoading(false);
+      return undefined;
+    }
+    let alive = true;
+    setEpisodesLoading(true);
+    fetchEpisodesBySeasonNumber(tvId, activeSeasonNumber)
+      .then((eps) => alive && setEpisodes(Array.isArray(eps) ? eps : []))
+      .catch(() => alive && setEpisodes([]))
+      .finally(() => alive && setEpisodesLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [tvId, activeSeasonNumber, lng]);
 
   // My List (saved on the server, per profile)
   useEffect(() => {

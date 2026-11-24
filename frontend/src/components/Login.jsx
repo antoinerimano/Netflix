@@ -12,6 +12,7 @@ import { Button, Field, Modal, friendlyError } from '../design';
 import { MailIcon } from '../design/icons';
 import { AuthAlert, AuthLayout, EMAIL_RE, PasswordField } from './auth/AuthLayout';
 import { setActiveProfile } from '../utils/activeProfile';
+import { clearSession } from '../utils/session';
 
 function signInError(err) {
   const status = err?.response?.status;
@@ -136,6 +137,9 @@ const Login = () => {
 
     try {
       const data = await loginUser(email.trim(), password);
+      // whatever the last session left here (an expired one, another account) goes first: its
+      // profile id and its look must not carry over to this account
+      clearSession();
 
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
@@ -174,12 +178,12 @@ const Login = () => {
         return;
       }
 
-      const from = location.state?.from?.pathname;
-      if (data.user.is_staff && from && from.startsWith('/admin/')) {
-        navigate(from, { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      // back where the user was going (a title, their list...): it was always home before
+      const from = location.state?.from;
+      const target = from?.pathname && !['/login', '/register', '/profiles'].includes(from.pathname)
+        ? `${from.pathname}${from.search || ''}`
+        : '/';
+      navigate(target, { replace: true });
     } catch (err) {
       setError(signInError(err));
     } finally {

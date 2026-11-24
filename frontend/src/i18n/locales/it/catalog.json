@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · E{{episode}}",
   "home": {
+    "loadError": "Impossibile caricare la tua home",
     "recommended": "Consigliati",
     "rows": {
       "popular": "Popolari ora",

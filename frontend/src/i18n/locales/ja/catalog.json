@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · E{{episode}}",
   "home": {
+    "loadError": "ホームを読み込めませんでした",
     "recommended": "おすすめ",
     "rows": {
       "popular": "いま人気",

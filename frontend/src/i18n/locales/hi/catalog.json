@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · E{{episode}}",
   "home": {
+    "loadError": "आपका होम पेज लोड नहीं हो सका",
     "recommended": "सुझाए गए",
     "rows": {
       "popular": "अभी लोकप्रिय",
