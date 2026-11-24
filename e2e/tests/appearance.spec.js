@@ -112,3 +112,25 @@ test('an expired session takes the profile look with it: the next sign-in starts
     await page.request.patch(`${API}/users/${session.user.id}/profiles/${profile.id}/`, { ...auth, data: { appearance: {} } });
   }
 });
+
+test('editing a profile keeps the look saved meanwhile on another device', async ({ page }) => {
+  const { session, profile } = await signInAs(page, 'Sam', '/profiles?manage');
+  const auth = { headers: { Authorization: `Bearer ${session.access}` } };
+  const url = `${API}/users/${session.user.id}/profiles/${profile.id}/`;
+  try {
+    await expect(page.getByRole('button', { name: 'Edit Sam' })).toBeVisible(); // the list is loaded
+    // another device picks a look now
+    await page.request.patch(url, { ...auth, data: { appearance: { accent: 'green' } } });
+
+    await page.getByRole('button', { name: 'Edit Sam' }).click();
+    await page.locator('#profile-name').fill('Sammy');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('button', { name: 'Edit Sammy' })).toBeVisible();
+
+    const saved = await (await page.request.get(url, auth)).json();
+    expect(saved.name).toBe('Sammy');
+    expect(saved.appearance).toEqual({ accent: 'green' });
+  } finally {
+    await page.request.patch(url, { ...auth, data: { name: 'Sam', appearance: {} } });
+  }
+});
