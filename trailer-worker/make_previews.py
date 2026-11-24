@@ -23,6 +23,9 @@ Statuses in results.json:
                RECHECK_DAYS (TMDB / YouTube get new videos)
   unavailable  every video found was private / removed / blocked here: same
   error        anything else (network, ffmpeg...): tried again on the next runs, 3 times at most
+  withdrawn    a clip made from a YouTube search that today's rules turn down (--recheck-search):
+               withdrawn = its path, the import takes it off the title; the title is tried again
+               (a "rejected" that follows keeps withdrawn, so the import still takes it off)
 
 YouTube blocks addresses that download too fast ("Sign in to confirm you're not a bot"): the
 script waits DELAY_MIN..DELAY_MAX seconds between titles, and stops (exit code 75) as soon as
@@ -166,8 +169,10 @@ def _compact_on_word_edges(n_compact: str, v_words: list) -> bool:
     return False
 
 
-def name_matches(video_name: str, *names: str) -> bool:
-    """The title (or its original title) is in the video's name, give or take punctuation."""
+def name_matches(video_name: str, *names: str, fuzzy: bool = True) -> bool:
+    """The title (or its original title) is in the video's name, give or take punctuation.
+    fuzzy=False: no "a letter or two off" (a YouTube search: "Escape In The Country" is another
+    show than "Escape to the Country")."""
     v = norm(video_name)
     words = v.split()
     for name in names:
@@ -182,7 +187,7 @@ def name_matches(video_name: str, *names: str) -> bool:
         # a letter or two off inside the name ("Pirates of the Carribean"), never at its first or
         # last word: "American Horror Stories" is another show than "American Horror Story"
         n_words = n.split()
-        if len(n) >= 8 and len(n_words) >= 2:
+        if fuzzy and len(n) >= 8 and len(n_words) >= 2:
             size = len(n_words)
             for width in (size - 1, size, size + 1):
                 for i in range(max(0, len(words) - width + 1)):
@@ -249,6 +254,70 @@ def check_video(info: dict, job: dict, names=None) -> None:
         raise Rejected(f"the video is called {video!r} (a sequel)")
     if job.get("type") == "movie" and other_year(video, job.get("year")):
         raise Rejected(f"the video is called {video!r} (another year: a remake or the original)")
+
+
+# ---------- a YouTube search's video: stricter than the title's own (TMDB) videos ----------
+# A search finds anything named like the title. Seen on 2026-11-24 (~1 in 5 search clips wrong):
+# "1974 Chevrolet Nova ... Bring a Trailer" for NOVA, "How It's Made - Semi trailers", the
+# show's film ("Yowamushi Pedal The Movie"), a Hindi dub, another "Snapped" (2021) for the 2004 show.
+VEHICLE_RE = re.compile(
+    r"(?<!\w)(?:semi|travel|camper|camping|horse|boat|cargo|utility|car|tractor|truck|flatbed|dump|"
+    r"enclosed|tiny house)[ -]?trailers?(?!\w)|bring a trailer|trailers? (?:park|hitch|for sale|tour|"
+    r"build|review|towing)|walk[- ]?around|for sale", re.I)
+MOVIE_RE = re.compile(r"(?<!\w)(?:movie|film|theatrical|gekij[oō][- ]?ban)(?!\w)|劇場版|剧场版|电影|映画", re.I)
+DUB_RE = re.compile(r"(?<!english )(?<!\w)(?:dubbed|dublado|doblad[oa]|hindi|tamil|telugu)(?!\w)", re.I)
+TV_WORDS_RE = re.compile(
+    r"(?<!\w)(?:promo|season|seasons|series|tv ?series|tv show|seizoen|staffel|temporada|saison|pilot|premiere|"
+    r"nbc|cbs|abc|fox|foxs|hbo|bbc|itv|netflix|bravo|britbox|uk gold|comedy ?central|telemundo|cbeebies|"
+    r"disney|nickelodeon|cartoon network|amc|fx|showtime|starz|hulu|prime video)(?!\w)", re.I)
+
+
+# what a video called just "<title> trailer" may add: nothing that names another work
+FILLER_RE = re.compile(
+    r"(?<!\w)(?:trailer|trailers|tr[aá]iler|teaser|bande annonce|official|offical|oficial|hd|hq|4k|tv|show|"
+    r"series|season|promo|first look|vhs|dvd|blu ?ray|video|"
+    r"final|new|main|the|a|1|2|3|4|5|6|7|8|9|10|i|ii)(?!\w)", re.I)
+
+
+def short_name(names) -> bool:
+    """One or two short words ("NOVA", "Snapped", "Family Ties"): many other videos share it."""
+    n = norm(names[0] if names else "")
+    return bool(n) and len(n.split()) <= 2 and len(n) <= 14
+
+
+def search_problem(video_name: str, job: dict, names) -> str | None:
+    """Why a YouTube search's video isn't the title's trailer (None = fine). Its name was already
+    checked to be the title's (name_matches, fuzzy=False)."""
+    rest = norm(video_name)
+    for name in names:  # "Trailer Park Boys", "Monster High: The Movie": the title's own words
+        n = norm(name)
+        if n:
+            rest = re.sub(rf"(?<!\w){re.escape(n)}(?!\w)", " ", rest)
+    if VEHICLE_RE.search(rest):
+        return f"the video is called {video_name!r} (not a film's trailer)"
+    if job.get("type") == "tv" and MOVIE_RE.search(rest):
+        return f"the video is called {video_name!r} (the show's film)"
+    if DUB_RE.search(rest):
+        return f"the video is called {video_name!r} (a dubbed version)"
+    if short_name(names):
+        try:
+            year = int(job.get("year") or 0)
+        except (TypeError, ValueError):
+            year = 0
+        years = [int(y) for y in YEAR_RE.findall(video_name or "")]
+        tv_words = job.get("type") == "tv" and TV_WORDS_RE.search(rest)
+        if years and year:
+            # a show's later season: only with a TV word ("CBS Newhart promo 1988" for the 1982
+            # show; "Snapped (2021) - Official Trailer" is a film)
+            if job.get("type") == "tv":
+                fits = lambda y: -1 <= y - year <= 2 or (y > year and tv_words)  # noqa: E731
+            else:
+                fits = lambda y: abs(y - year) <= 1  # noqa: E731
+            if not any(fits(y) for y in years):
+                return f"the video is called {video_name!r} (another year: a short name many share)"
+        elif not years and not tv_words and FILLER_RE.sub(" ", rest).strip():
+            return f"the video is called {video_name!r} (a short name many share, and no year)"
+    return None
 
 
 # ---------- the title's other videos and names (TMDB), a YouTube search ----------
@@ -359,7 +428,7 @@ def search_keys(job: dict, names: list) -> list:
             continue
         if duration and not 20 <= duration <= 600:
             continue
-        if name_matches(name, *names):
+        if name_matches(name, *names, fuzzy=False) and not search_problem(name, job, names):
             keys.append(key)
     return keys
 
@@ -516,6 +585,13 @@ def clip_for_job(job: dict, workdir: Path):
                 if not add_other_names():
                     raise
                 check_video(info, job, names)
+            if source == "search":
+                video = info.get("title") or ""
+                if not name_matches(video, *names, fuzzy=False):
+                    raise Rejected(f"the video is called {video!r} (only close to the title's name)")
+                problem = search_problem(video, job, names)
+                if problem:
+                    raise Rejected(problem)
             for f in workdir.iterdir():
                 shutil.rmtree(f, ignore_errors=True) if f.is_dir() else f.unlink()
             clip, found = make_clip({**job, "trailer_url": url}, workdir, info=info, check=False)
@@ -563,7 +639,7 @@ def _age_days(r: dict) -> float:
 
 
 def is_done(r: dict | None) -> bool:
-    if not r:
+    if not r or r.get("status") == "withdrawn":
         return False
     if r.get("status") == "ok":
         return True
@@ -655,6 +731,31 @@ def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, dea
     return 0
 
 
+# ---------- clips from a YouTube search, checked again with today's rules ----------
+def recheck_search(results: dict, jobs: list) -> list:
+    """Withdraws the "ok" clips made from a YouTube search that search_problem() (or the exact
+    name check) now turns down: no network, only the video names saved in results.json. Returns
+    [(title, reason)]. A video matched through one of the title's other TMDB names (not in
+    jobs.json) only goes through the rules that don't depend on the name."""
+    by_key = {job_key(j): j for j in jobs}
+    withdrawn = []
+    for key, r in results.items():
+        if r.get("status") != "ok" or r.get("source") != "search":
+            continue
+        job = by_key.get(key) or {"type": r.get("type"), "title": r.get("title", "")}
+        names = [n for n in (job.get("title", ""), job.get("original_title", "")) if n]
+        video = r.get("video_title") or ""
+        problem = None
+        if not name_matches(video, *names, fuzzy=False) and name_matches(video, *names):
+            problem = f"the video is called {video!r} (only close to the title's name)"
+        problem = problem or search_problem(video, job, names)
+        if problem:
+            r.update(status="withdrawn", withdrawn=r.get("path", ""), reason=problem,
+                     at=time.strftime("%Y-%m-%dT%H:%M:%S"))
+            withdrawn.append((r.get("title", ""), problem))
+    return withdrawn
+
+
 # ---------- progress, for the site's dashboard (run.sh: record_job trailer_worker) ----------
 def progress(jobs: list, results: dict, since: str) -> str:
     """One line: what was done since `since` ("%Y-%m-%dT%H:%M:%S", the run's start) and what is left."""
@@ -678,6 +779,8 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="Make the clips, don't upload them.")
     ap.add_argument("--recheck-audio", type=int, default=0, metavar="N",
                     help="Instead of jobs: re-check N clips already made for a dubbed audio track.")
+    ap.add_argument("--recheck-search", action="store_true",
+                    help="Instead of making clips: withdraw the YouTube search clips today's rules turn down.")
     ap.add_argument("--progress", metavar="SINCE",
                     help="Only print one line: what was done since SINCE (YYYY-MM-DDTHH:MM:SS) and what is left.")
     args = ap.parse_args()
@@ -699,6 +802,15 @@ def main() -> int:
     _lock = lock(results_path.with_suffix(".lock"))  # noqa: F841 (held until exit)
     data = load_results(results_path)
     results = data["results"]
+    if args.recheck_search:
+        jobs = json.loads(Path(args.jobs).read_text(encoding="utf-8")).get("jobs") or []
+        withdrawn = recheck_search(results, jobs)
+        for title, why in withdrawn:
+            print(f"withdrawn {title!r}: {why}")
+        if withdrawn and not args.dry_run:
+            save_results(results_path, data)
+        print(f"Search clips re-checked: {len(withdrawn)} withdrawn")
+        return 0
     stopping = {"now": False}
     signal.signal(signal.SIGTERM, lambda *_: stopping.update(now=True))
     deadline = time.monotonic() + args.max_minutes * 60 if args.max_minutes else None
@@ -743,6 +855,8 @@ def main() -> int:
             shutil.rmtree(workdir, ignore_errors=True)
 
         entry["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        if prev.get("withdrawn") and entry["status"] != "ok":
+            entry["withdrawn"] = prev["withdrawn"]  # not taken off the site yet, maybe
         if not args.dry_run:
             results[key] = entry
             save_results(results_path, data)

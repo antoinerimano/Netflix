@@ -41,6 +41,10 @@ minutes_left() { echo $(( (end - $(date +%s)) / 60 )); }
 reporter=$!
 trap 'kill "$reporter" 2>/dev/null' EXIT
 
+# clips made from a YouTube search that today's rules turn down (make_previews.py search_problem):
+# withdrawn, the import takes them off the site, the titles are looked for again. No network.
+.venv/bin/python make_previews.py jobs.json --recheck-search | tail -n 20
+
 # clips made before the original audio was asked for: a few a night, redone when the video has
 # AI-dubbed tracks (make_previews.py recheck_audio); nothing left to check = a few seconds
 .venv/bin/python make_previews.py --recheck-audio "${RECHECK_AUDIO:-100}" --max-minutes 90
