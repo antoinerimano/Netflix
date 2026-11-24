@@ -159,7 +159,7 @@ export function logOutboundClickBeacon({ title_id, surface, provider, url }) {
       },
       body: JSON.stringify(payload),
       keepalive: true,
-    });
+    }).catch(() => {}); // offline / blocked: an unhandled rejection otherwise (the try can't catch it)
     return true;
   } catch {
     return false;
@@ -196,7 +196,7 @@ export function logActionBeacon({ title_id, action, surface = "", provider = "" 
       },
       body: JSON.stringify(payload),
       keepalive: true,
-    });
+    }).catch(() => {}); // offline / blocked: an unhandled rejection otherwise (the try can't catch it)
     return true;
   } catch {
     return false;

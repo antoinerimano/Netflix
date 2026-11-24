@@ -1,6 +1,7 @@
 {
   "episodeShort": "第 {{season}} 季 · 第 {{episode}} 集",
   "home": {
+    "loadError": "无法加载首页",
     "recommended": "推荐",
     "rows": {
       "popular": "当前热门",

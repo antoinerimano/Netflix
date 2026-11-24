@@ -89,3 +89,26 @@ test('pick fonts, accent and background, then back to default: all with the remo
   await expect(page.getByRole('status')).toHaveText('Saved');
   await expect.poll(saved).toEqual({});
 });
+
+test('an expired session takes the profile look with it: the next sign-in starts from the default', async ({ page }) => {
+  const { session, profile } = await signInAs(page, 'Sam', '/');
+  const auth = { headers: { Authorization: `Bearer ${session.access}` } };
+  await page.request.patch(`${API}/users/${session.user.id}/profiles/${profile.id}/`, { ...auth, data: { appearance: { accent: 'blue' } } });
+  try {
+    await page.goto('/appearance');
+    await expect(page.getByRole('radio', { name: 'Blue', exact: true })).toHaveAttribute('aria-checked', 'true');
+    expect(await token(page, '--color-brand')).toBe('#2563eb');
+
+    // the session is no longer valid (refresh refused): the app signs out by itself
+    await page.evaluate(() => {
+      localStorage.setItem('access', 'expired');
+      localStorage.setItem('refresh', 'expired');
+    });
+    await page.goto('/');
+    await expect(page).toHaveURL(/\/login$/);
+    expect(await token(page, '--color-brand')).toBe('#e50914');
+    expect(await page.evaluate(() => [localStorage.getItem('activeProfile'), localStorage.getItem('activeProfileId')])).toEqual([null, null]);
+  } finally {
+    await page.request.patch(`${API}/users/${session.user.id}/profiles/${profile.id}/`, { ...auth, data: { appearance: {} } });
+  }
+});

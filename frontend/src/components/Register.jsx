@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { loginUser, registerUser } from '../api/userApi';
 import { AuthContext } from './AuthContext';
+import { clearSession } from '../utils/session';
 import { Button, Field } from '../design';
 import { AuthAlert, AuthLayout, EMAIL_RE, passwordHint, PasswordField, passwordProblem } from './auth/AuthLayout';
 
@@ -50,6 +51,9 @@ const Register = () => {
       const data = await registerUser(name.trim(), email.trim(), password);
       // the sign-up answer carries the tokens; sign in only if it didn't
       const session = data?.access ? data : await loginUser(email.trim(), password);
+      // a new account: nothing of a session left in this browser (its profile id was still sent
+      // as X-Profile-Id, and its look stayed on until the new profile was made)
+      clearSession();
       localStorage.setItem('access', session.access);
       localStorage.setItem('refresh', session.refresh);
       localStorage.setItem('userId', session.user.id);

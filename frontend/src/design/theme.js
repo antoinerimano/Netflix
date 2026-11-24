@@ -43,6 +43,7 @@ export const BACKGROUNDS = [
 export const DEFAULT_APPEARANCE = { font: 'default', accent: 'red', background: 'graphite' };
 
 const STORAGE_KEY = 'appearance';
+export const APPEARANCE_EVENT = 'appearanceChanged';
 const byId = (list, id) => list.find((x) => x.id === id) || list[0];
 
 /** Only known ids, every key filled (an unknown id from an older / newer app: the default). */
@@ -135,6 +136,9 @@ export function setAppearance(appearance) {
     /* private mode: applied for this visit only */
   }
   applyAppearance(a);
+  // the Appearance page follows what is on screen (a profile switch, the look saved on another
+  // device arriving after the page opened)
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(APPEARANCE_EVENT, { detail: a }));
   return a;
 }
 

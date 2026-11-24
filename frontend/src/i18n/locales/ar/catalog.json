@@ -1,6 +1,7 @@
 {
   "episodeShort": "م{{season}} · ح{{episode}}",
   "home": {
+    "loadError": "تعذّر تحميل صفحتك الرئيسية",
     "recommended": "مقترحات",
     "rows": {
       "popular": "الأكثر مشاهدة الآن",

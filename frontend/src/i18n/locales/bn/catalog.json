@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · E{{episode}}",
   "home": {
+    "loadError": "আপনার হোম পেজ লোড করা যায়নি",
     "recommended": "প্রস্তাবিত",
     "rows": {
       "popular": "এখন জনপ্রিয়",

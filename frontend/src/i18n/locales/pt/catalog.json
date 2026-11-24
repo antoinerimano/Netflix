@@ -1,6 +1,7 @@
 {
   "episodeShort": "T{{season}} · E{{episode}}",
   "home": {
+    "loadError": "Não foi possível carregar sua página inicial",
     "recommended": "Recomendados",
     "rows": {
       "popular": "Em alta agora",
