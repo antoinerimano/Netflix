@@ -69,19 +69,18 @@ headless Chrome gets Cloudflare pages on players that open fine in a real browse
 Check a few providers by hand: `xvfb-run -a python provider_health.py -p xpass,vidlink`
 (doesn't rewrite the catalog).
 
-Then on the site (every provider, whoever added it):
-- **plays with another domain / link structure** -> that one becomes its link (the old domain
-  stays as a backup); its TV link becomes the one an episode played with, removed if none did.
-- **doesn't play every test film** (or down) -> turned off, back on the night they all play again.
-- **couldn't be checked** (a Cloudflare page, or a player that asks for nothing in the test
-  browser: vidfast and 111movies do that, and play for people) -> nothing changes.
-- **reports its playback to the page** (postMessage) -> *sends events* on, so the site can tell
-  when it plays and offer the next source when it stays silent.
+Then on the site (`import_providers`):
 - **new provider that plays** -> created. **Enabled** when 2+ scanned sites use it, otherwise
   **disabled**: have a look in the admin (Providers) and tick *enabled*. It comes after the
   others (higher priority number).
-- the priority, and a provider you turned off yourself, are left as they are. The admin shows the
-  scout's last check under *Provider scout*.
+- **a provider whose own link is dead** (domain down, or 404 on every title tried) and another
+  link plays -> that one becomes its link (the old domain stays as a backup). Same for its TV link.
+- **reports its playback to the page** (postMessage) -> *sends events* on, so the site can tell
+  when it plays and offer the next source when it stays silent.
+- **nothing else**: the scout never turns a provider off, nor touches a link that answers (slow,
+  a bot check, a missing title...). Which sources play best for the viewers is the site's smart
+  playback (success rates, the source that last worked for a title). The admin shows the scout's
+  last check under *Provider scout*.
 
 Same machine as `trailer-worker/` (Debian / Ubuntu):
 

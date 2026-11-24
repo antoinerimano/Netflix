@@ -4,11 +4,9 @@ the mini PC by provider_scraper/run.sh) into the Provider table:
 
     docker compose exec -T backend python manage.py import_providers - < provider_catalog.json
 
-Every provider's link (domain + structure) becomes the one that played every test film (several
-well-known movies); providers that don't play them all are turned off, back on when they do. New
-providers that play them all are added (enabled when 2+ scanned sites use them, otherwise disabled
-for a look in the admin). See users/provider_import.py.
-Running it again with the same file changes nothing.
+New providers that play the test titles are added (enabled when 2+ scanned sites use them,
+otherwise disabled for a look in the admin); a provider whose own link is dead gets the one that
+plays. The scout never turns a provider off. See users/provider_import.py.
 """
 import json
 import sys
@@ -46,8 +44,7 @@ class Command(BaseCommand):
             ("[dry run] " if opts["dry_run"] else "")
             + f"catalog {catalog.get('generated', '?')}: {stats['created']} new "
               f"({stats['created_enabled']} enabled), {stats['new_backup']} new backup domain(s), "
-              f"{stats['known_ok']} known and playing as they are, {stats['switched']} moved to another domain, "
-              f"{stats['fixed_link']} movie link(s) and {stats['tv_fixed']} TV link(s) fixed, "
-              f"{stats['disabled']} turned off, {stats['reenabled']} back on, {stats['unchecked']} couldn't be checked, "
+              f"{stats['known_ok']} known left as they are, {stats['fixed_link']} dead movie link(s) and "
+              f"{stats['tv_fixed']} dead TV link(s) replaced ({stats['switched']} on another domain), "
               f"{stats['skipped_not_live']} new not playing, {stats['skipped_no_link']} without a link"
         )

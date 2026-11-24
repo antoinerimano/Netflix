@@ -54,9 +54,9 @@ class ProviderAdmin(admin.ModelAdmin):
     list_display_links = ("label",)
     list_editable = ("domain", "enabled", "priority", "auto_switch")
     actions = ["check_now", "accept_suggested_domain"]
-    list_filter = ("enabled", "disabled_by_scout", "status")
+    list_filter = ("enabled", "status")
     readonly_fields = ("status", "status_detail", "checked_at", "suggested_domain", "domain_changed_at", "example_links",
-                       "disabled_by_scout", "scout_check")
+                       "scout_check")
     fieldsets = (
         (None, {"fields": ("key", "label", "enabled", "priority")}),
         ("Domain", {"fields": ("domain", "backup_domains", "auto_switch")}),
@@ -67,7 +67,7 @@ class ProviderAdmin(admin.ModelAdmin):
         }),
         ("Health check", {"fields": ("status", "status_detail", "checked_at", "suggested_domain", "domain_changed_at")}),
         ("Provider scout (nightly: plays several well-known films)", {
-            "fields": ("disabled_by_scout", "scout_check"),
+            "fields": ("scout_check",),
         }),
     )
 

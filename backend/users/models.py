@@ -396,11 +396,7 @@ class Provider(models.Model):
     )
 
     # provider scout (provider_scraper/ on the mini PC, manage.py import_providers): its nightly
-    # check plays several well-known films on every provider, fixes wrong links / domains, and
-    # turns off the ones that don't play them all
-    disabled_by_scout = models.BooleanField(
-        default=False, help_text="Turned off by the scout (a test film didn't play); back on when they all play again.",
-    )
+    # check plays the test titles on every provider; shown in the admin
     scout_check = models.CharField(max_length=300, blank=True, default="",
                                    help_text="The scout's last nightly playback check.")
 

@@ -548,7 +548,12 @@ async def _play(ctx, template: str, title: dict, site: str | None, retry: bool) 
     return r
 
 
-async def find_template(ctx, p, cands, probe_titles, site, budget: int = 12):
+def is_dead(r: dict) -> bool:
+    """The link itself is dead: its domain doesn't answer, or the page isn't there (HTTP 404/410)."""
+    return r.get("state") == "down" or (r.get("state") == "no_source" and r.get("detail") in ("HTTP 404", "HTTP 410"))
+
+
+async def find_template(ctx, p, cands, probe_titles, site, budget: int = 12, current: list | None = None):
     """
     -> (template, source, links tried, a result: the one that played, else the most telling
     failure). The first format that plays one of probe_titles: the site's current link and the
@@ -570,6 +575,8 @@ async def find_template(ctx, p, cands, probe_titles, site, budget: int = 12):
             # the site's current link gets its second try (a slow load once must not replace a
             # link that works); the others one try
             r = await play(ctx, t, title, site, retry=src == "current")
+            if src == "current" and current is not None:
+                current.append(r)  # what the site's own link gives (the import replaces it only if dead)
             if r["state"] == "live":
                 return t, src, tried, r
             if r["state"] == "down" and re.search(r"DNS|refused|certificate|didn't answer", r["detail"]):
@@ -601,7 +608,8 @@ async def check_provider(ctx, p: dict, titles: list | None = None, episodes: lis
     if not movie_ts:
         return stamp({"state": "untested", "detail": "no domain or link format known"})
 
-    template, source, tried, r = await find_template(ctx, p, movie_ts, titles[:2], site)
+    cur_movie, cur_ep = [], []
+    template, source, tried, r = await find_template(ctx, p, movie_ts, titles[:2], site, current=cur_movie)
     if not template:
         others = other_domains(p, [t for t, _ in movie_ts], tried)
         template, source, more, r2 = await find_template(ctx, p, [(t, "other domain") for t in others], titles[:2], site,
@@ -626,13 +634,19 @@ async def check_provider(ctx, p: dict, titles: list | None = None, episodes: lis
     same_default_video(films)
     lost = sum(f["state"] not in ("live",) + NO_VERDICT for f in films) >= MAX_MISSES
     h = {"test_url": r["test_url"], "movie_template": template, "template_source": source, "films": films,
+         # the site's own link is dead (domain down / 404 on every title tried): only then may the
+         # import replace it with the one that plays
+         "current_dead": bool(cur_movie) and all(is_dead(x) for x in cur_movie),
          "docs_url": p.get("docs_url"), "sends_events": any(f.get("sends_events") for f in films)}
 
     # episodes: the format that plays one, then all of them (not for a provider that lost already)
     if template and episode_ts and episodes and not lost:
         ep_ts = list(dict.fromkeys([with_host(t, urlparse(template).hostname) for t in episode_ts] + episode_ts))[:8]
-        et, _, _, er = await find_template(ctx, p, [(t, "current" if i == 0 else "guess") for i, t in enumerate(ep_ts)],
-                                           episodes[:2], site, budget=6)
+        has_current_ep = bool((p.get("site_link") or {}).get("episode"))
+        et, _, _, er = await find_template(ctx, p, [(t, "current" if i == 0 and has_current_ep else "guess")
+                                                    for i, t in enumerate(ep_ts)],
+                                           episodes[:2], site, budget=6, current=cur_ep)
+        h["current_episode_dead"] = bool(cur_ep) and all(is_dead(x) for x in cur_ep)
         if et:
             h["episode_link"] = et  # judge() makes it the episode_template when enough episodes play
             h["episodes"] = []

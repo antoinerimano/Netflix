@@ -11,7 +11,8 @@ from users.provider_import import import_catalog, paths_for, to_template
 PROBE = {"tmdb": 1368337, "imdb": "tt33764258"}
 
 
-def entry(name, state="live", test_url=None, observed=(), formats=(), sites=2, hosts=(), episode=None):
+def entry(name, state="live", test_url=None, observed=(), formats=(), sites=2, hosts=(), episode=None,
+          dead=False, episode_dead=False):
     """A catalog provider as provider_health.py leaves it: "live" = played every test film."""
     health = {"state": state, "test_url": test_url, "current_tried": True} if state else {}
     if state in ("live", "partial"):
@@ -23,6 +24,7 @@ def entry(name, state="live", test_url=None, observed=(), formats=(), sites=2, h
         if episode:
             health["episode_template"] = episode
             health["episode"] = {"state": "live"}
+        health["current_dead"], health["current_episode_dead"] = dead, episode_dead
     return {
         "provider": name, "site_count": sites, "sites": [f"s{i}.com" for i in range(sites)],
         "hosts": list(hosts), "observed_templates": list(observed), "doc_formats": list(formats),
@@ -97,32 +99,41 @@ class ImportTests(TestCase):
         self.assertEqual(Provider.objects.count(), 1)
         self.assertEqual((stats["skipped_not_live"], stats["skipped_no_link"]), (2, 1))
 
-    def test_known_provider_moves_to_the_domain_the_films_play_on(self):
-        lines, stats = import_catalog(catalog(entry("vidfast", test_url="https://vidfast.vc/movie/1368337?autoPlay=true")))
+    def test_a_dead_link_gets_the_domain_the_films_play_on(self):
+        lines, stats = import_catalog(catalog(entry("vidfast", test_url="https://vidfast.vc/movie/1368337?autoPlay=true",
+                                                    dead=True)))
         self.vidfast.refresh_from_db()
         self.assertEqual(self.vidfast.domain, "https://vidfast.vc")
         self.assertIn("https://vidfast.pro", self.vidfast.backups())  # the old one kept as a fallback
         self.assertEqual(self.vidfast.status, Provider.UP)
-        self.assertEqual(self.vidfast.movie_path, "/movie/{tmdb_id}?autoPlay=true")  # same structure: admin's kept
-        self.assertEqual((stats["switched"], stats["fixed_link"]), (1, 0))
+        self.assertEqual(self.vidfast.movie_path, "/movie/{tmdb_id}")
+        self.assertEqual(stats["switched"], 1)
 
-    def test_playing_as_it_is_changes_nothing(self):
-        _, stats = import_catalog(catalog(entry("vidfast", test_url="https://vidfast.pro/movie/1368337")))
+    def test_a_link_that_answers_is_never_replaced(self):
+        # another link plays too, but its own wasn't dead (slow, a bot check, a missing title...)
+        _, stats = import_catalog(catalog(entry("vidfast", test_url="https://vidfast.vc/embed/1368337")))
         self.vidfast.refresh_from_db()
-        self.assertEqual((self.vidfast.domain, self.vidfast.movie_path, self.vidfast.enabled),
-                         ("https://vidfast.pro", "/movie/{tmdb_id}?autoPlay=true", True))
-        self.assertEqual(stats["known_ok"], 1)
+        self.assertEqual((self.vidfast.domain, self.vidfast.movie_path), ("https://vidfast.pro", "/movie/{tmdb_id}?autoPlay=true"))
+        self.assertEqual((stats["known_ok"], stats["fixed_link"]), (1, 0))
         self.assertIn("live 5/5", self.vidfast.scout_check)
 
-    def test_wrong_link_structure_and_domain_get_the_ones_that_play(self):
+    def test_a_dead_link_structure_gets_the_one_that_plays(self):
         Provider.objects.create(key="vidsrc", label="Vidsrc", domain="https://vidsrc.mov",
                                 movie_path="/embed/movie/{imdb_id}", episode_path="/embed/tv/{tmdb_id}/{season}-{episode}")
-        lines, stats = import_catalog(catalog(entry("vidsrc", test_url="https://vidsrc.party/movie/1368337",
-                                                    episode="https://vidsrc.party/tv/{tmdb}/{season}/{episode}")))
+        import_catalog(catalog(entry("vidsrc", test_url="https://vidsrc.mov/movie/1368337", dead=True,
+                                     episode="https://vidsrc.mov/tv/{tmdb}/{season}/{episode}", episode_dead=True)))
         p = Provider.objects.get(key="vidsrc")
-        self.assertEqual((p.domain, p.movie_path, p.episode_path, p.enabled),
-                         ("https://vidsrc.party", "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}", True))
-        self.assertEqual((stats["switched"], stats["fixed_link"], stats["tv_fixed"]), (1, 1, 1))
+        self.assertEqual((p.domain, p.movie_path, p.episode_path),
+                         ("https://vidsrc.mov", "/movie/{tmdb_id}", "/tv/{tmdb_id}/{season}/{episode}"))
+
+    def test_a_tv_link_that_answers_is_kept(self):
+        self.vidfast.episode_path = "/tv/{tmdb_id}/{season}/{episode}"
+        self.vidfast.save()
+        e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
+        e["health"]["episode"] = {"state": "up", "detail": "page loads, nothing plays"}
+        import_catalog(catalog(e))
+        self.vidfast.refresh_from_db()
+        self.assertEqual(self.vidfast.episode_path, "/tv/{tmdb_id}/{season}/{episode}")
 
     def test_a_player_that_reports_playback_gets_sends_events(self):
         e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
@@ -132,25 +143,9 @@ class ImportTests(TestCase):
         self.assertTrue(self.vidfast.sends_events)
         self.assertIn("sends_events on", lines[0])
 
-    def test_tv_link_removed_when_no_episode_plays(self):
-        self.vidfast.episode_path = "/tv/{tmdb_id}/{season}/{episode}"
-        self.vidfast.save()
-        e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
-        e["health"]["episode"] = {"state": "up", "detail": "page loads, nothing plays"}
-        lines, _ = import_catalog(catalog(e))
-        self.vidfast.refresh_from_db()
-        self.assertEqual(self.vidfast.episode_path, "")
-        self.assertIn("TV link", lines[0])
-
-    def test_tv_link_kept_when_episodes_were_not_tried(self):
-        self.vidfast.episode_path = "/tv/{tmdb_id}/{season}/{episode}"
-        self.vidfast.save()
-        import_catalog(catalog(entry("vidfast", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertEqual(self.vidfast.episode_path, "/tv/{tmdb_id}/{season}/{episode}")
-
     def test_found_by_host(self):
-        import_catalog(catalog(entry("vid-fast", test_url="https://vidfast.net/embed/1368337", hosts=["www.vidfast.pro"])))
+        import_catalog(catalog(entry("vid-fast", test_url="https://vidfast.net/embed/1368337", hosts=["www.vidfast.pro"],
+                                     dead=True)))
         self.vidfast.refresh_from_db()
         self.assertEqual((self.vidfast.domain, self.vidfast.movie_path), ("https://vidfast.net", "/embed/{tmdb_id}"))
         self.assertFalse(Provider.objects.filter(key="vid-fast").exists())
@@ -164,12 +159,7 @@ class ImportTests(TestCase):
         self.assertEqual((p.enabled, p.priority), (True, 5))
         self.assertEqual((stats["created"], stats["known_ok"]), (0, 1))
 
-    def test_turned_off_by_hand_stays_off(self):
-        Provider.objects.filter(key="vidfast").update(enabled=False)
-        import_catalog(catalog(entry("vidfast", test_url="https://vidfast.pro/movie/1368337")))
-        self.assertFalse(Provider.objects.get(key="vidfast").enabled)
-
-    def test_playing_one_film_is_not_enough(self):
+    def test_playing_one_film_is_not_enough_for_a_new_one(self):
         old = catalog(entry("vidly", test_url="https://vidly.pro/movie/1368337"))
         old["providers"][0]["health"] = {"state": "live", "test_url": "https://vidly.pro/movie/1368337"}
         _, stats = import_catalog(old)  # the old one-title check
@@ -178,40 +168,14 @@ class ImportTests(TestCase):
         self.assertEqual(stats["skipped_not_live"], 1)
         self.assertFalse(Provider.objects.filter(key="vidly").exists())
 
-    def test_any_provider_goes_off_when_a_film_stops_playing_and_back_on(self):
-        lines, stats = import_catalog(catalog(entry("vidfast", state="partial", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertEqual((self.vidfast.enabled, self.vidfast.disabled_by_scout, stats["disabled"]), (False, True, 1))
-        self.assertIn("partial 2/5", self.vidfast.scout_check)
-        self.assertIn("vidfast: OFF", lines[0])
-
-        import_catalog(catalog(entry("vidfast", state="down", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertFalse(self.vidfast.enabled)
-
-        _, stats = import_catalog(catalog(entry("vidfast", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertEqual((self.vidfast.enabled, self.vidfast.disabled_by_scout, stats["reenabled"]), (True, False, 1))
-
-    def test_not_turned_off_when_its_current_link_was_not_checked(self):
-        e = entry("vidfast", state="partial", test_url="https://vidfast.pro/movie/1368337")
-        e["health"]["current_tried"] = False  # the site's providers couldn't be read that night
-        lines, stats = import_catalog(catalog(e))
-        self.vidfast.refresh_from_db()
-        self.assertEqual((self.vidfast.enabled, stats["disabled"]), (True, 0))
-        self.assertIn("wasn't checked", lines[0])
-
-    def test_a_player_silent_for_the_test_browser_changes_nothing(self):
-        _, stats = import_catalog(catalog(entry("vidfast", state="unverified", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertEqual((self.vidfast.enabled, stats["unchecked"]), (True, 1))
-
-    def test_a_bot_check_changes_nothing(self):
-        lines, stats = import_catalog(catalog(entry("vidfast", state="protected", test_url="https://vidfast.pro/movie/1368337")))
-        self.vidfast.refresh_from_db()
-        self.assertTrue(self.vidfast.enabled)
-        self.assertEqual(stats["unchecked"], 1)
-        self.assertIn("couldn't be checked", lines[0])
+    def test_never_turned_off_nor_on(self):
+        for state in ("partial", "up", "no_source", "down", "protected", "unverified"):
+            import_catalog(catalog(entry("vidfast", state=state, test_url="https://vidfast.pro/movie/1368337")))
+            self.vidfast.refresh_from_db()
+            self.assertTrue(self.vidfast.enabled, state)
+        Provider.objects.filter(key="vidfast").update(enabled=False)  # turned off by hand
+        import_catalog(catalog(entry("vidfast", test_url="https://vidfast.pro/movie/1368337")))
+        self.assertFalse(Provider.objects.get(key="vidfast").enabled)
 
     def test_not_in_tonights_catalog_changes_nothing(self):
         import_catalog(catalog(entry("other", state="partial", test_url="https://other.to/movie/1368337")))
@@ -260,7 +224,7 @@ class CommandTests(TestCase):
         self.assertEqual(data["providers"], [{
             "key": "vidfast", "domain": "https://vidfast.vc", "backups": ["https://vidfast.pro"],
             "movie_path": "/movie/{tmdb_id}", "episode_path": "/tv/{tmdb_id}/{season}/{episode}",
-            "enabled": False, "disabled_by_scout": False, "sends_events": False}])
+            "enabled": False, "sends_events": False}])
         # the classics first, then the catalog's (no short film)
         self.assertEqual([m["name"] for m in data["test_titles"]["movies"]],
                          ["The Godfather", "Pulp Fiction", "Casablanca", "Fight Club"])

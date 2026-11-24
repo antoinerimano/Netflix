@@ -4,18 +4,15 @@
 # by hand:
 #   * "live" = in the scout's test, which plays each provider the way tauruss does (in an iframe on
 #     the site's origin, the 15 s rule, the players' postMessage events), it played >= 90 % of the
-#     test titles (what the viewers watch lately) that some provider plays, with the provider's
-#     current link tried first, then its docs' formats, the usual structures and its other domains
+#     test titles (what the viewers watch lately) that some provider plays
 #     (see provider_scraper/provider_health.py)
-#   * every provider (the scout checks all the site's providers, export_providers): live with
-#     another domain / link structure -> that one becomes its link (old domain kept as backup);
-#     its TV link becomes the one an episode played with, or is removed when none did
-#   * a provider that doesn't play every test film is turned off (disabled_by_scout), back on the
-#     night they all play again. "Couldn't check" (a Cloudflare page in the scout's browser)
-#     changes nothing.
 #   * a new provider that is live is created: enabled only when 2+ scanned sites use it (an
 #     established provider), otherwise left disabled for a look in the admin
-# Priority and providers turned off by hand (not by the scout) are left as they are.
+#   * a provider of the site whose own link is DEAD (domain down, or 404 on every title tried)
+#     gets the link that played (old domain kept as backup); same for its TV link
+#   * nothing else: the scout never turns a provider off nor touches a link that answers. Which
+#     sources play best for the viewers is the site's smart playback (success rates, the source
+#     that last worked) - a test in an automated browser gets that wrong too often.
 import re
 from urllib.parse import urlsplit
 
@@ -134,19 +131,6 @@ def _find_existing(entry, by_key, by_host):
     return None
 
 
-NOT_PLAYING = {"partial", "up", "no_source", "down"}  # checked, and a film didn't play
-UNKNOWN = {"protected", "unverified", "untested"}  # couldn't be checked (bot check, player silent for robots): no change
-
-
-def is_checked(entry):
-    """
-    Checked with the film test, the site's current link included: a night the scout couldn't read
-    the site's providers, only its own formats were tried, and those failing says nothing.
-    """
-    health = entry.get("health") or {}
-    return health.get("current_tried") is True and (bool(health.get("films")) or health.get("state") == "down")
-
-
 def _path_of(domain, path):
     t = to_template(domain + path) if path else None
     return t[1] if t else path
@@ -154,34 +138,24 @@ def _path_of(domain, path):
 
 def _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now):
     """
-    Every test film played with domain + movie_path: make it the provider's link when its own is
-    another domain or structure (its current link is tried first, so a different one means it
-    didn't play). The TV link: the one an episode played with, removed when none did.
+    The scout found the link that plays (domain + movie_path). It replaces the provider's own link
+    only when that one is dead (current_dead); same for the TV link. A link that answers is kept.
     """
     changed = False
-    if domain != known.domain:
-        _switch_domain(known, domain, "provider scout: the films play on this domain")
-        stats["switched"] += 1
-        lines.append(f"{known.key}: domain -> {domain} (films play there)")
-        changed = True
-    # same structure once both drop their placeholder-less parameters (autoplay...): keep the admin's
-    if _path_of(domain, known.movie_path) != movie_path:
-        lines.append(f"{known.key}: movie link {known.movie_path!r} -> {movie_path!r} (the one that plays)")
+    if health.get("current_dead") and (domain != known.domain or _path_of(domain, known.movie_path) != movie_path):
+        if domain != known.domain:
+            _switch_domain(known, domain, "provider scout: its link is dead, the films play on this one")
+            stats["switched"] += 1
+        lines.append(f"{known.key}: dead link {known.movie_path!r} -> {domain}{movie_path} (plays)")
         known.movie_path = movie_path
         stats["fixed_link"] += 1
         changed = True
-    if "episode" in health:  # an episode was tried
-        if episode_path and _path_of(domain, known.episode_path) != episode_path:
-            lines.append(f"{known.key}: TV link {known.episode_path!r} -> {episode_path!r} (the one that plays)")
-            known.episode_path = episode_path
-            stats["tv_fixed"] += 1
-            changed = True
-        elif not episode_path and known.episode_path:
-            lines.append(f"{known.key}: TV link {known.episode_path!r} removed: no episode plays "
-                         f"({(health.get('episode') or {}).get('detail', '')})")
-            known.episode_path = ""
-            stats["tv_fixed"] += 1
-            changed = True
+    if (health.get("current_episode_dead") and episode_path
+            and _path_of(known.domain, known.episode_path) != episode_path):
+        lines.append(f"{known.key}: dead TV link {known.episode_path!r} -> {episode_path!r} (plays)")
+        known.episode_path = episode_path
+        stats["tv_fixed"] += 1
+        changed = True
     if health.get("sends_events") and not known.sends_events:
         # it reported playback to the page in the scout's test: the site can tell when it plays
         known.sends_events = True
@@ -207,7 +181,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     lines = []
     stats = {"created": 0, "created_enabled": 0, "new_backup": 0, "switched": 0,
              "known_ok": 0, "skipped_not_live": 0, "skipped_no_link": 0,
-             "disabled": 0, "reenabled": 0, "unchecked": 0, "fixed_link": 0, "tv_fixed": 0}
+             "fixed_link": 0, "tv_fixed": 0}
     now = timezone.now()
     stamp = (catalog.get("generated") or now.strftime("%Y-%m-%d %H:%M"))[:16]
 
@@ -230,20 +204,6 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 known.scout_check = note
                 if live and domain:
                     _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now)
-                    if known.disabled_by_scout:
-                        known.enabled, known.disabled_by_scout = True, False
-                        stats["reenabled"] += 1
-                        lines.append(f"{known.key}: back ON, plays every test film again")
-                elif state in NOT_PLAYING and not is_checked(entry) and known.enabled:
-                    lines.append(f"{known.key}: its current link wasn't checked tonight, left as is")
-                elif state in NOT_PLAYING and known.enabled:
-                    known.enabled, known.disabled_by_scout = False, True
-                    stats["disabled"] += 1
-                    lines.append(f"{known.key}: OFF, doesn't play every test film - {health.get('detail', '')}")
-                elif state in UNKNOWN and known.enabled:
-                    # a bot check in a headless browser is not "doesn't play": changes nothing
-                    stats["unchecked"] += 1
-                    lines.append(f"{known.key}: couldn't be checked ({health.get('detail', state)}), left as is")
                 if not dry_run:
                     known.save()
                 continue

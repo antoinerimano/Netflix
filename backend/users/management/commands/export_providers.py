@@ -96,7 +96,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         providers = [{
             "key": p.key, "domain": p.domain, "backups": p.backups(), "movie_path": p.movie_path,
-            "episode_path": p.episode_path, "enabled": p.enabled, "disabled_by_scout": p.disabled_by_scout,
+            "episode_path": p.episode_path, "enabled": p.enabled,
             "sends_events": p.sends_events,
         } for p in Provider.objects.all()]
         self.stdout.write(json.dumps({"site_origin": settings.SITE_URL, "providers": providers,
