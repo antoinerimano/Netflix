@@ -578,6 +578,9 @@ async def find_template(ctx, p, cands, probe_titles, site, budget: int = 12):
                 best = r
             if src in TRUSTED and first is None:
                 first = r
+            if r["state"] in ("protected", "unverified") and src == "current":
+                # its own link answers, behind a bot check: other structures won't tell more
+                return None, None, tried, r
             if r["state"] in ("down", "protected", "unverified"):
                 break  # same answer for any title on this link
     return None, None, tried, (first or best)
