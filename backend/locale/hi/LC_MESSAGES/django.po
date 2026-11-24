@@ -241,3 +241,15 @@ msgstr "%(name)s की फ़िल्में और टीवी शो।"
 #: users/seo.py
 msgid "Page not found"
 msgstr "पेज नहीं मिला"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "खाते की सुरक्षा"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "आपका खाता"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "आपकी सीरीज़"

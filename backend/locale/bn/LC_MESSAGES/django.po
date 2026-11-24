@@ -242,3 +242,15 @@ msgstr "%(name)s অভিনীত সিনেমা ও টিভি শো�
 #: users/seo.py
 msgid "Page not found"
 msgstr "পেজ পাওয়া যায়নি"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "অ্যাকাউন্টের নিরাপত্তা"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "আপনার অ্যাকাউন্ট"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "আপনার সিরিজ"

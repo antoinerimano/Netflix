@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("users", "0027_title_trailer_clip_for"),
+        ("users", "0028_profile_appearance"),
     ]
 
     operations = [

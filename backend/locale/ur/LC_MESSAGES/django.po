@@ -235,3 +235,15 @@ msgstr "اس ری سیٹ لنک کی میعاد ختم ہو گئی ہے یا ی�
 #: .\users\views.py:471
 msgid "Your password has been changed."
 msgstr "آپ کا پاس ورڈ بدل دیا گیا ہے۔"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "اکاؤنٹ کی حفاظت"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "آپ کا اکاؤنٹ"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "آپ کی سیریز"

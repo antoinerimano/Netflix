@@ -247,3 +247,15 @@ msgstr "%(name)sの出演作品（映画・ドラマ）。"
 #: users/seo.py
 msgid "Page not found"
 msgstr "ページが見つかりません"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "アカウントのセキュリティ"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "あなたのアカウント"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "フォロー中の番組"

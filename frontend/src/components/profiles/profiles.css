@@ -7,7 +7,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(70% 55% at 50% 0%, rgba(229, 9, 20, 0.12), transparent 70%),
+    radial-gradient(70% 55% at 50% 0%, rgba(var(--color-brand-rgb), 0.12), transparent 70%),
     var(--color-bg-deep);
   color: var(--color-text);
 }
@@ -142,7 +142,7 @@
   display: grid;
   place-items: center;
   border-radius: var(--radius-lg);
-  background: rgba(8, 8, 10, 0.68); /* the pencil reads clearly over a photo or an initial */
+  background: rgba(var(--color-bg-deep-rgb), 0.68); /* the pencil reads clearly over a photo or an initial */
   color: #ffffff;
 }
 .profile-tile__edit svg {
@@ -293,7 +293,7 @@
   justify-content: center;
   gap: 3px;
   border: 2px dashed var(--color-border-strong);
-  background: linear-gradient(135deg, rgba(229, 9, 20, 0.16), rgba(139, 92, 246, 0.16));
+  background: linear-gradient(135deg, rgba(var(--color-brand-rgb), 0.16), rgba(139, 92, 246, 0.16));
   color: var(--color-text);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
@@ -746,7 +746,7 @@
   gap: var(--space-3);
   padding: var(--space-4) var(--page-gutter) max(var(--space-4), env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--color-border);
-  background: rgba(10, 10, 12, 0.88);
+  background: rgba(var(--color-bg-deep-rgb), 0.88);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }

@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from .i18n import current_language, language_of
 
 COMPANY_NAME = "Taurus"
+RTL_LANGUAGES = {"ar", "ur"}
 
 
 def send_templated_email(subject, template, context, to, language=None):
@@ -16,7 +17,14 @@ def send_templated_email(subject, template, context, to, language=None):
     use {% translate %} / {% blocktranslate %} (locale/<lang>/LC_MESSAGES/django.po).
     """
     lang = language or current_language()
-    context = {"company_name": COMPANY_NAME, "support_email": settings.SUPPORT_EMAIL, "lang": lang, **context}
+    context = {
+        "company_name": COMPANY_NAME,
+        "support_email": settings.SUPPORT_EMAIL,
+        "site_url": settings.SITE_URL,  # the logo in the header is served by the site
+        "lang": lang,
+        "text_dir": "rtl" if lang in RTL_LANGUAGES else "ltr",
+        **context,
+    }
     with language_of(lang):
         html = render_to_string(f"emails/{template}.html", context)
         text = render_to_string(f"emails/{template}.txt", context).strip() + "\n"

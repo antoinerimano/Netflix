@@ -250,3 +250,15 @@ msgstr "Film e serie TV con %(name)s."
 #: users/seo.py
 msgid "Page not found"
 msgstr "Pagina non trovata"
+
+#: .\users\templates\emails\password_reset.html
+msgid "Account security"
+msgstr "Sicurezza dell'account"
+
+#: .\users\templates\emails\email_change.html
+msgid "Your account"
+msgstr "Il tuo account"
+
+#: .\users\templates\emails\new_episodes.html
+msgid "Your shows"
+msgstr "Le tue serie"
