@@ -395,6 +395,11 @@ class Provider(models.Model):
         help_text="Let the health check move to a backup domain, or follow a redirect to a new domain.",
     )
 
+    # provider scout (provider_scraper/ on the mini PC, manage.py import_providers): its nightly
+    # check plays the test titles on every provider; shown in the admin
+    scout_check = models.CharField(max_length=300, blank=True, default="",
+                                   help_text="The scout's last nightly playback check.")
+
     # filled by the health check (check_providers)
     status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)
     status_detail = models.CharField(max_length=300, blank=True, default="")
