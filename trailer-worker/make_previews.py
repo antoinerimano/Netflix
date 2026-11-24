@@ -655,6 +655,19 @@ def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, dea
     return 0
 
 
+# ---------- progress, for the site's dashboard (run.sh: record_job trailer_worker) ----------
+def progress(jobs: list, results: dict, since: str) -> str:
+    """One line: what was done since `since` ("%Y-%m-%dT%H:%M:%S", the run's start) and what is left."""
+    counts = {"ok": 0, "rejected": 0, "unavailable": 0, "error": 0}
+    for r in results.values():
+        if r.get("at", "") >= since and r.get("status") in counts:
+            counts[r["status"]] += 1
+    left = sum(1 for j in jobs if not is_done(results.get(job_key(j))))
+    return (f"{counts['ok']} clips made since {since[11:16]}, "
+            f"{counts['rejected'] + counts['unavailable']} without a usable video, {counts['error']} errors"
+            f"; {left} titles left")
+
+
 # ---------- main ----------
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -665,9 +678,15 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="Make the clips, don't upload them.")
     ap.add_argument("--recheck-audio", type=int, default=0, metavar="N",
                     help="Instead of jobs: re-check N clips already made for a dubbed audio track.")
+    ap.add_argument("--progress", metavar="SINCE",
+                    help="Only print one line: what was done since SINCE (YYYY-MM-DDTHH:MM:SS) and what is left.")
     args = ap.parse_args()
     if not args.jobs and not args.recheck_audio:
         ap.error("give jobs.json, or --recheck-audio N")
+    if args.progress:  # while a run goes on: reads results.json (always whole: save_results), no lock
+        jobs = json.loads(Path(args.jobs).read_text(encoding="utf-8")).get("jobs") or []
+        print(progress(jobs, load_results(Path(args.results))["results"], args.progress))
+        return 0
 
     if not args.dry_run and not (BUNNY_API_KEY and BUNNY_STORAGE_ZONE):
         print("Set BUNNY_API_KEY and BUNNY_STORAGE_ZONE in .env (see .env.example).")

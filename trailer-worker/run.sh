@@ -5,21 +5,41 @@ set -uo pipefail
 cd "$(dirname "$0")"
 set -a; . ./.env; set +a
 : "${SERVER_SSH:?set SERVER_SSH in .env}" "${SERVER_DIR:?set SERVER_DIR in .env}"
-remote() { ssh -o BatchMode=yes "$SERVER_SSH" "cd '$SERVER_DIR' && docker compose exec -T backend python manage.py $*"; }
+# (each argument quoted for the server's shell: a summary is one argument, spaces and all)
+remote() { ssh -o BatchMode=yes "$SERVER_SSH" "cd '$SERVER_DIR' && docker compose exec -T backend python manage.py $(printf '%q ' "$@")"; }
+# the site's dashboard: "Trailer clips (mini PC)" running, its progress every hour, then the end
+# (manage.py record_job). The dashboard being unreachable never stops the run.
+started=$(date '+%Y-%m-%dT%H:%M:%S')
+tell_site() { remote record_job trailer_worker "$@" > /dev/null || echo "Couldn't tell the site's dashboard ($1)"; }
+progress() { .venv/bin/python make_previews.py jobs.json --progress "$started" 2>/dev/null || echo "?"; }
+finish() { tell_site "$@"; exit "${rc:-1}"; }
 
 echo "=== $(date '+%F %T') ==="
+tell_site --start --summary "Asking the site which titles need a clip"
 .venv/bin/pip install -q -U -r requirements.txt   # YouTube changes often: old yt-dlp versions stop working
 
 if remote export_trailer_jobs > jobs.json.part; then
   mv jobs.json.part jobs.json
 else
-  echo "Couldn't get the job list from the server"; rm -f jobs.json.part; exit 1
+  echo "Couldn't get the job list from the server"; rm -f jobs.json.part
+  rc=1; finish --failed --summary "Couldn't get the job list from the server (see run.log)"
 fi
 
 give_results() { [ ! -f results.json ] || remote import_trailer_results - < results.json; }
 end=$(( $(date +%s) + ${MAX_MINUTES:-480} * 60 ))
 pause=${BLOCKED_PAUSE_MINUTES:-30}
 minutes_left() { echo $(( (end - $(date +%s)) / 60 )); }
+
+# every PROGRESS_MINUTES: the clips made so far go to the site (not only at the end, ~21 h later)
+# and the dashboard gets one line of progress. results.json is always a whole file (save_results).
+(
+  while sleep $(( ${PROGRESS_MINUTES:-60} * 60 )); do
+    give_results > /dev/null || echo "Couldn't give the results to the server (tried again later)"
+    tell_site --progress --summary "$(progress)"
+  done
+) &
+reporter=$!
+trap 'kill "$reporter" 2>/dev/null' EXIT
 
 # clips made before the original audio was asked for: a few a night, redone when the video has
 # AI-dubbed tracks (make_previews.py recheck_audio); nothing left to check = a few seconds
@@ -44,5 +64,10 @@ while :; do
   [ "$rc" -ne 75 ] && break
 done
 
-give_results || rc=1
-exit "$rc"
+kill "$reporter" 2>/dev/null
+give_results || { echo "Couldn't give the results to the server"; rc=1; }
+if [ "$rc" -eq 0 ]; then
+  finish --summary "$(progress)"
+else
+  finish --failed --summary "$(progress), exit $rc (see run.log)"
+fi

@@ -34,8 +34,9 @@ where it lives and how to change it (a key, the domain, the server's IP): [`docs
 Every job in the dashboard's `JOBS` (`backend/users/dashboard.py`) records its runs (`JobRun`): the
 dashboard shows them and the daily check-up emails staff when one failed or is late. Django commands
 use `@tracked`; the shell scripts here call `manage.py record_job <name>` when they end
-(`backup_db.sh`: ok or failed, `weekly-cleanup.sh`); the mini PC's trailer clips are seen when it
-imports them (`import_trailer_results`). The check-up also warns when the HTTPS certificate has
+(`backup_db.sh`: ok or failed, `weekly-cleanup.sh`). The mini PC's trailer worker (~21 h a night)
+says `record_job trailer_worker --start`, then `--progress` every hour, then the end: the dashboard
+shows it running, and the check-up calls it stuck only after 23 h (`STUCK_AFTER_JOB`). The check-up also warns when the HTTPS certificate has
 less than 14 days left (certbot renews at 30).
 
 The dashboard's jobs card groups them (Catalog, Recommendations & home pages, AI, Health & safety)

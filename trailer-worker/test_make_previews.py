@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from make_previews import Blocked, Rejected, check_video, is_done, name_matches, run
+from make_previews import Blocked, Rejected, check_video, is_done, name_matches, progress, run
 
 
 class NameMatchTests(unittest.TestCase):
@@ -289,3 +289,18 @@ class ChooseVideoTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProgressTests(unittest.TestCase):
+    def test_counts_this_run_and_what_is_left(self):
+        jobs = [{"type": "movie", "tmdb_id": n, "youtube_key": f"k{n:010d}"} for n in range(5)]
+        key = lambda n: f"movie:{n}:k{n:010d}"  # noqa: E731
+        results = {
+            key(0): {"status": "ok", "at": "2026-11-23T03:00:00"},  # last night's
+            key(1): {"status": "ok", "at": "2026-11-24T02:00:00"},
+            key(2): {"status": "rejected", "v": 2, "at": "2026-11-24T02:10:00"},
+            key(3): {"status": "error", "attempts": 1, "at": "2026-11-24T02:20:00"},
+        }
+        with mock.patch("make_previews.time.time", return_value=1795600000):  # 2026-11-24, rejected is recent
+            line = progress(jobs, results, "2026-11-24T01:00:02")
+        self.assertEqual(line, "1 clips made since 01:00, 1 without a usable video, 1 errors; 2 titles left")
