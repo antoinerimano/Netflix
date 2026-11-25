@@ -11,7 +11,7 @@ emblem.svg   the logo / favicon (from frontend/src/design/brandMark.js)
 ```
 
 **The app's address** is set once, in `index.html`:
-`<meta name="site-url" content="https://tauruss.com" />`. Every "Visit site", "Sign in" and
+`<meta name="site-url" content="https://tauruss.top" />`. Every "Visit site", "Sign in" and
 "Create an account" button goes there (`/`, `/login`, `/register`). The links also carry that address
 in their `href`, so they still work without JavaScript: change both when the domain changes.
 

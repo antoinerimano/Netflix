@@ -4,7 +4,7 @@ const { pathToFileURL } = require('url');
 const { test, expect } = require('@playwright/test');
 
 const PAGE = pathToFileURL(path.join(__dirname, '..', '..', 'landing', 'index.html')).href;
-const SITE = 'https://tauruss.com';
+const SITE = 'https://tauruss.top';
 const SHOTS = process.env.LANDING_SHOTS; // a folder: save screenshots there (design review)
 
 async function focused(page) {
