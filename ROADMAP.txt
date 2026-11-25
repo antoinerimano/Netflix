@@ -459,3 +459,109 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         1280 / 1920px in English and French: no scroll, no cut label, no link under the search.
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
+
+9. CATCHING UP WITH THE BEST SITES ON THE LISTS (researched 2026-11-25)
+----------------------------------------------------------------------
+Where this comes from: ahoylist.net/movies-and-tv-shows lists 42 sites like ours (names and links
+only, no ranking). Users pick between them with FMHY's "Stream Site Grading" wiki
+(github.com/fmhy/FMHY/wiki/Stream-Site-Grading), the score the lists and Reddit point to. It
+gives 9 criteria 0-2 points each (max 18); an aggregator needs 18/18 to get FMHY's "star".
+Sites at 18/18 there and also on ahoylist: Movy, 7Movies, PopcornMovies, ShuttleTV, Flixer/Hexa,
+Rive, MovieBite, Primeshows, CinemaOS, Stellar, VidPlay. HydraHD, Nepu, Mapple, Willow: 16-17.
+Read on their home pages: Cineby "Without login, no ads", Top 10 today/week, browse by streaming
+service (Netflix, Prime, Max, Disney+...); HydraHD: "Airing today", Random, Keywords, Live
+sports, HD/CAM labels, a status page; Movy: Top 10, "Recently added in 4K", upcoming episodes;
+Rive: anime, K-drama, manga, live sports, AI; PrimeWire: TV schedule, forum, playlists, filters
+by streaming service / free links / quality; LookMovie: quality labels, "Playback issues?" link.
+
+Our score on the same grid (my reading of the code, not FMHY's):
+  1 Content (movies, TV, anime, 1080p, subtitles, quality) .. 1/2  no anime section; subtitles and
+                                                                   quality depend on each embed
+  2 Backup sources switch by themselves ................... 1/2  2.1 offers the next one, doesn't
+                                                                   go through all of them alone
+  3 Episode auto-next ..................................... 1/2  only when the embed does it
+  4 UI, player, search, settings .......................... 2/2
+  5 Watch lists + sync .................................... 2/2  (no Trakt / Simkl / AniList)
+  6 Discovery (recs, collections, random, sort, moods) .... 2/2  ahead of almost all of them
+  7 Redirect / pop-up ads ................................. 0-1  the embeds' pop-ups get through,
+                                                                   no "block pop-ups" switch
+  8 Mobile ................................................ 2/2
+  9 Own / custom player ................................... 0/2  iframes of other players; stays 0:
+                                                                   we host no films (9.10 dropped)
+  About 12/18, so 16/18 at best. The gap is the player side (1, 2, 3, 7), not the app.
+Where we are already ahead (say it on the landing page and the listing request): TV remote on
+every page, kids profiles that really filter, 13 languages incl. right to left, "Ask Taurus",
+"What to watch?", recaps, Upcoming calendar, your year, shareable lists, Letterboxd / IMDb import.
+None of the 18/18 sites does more than 3-4 of these.
+
+Order: 9.1-9.3 first (they move the score from ~12 to ~16 for little work), then 9.4-9.7 (what
+visitors see on the first screen), the bigger ones after.
+
+[ ] 9.1 "Block pop-ups" switch (criterion 7, the biggest complaint about sites like ours)
+        Taurus runs no ads of its own. The pop-ups / redirects come from the third-party players
+        we embed (their own ads open new tabs or send the page elsewhere). The top sites call this
+        switch an "ad toggle": the player iframe gets a sandbox attribute without allow-popups /
+        allow-top-navigation, so the embed can't open new tabs or redirect the page.
+        - The provider scout tests each source sandboxed too and records "works sandboxed"
+          (some embeds refuse to play when sandboxed); the dashboard shows it.
+        - Profile setting + a switch on the watch page: "Block pop-ups" ON by default; when ON,
+          sources that don't work sandboxed go last with a "may open pop-ups" note.
+        - A chip on each source: "No pop-ups". Remote: the switch is reachable from the source row.
+        - e2e (remote only): a fake embed that calls window.open is blocked when ON.
+[ ] 9.2 Sources switch by themselves, through all of them (criterion 2)
+        Today: a source that doesn't load in a few seconds -> the next one is OFFERED. Better: go
+        to the next one by itself (toast "Source 2 didn't load, trying Source 3", Undo), through the
+        whole list, ordered by the scout's last results + what worked for this title (2.1). Count
+        "loaded" only on a real player event (play / time), not just the iframe's load. All failed:
+        one clear screen (try again, report a problem -> 9.8).
+[ ] 9.3 Next episode by the app, for every source (criterion 3)
+        On an "ended" player event (already read in WatchPage.jsx) or at the episode's last 30 s
+        when the embed sends times: a "Next episode in 10" card with the next episode's picture,
+        Play now / Cancel (OK / Back on the remote), then load S/E+1 on the same source. Season end
+        -> next season E1; show end -> "More like this". Setting "Play next episode automatically"
+        (on by default) + "Still watching?" after 3 episodes without a key press (TV left on).
+[ ] 9.4 Top 10 + browse by streaming service (Cineby, Movy, PrimeWire: on the first screen)
+        - Home rows "Top 10 movies today" / "Top 10 shows this week": big numbered cards, from TMDB
+          trending (day / week, already synced) mixed with our own plays once there are enough.
+        - "On Netflix / Prime Video / Disney+ / Max / Apple TV+ ..." rows and a filter on the browse
+          pages, from TMDB watch providers per country (free TMDB data: "TMDB first"), country =
+          the profile's language region / the visitor's.
+        - Browse sort "Recently added" (our own date) beside newest / popular.
+[ ] 9.5 Anime (and K-drama) sections (Rive, Movy, HydraHD all have one; criterion 1)
+        TMDB already tells us: Animation + origin country JP (+ keyword "anime" 210024) = anime;
+        origin KR + Drama = K-drama. A nav entry / browse filter, home rows for profiles that watch
+        them, kids filter still applies. Episodes: check absolute numbering (One Piece) works with
+        each source; the scout marks anime-capable sources. Import: AniList / MyAnimeList lists in
+        /import beside Letterboxd and IMDb (7.2).
+[ ] 9.6 Quality and release status labels (HydraHD, LookMovie, Movy show HD / CAM / 4K)
+        From TMDB release dates (free): a film still only in cinemas gets "In cinemas - digital
+        release on <date>" and a Notify me (like 2.2) instead of a CAM nobody wants; "HD" once its
+        digital release date (type 4) has passed. "4K" only if a source really says so (scout).
+        "Airing today" row / filter for shows (HydraHD), from Episode.air_date.
+[ ] 9.7 Try before signing up (Cineby: "Without login")
+        Today the home page needs an account (ProtectedRoute): a visitor from a list sees a sign-in
+        form and leaves. Let signed-out visitors browse home (a generic snapshot), detail pages,
+        search and play; Continue watching / My List kept in the browser and moved to the account
+        when they sign up ("Create a free account to keep your list on every device"). Kids
+        profiles, history, AI features stay for accounts. Measure sign-ups before / after.
+[ ] 9.8 "Playback problem?" + status page (LookMovie, HydraHD)
+        A "Report a problem" button on the watch page (wrong film, no sound, out of sync, no
+        subtitles) -> saved with the source + title, on the dashboard, and the scout re-checks that
+        source first. A public status page: the app up, each source's last check (the scout already
+        has the data), answers "is it down for me or everyone?".
+[ ] 9.9 Watch together, the cheap way (Hexa, Beech score points for it; 2.5 was skipped)
+        Some of our embeds have their own watch party (the VidPlus URL has watchparty=false in
+        docs/streaming-providers-notes.txt): turn it on for those and show a "Watch together"
+        button only on sources that have it. A synced one on any source would need our own player
+        (9.10, dropped): not planned.
+[-] 9.10 Our own player (dropped 2026-11-25: we host no films)
+        The 18/18 sites put their own player on direct streams; Taurus only embeds other sites'
+        players and won't host or pull streams, so criterion 9 stays 0/2. Subtitles, quality and
+        speed stay whatever each embed offers; 9.2 / 9.3 do auto-switch and auto-next around them.
+[ ] 9.11 Sync with Trakt / Simkl (criterion 5 counts it as a plus; was left out in 7.2)
+        Low priority: our own sync already scores 2/2. Only if users ask: scrobble plays to Trakt
+        / Simkl and pull their watchlist, behind a "Connect" button on the account page.
+[ ] 9.12 Get listed (once 9.1-9.3 are done and the score is ~16/18)
+        Ask FMHY to grade the site and ahoylist to add it (GitHub yarrlist/AhoyList,
+        r/ahoylistnet). Lead with what nobody else has (TV remote, kids profiles, 13 languages,
+        Ask Taurus). The landing page (alioupganghd.store) says the same.
