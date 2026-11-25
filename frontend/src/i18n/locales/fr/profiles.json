@@ -61,7 +61,9 @@
     "ageLimitHint": "Les titres au-dessus de cette limite sont masqués.",
     "ageLimitKidsHint": "Les profils enfants vont jusqu'à 7+ (PG).",
     "language": "Langue",
-    "languageHint": "L'application, les titres et les résumés s'affichent dans cette langue."
+    "languageHint": "L'application, les titres et les résumés s'affichent dans cette langue.",
+    "blockPopups": "Bloquer les pop-ups",
+    "blockPopupsHint": "Les lecteurs vidéo ne peuvent pas ouvrir de nouveaux onglets ni de pubs. Quelques sources ne se lancent que sans ce blocage."
   },
   "avatar": {
     "title": "Créez votre avatar",

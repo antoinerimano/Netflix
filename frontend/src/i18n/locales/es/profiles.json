@@ -61,7 +61,9 @@
     "ageLimitHint": "Los títulos por encima de este límite se ocultan.",
     "ageLimitKidsHint": "Los perfiles infantiles llegan hasta 7+ (PG).",
     "language": "Idioma",
-    "languageHint": "La app, los títulos y las sinopsis se muestran en este idioma."
+    "languageHint": "La app, los títulos y las sinopsis se muestran en este idioma.",
+    "blockPopups": "Bloquear ventanas emergentes",
+    "blockPopupsHint": "Los reproductores no pueden abrir pestañas nuevas ni anuncios. Algunas fuentes solo se reproducen con esto desactivado."
   },
   "avatar": {
     "title": "Crea tu avatar",

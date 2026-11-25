@@ -293,10 +293,10 @@
   {# ---------- providers ---------- #}
   <section class="dash-card">
     <h2>Stream providers</h2>
-    <p class="dash-sub">Status from the last health check · uptime over 24 h of checks · plays and how often they actually played, last 7 days</p>
+    <p class="dash-sub">Status from the last health check · no pop-ups: plays sandboxed (scout) · uptime over 24 h of checks · plays and how often they actually played, last 7 days</p>
     <table>
       <tr>
-        <th>Provider</th><th>Status</th><th class="num">Uptime 24 h</th><th>Plays, 7 days</th><th class="num">Played OK</th><th>Last check</th>
+        <th>Provider</th><th>Status</th><th>No pop-ups</th><th class="num">Uptime 24 h</th><th>Plays, 7 days</th><th class="num">Played OK</th><th>Last check</th>
       </tr>
       {% for r in providers %}
         <tr>
@@ -306,6 +306,12 @@
             {% elif r.p.status == "down" %}<span class="dash-status dash-status--critical">Down</span>
             {% else %}<span class="dash-status dash-status--none">Unknown</span>{% endif %}
             {% if r.p.suggested_domain %}<br><span class="quiet">suggests {{ r.p.suggested_domain }}</span>{% endif %}
+          </td>
+          <td title="Plays with pop-ups blocked (sandboxed player): the scout's check; under it, the viewers' sandboxed plays that played, 7 days">
+            {% if r.p.sandbox_ok == "yes" %}<span class="dash-status dash-status--good">Yes</span>
+            {% elif r.p.sandbox_ok == "no" %}<span class="dash-status dash-status--critical">No</span>
+            {% else %}<span class="dash-status dash-status--none">Unknown</span>{% endif %}
+            {% if r.sandboxed_success is not None %}<br><span class="quiet">{{ r.sandboxed_success }} % of {{ r.sandboxed_plays|intcomma }} sandboxed</span>{% endif %}
           </td>
           <td class="num">{% if r.uptime is not None %}{{ r.uptime }} %{% else %}<span class="quiet">no checks</span>{% endif %}</td>
           <td>

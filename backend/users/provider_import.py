@@ -167,6 +167,24 @@ def _apply_working_link(known, domain, movie_path, episode_path, health, lines, 
         stats["known_ok"] += 1
 
 
+def sandbox_verdict(health):
+    """The scout's "plays with pop-ups blocked" check (health["sandbox"]): "yes" / "no", or None
+    (not checked tonight, or no verdict: the import keeps what is known)."""
+    v = (health or {}).get("sandbox")
+    return v if v in (Provider.SANDBOX_YES, Provider.SANDBOX_NO) else None
+
+
+def _apply_sandbox(known, health, lines):
+    """Block pop-ups (ROADMAP 9.1): the scout played a title sandboxed too. -> changed?"""
+    v = sandbox_verdict(health)
+    if not v or v == known.sandbox_ok:
+        return False
+    lines.append(f"{known.key}: plays with pop-ups blocked: {known.sandbox_ok} -> {v}"
+                 + (f" ({health.get('sandbox_detail')})" if health.get("sandbox_detail") else ""))
+    known.sandbox_ok = v
+    return True
+
+
 def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     """Apply a provider_catalog.json (dict). Returns (lines, stats)."""
     probe = catalog.get("probe_title") or {}
@@ -202,6 +220,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 if not health:
                     continue  # not checked tonight
                 known.scout_check = note
+                _apply_sandbox(known, health, lines)  # a verdict counts even for a source that isn't live
                 if live and domain:
                     _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now)
                 if not dry_run:
@@ -224,6 +243,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 movie_path=movie_path, episode_path=episode_path,
                 enabled=enabled, priority=min(next_priority, 32767), auto_switch=True,
                 scout_check=note, sends_events=bool(health.get("sends_events")),
+                sandbox_ok=sandbox_verdict(health) or Provider.UNKNOWN,
                 status=Provider.UP, status_detail=f"added by provider scout {stamp}: plays every test film, "
                                                   f"used by {sites} site(s)",
                 checked_at=now,

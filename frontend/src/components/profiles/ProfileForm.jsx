@@ -32,6 +32,7 @@ export const EMPTY_PROFILE = {
   is_kids: false,
   age_restriction: 'NC-17',
   language_preference: '', // '' = the language the app is in when the form opens
+  block_popups: true, // "Block pop-ups" (ROADMAP 9.1): the players can't open tabs / leave the page
 };
 
 /** "Kids · All ages", "13+", "No limit": a profile's limit in a few words */
@@ -233,6 +234,13 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel, onSu
           ))}
         </select>
       </Field>
+
+      <Switch
+        checked={values.block_popups !== false}
+        label={t('form.blockPopups')}
+        description={t('form.blockPopupsHint')}
+        onChange={(on) => set({ block_popups: on })}
+      />
 
       {error ? (
         <p className="profile-form__error" role="alert">

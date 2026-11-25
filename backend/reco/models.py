@@ -238,6 +238,8 @@ class PlaybackOutcome(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     provider_key = models.CharField(max_length=40)
     worked = models.BooleanField()
+    # the player was sandboxed ("Block pop-ups", ROADMAP 9.1); null = not said (older apps)
+    sandboxed = models.BooleanField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -38,6 +38,15 @@
     "customLabel": "Your video link",
     "customPlaceholder": "Paste a video or player link (https://…)"
   },
+  "popups": {
+    "block": "Block pop-ups",
+    "blockHint": "Stops the video players from opening new tabs or leaving this page",
+    "noPopups": "No pop-ups",
+    "mayOpen": "may open pop-ups",
+    "mayOpenHint": "Doesn't play with pop-ups blocked: shown last",
+    "offer": "{{source}} may not play with pop-ups blocked.",
+    "allowOnce": "Allow pop-ups for this source"
+  },
   "info": {
     "about": "About",
     "seasonEpisodes": "Season {{number}} episodes",

@@ -12,6 +12,11 @@ Every test reproduces the site (frontend WatchPage.jsx, titlesApi.buildProviderL
     VidCore) count as proof of playback
 Run it from the mini PC: its network, not an office one that blocks some providers.
 
+Block pop-ups (ROADMAP 9.1): the site's watch page sandboxes the player by default (no new tabs,
+no redirect of the page; frontend watch/popups.js). Some embeds refuse to play sandboxed, so a
+provider with a working link plays up to SANDBOX_TRIES of its titles once more in a sandboxed
+iframe: health "sandbox" = yes / no / unknown (+ "sandbox_detail"), Provider.sandbox_ok on import.
+
 A title plays when, within ~35 s, a feature-length video (40 min+ for a movie, 10 min+ for an
 episode) moves or its stream is there, or the player reports playback (postMessage). Not its TMDB
 runtime: director's cuts, credits and other edits differ. A trailer, an ad or a "not available"
@@ -70,6 +75,11 @@ PLAY_WINDOW = 35        # s: how long a title gets to start
 # frontend WatchPage.jsx <iframe allow=...>
 IFRAME_ALLOW = "autoplay; fullscreen *; picture-in-picture; encrypted-media"
 REFERRER_POLICY = "strict-origin-when-cross-origin"  # nginx/security-headers.inc
+# frontend watch/popups.js SANDBOX: the player with "Block pop-ups" on (no allow-popups, no allow-top-navigation)
+IFRAME_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-presentation"
+SANDBOX_TRIES = 2       # titles that played, tried again sandboxed: one that plays is enough for "yes"
+# Chrome's console line when a sandboxed frame tries to open a window or move the page
+BLOCKED = re.compile(r"sandboxed|allow-popups|allow-top-navigation", re.I)
 
 STREAM = re.compile(r"\.(m3u8|mpd)(\?|$)|\.mp4(\?|$)|/(playlist|master|index)\.m3u8|/hls/|/manifest", re.I)
 NO_SOURCE = re.compile(r"(not found|no sources?|unavailable|could ?n.t find|doesn.t exist|does not exist|"
@@ -101,13 +111,15 @@ VIDEO_JS = r"""() => [...document.querySelectorAll('video')].map(v => {
 })"""
 
 
-def site_page(origin_url: str, embed_url: str) -> str:
-    """The tauruss watch page, reduced to its player: the iframe as WatchPage.jsx renders it."""
+def site_page(origin_url: str, embed_url: str, sandbox: bool = False) -> str:
+    """The tauruss watch page, reduced to its player: the iframe as WatchPage.jsx renders it
+    (sandbox: as it renders it with "Block pop-ups" on)."""
     esc = embed_url.replace("&", "&amp;").replace('"', "&quot;")
+    sb = f' sandbox="{IFRAME_SANDBOX}"' if sandbox else ""
     return f"""<!doctype html><html><head><meta charset="utf-8">
 <meta name="referrer" content="{REFERRER_POLICY}"><title>tauruss</title></head>
 <body style="margin:0;background:#000">
-<iframe id="player" src="{esc}" title="Player" allow="{IFRAME_ALLOW}" allowfullscreen
+<iframe id="player" src="{esc}" title="Player" allow="{IFRAME_ALLOW}"{sb} allowfullscreen
   webkitallowfullscreen="true" mozallowfullscreen="true"
   style="width:1280px;height:720px;border:0"
   onload="window.__loadedAt = window.__loadedAt || performance.now()"></iframe>
@@ -275,14 +287,26 @@ def _manifest_seconds(body: str) -> float | None:
     return None
 
 
-async def play_title(ctx, url: str, title: dict, site: str | None = None, timeout_ms: int = 25000) -> dict:
+async def play_title(ctx, url: str, title: dict, site: str | None = None, timeout_ms: int = 25000,
+                     sandbox: bool = False) -> dict:
     """
     Open one embed URL the way tauruss does (in an iframe on a page of the site's origin) and
     prove the title plays. -> {state, detail, load_s, play_s, events, ...}
+    sandbox: the iframe sandboxed like "Block pop-ups" does (needs site); "blocked" counts the
+    pop-ups / redirects the browser stopped.
     """
     page = await ctx.new_page()
-    seen = {"stream": None, "manifests": [], "segments": 0, "variants": [], "main_status": None}
+    seen = {"stream": None, "manifests": [], "segments": 0, "variants": [], "main_status": None, "blocked": 0}
     tasks = []
+
+    def on_console(msg):
+        try:
+            if BLOCKED.search(msg.text):
+                seen["blocked"] += 1
+        except Exception:
+            pass
+    if sandbox:
+        page.on("console", on_console)
 
     async def read_manifest(resp):
         try:
@@ -341,7 +365,7 @@ async def play_title(ctx, url: str, title: dict, site: str | None = None, timeou
     try:
         if site:
             page_url = site.rstrip("/") + "/__provider_scout"
-            html = site_page(page_url, url)
+            html = site_page(page_url, url, sandbox=sandbox)
             await page.route(page_url, lambda r: r.fulfill(body=html, content_type="text/html; charset=utf-8",
                                                            headers={"Referrer-Policy": REFERRER_POLICY}))
             await page.goto(page_url, timeout=timeout_ms, wait_until="domcontentloaded")
@@ -404,6 +428,8 @@ async def play_title(ctx, url: str, title: dict, site: str | None = None, timeou
         vids = await videos()
         ev = await events()
         out["sends_events"] = bool(ev)
+        if sandbox:
+            out["blocked"] = seen["blocked"]
         out["http"] = seen["main_status"]
         out["stream_host"] = seen["stream"]
         # a real feature / episode, not its length on TMDB (director's cuts, credits, other edits
@@ -517,32 +543,32 @@ VERBOSE = False  # -v: one line per title tried, as it happens
 TITLE_TIMEOUT = PLAY_WINDOW + 40  # s: a title can never hold the test longer, whatever a player does
 
 
-async def bounded_play_title(ctx, url: str, title: dict, site: str | None) -> dict:
+async def bounded_play_title(ctx, url: str, title: dict, site: str | None, sandbox: bool = False) -> dict:
     try:
-        return await asyncio.wait_for(play_title(ctx, url, title, site), TITLE_TIMEOUT)
+        return await asyncio.wait_for(play_title(ctx, url, title, site, sandbox=sandbox), TITLE_TIMEOUT)
     except asyncio.TimeoutError:
         return {"title": title["name"], "test_url": url, "state": "up",
                 "detail": f"the player hung the test page for {TITLE_TIMEOUT} s"}
 
 
-async def play(ctx, template: str, title: dict, site: str | None, retry: bool) -> dict:
-    r = await _play(ctx, template, title, site, retry)
+async def play(ctx, template: str, title: dict, site: str | None, retry: bool, sandbox: bool = False) -> dict:
+    r = await _play(ctx, template, title, site, retry, sandbox)
     if VERBOSE:
-        print(f"    {urlparse(template).hostname} · {title['name'][:40]} -> {r['state']}: {r.get('detail', '')[:90]}",
-              flush=True)
+        print(f"    {urlparse(template).hostname} · {title['name'][:40]}{' (sandboxed)' if sandbox else ''} "
+              f"-> {r['state']}: {r.get('detail', '')[:90]}", flush=True)
     return r
 
 
-async def _play(ctx, template: str, title: dict, site: str | None, retry: bool) -> dict:
+async def _play(ctx, template: str, title: dict, site: str | None, retry: bool, sandbox: bool = False) -> dict:
     """One title with one link format; a miss tried once more when retry (slow CDN, a click that didn't land)."""
     url = fill(template, title)
     if not url:
         return {"title": title["name"], "state": "untested", "detail": "the link needs an id this title lacks"}
-    r = await bounded_play_title(ctx, url, title, site)
+    r = await bounded_play_title(ctx, url, title, site, sandbox)
     # only a stream that didn't make it (slow CDN, a click that didn't land) gets a second try:
     # "not found", a bot check or a dead domain say the same the second time
     if retry and r["state"] == "up":
-        r2 = await bounded_play_title(ctx, url, title, site)
+        r2 = await bounded_play_title(ctx, url, title, site, sandbox)
         if RANK[r2["state"]] >= RANK[r["state"]]:
             r = r2
     return r
@@ -639,6 +665,9 @@ async def check_provider(ctx, p: dict, titles: list | None = None, episodes: lis
          "current_dead": bool(cur_movie) and all(is_dead(x) for x in cur_movie),
          "docs_url": p.get("docs_url"), "sends_events": any(f.get("sends_events") for f in films)}
 
+    # Block pop-ups (9.1): does it still play sandboxed?
+    h.update(await sandbox_check(ctx, template, films, titles, site))
+
     # episodes: the format that plays one, then all of them (not for a provider that lost already)
     if template and episode_ts and episodes and not lost:
         ep_ts = list(dict.fromkeys([with_host(t, urlparse(template).hostname) for t in episode_ts] + episode_ts))[:8]
@@ -660,6 +689,40 @@ async def check_provider(ctx, p: dict, titles: list | None = None, episodes: lis
         h["episode"] = er  # an episode was tried
     # standalone verdict against every title; main() judges again against what some provider plays
     return stamp(judge(h, {t["name"] for t in titles}, {e["name"] for e in episodes}))
+
+
+async def sandbox_check(ctx, template: str, films: list, titles: list, site: str | None, play_fn=None) -> dict:
+    """
+    Block pop-ups (ROADMAP 9.1): the titles that played (up to SANDBOX_TRIES), played again in a
+    sandboxed iframe (no allow-popups / allow-top-navigation, like the watch page by default).
+    -> {"sandbox": "yes" | "no" | "unknown", "sandbox_detail": "..."}
+    yes: one of them plays sandboxed. no: none does. A player that goes silent sandboxed
+    ("unverified") counts as a no here: the same title just played without the sandbox, and that
+    is how most embeds refuse one. Only a bot check / an untested title gives no verdict. The
+    import sets Provider.sandbox_ok from it.
+    """
+    play_fn = play_fn or play
+    if not site:
+        return {"sandbox": "unknown", "sandbox_detail": "players opened directly (--direct): no iframe to sandbox"}
+    by_name = {t["name"]: t for t in titles}
+    played = [by_name[f["title"]] for f in films if f.get("state") == "live" and f.get("title") in by_name]
+    if not played:
+        return {"sandbox": "unknown", "sandbox_detail": "no title played: nothing to try sandboxed"}
+    tried = []
+    for t in played[:SANDBOX_TRIES]:
+        r = await play_fn(ctx, template, t, site, retry=True, sandbox=True)
+        blocked = r.get("blocked") or 0
+        note = f"; {blocked} pop-up / redirect attempt(s) blocked" if blocked else ""
+        if r.get("state") == "live":
+            return {"sandbox": "yes", "sandbox_detail": f"{t['name']} plays sandboxed{note}"}
+        tried.append((t, r, note))
+    judged = [(t, r, note) for t, r, note in tried if r.get("state") not in ("protected", "untested")]
+    if not judged:
+        t, r, _ = tried[0]
+        return {"sandbox": "unknown", "sandbox_detail": f"sandboxed: {r.get('state')} ({r.get('detail', '')[:120]}): no verdict"}
+    t, r, note = judged[0]
+    return {"sandbox": "no", "sandbox_detail": f"plays, but not sandboxed: {t['name']} -> {r.get('state')} "
+                                               f"({r.get('detail', '')[:120]}){note}"}
 
 
 def same_default_video(results: list) -> None:
@@ -795,7 +858,8 @@ async def main():
           flush=True)
     for p in todo:
         h = judge(p["health"], avail, avail_eps)
-        print(f"  {p['provider']:16s} {h['state']:10s} {h.get('verified', ''):>6}  {h.get('detail', '')}", flush=True)
+        print(f"  {p['provider']:16s} {h['state']:10s} {h.get('verified', ''):>6}  {h.get('detail', '')}"
+              + (f"  [no pop-ups: {h['sandbox']}]" if h.get("sandbox") else ""), flush=True)
     if not only:
         cat["coverage"] = {"movies": sorted(avail), "episodes": sorted(avail_eps), "required": COVERAGE}
         json.dump(cat, open(cfg.catalog, "w", encoding="utf-8"), indent=2, ensure_ascii=False)

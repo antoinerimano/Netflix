@@ -38,6 +38,15 @@
     "customLabel": "Votre lien vidéo",
     "customPlaceholder": "Collez un lien vidéo ou de lecteur (https://…)"
   },
+  "popups": {
+    "block": "Bloquer les pop-ups",
+    "blockHint": "Empêche les lecteurs vidéo d'ouvrir de nouveaux onglets ou de quitter cette page",
+    "noPopups": "Sans pop-up",
+    "mayOpen": "peut ouvrir des pop-ups",
+    "mayOpenHint": "Ne se lance pas avec les pop-ups bloqués : affichée en dernier",
+    "offer": "{{source}} risque de ne pas se lancer avec les pop-ups bloqués.",
+    "allowOnce": "Autoriser les pop-ups pour cette source"
+  },
   "info": {
     "about": "À propos",
     "seasonEpisodes": "Épisodes de la saison {{number}}",

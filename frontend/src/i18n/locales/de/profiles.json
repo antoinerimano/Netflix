@@ -60,7 +60,9 @@
     "ageLimitHint": "Titel mit einer höheren Freigabe werden ausgeblendet.",
     "ageLimitKidsHint": "Kinderprofile gehen bis 7+ (PG).",
     "language": "Sprache",
-    "languageHint": "App, Titel und Inhaltsangaben werden in dieser Sprache angezeigt."
+    "languageHint": "App, Titel und Inhaltsangaben werden in dieser Sprache angezeigt.",
+    "blockPopups": "Pop-ups blockieren",
+    "blockPopupsHint": "Videoplayer können keine neuen Tabs oder Werbung öffnen. Einige Quellen spielen nur, wenn dies aus ist."
   },
   "avatar": {
     "title": "Avatar erstellen",

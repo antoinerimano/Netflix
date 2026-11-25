@@ -77,6 +77,13 @@ Then on the site (`import_providers`):
   link plays -> that one becomes its link (the old domain stays as a backup). Same for its TV link.
 - **reports its playback to the page** (postMessage) -> *sends events* on, so the site can tell
   when it plays and offer the next source when it stays silent.
+- **plays with pop-ups blocked?** (ROADMAP 9.1) -> *sandbox ok* yes / no. The watch page sandboxes
+  the player by default ("Block pop-ups": no `allow-popups`, no `allow-top-navigation`), and some
+  embeds refuse to play sandboxed. A provider that played is tried again on up to 2 of its titles in
+  a sandboxed iframe (`sandbox_check`, `sandbox` / `sandbox_detail` in the catalog, with the pop-ups /
+  redirects Chrome blocked). Yes when one plays; no when none does; a bot check gives no verdict
+  and the import keeps what it knew. With "Block pop-ups" on, the "no" sources come last on the
+  watch page with a "may open pop-ups" note. Shown in the admin and on the dashboard.
 - **nothing else**: the scout never turns a provider off, nor touches a link that answers (slow,
   a bot check, a missing title...). Which sources play best for the viewers is the site's smart
   playback (success rates, the source that last worked for a title). The admin shows the scout's

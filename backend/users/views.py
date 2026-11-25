@@ -751,7 +751,8 @@ def provider_list(request):
 
     rates = provider_success_rates()
     providers = list(Provider.objects.filter(enabled=True).values(
-        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority"
+        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority",
+        "sandbox_ok",  # plays with pop-ups blocked (sandboxed iframe): yes / no / unknown (ROADMAP 9.1)
     ))
     for p in providers:
         p["success_rate"] = rates.get(p["key"])  # None until enough plays were recorded

@@ -497,17 +497,43 @@ None of the 18/18 sites does more than 3-4 of these.
 Order: 9.1-9.3 first (they move the score from ~12 to ~16 for little work), then 9.4-9.7 (what
 visitors see on the first screen), the bigger ones after.
 
-[ ] 9.1 "Block pop-ups" switch (criterion 7, the biggest complaint about sites like ours)
-        Taurus runs no ads of its own. The pop-ups / redirects come from the third-party players
-        we embed (their own ads open new tabs or send the page elsewhere). The top sites call this
-        switch an "ad toggle": the player iframe gets a sandbox attribute without allow-popups /
-        allow-top-navigation, so the embed can't open new tabs or redirect the page.
-        - The provider scout tests each source sandboxed too and records "works sandboxed"
-          (some embeds refuse to play when sandboxed); the dashboard shows it.
-        - Profile setting + a switch on the watch page: "Block pop-ups" ON by default; when ON,
-          sources that don't work sandboxed go last with a "may open pop-ups" note.
-        - A chip on each source: "No pop-ups". Remote: the switch is reachable from the source row.
-        - e2e (remote only): a fake embed that calls window.open is blocked when ON.
+[x] 9.1 "Block pop-ups" switch (criterion 7, the biggest complaint about sites like ours)
+        Taurus runs no ads of its own: the pop-ups / redirects come from the embedded players. With
+        the switch on, the player's iframe gets sandbox="allow-scripts allow-same-origin allow-forms
+        allow-presentation" (no allow-popups, no allow-top-navigation*): the embed can't open tabs or
+        send the page elsewhere. allow= (autoplay, full screen, PiP, encrypted media) and
+        allowFullScreen kept. A frame on our own origin never gets allow-scripts + allow-same-origin
+        (it loses allow-same-origin). The iframe is remounted (key) when the sandbox changes: a
+        sandbox only applies when the frame loads. frontend watch/popups.js (pure helpers).
+        - Setting: Profile.block_popups, ON by default (users 0030), saved like the profile's other
+          settings: a switch in the profile form, and one at the end of the watch page's source row
+          (Right from the last source; OK toggles it, the focus stays on it while the player reloads,
+          Back still leaves). Changing it keeps the source that is playing.
+        - Which sources play sandboxed: Provider.sandbox_ok yes / no / unknown (users 0030), in
+          /api/providers/, the admin (column + filter, editable) and the dashboard's provider card
+          ("No pop-ups", with the share of the viewers' sandboxed plays that played, 7 days).
+        - The scout (provider_health.py sandbox_check): a provider that played is tried again on up to
+          2 of its titles in a sandboxed iframe like the watch page's. One plays = yes; none = no (a
+          player that goes silent sandboxed counts as no: the same title just played without it);
+          a bot check = no verdict (the import keeps what it knew). It also counts the pop-ups /
+          redirects Chrome blocked. import_providers sets sandbox_ok (known and new providers).
+        - Watch page, switch on: sources with sandbox_ok "no" go last with "may open pop-ups"; "No
+          pop-ups" on the ones the scout saw play sandboxed; the starting source is one that plays
+          sandboxed when there is one. A sandboxed source that fails by itself (same path as
+          autoFailedRef: not loaded in 15 s) is remembered for this profile for 2 weeks (it goes last
+          too), unless the scout saw it play sandboxed (then it is just down); plays are reported
+          with "sandboxed" (PlaybackOutcome.sandboxed, reco 0023). On a source that may open pop-ups,
+          or when nothing left plays sandboxed: "Allow pop-ups for this source" once (that source,
+          that title; the setting stays on).
+        - 13 languages; right to left checked (the switch's thumb was positioned with translateX:
+          mirrored for dir="rtl"; the row and the offer use logical properties).
+        Measured: the players' postMessage events (progress, CineSrc remote commands and replies)
+        still arrive with the sandbox (e2e). How many real sources refuse the sandbox: the scout's
+        first night after the deploy says (dashboard "No pop-ups" column).
+        Tests: frontend watch/popups.test.js (13); backend users/test_block_popups.py (6) + 3 in
+        test_provider_import.py; provider_scraper/test_provider_health.py (7, no browser); e2e
+        popups.spec.js (5, remote only: a fake embed calling window.open / top.location, blocked when
+        ON, going through when OFF; the switch, the one-time allow, Arabic).
 [ ] 9.2 Sources switch by themselves, through all of them (criterion 2)
         Today: a source that doesn't load in a few seconds -> the next one is OFFERED. Better: go
         to the next one by itself (toast "Source 2 didn't load, trying Source 3", Undo), through the

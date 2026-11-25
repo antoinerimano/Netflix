@@ -143,6 +143,39 @@ class ImportTests(TestCase):
         self.assertTrue(self.vidfast.sends_events)
         self.assertIn("sends_events on", lines[0])
 
+    def test_plays_with_pop_ups_blocked_comes_from_the_scout(self):
+        # Block pop-ups (9.1): the scout's sandboxed check sets sandbox_ok, also on a source that isn't live
+        self.assertEqual(self.vidfast.sandbox_ok, Provider.UNKNOWN)
+        e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
+        e["health"].update(sandbox="no", sandbox_detail="plays, but not sandboxed")
+        lines, _ = import_catalog(catalog(e))
+        self.vidfast.refresh_from_db()
+        self.assertEqual(self.vidfast.sandbox_ok, Provider.SANDBOX_NO)
+        self.assertIn("pop-ups blocked: unknown -> no", lines[0])
+        e = entry("vidfast", state="partial", test_url="https://vidfast.pro/movie/1368337")
+        e["health"]["sandbox"] = "yes"
+        import_catalog(catalog(e))
+        self.vidfast.refresh_from_db()
+        self.assertEqual(self.vidfast.sandbox_ok, Provider.SANDBOX_YES)
+
+    def test_no_sandbox_verdict_keeps_what_is_known(self):
+        self.vidfast.sandbox_ok = Provider.SANDBOX_NO
+        self.vidfast.save()
+        for verdict in ("unknown", None):
+            e = entry("vidfast", test_url="https://vidfast.pro/movie/1368337")
+            if verdict:
+                e["health"]["sandbox"] = verdict
+            import_catalog(catalog(e))
+            self.vidfast.refresh_from_db()
+            self.assertEqual(self.vidfast.sandbox_ok, Provider.SANDBOX_NO)
+
+    def test_a_new_provider_gets_the_sandbox_verdict(self):
+        e = entry("cinesrc", test_url="https://cinesrc.st/embed/movie/1368337", sites=3)
+        e["health"]["sandbox"] = "yes"
+        import_catalog(catalog(e, entry("vidly", test_url="https://vidly.pro/movie/1368337", sites=3)))
+        self.assertEqual(Provider.objects.get(key="cinesrc").sandbox_ok, Provider.SANDBOX_YES)
+        self.assertEqual(Provider.objects.get(key="vidly").sandbox_ok, Provider.UNKNOWN)
+
     def test_found_by_host(self):
         import_catalog(catalog(entry("vid-fast", test_url="https://vidfast.net/embed/1368337", hosts=["www.vidfast.pro"],
                                      dead=True)))
