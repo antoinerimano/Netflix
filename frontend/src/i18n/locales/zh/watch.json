@@ -38,15 +38,6 @@
     "customLabel": "你的视频链接",
     "customPlaceholder": "粘贴视频或播放器链接（https://…）"
   },
-  "popups": {
-    "block": "拦截弹窗",
-    "blockHint": "阻止视频播放器打开新标签页或离开此页面",
-    "noPopups": "无弹窗",
-    "mayOpen": "可能会打开弹窗",
-    "mayOpenHint": "拦截弹窗时无法播放：排在最后",
-    "offer": "拦截弹窗时 {{source}} 可能无法播放。",
-    "allowOnce": "允许此来源打开弹窗"
-  },
   "info": {
     "about": "简介",
     "seasonEpisodes": "第 {{number}} 季剧集",

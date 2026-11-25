@@ -58,12 +58,9 @@ export async function markNotInterested({ profileId, titleId, surface = "" }) {
 
 // ---------- smart playback ----------
 // Did this source play? worked = playback reported / viewer stayed; false = left it quickly or it never loaded.
-// sandboxed: the player had "Block pop-ups" on (ROADMAP 9.1)
-export async function reportPlayback({ profileId, titleId, provider, worked, sandboxed }) {
+export async function reportPlayback({ profileId, titleId, provider, worked }) {
   if (!profileId || !titleId || !provider) return;
-  const body = { profile_id: Number(profileId), title_id: Number(titleId), provider, worked };
-  if (typeof sandboxed === "boolean") body.sandboxed = sandboxed;
-  await api.post("/playback/", body);
+  await api.post("/playback/", { profile_id: Number(profileId), title_id: Number(titleId), provider, worked });
 }
 
 // { title, profile }: provider key that last worked for this title / for this profile (or null)

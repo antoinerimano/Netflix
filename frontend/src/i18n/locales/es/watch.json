@@ -38,15 +38,6 @@
     "customLabel": "Tu enlace de vídeo",
     "customPlaceholder": "Pega un enlace de vídeo o de reproductor (https://…)"
   },
-  "popups": {
-    "block": "Bloquear ventanas emergentes",
-    "blockHint": "Impide que los reproductores abran pestañas nuevas o salgan de esta página",
-    "noPopups": "Sin ventanas emergentes",
-    "mayOpen": "puede abrir ventanas emergentes",
-    "mayOpenHint": "No se reproduce con las ventanas emergentes bloqueadas: aparece al final",
-    "offer": "Puede que {{source}} no se reproduzca con las ventanas emergentes bloqueadas.",
-    "allowOnce": "Permitir ventanas emergentes en esta fuente"
-  },
   "info": {
     "about": "Información",
     "seasonEpisodes": "Episodios de la temporada {{number}}",

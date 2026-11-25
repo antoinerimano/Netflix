@@ -171,26 +171,6 @@ one that passes on its retry shows as "flaky" and deserves a look.
 | `test_kids_profile_list_respects_its_age_and_others_are_refused` | a kids profile's list follows its age limit; nobody reads or removes another account's history |
 | `test_backfill_from_what_was_recorded_before` | the migration builds the first history from Continue watching (with the episode) and Play presses (one per title and day) |
 
-### Block pop-ups: `backend/users/test_block_popups.py` (6) and `backend/users/test_provider_import.py` (3 of them)
-
-ROADMAP 9.1: the profile's "Block pop-ups" setting, and which providers play in a sandboxed player.
-
-| Test | Verifies |
-|---|---|
-| `test_on_by_default_and_sent_with_the_profile` | a new profile blocks pop-ups; the profile API sends the setting |
-| `test_the_switch_is_saved_on_the_profile` | the watch page's switch (PATCH) and the profile form (PUT) save it |
-| `test_nobody_else_changes_it` | another account's profile can't be changed |
-| `test_providers_say_if_they_play_sandboxed` | `/api/providers/` gives each source's `sandbox_ok` (yes / no / unknown) |
-| `test_sandboxed_plays_are_recorded` | a reported play says whether the player was sandboxed (not said by older apps: empty) |
-| `test_dashboard_shows_it` | the dashboard's provider card shows "No pop-ups" and the share of sandboxed plays that played |
-| `test_plays_with_pop_ups_blocked_comes_from_the_scout` | the scout's sandboxed check sets `sandbox_ok`, also on a source that isn't live |
-| `test_no_sandbox_verdict_keeps_what_is_known` | no verdict tonight (bot check, not checked): what was known stays |
-| `test_a_new_provider_gets_the_sandbox_verdict` | a provider the scout adds comes with its verdict |
-
-The scout's own part (`provider_scraper/test_provider_health.py`, 7, no browser: `cd provider_scraper && python -m unittest test_provider_health`):
-the sandboxed test page is the watch page's iframe (no `allow-popups`, no `allow-top-navigation`); a title that
-played is tried again sandboxed (2 at most, one that plays = yes, a silent player = no, a bot check = no verdict).
-
 ### Upcoming episodes: `backend/reco/test_calendar.py` (5)
 
 | Test | Verifies |
@@ -341,17 +321,6 @@ What each video player's messages mean (`watch/playerEvents.js`): they drive the
 | URLs (2) | a bare domain gets `https://`; `.mp4` / `.m3u8` files play in the page's own player |
 | saved preferences and the address (3) | the saved source is per profile and title; old saved sources still work; `?season=` / `?episode=` / `?t=` only accept positive numbers |
 
-### Block pop-ups: `frontend/src/components/watch/popups.test.js` (13)
-
-ROADMAP 9.1 (`watch/popups.js`).
-
-| Test | Verifies |
-|---|---|
-| sandbox attribute (3) | blocking: `allow-scripts allow-same-origin allow-forms allow-presentation`, never `allow-popups` / `allow-top-navigation`; nothing when off; a frame on our own origin never gets `allow-scripts` with `allow-same-origin` |
-| source order (4) | blocking: sources that don't play sandboxed (scout, or failed sandboxed here) last with "may open pop-ups", "No pop-ups" on the ones the scout saw play sandboxed, the server's order kept inside each group; off: the server's order, no marks |
-| "Allow pop-ups for this source" (3) | offered on a source that may open pop-ups, or when the current one failed and no other plays sandboxed; once per source, never when off |
-| learned failures and the setting (3) | a failure is remembered per profile for 2 weeks; broken storage is ignored; on by default, the profile copy follows the switch |
-
 ### Trailer previews on the rows: `frontend/src/components/preview/previewStore.test.js` (8)
 
 When a row card's trailer preview starts and stops (`components/preview/previewStore.js`).
@@ -490,18 +459,6 @@ a franchise (The Godfather + The Godfather Part II, collection 230), see `backen
 | OK on the player never traps the remote in it | after OK on the player (full screen or not), the remote always comes back to the app, never stuck inside the player |
 | CineSrc: the remote drives the player, the focus stays in the app | Play / Pause reach the CineSrc player as commands; the focus never leaves the app |
 | Back on the player returns to the title | Back leaves the player for the title's page |
-
-### Block pop-ups: `e2e/tests/popups.spec.js` (5, remote only)
-
-A fake player with ads: a button that calls `window.open`, one that sets `top.location`. They are pressed the remote's way: OK on the player (full screen, the keys go to the player), then Enter.
-
-| Test | Verifies |
-|---|---|
-| on by default: the player is sandboxed, its pop-up and redirect do nothing, progress still arrives | the iframe's sandbox has no `allow-popups` / `allow-top-navigation`, `allow=` keeps full screen; no tab opens, the page stays; the player's progress events still reach the page; "No pop-ups" on CineSrc, the source that refuses the sandbox last with "may open pop-ups" |
-| the switch: reached from the sources, OK turns it off, the focus stays, pop-ups go through | Right from the last source reaches the switch; OK turns it off and saves it on the profile (still off after a reload); the player is reloaded without the sandbox and the focus stays on the switch; the same pop-up then opens and the redirect moves the page |
-| OK again turns it back on, and Back still leaves the page from the switch | on / off / on with OK; Left goes back to the sources; Back leaves the player |
-| a source that may open pop-ups: "Allow pop-ups for this source" once, the setting stays on | choosing it shows the offer; Down + OK lifts the sandbox for that source only; the focus lands on the source; another source is sandboxed again |
-| Arabic: the switch at the end of the row (on the left), the thumb in its track, the remote reaches it | right to left: the switch is left of the sources, its thumb stays in the track on the "on" side, Left from the last source reaches it, the focus look keeps clear of its neighbours |
 
 ### Focus look never covers a neighbour: `e2e/tests/focus-overlap.spec.js` (10: 5 at 1280 × 720, the same 5 at 1920 × 1080)
 

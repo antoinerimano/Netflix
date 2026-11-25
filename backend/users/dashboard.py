@@ -150,9 +150,7 @@ def _providers(now):
         r["provider_key"]: r
         for r in PlaybackOutcome.objects.filter(created_at__gte=since7)
         .values("provider_key")
-        .annotate(n=Count("id"), ok=Count("id", filter=Q(worked=True)),
-                  sb_n=Count("id", filter=Q(sandboxed=True)),
-                  sb_ok=Count("id", filter=Q(sandboxed=True, worked=True)))
+        .annotate(n=Count("id"), ok=Count("id", filter=Q(worked=True)))
     }
     checks = {
         r["provider_key"]: r
@@ -169,9 +167,6 @@ def _providers(now):
             "success": _pct(pl.get("ok", 0), pl.get("n", 0)),
             "uptime": _pct(ch.get("up", 0), ch.get("n", 0)),
             "checks": ch.get("n", 0),
-            # "Block pop-ups" (9.1): the plays with the player sandboxed, and how often they played
-            "sandboxed_plays": pl.get("sb_n", 0),
-            "sandboxed_success": _pct(pl.get("sb_ok", 0), pl.get("sb_n", 0)),
         })
     most_plays = max([r["plays"] for r in rows] + [1])
     for r in rows:

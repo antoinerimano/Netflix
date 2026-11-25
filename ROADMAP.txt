@@ -483,57 +483,26 @@ Our score on the same grid (my reading of the code, not FMHY's):
   4 UI, player, search, settings .......................... 2/2
   5 Watch lists + sync .................................... 2/2  (no Trakt / Simkl / AniList)
   6 Discovery (recs, collections, random, sort, moods) .... 2/2  ahead of almost all of them
-  7 Redirect / pop-up ads ................................. 0-1  the embeds' pop-ups get through,
-                                                                   no "block pop-ups" switch
+  7 Redirect / pop-up ads ................................. 0-1  the embeds' pop-ups get through;
+                                                                   blocking them stops most players (9.1)
   8 Mobile ................................................ 2/2
   9 Own / custom player ................................... 0/2  iframes of other players; stays 0:
                                                                    we host no films (9.10 dropped)
-  About 12/18, so 16/18 at best. The gap is the player side (1, 2, 3, 7), not the app.
+  About 12/18, so ~15/18 at best. The gap is the player side (1, 2, 3, 7), not the app.
 Where we are already ahead (say it on the landing page and the listing request): TV remote on
 every page, kids profiles that really filter, 13 languages incl. right to left, "Ask Taurus",
 "What to watch?", recaps, Upcoming calendar, your year, shareable lists, Letterboxd / IMDb import.
 None of the 18/18 sites does more than 3-4 of these.
 
-Order: 9.1-9.3 first (they move the score from ~12 to ~16 for little work), then 9.4-9.7 (what
+Order: 9.2-9.3 first (they move the score from ~12 to ~14 for little work), then 9.4-9.7 (what
 visitors see on the first screen), the bigger ones after.
 
-[x] 9.1 "Block pop-ups" switch (criterion 7, the biggest complaint about sites like ours)
-        Taurus runs no ads of its own: the pop-ups / redirects come from the embedded players. With
-        the switch on, the player's iframe gets sandbox="allow-scripts allow-same-origin allow-forms
-        allow-presentation" (no allow-popups, no allow-top-navigation*): the embed can't open tabs or
-        send the page elsewhere. allow= (autoplay, full screen, PiP, encrypted media) and
-        allowFullScreen kept. A frame on our own origin never gets allow-scripts + allow-same-origin
-        (it loses allow-same-origin). The iframe is remounted (key) when the sandbox changes: a
-        sandbox only applies when the frame loads. frontend watch/popups.js (pure helpers).
-        - Setting: Profile.block_popups, ON by default (users 0030), saved like the profile's other
-          settings: a switch in the profile form, and one at the end of the watch page's source row
-          (Right from the last source; OK toggles it, the focus stays on it while the player reloads,
-          Back still leaves). Changing it keeps the source that is playing.
-        - Which sources play sandboxed: Provider.sandbox_ok yes / no / unknown (users 0030), in
-          /api/providers/, the admin (column + filter, editable) and the dashboard's provider card
-          ("No pop-ups", with the share of the viewers' sandboxed plays that played, 7 days).
-        - The scout (provider_health.py sandbox_check): a provider that played is tried again on up to
-          2 of its titles in a sandboxed iframe like the watch page's. One plays = yes; none = no (a
-          player that goes silent sandboxed counts as no: the same title just played without it);
-          a bot check = no verdict (the import keeps what it knew). It also counts the pop-ups /
-          redirects Chrome blocked. import_providers sets sandbox_ok (known and new providers).
-        - Watch page, switch on: sources with sandbox_ok "no" go last with "may open pop-ups"; "No
-          pop-ups" on the ones the scout saw play sandboxed; the starting source is one that plays
-          sandboxed when there is one. A sandboxed source that fails by itself (same path as
-          autoFailedRef: not loaded in 15 s) is remembered for this profile for 2 weeks (it goes last
-          too), unless the scout saw it play sandboxed (then it is just down); plays are reported
-          with "sandboxed" (PlaybackOutcome.sandboxed, reco 0023). On a source that may open pop-ups,
-          or when nothing left plays sandboxed: "Allow pop-ups for this source" once (that source,
-          that title; the setting stays on).
-        - 13 languages; right to left checked (the switch's thumb was positioned with translateX:
-          mirrored for dir="rtl"; the row and the offer use logical properties).
-        Measured: the players' postMessage events (progress, CineSrc remote commands and replies)
-        still arrive with the sandbox (e2e). How many real sources refuse the sandbox: the scout's
-        first night after the deploy says (dashboard "No pop-ups" column).
-        Tests: frontend watch/popups.test.js (13); backend users/test_block_popups.py (6) + 3 in
-        test_provider_import.py; provider_scraper/test_provider_health.py (7, no browser); e2e
-        popups.spec.js (5, remote only: a fake embed calling window.open / top.location, blocked when
-        ON, going through when OFF; the switch, the one-time allow, Arabic).
+[-] 9.1 "Block pop-ups" switch (dropped 2026-11-25: built, tested locally, then removed)
+        The idea: sandbox the player iframe (no allow-popups / allow-top-navigation) so the
+        embedded players can't open tabs or redirect the page. Built by an agent on the mini PC
+        (all tests passed), but on real sources most players notice their pop-ups are blocked
+        and refuse to play the video. Reverted. Criterion 7 stays as it is: the pop-ups are the
+        embeds' own ads; a source is only as clean as its player.
 [ ] 9.2 Sources switch by themselves, through all of them (criterion 2)
         Today: a source that doesn't load in a few seconds -> the next one is OFFERED. Better: go
         to the next one by itself (toast "Source 2 didn't load, trying Source 3", Undo), through the
@@ -587,7 +556,7 @@ visitors see on the first screen), the bigger ones after.
 [ ] 9.11 Sync with Trakt / Simkl (criterion 5 counts it as a plus; was left out in 7.2)
         Low priority: our own sync already scores 2/2. Only if users ask: scrobble plays to Trakt
         / Simkl and pull their watchlist, behind a "Connect" button on the account page.
-[ ] 9.12 Get listed (once 9.1-9.3 are done and the score is ~16/18)
+[ ] 9.12 Get listed (once 9.2-9.3 are done and the score is ~14/18)
         Ask FMHY to grade the site and ahoylist to add it (GitHub yarrlist/AhoyList,
         r/ahoylistnet). Lead with what nobody else has (TV remote, kids profiles, 13 languages,
         Ask Taurus). The landing page (alioupganghd.store) says the same.

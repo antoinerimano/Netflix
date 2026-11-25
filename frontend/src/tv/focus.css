@@ -40,8 +40,7 @@
 /* ---------- Design system buttons / chips (design/components.css): an offset ring (a gap in
    the page color, then white) that stays visible on white and red buttons alike ---------- */
 .ui-btn:focus-visible,
-.ui-chip:focus-visible,
-.watchpage__popupSwitch:focus-visible {
+.ui-chip:focus-visible {
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 5px var(--focus-ring), 0 10px 26px rgba(0, 0, 0, 0.5);
 }
 

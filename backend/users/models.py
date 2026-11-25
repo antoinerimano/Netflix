@@ -64,9 +64,6 @@ class Profile(models.Model):
     # "Appearance" page: {"font", "accent", "background"} ids chosen by the profile (frontend
     # design/theme.js); missing keys = the default look. Follows the profile on every device.
     appearance = models.JSONField(default=dict, blank=True)
-    # "Block pop-ups" (ROADMAP 9.1): the watch page sandboxes the embedded players (no new tabs, no
-    # redirect of the page). On by default; the watch page's switch and the profile form change it.
-    block_popups = models.BooleanField(default=True)
 
 class PaymentHistory(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
@@ -402,15 +399,6 @@ class Provider(models.Model):
     # check plays the test titles on every provider; shown in the admin
     scout_check = models.CharField(max_length=300, blank=True, default="",
                                    help_text="The scout's last nightly playback check.")
-    # "Block pop-ups" (ROADMAP 9.1): does the player still play inside a sandboxed iframe (no
-    # allow-popups / allow-top-navigation)? Some embeds detect the sandbox and refuse. Set by the
-    # scout (it plays a title sandboxed too) or by hand; the watch page puts "no" sources last.
-    SANDBOX_YES, SANDBOX_NO = "yes", "no"
-    SANDBOX_CHOICES = [(SANDBOX_YES, "Yes"), (SANDBOX_NO, "No"), (UNKNOWN, "Unknown")]
-    sandbox_ok = models.CharField(
-        max_length=10, choices=SANDBOX_CHOICES, default=UNKNOWN,
-        help_text="Plays with pop-ups blocked (sandboxed iframe). Set by the provider scout.",
-    )
 
     # filled by the health check (check_providers)
     status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)

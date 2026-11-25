@@ -38,15 +38,6 @@
     "customLabel": "Dein Videolink",
     "customPlaceholder": "Video- oder Player-Link einfügen (https://…)"
   },
-  "popups": {
-    "block": "Pop-ups blockieren",
-    "blockHint": "Verhindert, dass die Videoplayer neue Tabs öffnen oder diese Seite verlassen",
-    "noPopups": "Keine Pop-ups",
-    "mayOpen": "kann Pop-ups öffnen",
-    "mayOpenHint": "Spielt nicht mit blockierten Pop-ups ab: steht am Ende",
-    "offer": "{{source}} spielt mit blockierten Pop-ups eventuell nicht ab.",
-    "allowOnce": "Pop-ups für diese Quelle erlauben"
-  },
   "info": {
     "about": "Über",
     "seasonEpisodes": "Folgen der Staffel {{number}}",

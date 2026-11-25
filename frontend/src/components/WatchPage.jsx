@@ -7,10 +7,9 @@ import "./WatchPage.css";
 
 import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource, fetchCollection } from "../api/recoApi";
-import { patchProfile } from "../api/userApi";
 import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbBackground, IMG } from "../utils/tmdbImage";
-import { Button, Chip, EmptyState, Skeleton, Spinner, Switch } from "../design";
+import { Button, Chip, EmptyState, Skeleton, Spinner } from "../design";
 import { ArrowLeftIcon, ChevronRightIcon, MaximizeIcon, LinkIcon } from "../design/icons";
 import WatchInfo from "./watch/WatchInfo";
 import { usePlayerRemote } from "./watch/playerRemote";
@@ -27,15 +26,6 @@ import {
   readPositiveInt,
   storageKey,
 } from "./watch/playerEvents";
-import {
-  orderSources,
-  readBlockPopups,
-  readSandboxFailures,
-  rememberSandboxFailure,
-  sandboxFor,
-  shouldOfferAllow,
-  storeBlockPopups,
-} from "./watch/popups";
 
 export default function WatchPage() {
   const { t, i18n } = useTranslation("watch");
@@ -77,14 +67,6 @@ export default function WatchPage() {
   const autoFailedRef = useRef(new Set()); // sources that failed by themselves on this page
   const [banner, setBanner] = useState(null); // { text, nextKey?, nextLabel? }
   const [serverPref, setServerPref] = useState(undefined); // undefined = loading, null = unavailable
-  const [, setFailedTick] = useState(0); // autoFailedRef changed (the "allow pop-ups" offer reads it)
-
-  // Block pop-ups (ROADMAP 9.1): the profile's setting, sources that failed sandboxed for this
-  // profile (learned), and the ones the viewer let open pop-ups on this page ("Allow pop-ups for
-  // this source": the setting doesn't change)
-  const [blockPopups, setBlockPopups] = useState(readBlockPopups);
-  const [learnedNoSandbox, setLearnedNoSandbox] = useState(() => readSandboxFailures(activeProfileId));
-  const [allowedOnce, setAllowedOnce] = useState(() => new Set());
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // ✅ Default selection is NOT custom anymore (we auto-pick first provider)
@@ -289,7 +271,7 @@ export default function WatchPage() {
   useEffect(() => setBackHandler(goBack), [goBack]);
 
   // Links: provider domain + path template, filled with this movie / episode
-  const linkedProviders = useMemo(() => {
+  const providers = useMemo(() => {
     if (!title) return [];
     if (isTV) {
       return buildProviderLinks(
@@ -304,13 +286,6 @@ export default function WatchPage() {
       "movie"
     );
   }, [title, isTV, providerDefs, seasonNumber, episodeNumber, startFromUrl]);
-
-  // Block pop-ups on: the sources that don't play sandboxed last ("may open pop-ups"), "No pop-ups"
-  // on the ones the scout saw play sandboxed
-  const providers = useMemo(
-    () => orderSources(linkedProviders, { block: blockPopups, learned: learnedNoSandbox }),
-    [linkedProviders, blockPopups, learnedNoSandbox]
-  );
 
   // Load prefs
   useEffect(() => {
@@ -368,16 +343,13 @@ export default function WatchPage() {
       return;
     }
 
-    // with pop-ups blocked, a source that plays sandboxed first (any source if none does)
     const available = new Set(providers.map((p) => p.key));
-    const safe = new Set(providers.filter((p) => !p.popupRisk).map((p) => p.key));
-    const candidates = [
+    const pick = [
       serverPref?.title,
       hasPrefsRef.current ? savedKeyRef.current : null,
       serverPref?.profile,
       providers[0]?.key,
-    ];
-    const pick = candidates.find((key) => key && safe.has(key)) || candidates.find((key) => key && available.has(key));
+    ].find((key) => key && available.has(key));
 
     if (pick) {
       if (selectedKey !== pick) setSelectedKey(pick);
@@ -494,41 +466,10 @@ export default function WatchPage() {
     return isDirectVideo(resolvedUrl) ? "direct" : "iframe";
   }, [resolvedUrl]);
 
-  // the player's sandbox: no pop-ups, no redirect of this page (undefined = none). A change
-  // remounts the iframe (its key): a sandbox only applies when the frame loads.
-  const sandboxAttr = sourceType === "iframe" ? sandboxFor(resolvedUrl, blockPopups && !allowedOnce.has(selectedKey)) : undefined;
-
-  const learnSandboxFailure = useCallback(
-    (key) => {
-      rememberSandboxFailure(activeProfileId, key);
-      setLearnedNoSandbox(readSandboxFailures(activeProfileId));
-    },
-    [activeProfileId]
-  );
-
-  // The switch (watch page) and the profile form: saved on the profile, like its other settings
-  const toggleBlockPopups = useCallback((on) => {
-    // the sources get re-ordered: stay on the one playing (the starting pick must not run again)
-    userPickedRef.current = true;
-    setBlockPopups(on);
-    storeBlockPopups(on);
-    const userId = localStorage.getItem("userId");
-    const profileId = localStorage.getItem("activeProfileId");
-    if (userId && profileId) patchProfile(userId, profileId, { block_popups: on }).catch(() => {});
-  }, []);
-
-  const allowPopupsOnce = useCallback((key) => {
-    setAllowedOnce((prev) => new Set(prev).add(key));
-    // the offer goes away: the remote lands on the source it was about
-    setTimeout(() => document.querySelector(".watchpage__chip.is-selected")?.focus({ preventScroll: true }), 0);
-  }, []);
-
   // Smart playback: did the current source play? Reported to the server (it opens the source that
   // worked next time, and ranks providers); falls back when a source never loads.
   useEffect(() => {
     autoFailedRef.current = new Set(); // new title / episode: every source gets a fresh chance
-    setFailedTick((n) => n + 1);
-    setAllowedOnce(new Set()); // "Allow pop-ups for this source" was for that title only
   }, [titleId, seasonNumber, episodeNumber]);
 
   useEffect(() => {
@@ -539,13 +480,11 @@ export default function WatchPage() {
       return;
     }
     const pid = localStorage.getItem("activeProfileId");
-    const sandboxed = !!sandboxAttr;
-    const lifted = blockPopups && !sandboxed; // pop-ups allowed for this source only ("Allow pop-ups")
     const attempt = { key: p.key, startedAt: Date.now(), playing: false, reported: false };
     attempt.report = (worked) => {
       if (attempt.reported || !pid) return;
       attempt.reported = true;
-      reportPlayback({ profileId: pid, titleId: title.id, provider: p.key, worked, sandboxed }).catch(() => {});
+      reportPlayback({ profileId: pid, titleId: title.id, provider: p.key, worked }).catch(() => {});
     };
     attemptRef.current = attempt;
     const nextSource = () =>
@@ -557,8 +496,6 @@ export default function WatchPage() {
         attempt.playing = true;
         setBanner(null);
         attempt.report(true);
-        // it didn't play sandboxed, it plays with pop-ups allowed: the sandbox was the problem
-        if (lifted && p.sandboxOk !== "yes" && autoFailedRef.current.has(p.key)) learnSandboxFailure(p.key);
       }
     };
     window.addEventListener("message", onMessage);
@@ -568,13 +505,9 @@ export default function WatchPage() {
       setTimeout(() => {
         if (iframeLoadedRef.current || attempt.playing) return;
         const next = nextSource();
-        autoFailedRef.current.add(p.key);
-        setFailedTick((n) => n + 1);
-        // failed by itself while sandboxed: this profile's watch page now puts it last when pop-ups
-        // are blocked (unless the scout saw it play sandboxed: then it is just down)
-        if (sandboxed && p.sandboxOk !== "yes") learnSandboxFailure(p.key);
         if (!next) return;
         attempt.report(false);
+        autoFailedRef.current.add(p.key);
         userPickedRef.current = true;
         setBanner({ text: t("sources.switched", { from: p.label, to: next.label }) });
         setSelectedKey(next.key);
@@ -596,7 +529,7 @@ export default function WatchPage() {
       timers.forEach(clearTimeout);
       window.removeEventListener("message", onMessage);
     };
-  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers, sandboxAttr]); // eslint-disable-line react-hooks/exhaustive-deps -- t: only the banner text, a new language must not restart the source
+  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers]); // eslint-disable-line react-hooks/exhaustive-deps -- t: only the banner text, a new language must not restart the source
 
   // "switched to X" notices go away by themselves; "Not playing?" offers stay until used
   useEffect(() => {
@@ -708,14 +641,11 @@ export default function WatchPage() {
 
     return (
       <iframe
-        // Block pop-ups: a new sandbox only applies to a new frame
-        key={sandboxAttr ? "sandboxed" : "open"}
         ref={iframeRef}
         className="watchpage__iframe"
         src={resolvedUrl}
         title={t("player.label")}
         allow="autoplay; fullscreen *; picture-in-picture; encrypted-media"
-        sandbox={sandboxAttr}
         allowFullScreen
         webkitallowfullscreen="true"
         mozallowfullscreen="true"
@@ -727,7 +657,7 @@ export default function WatchPage() {
         }}
       />
     );
-  }, [resolvedUrl, sourceType, providersError, sandboxAttr, t]);
+  }, [resolvedUrl, sourceType, providersError, t]);
 
   if (loading) {
     return (
@@ -767,10 +697,6 @@ export default function WatchPage() {
   }
 
   const selectedProvider = providers.find((x) => x.key === selectedKey);
-  // re-rendered when autoFailedRef changes (setFailedTick)
-  const offerAllow =
-    sourceType === "iframe" &&
-    shouldOfferAllow({ block: blockPopups, current: selectedProvider, sources: providers, failed: autoFailedRef.current, allowed: allowedOnce });
   const subtitle = [isTV ? t("seasonEpisode", { season: seasonNumber, episode: episodeNumber }) : "", metaLine].filter(Boolean).join(" · ");
 
   return (
@@ -881,46 +807,24 @@ export default function WatchPage() {
             <h2 className="watchpage__sourcesTitle">{t("sources.title")}</h2>
             <p className="watchpage__sourcesHelp">{t("sources.help")}</p>
           </div>
-          <div className="watchpage__sourceRow">
-            <div className="ui-scroller watchpage__providerRow" role="group" aria-label={t("sources.choose")}>
-              {providers.map((p) => (
-                <Chip
-                  key={p.key}
-                  className="watchpage__chip"
-                  selected={selectedKey === p.key}
-                  onClick={() => switchSource(p.key)} // also stops the auto-reset to the first provider
-                  title={p.down ? t("sources.downHint") : p.popupRisk ? t("popups.mayOpenHint") : undefined}
-                >
-                  {p.label}
-                  {p.noPopups ? <span className="watchpage__chipTag">{t("popups.noPopups")}</span> : null}
-                  {p.down ? <span className="watchpage__chipNote">{t("sources.down")}</span> : null}
-                  {p.popupRisk && !p.down ? <span className="watchpage__chipNote">{t("popups.mayOpen")}</span> : null}
-                </Chip>
-              ))}
-              <Chip className="watchpage__chip" selected={selectedKey === "custom"} onClick={() => switchSource("custom")}>
-                <LinkIcon className="watchpage__chipIcon" aria-hidden="true" />
-                {t("sources.custom")}
+          <div className="ui-scroller watchpage__providerRow" role="group" aria-label={t("sources.choose")}>
+            {providers.map((p) => (
+              <Chip
+                key={p.key}
+                className="watchpage__chip"
+                selected={selectedKey === p.key}
+                onClick={() => switchSource(p.key)} // also stops the auto-reset to the first provider
+                title={p.down ? t("sources.downHint") : undefined}
+              >
+                {p.label}
+                {p.down ? <span className="watchpage__chipNote">{t("sources.down")}</span> : null}
               </Chip>
-            </div>
-            {/* Block pop-ups (9.1): beside the sources (Right from the last one); OK toggles it, the
-                focus stays on it while the player reloads */}
-            <Switch
-              className="watchpage__popupSwitch"
-              checked={blockPopups}
-              onChange={toggleBlockPopups}
-              label={t("popups.block")}
-              title={t("popups.blockHint")}
-            />
+            ))}
+            <Chip className="watchpage__chip" selected={selectedKey === "custom"} onClick={() => switchSource("custom")}>
+              <LinkIcon className="watchpage__chipIcon" aria-hidden="true" />
+              {t("sources.custom")}
+            </Chip>
           </div>
-
-          {offerAllow ? (
-            <div className="watchpage__popupOffer" role="status">
-              <p className="watchpage__popupOfferText">{t("popups.offer", { source: selectedProvider.label })}</p>
-              <Button variant="secondary" size="sm" onClick={() => allowPopupsOnce(selectedProvider.key)}>
-                {t("popups.allowOnce")}
-              </Button>
-            </div>
-          ) : null}
 
           {selectedKey === "custom" ? (
             <div className="watchpage__customBox">

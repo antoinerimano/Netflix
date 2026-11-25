@@ -61,9 +61,7 @@
     "ageLimitHint": "I titoli con una classificazione superiore vengono nascosti.",
     "ageLimitKidsHint": "I profili bambini arrivano fino a 7+ (PG).",
     "language": "Lingua",
-    "languageHint": "L'app, i titoli e le trame vengono mostrati in questa lingua.",
-    "blockPopups": "Blocca pop-up",
-    "blockPopupsHint": "I lettori video non possono aprire nuove schede o pubblicità. Alcune fonti partono solo con questa opzione disattivata."
+    "languageHint": "L'app, i titoli e le trame vengono mostrati in questa lingua."
   },
   "avatar": {
     "title": "Crea il tuo avatar",

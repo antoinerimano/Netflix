@@ -1525,8 +1525,7 @@ def _last_working_source(outcomes):
 
 class PlaybackView(APIView):
     """
-    POST /api/playback/  {profile_id, title_id, provider, worked, sandboxed?}  did this source play?
-                         (sandboxed: with "Block pop-ups" on, ROADMAP 9.1)
+    POST /api/playback/  {profile_id, title_id, provider, worked}        did this source play?
     GET  /api/playback/?profileId=..&titleId=..
          -> {"title": key | null, "profile": key | null}  source to open first: the one that last
             worked for this title, else the one that last worked for this profile
@@ -1541,9 +1540,7 @@ class PlaybackView(APIView):
             return Response({"detail": "unknown provider"}, status=400)
         if profile.history_paused:
             return Response({"ok": True, "paused": True})
-        sandboxed = request.data.get("sandboxed")
-        PlaybackOutcome.objects.create(profile=profile, title=title, provider_key=key, worked=bool(request.data.get("worked")),
-                                       sandboxed=None if sandboxed is None else bool(sandboxed))
+        PlaybackOutcome.objects.create(profile=profile, title=title, provider_key=key, worked=bool(request.data.get("worked")))
         return Response({"ok": True})
 
     def get(self, request):

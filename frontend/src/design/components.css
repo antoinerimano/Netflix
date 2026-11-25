@@ -717,10 +717,6 @@
 .ui-switch.is-on .ui-switch__thumb {
   transform: translateX(1.125rem);
 }
-/* right to left (Arabic, Urdu): the thumb starts on the right, "on" is to the left */
-[dir="rtl"] .ui-switch.is-on .ui-switch__thumb {
-  transform: translateX(-1.125rem);
-}
 
 /* ---------- Toast ---------- */
 .ui-toast {

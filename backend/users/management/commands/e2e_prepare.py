@@ -23,11 +23,7 @@ PROVIDERS = [
          movie_path="/movie/{tmdb_id}", episode_path="/tv/{tmdb_id}/{season}/{episode}", priority=1),
     dict(key="cinesrc", label="CineSrc", domain="https://cinesrc.st",
          movie_path="/embed/movie/{tmdb_id}", episode_path="/embed/tv/{tmdb_id}/{season}/{episode}",
-         sends_events=True, priority=2, sandbox_ok="yes"),
-    # Block pop-ups (9.1): a source the scout saw refuse the sandbox (last, "may open pop-ups")
-    dict(key="e2enoisy", label="Noisy Player", domain="https://player.e2e.test",
-         movie_path="/noisy/movie/{tmdb_id}", episode_path="/noisy/tv/{tmdb_id}/{season}/{episode}",
-         priority=0, sandbox_ok="no"),
+         sends_events=True, priority=2),
 ]
 
 MOVIES = [

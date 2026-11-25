@@ -60,9 +60,7 @@
     "ageLimitHint": "Titles rated above this are hidden.",
     "ageLimitKidsHint": "Kids profiles go up to 7+ (PG).",
     "language": "Language",
-    "languageHint": "The app, titles and synopses are shown in this language.",
-    "blockPopups": "Block pop-ups",
-    "blockPopupsHint": "Video players can't open new tabs or ads. A few sources only play with this off."
+    "languageHint": "The app, titles and synopses are shown in this language."
   },
   "avatar": {
     "title": "Create your avatar",

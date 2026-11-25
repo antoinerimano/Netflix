@@ -59,9 +59,7 @@
     "ageLimitHint": "分级高于此限制的作品将被隐藏。",
     "ageLimitKidsHint": "儿童个人资料最高为 7+（PG）。",
     "language": "语言",
-    "languageHint": "应用界面、片名和简介将以此语言显示。",
-    "blockPopups": "拦截弹窗",
-    "blockPopupsHint": "视频播放器无法打开新标签页或广告。少数来源只有关闭此项才能播放。"
+    "languageHint": "应用界面、片名和简介将以此语言显示。"
   },
   "avatar": {
     "title": "创建你的头像",

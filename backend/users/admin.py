@@ -50,12 +50,11 @@ class ProviderForm(forms.ModelForm):
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
     form = ProviderForm
-    list_display = ("label", "domain", "status_badge", "sandbox_badge", "checked_at", "suggested_domain", "enabled", "priority",
-                    "auto_switch")
+    list_display = ("label", "domain", "status_badge", "checked_at", "suggested_domain", "enabled", "priority", "auto_switch")
     list_display_links = ("label",)
     list_editable = ("domain", "enabled", "priority", "auto_switch")
     actions = ["check_now", "accept_suggested_domain"]
-    list_filter = ("enabled", "status", "sandbox_ok")
+    list_filter = ("enabled", "status")
     readonly_fields = ("status", "status_detail", "checked_at", "suggested_domain", "domain_changed_at", "example_links",
                        "scout_check")
     fieldsets = (
@@ -68,10 +67,7 @@ class ProviderAdmin(admin.ModelAdmin):
         }),
         ("Health check", {"fields": ("status", "status_detail", "checked_at", "suggested_domain", "domain_changed_at")}),
         ("Provider scout (nightly: plays several well-known films)", {
-            "fields": ("scout_check", "sandbox_ok"),
-            "description": "Works with pop-ups blocked: the scout plays a title in a sandboxed iframe too "
-                           "(no pop-ups, no redirects). With \"Block pop-ups\" on, the watch page puts the "
-                           "sources marked No last, with a \"may open pop-ups\" note.",
+            "fields": ("scout_check",),
         }),
     )
 
@@ -79,11 +75,6 @@ class ProviderAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         color = {"up": "#2e7d32", "down": "#c62828"}.get(obj.status, "#777")
         return format_html('<b style="color:{}" title="{}">{}</b>', color, obj.status_detail, obj.get_status_display())
-
-    @admin.display(description="No pop-ups", ordering="sandbox_ok")
-    def sandbox_badge(self, obj):
-        color = {"yes": "#2e7d32", "no": "#c62828"}.get(obj.sandbox_ok, "#777")
-        return format_html('<b style="color:{}">{}</b>', color, obj.get_sandbox_ok_display())
 
     @admin.display(description="Example links")
     def example_links(self, obj):

@@ -301,13 +301,12 @@ export function Avatar({ src, name = "", size = "2.5rem", className, radius }) {
 }
 
 /** On / off switch (a button with role="switch": OK on a remote toggles it) */
-export function Switch({ checked, onChange, label, description, className, id, title }) {
+export function Switch({ checked, onChange, label, description, className, id }) {
   return (
     <button
       type="button"
       role="switch"
       id={id}
-      title={title}
       aria-checked={!!checked}
       className={cx("ui-switch", checked && "is-on", className)}
       onClick={() => onChange?.(!checked)}
