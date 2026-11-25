@@ -167,6 +167,15 @@ def _apply_working_link(known, domain, movie_path, episode_path, health, lines, 
         stats["known_ok"] += 1
 
 
+def scout_score(health):
+    """Share of the judged test titles that played in the scout's check ("verified": "4/5" -> 0.8);
+    0 for a provider it found down; None when it couldn't judge any (bot check, network...)."""
+    m = re.fullmatch(r"\s*(\d+)\s*/\s*(\d+)\s*", str(health.get("verified") or ""))
+    if m and int(m.group(2)) > 0:
+        return min(1.0, int(m.group(1)) / int(m.group(2)))
+    return 0.0 if health.get("state") == "down" else None
+
+
 def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     """Apply a provider_catalog.json (dict). Returns (lines, stats)."""
     probe = catalog.get("probe_title") or {}
@@ -202,6 +211,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 if not health:
                     continue  # not checked tonight
                 known.scout_check = note
+                known.scout_score = scout_score(health)
                 if live and domain:
                     _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now)
                 if not dry_run:
@@ -223,7 +233,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 key=key, label=name[:1].upper() + name[1:], domain=domain,
                 movie_path=movie_path, episode_path=episode_path,
                 enabled=enabled, priority=min(next_priority, 32767), auto_switch=True,
-                scout_check=note, sends_events=bool(health.get("sends_events")),
+                scout_check=note, scout_score=scout_score(health), sends_events=bool(health.get("sends_events")),
                 status=Provider.UP, status_detail=f"added by provider scout {stamp}: plays every test film, "
                                                   f"used by {sites} site(s)",
                 checked_at=now,

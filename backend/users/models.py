@@ -399,6 +399,11 @@ class Provider(models.Model):
     # check plays the test titles on every provider; shown in the admin
     scout_check = models.CharField(max_length=300, blank=True, default="",
                                    help_text="The scout's last nightly playback check.")
+    scout_score = models.FloatField(
+        null=True, blank=True,
+        help_text="Share of the test titles the scout's last nightly check played (0-1). Ranks sources "
+                  "that have no success rate yet, and the automatic switch tries the best ones first.",
+    )
 
     # filled by the health check (check_providers)
     status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)

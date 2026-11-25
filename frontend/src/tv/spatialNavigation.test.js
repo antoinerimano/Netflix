@@ -124,3 +124,27 @@ test('an open dialog keeps the remote inside it', () => {
   key('ArrowUp');
   expect(document.activeElement).not.toBe(page);
 });
+
+test('a tile with its own buttons over it (data-tv-inner): up / down reach them', () => {
+  const header = place(add('<button>Full screen</button>'), 800, 0, 200, 50);
+  const tile = place(add('<div tabindex="0" data-tv-inner><button>Undo</button><button>Try again</button></div>'), 0, 100, 1920, 800);
+  const [undo, retry] = tile.querySelectorAll('button');
+  place(undo, 900, 120, 100, 40); // at the top of the tile
+  place(retry, 900, 600, 100, 40); // below its middle
+  const chip = place(add('<button>Source</button>'), 100, 950);
+  tile.focus();
+  key('ArrowUp');
+  expect(document.activeElement).toBe(undo);
+  key('ArrowUp');
+  expect(document.activeElement).toBe(header);
+  tile.focus();
+  key('ArrowDown');
+  expect(document.activeElement).toBe(retry);
+  key('ArrowDown');
+  expect(document.activeElement).toBe(chip);
+  // without the attribute, a tile's own buttons are skipped (as before)
+  tile.removeAttribute('data-tv-inner');
+  tile.focus();
+  key('ArrowUp');
+  expect(document.activeElement).toBe(header);
+});

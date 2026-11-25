@@ -744,21 +744,28 @@ def provider_list(request):
     """
     GET /api/providers/
     Enabled stream providers; the client builds links as domain + path template
-    ({tmdb_id} {imdb_id} {season} {episode}). Order: down last, then success rate (smart playback),
-    then admin priority.
+    ({tmdb_id} {imdb_id} {season} {episode}). Order: down last, then success rate (smart playback;
+    the scout's last nightly result for a provider without one), then the scout, then admin priority.
+    The watch page tries them in this order when a source doesn't play (9.2).
     """
     from reco.views import provider_success_rates
 
     rates = provider_success_rates()
     providers = list(Provider.objects.filter(enabled=True).values(
-        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority"
+        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority",
+        "scout_score",
     ))
+
+    def known(v):
+        return v if v is not None else UNKNOWN_SUCCESS_RATE
+
     for p in providers:
         p["success_rate"] = rates.get(p["key"])  # None until enough plays were recorded
-    # down last, then the ones that play most often for everyone, then the admin priority
+    # down last, then the ones that play most often for everyone (or in the scout's test), then the admin priority
     data = sorted(providers, key=lambda p: (
         p["status"] == Provider.DOWN,
-        -(p["success_rate"] if p["success_rate"] is not None else UNKNOWN_SUCCESS_RATE),
+        -(p["success_rate"] if p["success_rate"] is not None else known(p["scout_score"])),
+        -known(p["scout_score"]),
         p.pop("priority"),
     ))
     response = Response(data)

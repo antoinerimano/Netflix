@@ -1523,12 +1523,21 @@ def _last_working_source(outcomes):
     return None
 
 
+def _last_failed_sources(outcomes):
+    """outcomes newest first [(provider_key, worked)]: the sources whose newest outcome is a failure."""
+    newest = {}
+    for key, worked in outcomes:
+        newest.setdefault(key, worked)
+    return [key for key, worked in newest.items() if not worked]
+
+
 class PlaybackView(APIView):
     """
     POST /api/playback/  {profile_id, title_id, provider, worked}        did this source play?
     GET  /api/playback/?profileId=..&titleId=..
-         -> {"title": key | null, "profile": key | null}  source to open first: the one that last
-            worked for this title, else the one that last worked for this profile
+         -> {"title": key | null, "profile": key | null, "failed": [key...]}  source to open first:
+            the one that last worked for this title, else the one that last worked for this profile;
+            failed = sources whose last try on this title didn't play (tried last by the automatic switch)
     """
     permission_classes = [IsAuthenticated]
 
@@ -1548,9 +1557,10 @@ class PlaybackView(APIView):
         enabled = set(Provider.objects.filter(enabled=True).values_list("key", flat=True))
         base = PlaybackOutcome.objects.filter(profile=profile, provider_key__in=enabled).order_by("-created_at")
         title_id = request.query_params.get("titleId")
-        for_title = _last_working_source(base.filter(title_id=title_id).values_list("provider_key", "worked")[:50]) if title_id else None
+        on_title = list(base.filter(title_id=title_id).values_list("provider_key", "worked")[:50]) if title_id else []
         for_profile = _last_working_source(base.values_list("provider_key", "worked")[:200])
-        return Response({"title": for_title, "profile": for_profile})
+        return Response({"title": _last_working_source(on_title), "profile": for_profile,
+                         "failed": _last_failed_sources(on_title)})
 
 
 # ============================================================

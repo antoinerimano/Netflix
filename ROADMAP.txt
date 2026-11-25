@@ -503,12 +503,30 @@ visitors see on the first screen), the bigger ones after.
         (all tests passed), but on real sources most players notice their pop-ups are blocked
         and refuse to play the video. Reverted. Criterion 7 stays as it is: the pop-ups are the
         embeds' own ads; a source is only as clean as its player.
-[ ] 9.2 Sources switch by themselves, through all of them (criterion 2)
-        Today: a source that doesn't load in a few seconds -> the next one is OFFERED. Better: go
-        to the next one by itself (toast "Source 2 didn't load, trying Source 3", Undo), through the
-        whole list, ordered by the scout's last results + what worked for this title (2.1). Count
-        "loaded" only on a real player event (play / time), not just the iframe's load. All failed:
-        one clear screen (try again, report a problem -> 9.8).
+[x] 9.2 Sources switch by themselves, through all of them (criterion 2)
+        A source that doesn't play -> the next one by itself ("CineSrc didn't play, trying VidFast…",
+        Undo for 10 s), through the whole list, then one clear screen: "No source played this",
+        Try again (the whole list once more, from the best one) / Choose a source (the remote goes
+        to the source chips). Report a problem waits for 9.8.
+        Order (watch/sourceOrder.js): what worked before (this title on any device, the one picked
+        here last, this profile), then the server's order, then the sources whose last try on this
+        title failed (GET /api/playback/ now returns "failed"), the unreachable ones last.
+        /api/providers/: down last, then the viewers' success rate, then the scout's last nightly
+        result (new Provider.scout_score = test films played / judged, set by import_providers,
+        migration users 0030), then the admin priority. A source with no plays yet is ranked by
+        the scout instead of the 0.5 default.
+        "Didn't play": never loaded in 15 s and sent no player message, or (players that send
+        events) loaded but no play / time event in 20 s. The iframe's load alone no longer counts.
+        No switch by itself while the viewer is busy with the player (full screen, pointer over it,
+        focus in the iframe), after Undo (the next one is only offered), or with the tab hidden
+        (decided when it's visible again).
+        Remote: the player tile has data-tv-inner (spatialNavigation.js): Up / Down from it reach
+        the buttons over it (Undo at the top), which the arrows used to skip. The all-failed screen
+        takes the focus on Try again; a notice that goes away puts the focus back on the player.
+        Measured: only locally (fake players in e2e), not yet on real sources.
+        Tests: reco/test_playback.py (6), users/test_provider_import.py (+2), sourceOrder.test.js
+        (8), spatialNavigation.test.js (+1), e2e/tests/watch-switch.spec.js (2, remote only: arrows
+        / OK / Back, focus overlap). Run: watch, focus-overlap, tv-remote, rtl e2e; reco + users.
 [ ] 9.3 Next episode by the app, for every source (criterion 3)
         On an "ended" player event (already read in WatchPage.jsx) or at the episode's last 30 s
         when the embed sends times: a "Next episode in 10" card with the next episode's picture,

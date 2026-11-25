@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from users.models import JobRun, Provider
-from users.provider_import import import_catalog, paths_for, to_template
+from users.provider_import import import_catalog, paths_for, scout_score, to_template
 
 PROBE = {"tmdb": 1368337, "imdb": "tt33764258"}
 
@@ -116,6 +116,19 @@ class ImportTests(TestCase):
         self.assertEqual((self.vidfast.domain, self.vidfast.movie_path), ("https://vidfast.pro", "/movie/{tmdb_id}?autoPlay=true"))
         self.assertEqual((stats["known_ok"], stats["fixed_link"]), (1, 0))
         self.assertIn("live 5/5", self.vidfast.scout_check)
+
+    def test_the_scouts_result_is_kept_as_a_score(self):
+        import_catalog(catalog(entry("vidfast", state="partial", test_url="https://vidfast.pro/movie/1368337")))
+        self.vidfast.refresh_from_db()
+        self.assertAlmostEqual(self.vidfast.scout_score, 0.4)  # 2 of the 5 test films
+        import_catalog(catalog({**entry("vidfast", state="down"), "health": {"state": "down"}}))
+        self.vidfast.refresh_from_db()
+        self.assertEqual(self.vidfast.scout_score, 0.0)
+
+    def test_scout_score_of_a_check_without_a_verdict(self):
+        self.assertIsNone(scout_score({"state": "unverified", "verified": "0/0"}))
+        self.assertIsNone(scout_score({}))
+        self.assertEqual(scout_score({"state": "live", "verified": "5/5"}), 1.0)
 
     def test_a_dead_link_structure_gets_the_one_that_plays(self):
         Provider.objects.create(key="vidsrc", label="Vidsrc", domain="https://vidsrc.mov",
