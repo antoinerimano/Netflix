@@ -22,7 +22,10 @@
       "trending": "ট্রেন্ডিং",
       "new_episodes": "নতুন পর্ব",
       "continue_watching": "দেখা চালিয়ে যান",
-      "collections_next": "আপনার সিরিজে এরপর"
+      "collections_next": "আপনার সিরিজে এরপর",
+      "top10_movies": "আজকের সেরা ১০টি সিনেমা",
+      "top10_tv": "এই সপ্তাহের সেরা ১০টি শো",
+      "service": "{{name}}-এ"
     },
     "why": {
       "similarTo": "{{title}}-এর মতো",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "রেটিং {{value}}",
     "newEpisode": "নতুন · S{{season}} E{{episode}}",
-    "watched": "{{percent}} দেখা হয়েছে"
+    "watched": "{{percent}} দেখা হয়েছে",
+    "rank": "{{rank}} নম্বর: {{title}}"
   },
   "trailer": {
     "mute": "মিউট",
@@ -179,9 +183,11 @@
       "popular": "জনপ্রিয়",
       "rating": "সর্বোচ্চ রেটিং",
       "newest": "নতুন",
-      "title": "ক–ঞ"
+      "title": "ক–ঞ",
+      "added": "সম্প্রতি যোগ করা"
     },
     "filters": "ফিল্টার",
+    "service": "স্ট্রিমিং পরিষেবা",
     "activeFilters": "চালু ফিল্টার",
     "removeFilter": "ফিল্টার {{label}} সরান",
     "clearAll": "সব মুছুন",
@@ -196,6 +202,7 @@
     "actorPlaceholder": "যেমন Zendaya",
     "pillDirector": "পরিচালক: {{name}}",
     "pillActor": "{{name}}-এর সাথে",
+    "pillService": "{{name}}-এ",
     "years": {
       "any": "যেকোনো",
       "range": "{{from}}–{{to}}",

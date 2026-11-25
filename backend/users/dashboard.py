@@ -35,6 +35,8 @@ JOBS = [
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
     ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
+    ("sync_tmdb_charts", "TMDB trending (Top 10 rows)", timedelta(hours=14)),
+    ("sync_tmdb_watch_providers", "Streaming services per country", timedelta(hours=30)),
     ("translate_titles", "AI translations (missing overviews)", timedelta(hours=30)),
     ("fix_actor_duplicates", "Actor duplicates (monthly)", timedelta(days=32)),
     # shell scripts, recorded by manage.py record_job
@@ -57,6 +59,9 @@ JOB_INFO = {
     "clean_db": ("Catalog", "Every night 04:30, 2 h 30 max", "Removes duplicates, refreshes each title from TMDB once a month"),
     "backfill_ratings": ("Catalog", "Every night 02:00", "Age ratings of new titles (what Kids profiles may see)"),
     "sync_tmdb_related": ("Catalog", "Every night 03:00", "TMDB's related titles and other names (search in every language)"),
+    "sync_tmdb_charts": ("Catalog", "Every 6 hours", 'TMDB trending today / this week: the "Top 10" home rows'),
+    "sync_tmdb_watch_providers": ("Catalog", "Every night 05:30",
+                                  'Which titles Netflix, Prime Video, Disney+... have in each country ("On Netflix" rows, browse filter)'),
     "rebuild_title_indexes": ("Catalog", "Every night 07:15", "Makes new and refreshed titles findable by keyword, studio, network"),
     "fix_actor_duplicates": ("Catalog", "1st of the month 02:30", "Merges actors listed twice on a title"),
     "import_trailer_results": ("Catalog", "Every night (mini PC)", "Trailer preview clips cut by the mini PC"),

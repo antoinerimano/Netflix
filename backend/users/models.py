@@ -155,6 +155,9 @@ class Title(models.Model):
     # nightly run takes the titles never read or read more than --stale-days ago, so a run cut off
     # (deploy, --max-minutes) carries on where it stopped
     tmdb_checked_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # when manage.py sync_tmdb_watch_providers last read on TMDB which streaming services (Netflix,
+    # Prime Video...) offer it in each country (TitleOnService, null = never): refreshed every 30 days
+    services_synced_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)
@@ -360,6 +363,48 @@ class TitleNetwork(models.Model):
 
     def __str__(self):
         return f"{self.title_id} net {self.network_norm}"
+
+
+class TitleOnService(models.Model):
+    """A title in a streaming service's subscription in a country ("On Netflix" rows, the browse
+    pages' service filter, ROADMAP 9.4). From TMDB's watch providers (JustWatch data, free),
+    manage.py sync_tmdb_watch_providers; only the services of users/watch_services.py SERVICES."""
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="services_rel")
+    country = models.CharField(max_length=2)        # ISO 3166-1, e.g. "FR"
+    service = models.CharField(max_length=16)       # SERVICES key, e.g. "netflix"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["title", "country", "service"], name="uniq_title_country_service"),
+        ]
+        indexes = [
+            models.Index(fields=["country", "service", "title"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title_id} on {self.service} ({self.country})"
+
+
+class TitleChartEntry(models.Model):
+    """One place in TMDB's trending charts ("Top 10" home rows, ROADMAP 9.4): manage.py
+    sync_tmdb_charts keeps the latest list of each chart, only titles in the catalog."""
+    MOVIE_DAY = "movie_day"   # /trending/movie/day
+    TV_WEEK = "tv_week"       # /trending/tv/week
+    CHARTS = [(MOVIE_DAY, "Movies today"), (TV_WEEK, "Shows this week")]
+
+    chart = models.CharField(max_length=16, choices=CHARTS)
+    position = models.PositiveSmallIntegerField()   # 1 = first on TMDB's list (gaps: titles we lack)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="+")
+    synced_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["chart", "position"]
+        constraints = [
+            models.UniqueConstraint(fields=["chart", "position"], name="uniq_chart_position"),
+        ]
+
+    def __str__(self):
+        return f"{self.chart} #{self.position}: {self.title_id}"
 
 
 class Provider(models.Model):

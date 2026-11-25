@@ -74,6 +74,8 @@ FIX_COMMANDS = {
     "import_providers": "on the mini PC: tail -50 ~/taurus/provider_scraper/run.log   (then: crontab -l, ~/taurus/provider_scraper/run.sh)",
     "tag_titles": f"{_EXEC} tag_titles",
     "sync_tmdb_related": f"{_EXEC} sync_tmdb_related",
+    "sync_tmdb_charts": f"{_EXEC} sync_tmdb_charts   (log: /var/log/taurus_charts.log)",
+    "sync_tmdb_watch_providers": f"{_EXEC} sync_tmdb_watch_providers   (log: /var/log/taurus_watch_providers.log)",
     "translate_titles": f"{_EXEC} translate_titles",
 "_previews": f"{_EXEC} export_trailer_jobs > jobs.json   (then trailer-worker/, then: "
                  f"{_EXEC} import_trailer_results --clear-rejected - < results.json)",

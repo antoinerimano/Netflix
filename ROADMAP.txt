@@ -554,13 +554,34 @@ visitors see on the first screen), the bigger ones after.
         Tests: autoNext.test.js (12), users/test_autoplay_next.py (2), e2e/tests/watch-next.spec.js
         (4, remote only: arrows / OK / Back, focus overlap). Run: watch, watch-switch, watch-next,
         focus-overlap, tv-remote, rtl e2e (31 passed); vitest (117); users (195); i18n:check.
-[ ] 9.4 Top 10 + browse by streaming service (Cineby, Movy, PrimeWire: on the first screen)
-        - Home rows "Top 10 movies today" / "Top 10 shows this week": big numbered cards, from TMDB
-          trending (day / week, already synced) mixed with our own plays once there are enough.
-        - "On Netflix / Prime Video / Disney+ / Max / Apple TV+ ..." rows and a filter on the browse
-          pages, from TMDB watch providers per country (free TMDB data: "TMDB first"), country =
-          the profile's language region / the visitor's.
-        - Browse sort "Recently added" (our own date) beside newest / popular.
+[x] 9.4 Top 10 + browse by streaming service (Cineby, Movy, PrimeWire: on the first screen)
+        Top 10: home rows "Top 10 movies today" / "Top 10 shows this week", right after the first
+        personal row and the second one: a big number (outlined, on the start side, the right in
+        Arabic / Urdu) beside a poster card, 10 at most, numbered after the profile's age limit and
+        dislikes took theirs out; a chart keeps all its places (not removed by the page's
+        one-title-once rule). From TMDB /trending/movie/day and /trending/tv/week: their order was
+        never stored, now manage.py sync_tmdb_charts (every 6 h, 2 pages a chart, free) keeps it in
+        TitleChartEntry (only titles in the catalog; a chart that can't be read keeps its last
+        list). Our own plays mixed in (reco/top10.py blend) once there are 30+ (people x title,
+        movies today / shows this week): half the score from TMDB's position, half from our share,
+        so our viewers' favourite climbs and one only we watch can come in.
+        Services: TitleOnService (title, country, service), from TMDB's watch providers (JustWatch
+        data, free), subscription offers only (rent / buy aren't "on Netflix"), 8 services
+        (users/watch_services.py: Netflix, Prime Video, Disney+, Max, Apple TV+, Hulu, Paramount+,
+        Peacock, with their ads plans / old names). manage.py sync_tmdb_watch_providers: one TMDB
+        call per title, 6,000 a night most popular first, each title again every 30 days
+        (Title.services_synced_at). Home: up to 3 "On <service>" rows (10+ titles there), the
+        services the profile's titles are on first; browse pages: a "Streaming service" row of
+        chips in the Filters sheet (only the services with titles in the country,
+        GET /api/titles/services/), an "On Prime Video" pill, ?service=prime in the URL.
+        Country: the first browser language with a region (frontend utils/watchRegion.js, sent as
+        ?region=), else the profile's language region (fr -> FR, pt-BR -> BR), else US.
+        Browse sort "Recently added": newest id first (ids are given in the order titles come in).
+        Migration users 0032. Dashboard / daily check-up / scripts/job_locks.sh know the 2 new jobs.
+        Measured: only locally (seeded charts / services in e2e), not yet with real TMDB data: how
+        many titles of the catalog each service has per country decides which rows show.
+        Tests: users/test_watch_services.py (9), reco/test_top10.py (7), watchRegion.test.js (2),
+        e2e/tests/top10.spec.js (3, remote only: arrows / OK / Back, focus overlap).
 [ ] 9.5 Anime (and K-drama) sections (Rive, Movy, HydraHD all have one; criterion 1)
         TMDB already tells us: Animation + origin country JP (+ keyword "anime" 210024) = anime;
         origin KR + Drama = K-drama. A nav entry / browse filter, home rows for profiles that watch

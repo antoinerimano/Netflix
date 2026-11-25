@@ -157,6 +157,23 @@ class Command(BaseCommand):
             Episode.objects.create(season=season, episode_number=e, name=f"Shift {e}", overview=f"Night {e}.",
                                    air_date=today + timedelta(days=days), runtime=45)
 
+        # Top 10 rows (TMDB trending, sync_tmdb_charts) and the streaming services in the US, the
+        # tests' browser region (watch_services.py): every title on Netflix (a home row needs 10),
+        # three on Prime Video (the browse filter only)
+        from users.models import TitleChartEntry, TitleOnService
+        now = timezone.now()
+        for chart, names in (
+            (TitleChartEntry.MOVIE_DAY, ["Inception", "Parasite", "Interstellar", "The Godfather", "Heat",
+                                         "Toy Story", "Spirited Away", "Amélie", "The Godfather Part II"]),
+            (TitleChartEntry.TV_WEEK, ["Night Shift", "Breaking Bad"]),
+        ):
+            for pos, name in enumerate(names, start=1):
+                TitleChartEntry.objects.create(chart=chart, position=pos, title=Title.objects.get(title=name), synced_at=now)
+        for t in Title.objects.all():
+            TitleOnService.objects.create(title=t, country="US", service="netflix")
+        for name in ("Heat", "Parasite", "Breaking Bad"):
+            TitleOnService.objects.create(title=Title.objects.get(title=name), country="US", service="prime")
+
         user = User.objects.create_user(E2E_EMAIL, "E2E User", E2E_PASSWORD)
         profiles = [
             Profile.objects.create(user=user, name="Alex", language_preference="en", age_restriction="NC-17"),

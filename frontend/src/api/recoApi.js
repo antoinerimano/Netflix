@@ -1,9 +1,12 @@
 // src/api/recoApi.js
 import api from "./http";
 import { getRecoSessionId } from "./analyticsApi";
+import { watchRegion } from "../utils/watchRegion";
 
 export async function fetchHomeRecoRows(profileId) {
-  const res = await api.get("/reco/home/", { params: { profileId } });
+  // region: the visitor's country, for the "On Netflix..." rows (utils/watchRegion.js)
+  const region = watchRegion();
+  const res = await api.get("/reco/home/", { params: { profileId, ...(region ? { region } : {}) } });
   return res.data;
 }
 

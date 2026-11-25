@@ -22,7 +22,10 @@
       "trending": "ٹرینڈنگ",
       "new_episodes": "نئی اقساط",
       "continue_watching": "دیکھنا جاری رکھیں",
-      "collections_next": "آپ کی سیریز میں اگلا"
+      "collections_next": "آپ کی سیریز میں اگلا",
+      "top10_movies": "آج کی 10 بہترین فلمیں",
+      "top10_tv": "اس ہفتے کے 10 بہترین شوز",
+      "service": "{{name}} پر"
     },
     "why": {
       "similarTo": "{{title}} جیسی",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "ریٹنگ {{value}}",
     "newEpisode": "نئی · S{{season}} E{{episode}}",
-    "watched": "{{percent}} دیکھا گیا"
+    "watched": "{{percent}} دیکھا گیا",
+    "rank": "نمبر {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "آواز بند",
@@ -179,9 +183,11 @@
       "popular": "مقبول",
       "rating": "سب سے زیادہ ریٹنگ",
       "newest": "تازہ ترین",
-      "title": "ا–ے"
+      "title": "ا–ے",
+      "added": "حال ہی میں شامل"
     },
     "filters": "فلٹرز",
+    "service": "اسٹریمنگ سروس",
     "activeFilters": "فعال فلٹرز",
     "removeFilter": "فلٹر {{label}} ہٹائیں",
     "clearAll": "سب صاف کریں",
@@ -196,6 +202,7 @@
     "actorPlaceholder": "مثلاً زینڈایا",
     "pillDirector": "ہدایت کار: {{name}}",
     "pillActor": "{{name}} کے ساتھ",
+    "pillService": "{{name}} پر",
     "years": {
       "any": "کوئی بھی",
       "range": "{{from}}–{{to}}",

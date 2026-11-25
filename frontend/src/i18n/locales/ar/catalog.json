@@ -22,7 +22,10 @@
       "trending": "الأكثر رواجًا",
       "new_episodes": "حلقات جديدة",
       "continue_watching": "متابعة المشاهدة",
-      "collections_next": "التالي في سلاسلك"
+      "collections_next": "التالي في سلاسلك",
+      "top10_movies": "أفضل 10 أفلام اليوم",
+      "top10_tv": "أفضل 10 مسلسلات هذا الأسبوع",
+      "service": "على {{name}}"
     },
     "why": {
       "similarTo": "مشابه لـ {{title}}",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "التقييم {{value}}",
     "newEpisode": "جديد · م{{season}} ح{{episode}}",
-    "watched": "تمت مشاهدة {{percent}}"
+    "watched": "تمت مشاهدة {{percent}}",
+    "rank": "رقم {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "كتم الصوت",
@@ -195,9 +199,11 @@
       "popular": "الأكثر شعبية",
       "rating": "الأعلى تقييمًا",
       "newest": "الأحدث",
-      "title": "أ–ي"
+      "title": "أ–ي",
+      "added": "أُضيفت مؤخرًا"
     },
     "filters": "عوامل التصفية",
+    "service": "خدمة البث",
     "activeFilters": "عوامل التصفية النشطة",
     "removeFilter": "إزالة عامل التصفية {{label}}",
     "clearAll": "مسح الكل",
@@ -212,6 +218,7 @@
     "actorPlaceholder": "مثلًا: زندايا",
     "pillDirector": "المخرج: {{name}}",
     "pillActor": "مع {{name}}",
+    "pillService": "على {{name}}",
     "years": {
       "any": "أي سنة",
       "range": "{{from}}–{{to}}",

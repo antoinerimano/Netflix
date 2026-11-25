@@ -8,6 +8,7 @@ LOCKS=(
   /tmp/taurus_tags.lock /tmp/taurus_related.lock /tmp/taurus_checkup.lock
   /tmp/taurus_episodes.lock /tmp/taurus_home.lock /tmp/taurus_backup.lock /tmp/taurus_translate.lock
   /tmp/taurus_ratings.lock /tmp/taurus_new_releases.lock /tmp/taurus_index.lock /tmp/taurus_restore_test.lock
+  /tmp/taurus_charts.lock /tmp/taurus_watch_providers.lock
 )
 
 # take_job_locks SECONDS: wait (up to SECONDS in all) for the running jobs to finish, then hold

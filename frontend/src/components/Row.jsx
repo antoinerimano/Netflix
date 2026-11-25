@@ -52,8 +52,13 @@ const getSlidesToShowFromSettings = (settings) => {
 // Cards fully shown (slidesToShow has a fraction: the next card peeks in, showing the row scrolls)
 const fullCards = (settings) => Math.max(1, Math.floor(getSlidesToShowFromSettings(settings)));
 
+// Top 10 rows (ROADMAP 9.4): at most this many, numbered in the order shown
+export const TOP10_SIZE = 10;
+
 // title: shown (translated); analyticsTitle: the row's stable name for analytics (same in every language)
-const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
+// variant "top10": big numbers beside poster cards, the first TOP10_SIZE titles
+const Row = ({ title: shownTitle, analyticsTitle, movies, variant }) => {
+  const top10 = variant === 'top10';
   const { t, i18n } = useTranslation('catalog');
   const navigate = useNavigate();
   const title = analyticsTitle || shownTitle;
@@ -77,7 +82,7 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
       seen.add(id);
       out.push(t);
     }
-    return out;
+    return top10 ? out.slice(0, TOP10_SIZE) : out;
   })();
 
 
@@ -214,7 +219,14 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
     slidesToScroll: 1,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow isVisible={showPrevArrow} />,
-    responsive: [
+    responsive: top10 ? [
+      // a number + a poster per slide: about as many per screen as the wide cards
+      { breakpoint: 1920, settings: { slidesToShow: 5.15, slidesToScroll: 1 } },
+      { breakpoint: 1400, settings: { slidesToShow: 4.6, slidesToScroll: 1 } },
+      { breakpoint: 1024, settings: { slidesToShow: 3.6, slidesToScroll: 1 } },
+      { breakpoint: 600, settings: { slidesToShow: 2.4, slidesToScroll: 1 } },
+      { breakpoint: 340, settings: { slidesToShow: 1.8, slidesToScroll: 1 } },
+    ] : [
       { breakpoint: 1920, settings: { slidesToShow: 5.15, slidesToScroll: 1 } },
       { breakpoint: 1400, settings: { slidesToShow: 4.15, slidesToScroll: 1 } },
       { breakpoint: 1024, settings: { slidesToShow: 3.15, slidesToScroll: 1 } },
@@ -290,13 +302,15 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
   if (displayedMovies.length === 0) return null; // e.g. everything removed from Continue watching
 
   return (
-    <section className="row" ref={rowRef} aria-label={shownTitle} {...rtlSwipe}>
+    <section className={`row${top10 ? ' row--top10' : ''}`} ref={rowRef} aria-label={shownTitle} {...rtlSwipe}>
       <h2 className="row__title">{shownTitle}</h2>
       <Slider ref={sliderRef} {...settings}>
         {displayedMovies.map((movie, index) => {
           const key = `${title}-${movie.id}-${index}`;
           const trailerSrc = movie.trailer_clip_url || '';
-          const posterSrc = movie?.landscape_image || movie?.poster;
+          // Top 10: the poster (portrait), the wide artwork if there is none
+          const posterSrc = top10 ? movie?.poster || movie?.landscape_image : movie?.landscape_image || movie?.poster;
+          const rank = index + 1;
 
           const hasProgress = typeof movie?.progress === 'number';
           const tagline = (movie?.tagline || '').trim();
@@ -318,12 +332,14 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
             // react-slick overwrites tabIndex (-1) and style on each slide's root element:
             // this wrapper takes it, so the card itself stays focusable (TV remote / keyboard)
             <div key={key} className="row-slide">
+            {top10 ? <span className="row-top10__rank" aria-hidden="true">{formatNumber(rank, undefined, i18n.resolvedLanguage)}</span> : null}
+            <div className="row-slide__card">
             <div
               data-id={key}
               className="movie-card"
               tabIndex={0}
               role="button"
-              aria-label={movie?.title}
+              aria-label={top10 ? t('card.rank', { rank: formatNumber(rank, undefined, i18n.resolvedLanguage), title: movie?.title || '' }) : movie?.title}
               data-options=""
               onFocus={(e) => {
                 ensureCardVisible(index);
@@ -352,16 +368,17 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
               {/* shown when the artwork is missing / broken (the image covers it otherwise) */}
               <span className="row-card__fallback" aria-hidden="true">{movie?.title}</span>
               <img
-                src={tmdbImage(posterSrc, IMG.backdropCard)}
+                src={tmdbImage(posterSrc, top10 && movie?.poster ? IMG.poster : IMG.backdropCard)}
                 alt=""
                 loading="lazy"
                 decoding="async"
                 onError={(e) => {
-                  // landscape image broken: try the poster, then show the title tile
+                  // landscape image broken: try the poster (Top 10: the other way), then show the title tile
                   const img = e.currentTarget;
-                  if (!img.dataset.fallback && movie?.poster && movie.poster !== posterSrc) {
+                  const other = top10 ? movie?.landscape_image : movie?.poster;
+                  if (!img.dataset.fallback && other && other !== posterSrc) {
                     img.dataset.fallback = '1';
-                    img.src = tmdbImage(movie.poster, IMG.poster);
+                    img.src = tmdbImage(other, top10 ? IMG.backdropCard : IMG.poster);
                   } else {
                     img.style.display = 'none';
                   }
@@ -431,6 +448,7 @@ const Row = ({ title: shownTitle, analyticsTitle, movies }) => {
               {movie?.type ? (
                 <span className="row-card__type">{String(movie.type).toLowerCase() === 'tv' ? t('common:kind.tv') : t('common:kind.movie')}</span>
               ) : null}
+            </div>
             </div>
             </div>
           );

@@ -22,7 +22,10 @@
       "trending": "Tendances",
       "new_episodes": "Nouveaux épisodes",
       "continue_watching": "Reprendre",
-      "collections_next": "La suite de vos sagas"
+      "collections_next": "La suite de vos sagas",
+      "top10_movies": "Top 10 des films aujourd'hui",
+      "top10_tv": "Top 10 des séries cette semaine",
+      "service": "Sur {{name}}"
     },
     "why": {
       "similarTo": "Semblable à {{title}}",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "noté {{value}}",
     "newEpisode": "Nouveau · S{{season}} É{{episode}}",
-    "watched": "{{percent}} regardé"
+    "watched": "{{percent}} regardé",
+    "rank": "N° {{rank}} : {{title}}"
   },
   "trailer": {
     "mute": "Couper le son",
@@ -183,9 +187,11 @@
       "popular": "Populaires",
       "rating": "Mieux notés",
       "newest": "Plus récents",
-      "title": "A–Z"
+      "title": "A–Z",
+      "added": "Ajoutés récemment"
     },
     "filters": "Filtres",
+    "service": "Service de streaming",
     "activeFilters": "Filtres actifs",
     "removeFilter": "Retirer le filtre {{label}}",
     "clearAll": "Tout effacer",
@@ -200,6 +206,7 @@
     "actorPlaceholder": "ex. Zendaya",
     "pillDirector": "Réalisation : {{name}}",
     "pillActor": "Avec {{name}}",
+    "pillService": "Sur {{name}}",
     "years": {
       "any": "Toutes",
       "range": "{{from}}–{{to}}",

@@ -20,6 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from users.i18n import current_language, to_app_language
 from users.localize import title_names
 from users.countries import TMDB_COUNTRIES
+from users.watch_services import DEFAULT_REGION, SERVICES, request_region
 from users.models import (
     Title, Profile, TVShowExtras, Episode, Provider,
     Actor, TitleKeyword, TitleCompany, TitleCountry, TitleNetwork
@@ -36,6 +37,7 @@ from .models import (
 from .taste import has_taste_signal
 from .history import WATCH_SIGNALS, record_watch
 from .collections import next_in_collections_row
+from .top10 import service_rows, top10_rows
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -1165,6 +1167,8 @@ def _row_params(row_type, profile):
         return {"name": str(arg).title()}
     if kind == "country":
         return {"country": str(arg).upper()}
+    if kind == "service" and arg in SERVICES:
+        return {"name": SERVICES[arg]["name"], "service": arg}
     if kind == "kw":
         return {"keyword": arg}
     return {}
@@ -1198,14 +1202,33 @@ def _describe_rows(payload, profile):
     return {**payload, "rows": rows}
 
 
-def _with_live_rows(payload, profile):
-    """Rows that must be fresh on every visit (the rest comes from the cron snapshot)."""
+def _interleave_live(rows, slots):
+    """slots {n: [rows]}: put after the n-th row of the snapshot (at the end if it has fewer)."""
+    slots = {n: [r for r in extra if r] for n, extra in slots.items()}
+    out = []
+    for i, row in enumerate(rows):
+        out.append(row)
+        out.extend(slots.pop(i + 1, []))
+    for n in sorted(slots):
+        out.extend(slots[n])
+    return out
+
+
+def _with_live_rows(payload, profile, region=DEFAULT_REGION):
+    """Rows that must be fresh on every visit (the rest comes from the cron snapshot).
+    region: the visitor's country, for the "On Netflix..." rows (users/watch_services.py)."""
     # nothing liked / listed / played yet: the app offers the "pick what you like" page
     payload = {**payload, "needs_taste": not has_taste_signal(profile.id)}
-    rows = list(payload.get("rows") or [])
     new_eps = _new_episodes_row()
-    if new_eps["items"]:
-        rows.insert(min(1, len(rows)), new_eps)  # right after the first personal row
+    top = {row["row_type"]: row for row in top10_rows()}
+    services = service_rows(region, [tid for tid, _ in _interest_events(profile.id, 100)])
+    # first screen: Top 10 movies right after the first personal row (ROADMAP 9.4), then new
+    # episodes, Top 10 shows after the second, a service row after each of the next ones
+    rows = _interleave_live(list(payload.get("rows") or []), {
+        1: [top.get("top10_movies"), new_eps if new_eps["items"] else None],
+        2: [top.get("top10_tv")],
+        **{3 + i: [row] for i, row in enumerate(services)},
+    })
     cont = _continue_watching_row(profile)
     if cont["items"]:
         rows.insert(0, cont)
@@ -1222,6 +1245,7 @@ class RecoHomeView(APIView):
     def get(self, request):
         profile_id = request.query_params.get("profileId")
         profile = get_object_or_404(Profile, id=profile_id, user=request.user)
+        region = request_region(request, profile)
 
         # 1) Snapshot principal (cron)
         snap = (
@@ -1232,7 +1256,7 @@ class RecoHomeView(APIView):
             .first()
         )
         if snap and snap.payload and snap.payload.get("rows") is not None:
-            payload = _with_live_rows(snap.payload, profile)
+            payload = _with_live_rows(snap.payload, profile, region)
             payload.setdefault("mode", "snapshot")
             return Response(payload)
 
@@ -1245,12 +1269,12 @@ class RecoHomeView(APIView):
             .first()
         )
         if seed and seed.payload and seed.payload.get("rows") is not None:
-            payload = _with_live_rows(seed.payload, profile)
+            payload = _with_live_rows(seed.payload, profile, region)
             payload.setdefault("mode", "seed_snapshot")
             return Response(payload)
 
         # 3) ultime fallback (ne devrait plus arriver)
-        return Response(_with_live_rows({"mode": "no_snapshot_yet", "rows": []}, profile))
+        return Response(_with_live_rows({"mode": "no_snapshot_yet", "rows": []}, profile, region))
 
 
 # ============================================================

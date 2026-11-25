@@ -22,7 +22,10 @@
       "trending": "В тренде",
       "new_episodes": "Новые серии",
       "continue_watching": "Продолжить просмотр",
-      "collections_next": "Продолжение ваших франшиз"
+      "collections_next": "Продолжение ваших франшиз",
+      "top10_movies": "Топ-10 фильмов сегодня",
+      "top10_tv": "Топ-10 сериалов за неделю",
+      "service": "На {{name}}"
     },
     "why": {
       "similarTo": "Похоже на «{{title}}»",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "оценка {{value}}",
     "newEpisode": "Новое · С{{season}} Э{{episode}}",
-    "watched": "Просмотрено {{percent}}"
+    "watched": "Просмотрено {{percent}}",
+    "rank": "№ {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "Без звука",
@@ -187,9 +191,11 @@
       "popular": "Популярные",
       "rating": "С высоким рейтингом",
       "newest": "Новые",
-      "title": "А–Я"
+      "title": "А–Я",
+      "added": "Недавно добавленные"
     },
     "filters": "Фильтры",
+    "service": "Стриминговый сервис",
     "activeFilters": "Активные фильтры",
     "removeFilter": "Убрать фильтр {{label}}",
     "clearAll": "Сбросить всё",
@@ -204,6 +210,7 @@
     "actorPlaceholder": "например, Зендея",
     "pillDirector": "Режиссёр: {{name}}",
     "pillActor": "С участием: {{name}}",
+    "pillService": "На {{name}}",
     "years": {
       "any": "Любой",
       "range": "{{from}}–{{to}}",

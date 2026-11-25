@@ -22,7 +22,10 @@
       "trending": "ट्रेंडिंग",
       "new_episodes": "नए एपिसोड",
       "continue_watching": "देखना जारी रखें",
-      "collections_next": "आपकी फ़िल्म सीरीज़ में आगे"
+      "collections_next": "आपकी फ़िल्म सीरीज़ में आगे",
+      "top10_movies": "आज की टॉप 10 फ़िल्में",
+      "top10_tv": "इस हफ़्ते के टॉप 10 शो",
+      "service": "{{name}} पर"
     },
     "why": {
       "similarTo": "{{title}} जैसी",
@@ -48,7 +51,8 @@
   "card": {
     "rated": "रेटिंग {{value}}",
     "newEpisode": "नया · S{{season}} E{{episode}}",
-    "watched": "{{percent}} देखा गया"
+    "watched": "{{percent}} देखा गया",
+    "rank": "नंबर {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "म्यूट",
@@ -179,9 +183,11 @@
       "popular": "लोकप्रिय",
       "rating": "सबसे ज़्यादा रेटिंग",
       "newest": "सबसे नए",
-      "title": "अ–ज़"
+      "title": "अ–ज़",
+      "added": "हाल ही में जोड़े गए"
     },
     "filters": "फ़िल्टर",
+    "service": "स्ट्रीमिंग सेवा",
     "activeFilters": "चालू फ़िल्टर",
     "removeFilter": "फ़िल्टर {{label}} हटाएँ",
     "clearAll": "सब साफ़ करें",
@@ -196,6 +202,7 @@
     "actorPlaceholder": "जैसे Zendaya",
     "pillDirector": "निर्देशक: {{name}}",
     "pillActor": "{{name}} के साथ",
+    "pillService": "{{name}} पर",
     "years": {
       "any": "कोई भी",
       "range": "{{from}}–{{to}}",

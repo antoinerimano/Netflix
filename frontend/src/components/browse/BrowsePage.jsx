@@ -1,6 +1,6 @@
 // src/components/browse/BrowsePage.js
 // Movies and TV Shows pages (one design for both): title + count, search box, genre chips,
-// sort, a Filters sheet (rating, decade, director / actor), active filter pills, a poster grid
+// sort, a Filters sheet (streaming service, rating, decade, director / actor), active filter pills, a poster grid
 // that loads more as you scroll, skeletons / empty / error states.
 // State lives in the URL (shareable, Back restores it) and the scroll position is restored when
 // coming back from a title.
@@ -13,20 +13,22 @@ import { genreName } from '../detail/DetailHero';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import MovieCard from '../MovieCard';
-import { fetchTitlesPage, fetchGenres } from '../../api/titlesApi';
+import { fetchTitlesPage, fetchGenres, fetchServices } from '../../api/titlesApi';
 import { Button, Chip, EmptyState, Modal, Skeleton, friendlyError } from '../../design';
 import { SearchIcon, CloseIcon } from '../../design/icons';
 import '../PosterCard.css';
 import './browse.css';
 
 const PAGE_SIZE = 48; // divisible by 2, 3, 4, 6 and 8 columns
-const FILTER_KEYS = ['query', 'genre', 'sort', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor'];
+const FILTER_KEYS = ['query', 'genre', 'sort', 'service', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor'];
+const ADVANCED_KEYS = ['service', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor']; // in the Filters sheet
 
 // labels: catalog:browse.sort.<key>
 const SORTS = [
   { value: '', key: 'popular' },
   { value: 'rating', key: 'rating' },
   { value: 'newest', key: 'newest' },
+  { value: 'added', key: 'added' }, // when it came into our catalog (ROADMAP 9.4)
   { value: 'title', key: 'title' },
 ];
 const RATINGS = ['', '6', '7', '8'];
@@ -78,6 +80,8 @@ export default function BrowsePage({ kind = 'movie' }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [genres, setGenres] = useState([]);
+  // streaming services with titles in the visitor's country (Netflix, Prime Video...), for the sheet
+  const [services, setServices] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState(filters); // inside the Filters sheet, applied on "Show"
   const [query, setQuery] = useState(filters.query); // search box (applied after a pause)
@@ -107,6 +111,17 @@ export default function BrowsePage({ kind = 'movie' }) {
       alive = false;
     };
   }, [kind]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchServices(kind)
+      .then((r) => alive && setServices(r.services))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [kind]);
+  const serviceName = (key) => services.find((s) => s.key === key)?.name || key;
 
   // search box -> URL after a short pause
   useEffect(() => setQuery(filters.query), [filters.query]);
@@ -212,8 +227,9 @@ export default function BrowsePage({ kind = 'movie' }) {
     setDraft(filters);
     setFiltersOpen(true);
   };
-  const advancedCount = ['ratingMin', 'yearMin', 'yearMax', 'director', 'actor'].filter((k) => filters[k]).length;
+  const advancedCount = ADVANCED_KEYS.filter((k) => filters[k]).length;
   const pills = [
+    filters.service && { key: 'service', label: t('browse.pillService', { name: serviceName(filters.service) }), clear: { service: '' } },
     filters.ratingMin && { key: 'ratingMin', label: t('browse.ratingAtLeast', { value: filters.ratingMin }), clear: { ratingMin: '' } },
     (filters.yearMin || filters.yearMax) && {
       key: 'years',
@@ -375,7 +391,7 @@ export default function BrowsePage({ kind = 'movie' }) {
           <>
             <Button
               variant="ghost"
-              onClick={() => setDraft((d) => ({ ...d, ratingMin: '', yearMin: '', yearMax: '', director: '', actor: '' }))}
+              onClick={() => setDraft((d) => ({ ...d, ...Object.fromEntries(ADVANCED_KEYS.map((k) => [k, ''])) }))}
             >
               {t('browse.reset')}
             </Button>
@@ -384,6 +400,7 @@ export default function BrowsePage({ kind = 'movie' }) {
               onClick={() => {
                 setFiltersOpen(false);
                 applyFilters({
+                  service: draft.service,
                   ratingMin: draft.ratingMin,
                   yearMin: draft.yearMin,
                   yearMax: draft.yearMax,
@@ -398,6 +415,22 @@ export default function BrowsePage({ kind = 'movie' }) {
         }
       >
         <div className="browse-filters">
+          {services.length ? (
+            <fieldset>
+              <legend>{t('browse.service')}</legend>
+              <div className="browse-filters__chips">
+                <Chip selected={!draft.service} onClick={() => setDraft((d) => ({ ...d, service: '' }))}>
+                  {t('browse.years.any')}
+                </Chip>
+                {services.map((s) => (
+                  <Chip key={s.key} selected={draft.service === s.key} onClick={() => setDraft((d) => ({ ...d, service: s.key }))}>
+                    {s.name}
+                  </Chip>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           <fieldset>
             <legend>{t('browse.rating')}</legend>
             <div className="browse-filters__chips">

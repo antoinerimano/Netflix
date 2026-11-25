@@ -1,6 +1,7 @@
 // src/api/titlesApi.js
 import http from './http';
 import { currentLanguage } from '../i18n';
+import { watchRegion } from '../utils/watchRegion';
 
 // ---------- base axios ----------
 // shared client: adds the JWT header and refreshes it when it expires
@@ -327,10 +328,20 @@ export const fetchTitlesPage = async ({
   yearMax = '',
   director = '',
   actor = '',
+  service = '',
 } = {}) => {
-  const params = { type, page, page_size: pageSize, sort, query, genre, ratingMin, yearMin, yearMax, director, actor };
+  const params = { type, page, page_size: pageSize, sort, query, genre, ratingMin, yearMin, yearMax, director, actor, service };
+  if (service) params.region = watchRegion(); // in the visitor's country ('' = the server decides)
   Object.keys(params).forEach((k) => (params[k] === '' || params[k] == null) && delete params[k]);
   return listTitlesPage(params);
+};
+
+/** Streaming services with titles in the visitor's country, biggest first (browse filter):
+ *  { region: "FR", services: [{ key: "netflix", name: "Netflix", count: 812 }, ...] } */
+export const fetchServices = async (type) => {
+  const region = watchRegion();
+  const res = await API.get('/titles/services/', { params: { type, ...(region ? { region } : {}) } });
+  return { region: res.data?.region || '', services: Array.isArray(res.data?.services) ? res.data.services : [] };
 };
 
 /** "More like this": titles nearest to this one (embeddings), best first */
