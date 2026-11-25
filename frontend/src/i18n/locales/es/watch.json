@@ -51,5 +51,17 @@
     "soon": "Pronto",
     "comingSoon": "próximamente"
   },
-  "nextMovie": "Siguiente película"
+  "nextMovie": "Siguiente película",
+  "upNext": {
+    "in": "Siguiente episodio en {{seconds}}",
+    "playNow": "Reproducir ahora",
+    "cancel": "Cancelar",
+    "stillTitle": "¿Sigues viendo?",
+    "stillText": "{{show}}: varios episodios seguidos sin pulsar ninguna tecla.",
+    "continue": "Seguir viendo",
+    "stop": "Parar",
+    "endTitle": "Ese fue el último episodio de {{show}}",
+    "moreLikeThis": "Más títulos similares",
+    "close": "Cerrar"
+  }
 }

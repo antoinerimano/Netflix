@@ -57,6 +57,8 @@
     "color": "Couleur {{color}}",
     "kids": "Profil enfant",
     "kidsHint": "Uniquement des titres adaptés aux enfants, un accueil plus simple.",
+    "autoNext": "Lire l'épisode suivant automatiquement",
+    "autoNextHint": "À la fin d'un épisode, le suivant démarre après 10 secondes, sur la même source.",
     "ageLimit": "Limite d'âge",
     "ageLimitHint": "Les titres au-dessus de cette limite sont masqués.",
     "ageLimitKidsHint": "Les profils enfants vont jusqu'à 7+ (PG).",

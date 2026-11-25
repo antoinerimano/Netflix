@@ -5,7 +5,7 @@ import { formatNumber } from "../i18n/format";
 import { genreName, splitGenres } from "./detail/DetailHero";
 import "./WatchPage.css";
 
-import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
+import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks, fetchSimilarTitles } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource, fetchCollection } from "../api/recoApi";
 import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbBackground, IMG } from "../utils/tmdbImage";
@@ -14,6 +14,8 @@ import { ArrowLeftIcon, ChevronRightIcon, MaximizeIcon, LinkIcon } from "../desi
 import WatchInfo from "./watch/WatchInfo";
 import { usePlayerRemote } from "./watch/playerRemote";
 import { isPlayerMessage, nextSource, orderSources } from "./watch/sourceOrder";
+import UpNextCard from "./watch/UpNextCard";
+import { NEXT_COUNTDOWN_S, findNextEpisode, isEpisodeEnding, upNextMode } from "./watch/autoNext";
 
 import {
   LEGACY_SOURCE_KEYS,
@@ -74,6 +76,12 @@ export default function WatchPage() {
   const bannerRef = useRef(null);
   const allFailedRef = useRef(null);
   const pointerOverRef = useRef(false);
+  // next episode by the app (9.3): the card at an episode's end
+  const [upNext, setUpNext] = useState(null); // { mode: countdown | offer | still | end, next, seconds }
+  const [similar, setSimilar] = useState(null); // show over: "More like this" (null = not loaded)
+  const upNextRef = useRef(null);
+  const upNextDoneRef = useRef(false); // the card was shown for this episode: once per episode
+  const autoStartsRef = useRef(0); // episodes started by themselves since the last key press
   const [serverPref, setServerPref] = useState(undefined); // undefined = loading, null = unavailable
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
@@ -161,28 +169,19 @@ export default function WatchPage() {
   }, [title?.id, isTV, seasonNumber, episodeNumber]);
 
   // Next aired episode: rest of this season, then the first episode of the next season
-  const nextEpisode = useMemo(() => {
-    if (!isTV || !Array.isArray(title?.seasons)) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    const airedNumbers = (season) =>
-      (season?.episodes || [])
-        .filter((ep) => !ep.air_date || ep.air_date <= today)
-        .map((ep) => Number(ep.episode_number))
-        .sort((a, b) => a - b);
+  const nextEpisode = useMemo(
+    () => (isTV ? findNextEpisode(title?.seasons, seasonNumber, episodeNumber) : null),
+    [isTV, title, seasonNumber, episodeNumber]
+  );
 
-    const seasons = [...title.seasons].sort((a, b) => a.season_number - b.season_number);
-    const current = seasons.find((s) => Number(s.season_number) === Number(seasonNumber));
-    const laterInSeason = airedNumbers(current).find((n) => n > episodeNumber);
-    if (laterInSeason) return { season: seasonNumber, episode: laterInSeason };
-
-    for (const s of seasons) {
-      if (s.season_number > seasonNumber) {
-        const first = airedNumbers(s)[0];
-        if (first) return { season: s.season_number, episode: first };
-      }
+  // "Play next episode automatically" (profile setting, on by default)
+  const autoplayNext = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("activeProfile") || "{}")?.autoplay_next !== false;
+    } catch {
+      return true;
     }
-    return null;
-  }, [isTV, title, seasonNumber, episodeNumber]);
+  }, [activeProfileId]); // eslint-disable-line react-hooks/exhaustive-deps -- read again for another profile
 
   // a movie of a franchise: the next part in watch order (released), for the "Next movie" button
   const [nextPart, setNextPart] = useState(null);
@@ -211,6 +210,7 @@ export default function WatchPage() {
 
   const goToNextEpisode = useCallback(() => {
     if (!nextEpisode) return;
+    userPickedRef.current = true; // on the same source
     navigate(`/watch/${titleId}?season=${nextEpisode.season}&episode=${nextEpisode.episode}`, { replace: true });
   }, [navigate, titleId, nextEpisode]);
 
@@ -275,8 +275,13 @@ export default function WatchPage() {
     };
   }, [playerKeysHint]);
 
-  // TV remote Back / Escape: back to this title's details page (leaves full screen first)
-  useEffect(() => setBackHandler(goBack), [goBack]);
+  // TV remote Back / Escape: back to this title's details page (leaves full screen first);
+  // with the next-episode card up, Back is its Cancel
+  const cancelUpNextRef = useRef(null);
+  useEffect(
+    () => setBackHandler(upNext ? () => cancelUpNextRef.current?.() : goBack),
+    [goBack, upNext]
+  );
 
   // Links: provider domain + path template, filled with this movie / episode
   const providers = useMemo(() => {
@@ -488,6 +493,9 @@ export default function WatchPage() {
     autoFailedRef.current = new Set();
     autoOffRef.current = false;
     setAllFailed(null);
+    upNextDoneRef.current = false;
+    setUpNext(null);
+    setSimilar(null);
   }, [titleId, seasonNumber, episodeNumber]);
 
   // The source didn't play: try the next one by itself (9.2), through the whole list, then one
@@ -635,6 +643,105 @@ export default function WatchPage() {
     const chips = [...document.querySelectorAll(".watchpage__providerRow .watchpage__chip")];
     (chips.find((c) => c.classList.contains("is-selected")) || chips[0])?.focus({ preventScroll: false });
   }, []);
+
+  // Next episode by the app (9.3), for every source: on the player's "ended" event, or in the
+  // episode's last 30 s when the player sends times, a card: "Next episode in 10" (Play now /
+  // Cancel), "Still watching?" after 3 episodes started by themselves, "More like this" at the end.
+  useEffect(() => {
+    if (!isTV || sourceType !== "iframe" || !title?.id) return undefined;
+    const since = Date.now(); // a late message from the episode before (its page still unloading) isn't this one's end
+    const onMessage = (e) => {
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return;
+      const ev = readPlayerEvent(e.data);
+      if (!ev) return;
+      // the player went to another episode by itself (its own auto-next): leave it to the player
+      if (ev.season && ev.episode && (ev.season !== seasonNumber || ev.episode !== episodeNumber)) {
+        upNextDoneRef.current = true;
+        keepFocusOnPlayer(upNextRef.current);
+        setUpNext(null);
+        return;
+      }
+      if (upNextDoneRef.current || !isEpisodeEnding(ev) || Date.now() - since < 3000) return;
+      upNextDoneRef.current = true;
+      const mode = upNextMode({ next: nextEpisode, autoplay: autoplayNext, autoStarts: autoStartsRef.current });
+      setUpNext({ mode, next: nextEpisode, seconds: NEXT_COUNTDOWN_S });
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [isTV, sourceType, title?.id, resolvedUrl, seasonNumber, episodeNumber, nextEpisode, autoplayNext, keepFocusOnPlayer]);
+
+  // someone is there: a key, a click, the player taking the focus -> no "Still watching?"
+  useEffect(() => {
+    const active = () => {
+      autoStartsRef.current = 0;
+    };
+    const onBlur = () => {
+      if (document.activeElement === iframeRef.current) active(); // a click in the player
+    };
+    window.addEventListener("keydown", active, true);
+    window.addEventListener("pointerdown", active, true);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", active, true);
+      window.removeEventListener("pointerdown", active, true);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
+
+  const playNext = useCallback(
+    ({ auto = false } = {}) => {
+      const next = upNext?.next || nextEpisode;
+      if (!next) return;
+      autoStartsRef.current = auto ? autoStartsRef.current + 1 : 0;
+      keepFocusOnPlayer(upNextRef.current);
+      setUpNext(null);
+      userPickedRef.current = true; // the same source plays the next episode
+      navigate(`/watch/${titleId}?season=${next.season}&episode=${next.episode}`, { replace: true });
+    },
+    [upNext, nextEpisode, keepFocusOnPlayer, navigate, titleId]
+  );
+
+  const cancelUpNext = useCallback(() => {
+    keepFocusOnPlayer(upNextRef.current);
+    setUpNext(null);
+  }, [keepFocusOnPlayer]);
+  cancelUpNextRef.current = cancelUpNext;
+
+  // the countdown: Play now by itself at 0
+  useEffect(() => {
+    if (upNext?.mode !== "countdown") return undefined;
+    if (upNext.seconds <= 0) {
+      playNext({ auto: true });
+      return undefined;
+    }
+    const timer = setTimeout(
+      () => setUpNext((u) => (u?.mode === "countdown" ? { ...u, seconds: u.seconds - 1 } : u)),
+      1000
+    );
+    return () => clearTimeout(timer);
+  }, [upNext, playNext]);
+
+  // the card takes the remote (unless the viewer is elsewhere on the page); in full screen too
+  const upNextShown = upNext?.mode || "";
+  useEffect(() => {
+    if (!upNextShown) return;
+    const a = document.activeElement;
+    if (!a || a === document.body || playerWrapRef.current?.contains(a)) {
+      upNextRef.current?.querySelector("button")?.focus({ preventScroll: true });
+    }
+  }, [upNextShown]);
+
+  // show over: a few titles like this one
+  useEffect(() => {
+    if (upNextShown !== "end" || similar || !title?.id) return undefined;
+    let alive = true;
+    fetchSimilarTitles(title.id, 3)
+      .then((list) => alive && setSimilar(list.slice(0, 3)))
+      .catch(() => alive && setSimilar([]));
+    return () => {
+      alive = false;
+    };
+  }, [upNextShown, similar, title?.id]);
 
   // Watch progress from the player's own events (Videasy, CineSrc, VidCore "ended"):
   // saved every 15 s and on pause / seek / end, so "Continue watching" can resume and show a bar.
@@ -896,6 +1003,21 @@ export default function WatchPage() {
                 </div>
               </div>
             </div>
+          ) : null}
+
+          {upNext ? (
+            <UpNextCard
+              ref={upNextRef}
+              mode={upNext.mode}
+              next={upNext.next}
+              seconds={upNext.seconds}
+              showTitle={title.title}
+              similar={similar}
+              onPlay={() => playNext()}
+              onCancel={cancelUpNext}
+              onOpenTitle={(item) => navigate(`/${item.type === "tv" ? "tv" : "movies"}/${item.id}`)}
+              onMoreLikeThis={() => navigate(`/tv/${titleId}`)}
+            />
           ) : null}
 
           {banner ? (

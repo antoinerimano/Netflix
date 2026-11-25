@@ -51,5 +51,17 @@
     "soon": "Soon",
     "comingSoon": "coming soon"
   },
-  "nextMovie": "Next movie"
+  "nextMovie": "Next movie",
+  "upNext": {
+    "in": "Next episode in {{seconds}}",
+    "playNow": "Play now",
+    "cancel": "Cancel",
+    "stillTitle": "Still watching?",
+    "stillText": "{{show}}: a few episodes in a row without a key press.",
+    "continue": "Continue watching",
+    "stop": "Stop",
+    "endTitle": "That was the last episode of {{show}}",
+    "moreLikeThis": "More like this",
+    "close": "Close"
+  }
 }

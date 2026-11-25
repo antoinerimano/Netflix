@@ -527,12 +527,33 @@ visitors see on the first screen), the bigger ones after.
         Tests: reco/test_playback.py (6), users/test_provider_import.py (+2), sourceOrder.test.js
         (8), spatialNavigation.test.js (+1), e2e/tests/watch-switch.spec.js (2, remote only: arrows
         / OK / Back, focus overlap). Run: watch, focus-overlap, tv-remote, rtl e2e; reco + users.
-[ ] 9.3 Next episode by the app, for every source (criterion 3)
-        On an "ended" player event (already read in WatchPage.jsx) or at the episode's last 30 s
-        when the embed sends times: a "Next episode in 10" card with the next episode's picture,
-        Play now / Cancel (OK / Back on the remote), then load S/E+1 on the same source. Season end
-        -> next season E1; show end -> "More like this". Setting "Play next episode automatically"
-        (on by default) + "Still watching?" after 3 episodes without a key press (TV left on).
+[x] 9.3 Next episode by the app, for every source (criterion 3)
+        At an episode's end, for every source: the player's "ended" event (CineSrc, Videasy, VidCore),
+        or its last 30 s when it sends times (episodes of 5 min or more) -> a card over the player,
+        bottom corner (bottom-left right to left, covers the small player on phones): "Next episode
+        in 10", S/E and name of the next one, its picture (TMDB still), a 10 s bar, Play now /
+        Cancel. At 0 the next episode loads on the same source (the one the viewer was on, not the
+        first of the list). Season end -> next season E1 (specials, season 0, never come next);
+        only aired episodes. Show end -> "That was the last episode of X": 3 titles like it (the
+        /similar/ endpoint, TMDB + embeddings), or a "More like this" button to the show's page.
+        Once per episode: Cancel, then the credits' "ended", doesn't bring it back. A player that
+        moves to another episode by itself (its own auto-next, Videasy sends S/E) is left alone.
+        A stale "ended" from the episode before (the first 3 s) is ignored.
+        Setting "Play next episode automatically" (Profile.autoplay_next, on by default, migration
+        users 0031; in the profile form beside Kids profile): off = the card waits for Play now.
+        "Still watching?" (Continue watching / Stop, no countdown) after 3 episodes that started
+        by themselves with no key press, click or focus in the player in between.
+        Remote: the card takes the focus on Play now (also out of the player's iframe in full
+        screen); Left / Right between its buttons, OK, Back = Cancel / Close (then Back leaves for
+        the title as before). The focus goes back to the player tile when the card goes.
+        Logic in watch/autoNext.js (findNextEpisode also feeds the header's "Next episode" button,
+        which now keeps the source too), the card in watch/UpNextCard.jsx + up-next.css.
+        Measured: only locally (fake players in e2e), not yet on real sources: which embeds send
+        "ended" / times in practice decides how often the card shows (the others: the header's
+        "Next episode" button, as before).
+        Tests: autoNext.test.js (12), users/test_autoplay_next.py (2), e2e/tests/watch-next.spec.js
+        (4, remote only: arrows / OK / Back, focus overlap). Run: watch, watch-switch, watch-next,
+        focus-overlap, tv-remote, rtl e2e (31 passed); vitest (117); users (195); i18n:check.
 [ ] 9.4 Top 10 + browse by streaming service (Cineby, Movy, PrimeWire: on the first screen)
         - Home rows "Top 10 movies today" / "Top 10 shows this week": big numbered cards, from TMDB
           trending (day / week, already synced) mixed with our own plays once there are enough.

@@ -56,6 +56,8 @@
     "color": "Color {{color}}",
     "kids": "Kids profile",
     "kidsHint": "Only titles rated for children, a simpler home page.",
+    "autoNext": "Play next episode automatically",
+    "autoNextHint": "When an episode ends, the next one starts after 10 seconds, on the same source.",
     "ageLimit": "Age limit",
     "ageLimitHint": "Titles rated above this are hidden.",
     "ageLimitKidsHint": "Kids profiles go up to 7+ (PG).",

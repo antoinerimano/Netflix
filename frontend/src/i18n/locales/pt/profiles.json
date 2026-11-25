@@ -57,6 +57,8 @@
     "color": "Cor {{color}}",
     "kids": "Perfil infantil",
     "kidsHint": "Só títulos indicados para crianças e uma tela inicial mais simples.",
+    "autoNext": "Reproduzir o próximo episódio automaticamente",
+    "autoNextHint": "Quando um episódio termina, o próximo começa após 10 segundos, na mesma fonte.",
     "ageLimit": "Classificação máxima",
     "ageLimitHint": "Títulos acima desta classificação ficam ocultos.",
     "ageLimitKidsHint": "Perfis infantis vão até 7+ (PG).",

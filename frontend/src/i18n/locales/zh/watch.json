@@ -51,5 +51,17 @@
     "soon": "即将上线",
     "comingSoon": "即将上线"
   },
-  "nextMovie": "下一部"
+  "nextMovie": "下一部",
+  "upNext": {
+    "in": "下一集将在 {{seconds}} 秒后播放",
+    "playNow": "立即播放",
+    "cancel": "取消",
+    "stillTitle": "还在看吗？",
+    "stillText": "{{show}}：已连续播放多集，期间没有按键。",
+    "continue": "继续观看",
+    "stop": "停止",
+    "endTitle": "这是《{{show}}》的最后一集",
+    "moreLikeThis": "更多类似内容",
+    "close": "关闭"
+  }
 }

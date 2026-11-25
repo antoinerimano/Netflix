@@ -64,6 +64,9 @@ class Profile(models.Model):
     # "Appearance" page: {"font", "accent", "background"} ids chosen by the profile (frontend
     # design/theme.js); missing keys = the default look. Follows the profile on every device.
     appearance = models.JSONField(default=dict, blank=True)
+    # "Play next episode automatically" (watch page, ROADMAP 9.3): at an episode's end the next one
+    # starts after a 10 s countdown; off = the card waits for Play now.
+    autoplay_next = models.BooleanField(default=True)
 
 class PaymentHistory(models.Model):
     id = models.CharField(max_length=255, primary_key=True)

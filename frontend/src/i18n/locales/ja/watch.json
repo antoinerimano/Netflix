@@ -51,5 +51,17 @@
     "soon": "近日公開",
     "comingSoon": "近日公開"
   },
-  "nextMovie": "次の映画"
+  "nextMovie": "次の映画",
+  "upNext": {
+    "in": "次のエピソードまで {{seconds}}",
+    "playNow": "今すぐ再生",
+    "cancel": "キャンセル",
+    "stillTitle": "まだ視聴中ですか？",
+    "stillText": "{{show}}：キーを押さずに何話も続けて再生しています。",
+    "continue": "視聴を続ける",
+    "stop": "停止",
+    "endTitle": "{{show}} の最終話でした",
+    "moreLikeThis": "似たような作品",
+    "close": "閉じる"
+  }
 }

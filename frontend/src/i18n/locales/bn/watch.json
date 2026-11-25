@@ -51,5 +51,17 @@
     "soon": "শিগগির",
     "comingSoon": "শিগগির আসছে"
   },
-  "nextMovie": "পরের সিনেমা"
+  "nextMovie": "পরের সিনেমা",
+  "upNext": {
+    "in": "পরের পর্ব {{seconds}}-এ",
+    "playNow": "এখনই চালান",
+    "cancel": "বাতিল",
+    "stillTitle": "এখনও দেখছেন?",
+    "stillText": "{{show}}: কোনো বোতাম না চেপে পরপর কয়েকটি পর্ব।",
+    "continue": "দেখা চালিয়ে যান",
+    "stop": "থামান",
+    "endTitle": "এটাই ছিল {{show}}-এর শেষ পর্ব",
+    "moreLikeThis": "এরকম আরও",
+    "close": "বন্ধ করুন"
+  }
 }

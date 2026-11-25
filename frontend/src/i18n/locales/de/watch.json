@@ -51,5 +51,17 @@
     "soon": "Bald",
     "comingSoon": "demnächst"
   },
-  "nextMovie": "Nächster Film"
+  "nextMovie": "Nächster Film",
+  "upNext": {
+    "in": "Nächste Folge in {{seconds}}",
+    "playNow": "Jetzt abspielen",
+    "cancel": "Abbrechen",
+    "stillTitle": "Schaust du noch?",
+    "stillText": "{{show}}: mehrere Folgen am Stück ohne Tastendruck.",
+    "continue": "Weiterschauen",
+    "stop": "Stopp",
+    "endTitle": "Das war die letzte Folge von {{show}}",
+    "moreLikeThis": "Mehr davon",
+    "close": "Schließen"
+  }
 }

@@ -56,6 +56,8 @@
     "color": "Farbe {{color}}",
     "kids": "Kinderprofil",
     "kidsHint": "Nur Titel, die für Kinder freigegeben sind, und eine einfachere Startseite.",
+    "autoNext": "Nächste Folge automatisch abspielen",
+    "autoNextHint": "Am Ende einer Folge startet die nächste nach 10 Sekunden, mit derselben Quelle.",
     "ageLimit": "Altersgrenze",
     "ageLimitHint": "Titel mit einer höheren Freigabe werden ausgeblendet.",
     "ageLimitKidsHint": "Kinderprofile gehen bis 7+ (PG).",
