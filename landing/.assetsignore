@@ -1,0 +1,6 @@
+README.md
+wrangler.jsonc
+.assetsignore
+.wrangler
+.wrangler/
+.gitignore

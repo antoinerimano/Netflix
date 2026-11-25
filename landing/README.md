@@ -15,7 +15,9 @@ emblem.svg   the logo / favicon (from frontend/src/design/brandMark.js)
 "Create an account" button goes there (`/`, `/login`, `/register`). The links also carry that address
 in their `href`, so they still work without JavaScript: change both when the domain changes.
 
-**Hosting:** upload the four files to any static host (nginx, Netlify, Cloudflare Pages, S3...).
+**Live at** https://alioupganghd.store (and `www.`): Cloudflare, a static Worker on the free plan.
+Update it after a change: `cd landing && npx wrangler deploy` (needs `npx wrangler login` once).
+`wrangler.jsonc` holds the setup; `.assetsignore` keeps this README and the config off the site.
 
 **Preview:** open `index.html` in a browser.
 

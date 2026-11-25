@@ -1,0 +1,13 @@
+// Publishes this folder to Cloudflare (a static Worker, free plan) on alioupganghd.store + www.
+// Update the live page:   cd landing && npx wrangler deploy
+// Files kept off the site: .assetsignore
+{
+  "name": "tauruss-landing",
+  "compatibility_date": "2026-11-25",
+  "assets": { "directory": "." },
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "alioupganghd.store", "custom_domain": true },
+    { "pattern": "www.alioupganghd.store", "custom_domain": true }
+  ]
+}
