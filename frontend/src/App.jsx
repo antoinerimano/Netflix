@@ -32,6 +32,7 @@ const ConfirmPasswordReset = lazy(() => import('./components/ConfirmPasswordRese
 const ConfirmEmailChange = lazy(() => import('./components/ConfirmEmailChange'));
 const WatchPage = lazy(() => import('./components/WatchPage'));
 const DesignSystemPage = lazy(() => import('./design/DesignSystemPage'));
+const StatusPage = lazy(() => import('./components/status/StatusPage'));
 import ProtectedRoute from './ProtectedRoute';
 import NotFound from './pages/NotFound';
 import ProfilesPage from './components/profiles/ProfilesPage';
@@ -221,6 +222,8 @@ function App() {
           }
         />
         <Route path="/l/:shareId" element={<PublicListPage />} />
+        {/* public: is Taurus / each source up, "down for me or everyone?" (reco/problems.py, ROADMAP 9.8) */}
+        <Route path="/status" element={<StatusPage />} />
         {/* a franchise in watch order (reco/collections.py) */}
         <Route
           path="/collection/:id"

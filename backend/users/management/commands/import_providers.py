@@ -46,5 +46,6 @@ class Command(BaseCommand):
               f"({stats['created_enabled']} enabled), {stats['new_backup']} new backup domain(s), "
               f"{stats['known_ok']} known left as they are, {stats['fixed_link']} dead movie link(s) and "
               f"{stats['tv_fixed']} dead TV link(s) replaced ({stats['switched']} on another domain), "
-              f"{stats['skipped_not_live']} new not playing, {stats['skipped_no_link']} without a link"
+              f"{stats['skipped_not_live']} new not playing, {stats['skipped_no_link']} without a link, "
+              f"{stats['reports_checked']} viewer report(s) re-checked"
         )

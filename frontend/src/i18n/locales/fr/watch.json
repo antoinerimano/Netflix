@@ -63,5 +63,57 @@
     "endTitle": "C'était le dernier épisode de {{show}}",
     "moreLikeThis": "Dans le même genre",
     "close": "Fermer"
+  },
+  "problem": {
+    "open": "Problème de lecture ?",
+    "title": "Problème de lecture ?",
+    "question": "Qu'est-ce qui ne va pas sur {{source}} ?",
+    "kinds": {
+      "not_playing": "Ça ne se lance pas",
+      "wrong_title": "Mauvais film ou épisode",
+      "no_sound": "Pas de son",
+      "out_of_sync": "Son décalé",
+      "no_subtitles": "Pas de sous-titres"
+    },
+    "note": "Le son, les sous-titres et la qualité viennent du lecteur de chaque source : une autre source les a peut-être.",
+    "thanks": "Merci, c'est noté. {{source}} sera vérifiée en premier cette nuit.",
+    "failed": "Envoi impossible. Vérifiez votre connexion et réessayez.",
+    "status": "État des sources"
+  },
+  "status": {
+    "title": "État",
+    "subtitle": "Taurus fonctionne-t-il, et quelles sources lisent en ce moment. Taurus n'héberge aucune vidéo : chaque source est le lecteur d'un autre site.",
+    "siteUp": "Taurus fonctionne",
+    "siteDown": "Impossible de joindre Taurus",
+    "siteDownText": "Notre serveur ne répond pas d'ici. Si d'autres sites s'ouvrent, Taurus est peut-être en panne pour tout le monde : réessayez dans quelques minutes.",
+    "sourcesWorking": "Sources qui fonctionnent : {{working}} sur {{total}}",
+    "noSourceWorking": "Aucune source ne fonctionne pour le moment. Réessayez plus tard.",
+    "updated": "Mis à jour {{when}}",
+    "testText": "Une source ne s'ouvre pas chez vous ? Testez toutes les sources depuis votre connexion : en panne pour tout le monde, ou seulement pour vous ?",
+    "test": "Tester depuis ma connexion",
+    "testing": "Test en cours…",
+    "testAgain": "Tester à nouveau",
+    "allReachable": "Toutes les sources qui fonctionnent sont joignables depuis votre connexion.",
+    "blockedHere": "Sources en ligne pour tout le monde mais injoignables depuis votre connexion : {{blocked}}. Votre réseau, un filtre DNS ou un bloqueur de pubs les arrête peut-être : essayez un autre réseau, ou désactivez le bloqueur pour Taurus.",
+    "sources": "Sources",
+    "noSources": "Aucune source à afficher.",
+    "note": "Notre serveur joint chaque source toutes les 15 minutes, et chaque nuit un test lit quelques films et épisodes sur chacune.",
+    "checked": "Dernière vérification {{when}}",
+    "neverChecked": "Pas encore vérifiée",
+    "scout": "Test de lecture de la nuit ({{date}}) : {{played}} titres de test lus sur {{tested}}",
+    "scoutNoVerdict": "Test de lecture de la nuit ({{date}}) : pas de verdict",
+    "viewers": "Spectateurs, dernières 24 h : {{share}} des lectures ont marché",
+    "reports": "Problèmes signalés, dernières 24 h : {{reports}}",
+    "states": {
+      "up": "Fonctionne",
+      "problems": "Des problèmes",
+      "down": "En panne",
+      "unknown": "Pas vérifiée"
+    },
+    "affected": {
+      "everyone": "En panne pour tout le monde",
+      "you": "Injoignable depuis votre connexion",
+      "ok": "Joignable depuis votre connexion"
+    }
   }
 }

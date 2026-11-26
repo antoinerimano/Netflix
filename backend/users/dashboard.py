@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
-from reco.models import Notification, PlaybackOutcome, RecoHomeSnapshot, TitleAction
+from reco.models import Notification, PlaybackOutcome, PlaybackReport, RecoHomeSnapshot, TitleAction
+from reco.problems import dashboard_reports
 from reco.visits import live_stats, visitor_stats
 from .models import Episode, JobRun, Profile, Provider, ProviderCheck, Title, User
 
@@ -287,6 +288,7 @@ def dashboard_view(request):
              .values("profile").distinct().count()),
             ("New accounts, 7 days", User.objects.filter(created_at__gte=since7).count()),
             ("Alert emails sent, 7 days", Notification.objects.filter(emailed_at__gte=since7).count()),
+            ("Playback problems reported, 7 days", PlaybackReport.objects.filter(created_at__gte=since7).count()),
         ],
         "visitors": visitor_stats(now),
         "live": live_stats(now),
@@ -294,6 +296,7 @@ def dashboard_view(request):
         "plays_top": plays_top,
         "plays_total": sum(d["n"] for d in plays),
         "providers": _providers(now),
+        "reports": dashboard_reports(now),  # "Playback problem?" (ROADMAP 9.8)
         "jobs": _job_board(_jobs(now)),
         "freshness": _freshness(titles_total),
         "titles_total": titles_total,

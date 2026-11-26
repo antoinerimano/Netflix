@@ -132,6 +132,7 @@ REST_FRAMEWORK = {
         "password_reset": env("THROTTLE_PASSWORD_RESET_RATE", default="5/hour"),
         "import": env("THROTTLE_IMPORT_RATE", default="20/hour"),  # history imports (reco/imports.py)
         "visit": env("THROTTLE_VISIT_RATE", default="120/min"),  # page views / pings (reco/visits.py)
+        "report": env("THROTTLE_REPORT_RATE", default="30/hour"),  # "Playback problem?" (reco/problems.py)
     },
     # nginx sits in front: take the client IP from the last X-Forwarded-For hop
     "NUM_PROXIES": env.int("NUM_PROXIES", default=1),

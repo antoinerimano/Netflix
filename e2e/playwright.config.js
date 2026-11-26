@@ -45,6 +45,7 @@ module.exports = defineConfig({
         THROTTLE_AUTH_RATE: '1000/min', // every test signs in
         THROTTLE_PASSWORD_RESET_RATE: '1000/hour',
         THROTTLE_VISIT_RATE: '10000/min',
+        THROTTLE_REPORT_RATE: '10000/min', // "Playback problem?" (ROADMAP 9.8)
         EMAIL_BACKEND: 'django.core.mail.backends.locmem.EmailBackend',
         AI_FAKE: '1', // AI features answer from a scripted fake (reco/ask_fake.py): never the API
         PYTHONIOENCODING: 'utf-8',

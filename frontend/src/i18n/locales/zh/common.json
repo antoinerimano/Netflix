@@ -49,7 +49,8 @@
   "footer": {
     "dmca": "DMCA 声明",
     "contact": "联系我们",
-    "copyright": "© {{year}} Tauruss。保留所有权利。"
+    "copyright": "© {{year}} Tauruss。保留所有权利。",
+    "status": "状态"
   },
   "nav": {
     "main": "主导航",

@@ -12,6 +12,10 @@ tauruss plays them:
                episodes (ROADMAP 9.5), One Piece 1x01 and a late season of the most popular
                anime shows (TMDB numbers its long shows by season: a player that counts
                episodes from 1 to 1100 plays the wrong one), -> Provider.scout_anime
+  reports      "Playback problem?" reports not re-checked yet (ROADMAP 9.8, reco/problems.py): the
+               scout checks those sources first and plays the reported titles on them; its answer
+               comes back with import_providers (health "reports"). The reported sources are
+               also first in "providers".
 """
 import json
 
@@ -130,10 +134,21 @@ class Command(BaseCommand):
     help = "Print the site's origin, providers and test titles as JSON for the provider scout."
 
     def handle(self, *args, **opts):
+        reports = _reports()
+        reported = {r["provider"] for r in reports}
         providers = [{
             "key": p.key, "domain": p.domain, "backups": p.backups(), "movie_path": p.movie_path,
             "episode_path": p.episode_path, "enabled": p.enabled,
             "sends_events": p.sends_events,
         } for p in Provider.objects.all()]
+        providers.sort(key=lambda p: p["key"] not in reported)  # stable: the reported ones first
         self.stdout.write(json.dumps({"site_origin": settings.SITE_URL, "providers": providers,
-                                      "test_titles": test_titles()}, indent=1))
+                                      "test_titles": test_titles(), "reports": reports}, indent=1))
+
+
+def _reports():
+    try:
+        from reco.problems import open_reports
+    except ImportError:  # the reco app is optional
+        return []
+    return open_reports()

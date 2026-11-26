@@ -615,22 +615,54 @@ visitors see on the first screen), the bigger ones after.
         sourceOrder.test.js (+1), ImportPage.test.jsx, e2e/tests/anime.spec.js (4, remote only:
         nav entry and chips, Kids profile, home row OK / Back, AniList + MyAnimeList import, focus
         overlap); import / top10 / focus-overlap specs re-run (18 passed).
-[ ] 9.6 Quality and release status labels (HydraHD, LookMovie, Movy show HD / CAM / 4K)
-        From TMDB release dates (free): a film still only in cinemas gets "In cinemas - digital
-        release on <date>" and a Notify me (like 2.2) instead of a CAM nobody wants; "HD" once its
-        digital release date (type 4) has passed. "4K" only if a source really says so (scout).
-        "Airing today" row / filter for shows (HydraHD), from Episode.air_date.
-[ ] 9.7 Try before signing up (Cineby: "Without login")
-        Today the home page needs an account (ProtectedRoute): a visitor from a list sees a sign-in
-        form and leaves. Let signed-out visitors browse home (a generic snapshot), detail pages,
-        search and play; Continue watching / My List kept in the browser and moved to the account
-        when they sign up ("Create a free account to keep your list on every device"). Kids
-        profiles, history, AI features stay for accounts. Measure sign-ups before / after.
-[ ] 9.8 "Playback problem?" + status page (LookMovie, HydraHD)
-        A "Report a problem" button on the watch page (wrong film, no sound, out of sync, no
-        subtitles) -> saved with the source + title, on the dashboard, and the scout re-checks that
-        source first. A public status page: the app up, each source's last check (the scout already
-        has the data), answers "is it down for me or everyone?".
+[-] 9.6 Quality and release status labels (dropped 2026-11-26: built, tested locally, removed)
+        HD / "In cinemas" / 4K labels on every card + "Airing today". Removed: the labels clutter
+        the artwork, and "In cinemas" was wrong too often (TMDB lacks digital dates for many films,
+        and its release dates mix festivals and cinemas).
+[-] 9.7 Try before signing up (dropped 2026-11-26: built, then removed)
+        Browsing and playing signed out. Removed: Taurus is built on recommendations for each
+        profile, and a signed-out visitor gets nothing personal, so it misses the point.
+[x] 9.8 "Playback problem?" + status page (LookMovie, HydraHD)
+        Watch page: "Playback problem?" at the end of the source chips' line (Right from the last
+        chip; the left end in Arabic / Urdu), only on an embedded source. A dialog (design system
+        Modal): "What's wrong on <source>?" It doesn't play / Wrong film or episode / No sound /
+        Sound out of sync / No subtitles (+ "sound, subtitles and quality come from each source's
+        own player"). Sent -> "Thanks, <source> is checked again first tonight" + Try <next source>
+        (the reported one counts as tried) / Source status. The "No source played this" screen
+        (9.2) also links to the status page.
+        Saved: PlaybackReport (reco, migration reco 0023): source, title, season / episode, problem,
+        profile (empty signed out), checked_at / check_result (the scout's answer).
+        POST /api/playback/report/ (reco/problems.py, signed out too, throttle "report" 30/hour per
+        IP, the same report by a profile within 6 h saved once). "Doesn't play" / "Wrong film" also
+        record a failed play for the profile (PlaybackOutcome): that source goes last on this title.
+        Dashboard: tile "Playback problems reported, 7 days" and a card per source (problems, how
+        many the scout re-checked) + the latest 15 with the scout's answer; admin list of reports.
+        Scout: export_providers sends "reports" (not re-checked, last 7 days, one per source +
+        title / episode, most reported first, 20 max) and puts the reported sources first;
+        provider_docs.py passes them on; provider_health.py checks those sources first, then plays
+        the reported titles (5 per source) with the link that works tonight (health "reports": state,
+        detail, a video far from TMDB's runtime noted as "maybe not this title");
+        import_providers writes the answer on the reports ("played in the scout's test" / "didn't
+        play ..." / "no verdict"). It tells plays / doesn't play, not sound, sync or subtitles.
+        Status page /status (public, footer link "Status", seo.APP_ROUTES): GET /api/status/
+        (AllowAny, no auth, cached 60 s): the site is up (database answers) + every enabled source:
+        Working / Having problems / Down / Not checked (down = the 15-min health check; problems =
+        3+ reports in 24 h, or under half of 5+ plays worked, or the scout under 1/2), its last
+        check, the scout's last night ("9 of 11 test titles played"), the viewers' share of plays
+        that worked in 24 h, the reports in 24 h. "Test from my connection": the browser asks each
+        source's site (no-cors fetch, 8 s): "Down for everyone" / "Not reachable from your
+        connection" (your network, a DNS filter, a blocker) / "Reachable"; Taurus not answering ->
+        "Can't reach Taurus". Each source is a remote stop (Down reads them all).
+        Measured: only locally (e2e, fake players); the scout part with a fake play (its helpers),
+        not on a real night yet: the deployed scout (~/provider-scout) must get the new
+        provider_docs.py / provider_health.py.
+        Tests: reco/test_problems.py (9: report signed in / out / refused, failed play, scout export
+        and answer, status page and states, dashboard), api/problemsApi.test.js (2),
+        e2e/tests/report-problem.spec.js (3, remote only: dialog with arrows / OK / Back, Try next,
+        status page test from my connection, Arabic right to left, focus overlap).
+        Run: report-problem, watch (watch, watch-switch, watch-next), focus-overlap, tv-remote, rtl,
+        guest e2e (37: all pass but rtl "mirrored row", the failure 9.6 already reported from
+        before 9.6); vitest (133); users + reco (395); lint; build; i18n:check; makemigrations --check.
 [ ] 9.9 Watch together, the cheap way (Hexa, Beech score points for it; 2.5 was skipped)
         Some of our embeds have their own watch party (the VidPlus URL has watchparty=false in
         docs/streaming-providers-notes.txt): turn it on for those and show a "Watch together"

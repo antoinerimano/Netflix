@@ -77,6 +77,11 @@ Then on the site (`import_providers`):
   link plays -> that one becomes its link (the old domain stays as a backup). Same for its TV link.
 - **reports its playback to the page** (postMessage) -> *sends events* on, so the site can tell
   when it plays and offer the next source when it stays silent.
+- **viewers' reports** ("Playback problem?" on the watch page, ROADMAP 9.8): `export_providers`
+  sends the ones not re-checked yet (catalog `reports`); those sources are checked first and play
+  the reported titles (`health.reports`); the answer goes on each report (admin dashboard,
+  *Playback problems reported*). It tells "plays" from "doesn't play" (and a video far from the
+  title's runtime: maybe the wrong film), not sound, sync or subtitles.
 - **nothing else**: the scout never turns a provider off, nor touches a link that answers (slow,
   a bot check, a missing title...). Which sources play best for the viewers is the site's smart
   playback (success rates, the source that last worked for a title). The admin shows the scout's

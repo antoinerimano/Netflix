@@ -15,6 +15,7 @@ import WatchInfo from "./watch/WatchInfo";
 import { usePlayerRemote } from "./watch/playerRemote";
 import { isPlayerMessage, nextSource, orderSources } from "./watch/sourceOrder";
 import UpNextCard from "./watch/UpNextCard";
+import ReportProblem from "./watch/ReportProblem";
 import { NEXT_COUNTDOWN_S, findNextEpisode, isEpisodeEnding, upNextMode } from "./watch/autoNext";
 
 import {
@@ -83,6 +84,7 @@ export default function WatchPage() {
   const upNextDoneRef = useRef(false); // the card was shown for this episode: once per episode
   const autoStartsRef = useRef(0); // episodes started by themselves since the last key press
   const [serverPref, setServerPref] = useState(undefined); // undefined = loading, null = unavailable
+  const [reportOpen, setReportOpen] = useState(false); // "Playback problem?" (9.8)
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // ✅ Default selection is NOT custom anymore (we auto-pick first provider)
@@ -639,6 +641,22 @@ export default function WatchPage() {
     else setReloadNonce((n) => n + 1);
   }, [keepFocusOnPlayer, selectedKey]);
 
+  // "Playback problem?" sent, then "Try <next source>": the reported one counts as tried
+  const reportNext = useMemo(() => {
+    if (!reportOpen) return null;
+    const key = nextSource(sourceOrderRef.current, selectedKey, new Set([...autoFailedRef.current, selectedKey]));
+    return providers.find((p) => p.key === key) || null;
+  }, [reportOpen, selectedKey, providers]);
+
+  const tryAfterReport = useCallback(
+    (key) => {
+      autoFailedRef.current.add(selectedKey);
+      setReportOpen(false);
+      switchSource(key, { judge: false }); // the report already said how it went
+    },
+    [selectedKey, switchSource]
+  );
+
   // "Choose a source": the remote goes to the chips under the player
   const chooseSourceYourself = useCallback(() => {
     const chips = [...document.querySelectorAll(".watchpage__providerRow .watchpage__chip")];
@@ -1001,6 +1019,9 @@ export default function WatchPage() {
                   <Button variant="secondary" size="sm" onClick={chooseSourceYourself}>
                     {t("player.chooseTitle")}
                   </Button>
+                  <Button variant="ghost" size="sm" to="/status">
+                    {t("problem.status")}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1047,6 +1068,8 @@ export default function WatchPage() {
             <h2 className="watchpage__sourcesTitle">{t("sources.title")}</h2>
             <p className="watchpage__sourcesHelp">{t("sources.help")}</p>
           </div>
+          {/* the chips, then "Playback problem?" on the same line: Right from the last chip reaches it */}
+          <div className="watchpage__sourcesBar">
           <div className="ui-scroller watchpage__providerRow" role="group" aria-label={t("sources.choose")}>
             {providers.map((p) => (
               <Chip
@@ -1064,6 +1087,12 @@ export default function WatchPage() {
               <LinkIcon className="watchpage__chipIcon" aria-hidden="true" />
               {t("sources.custom")}
             </Chip>
+          </div>
+          {selectedProvider && sourceType === "iframe" ? (
+            <Button variant="ghost" size="sm" className="watchpage__reportBtn" onClick={() => setReportOpen(true)}>
+              {t("problem.open")}
+            </Button>
+          ) : null}
           </div>
 
           {selectedKey === "custom" ? (
@@ -1100,6 +1129,19 @@ export default function WatchPage() {
           />
         </div>
       </main>
+
+      {selectedProvider ? (
+        <ReportProblem
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          source={selectedProvider}
+          titleId={title.id}
+          season={isTV ? seasonNumber : null}
+          episode={isTV ? episodeNumber : null}
+          next={reportNext}
+          onTryNext={tryAfterReport}
+        />
+      ) : null}
     </div>
   );
 }

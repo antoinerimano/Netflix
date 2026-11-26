@@ -49,7 +49,8 @@
   "footer": {
     "dmca": "Aviso DMCA",
     "contact": "Contacto",
-    "copyright": "© {{year}} Tauruss. Todos los derechos reservados."
+    "copyright": "© {{year}} Tauruss. Todos los derechos reservados.",
+    "status": "Estado"
   },
   "nav": {
     "main": "Navegación principal",

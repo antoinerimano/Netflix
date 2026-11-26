@@ -26,6 +26,12 @@ Anime (catalog test_titles "anime", ROADMAP 9.5): a few anime episodes, late sea
 numbers long shows like One Piece by season), played with the TV link that works: "anime_verified"
 "2/3" of the ones some provider plays (the site's Provider.scout_anime: anime tries those first).
 
+Viewers' reports (catalog "reports", from the site's "Playback problem?", ROADMAP 9.8): the
+reported sources are checked first, then each plays the reported titles with the link that works
+(health "reports": state / detail per title, a video far from the title's runtime noted as maybe
+the wrong film). import_providers writes the answer on the reports (admin dashboard). It can tell
+"plays" from "doesn't play", not sound, sync or subtitles.
+
 Link formats tried to find the one that plays (in order): the site's current link, the formats
 of its API docs, the ones seen on streaming sites, its docs' example URLs, the usual structures on
 its domain, then the best one on its other KNOWN domains (backups, seen on sites, in its docs).
@@ -671,6 +677,51 @@ async def check_provider(ctx, p: dict, titles: list | None = None, episodes: lis
     return stamp(judge(h, {t["name"] for t in titles}, {e["name"] for e in episodes}, {a["name"] for a in anime}))
 
 
+REPORTS_PER_PROVIDER = 5
+
+
+def site_key(p: dict) -> str:
+    """The site's key for a catalog provider (the reports use it)."""
+    return (p.get("site_link") or {}).get("key") or p["provider"]
+
+
+def reports_by_provider(reports: list) -> dict:
+    out = {}
+    for r in reports or []:
+        if isinstance(r, dict) and r.get("provider") and r.get("tmdb"):
+            out.setdefault(r["provider"], []).append(r)
+    return out
+
+
+def wrong_length(r: dict, report: dict) -> str:
+    """A video far from the title's runtime (TMDB): maybe another film / episode."""
+    got, want = r.get("duration_min"), report.get("minutes")
+    if r.get("state") != "live" or not got or not want or abs(got - want) <= max(15, 0.25 * want):
+        return ""
+    return f"; a {got} min video, the title is {want} min: maybe not this title"
+
+
+async def recheck_reports(ctx, h: dict, reports: list, site: str | None) -> list:
+    """Plays the titles viewers reported on this source, with the link that works tonight."""
+    out = []
+    for rep in reports[:REPORTS_PER_PROVIDER]:
+        tv = rep.get("type") == "tv"
+        base = {"type": "tv" if tv else "movie", "tmdb": rep["tmdb"],
+                **({"season": rep.get("season"), "episode": rep.get("episode")} if tv else {})}
+        template = h.get("episode_link") if tv else h.get("movie_template")
+        if not template:
+            down = h.get("state") == "down"
+            out.append({**base, "state": "down" if down else "untested",
+                        "detail": h.get("detail", "") if down else f"no {'TV ' if tv else ''}link of this source plays tonight"})
+            continue
+        title = {"tmdb": rep["tmdb"], "imdb": rep.get("imdb") or "", "name": rep.get("name") or str(rep["tmdb"]),
+                 "minutes": rep.get("minutes") or 0, **({"season": rep.get("season"), "episode": rep.get("episode")} if tv else {})}
+        r = await play(ctx, template, title, site, retry=True)
+        out.append({**base, "state": r["state"], "detail": (r.get("detail") or "") + wrong_length(r, rep),
+                    "duration_min": r.get("duration_min")})
+    return out
+
+
 def same_default_video(results: list) -> None:
     """
     SAME_VIDEO titles or more "playing" a video of the very same length (to the second): one default
@@ -773,6 +824,9 @@ async def main():
     if only:  # in the order given
         order = [x.strip() for x in cfg.providers.split(",")]
         todo.sort(key=lambda p: order.index(p["provider"]))
+    reported = reports_by_provider(cat.get("reports"))
+    if not only:  # the sources viewers reported go first (ROADMAP 9.8)
+        todo.sort(key=lambda p: site_key(p) not in reported)
     tt = cat.get("test_titles") or {}
     titles, episodes = tt.get("movies") or FILMS, tt.get("episodes") or EPISODES
     anime = tt.get("anime") or ANIME
@@ -784,6 +838,8 @@ async def main():
     if cfg.episodes is not None:
         anime = anime[:cfg.episodes]
     print(f"{len(titles)} movies, {len(episodes)} episodes, {len(anime)} anime; players in an iframe on {site or '(none: direct)'}", flush=True)
+    if reported:
+        print(f"viewers' reports to re-check first: {', '.join(f'{k} ({len(v)})' for k, v in reported.items())}", flush=True)
 
     # with a screen (run.sh: xvfb-run), a normal Chrome window: Cloudflare stops headless Chrome
     headless = not os.environ.get("DISPLAY") or os.environ.get("HEADLESS") == "1"
@@ -804,6 +860,12 @@ async def main():
                     p["health"] = await asyncio.wait_for(check_provider(ctx, p, titles, episodes, site, anime), 1800)
                 except Exception as e:
                     p["health"] = {"state": "untested", "detail": f"check failed: {type(e).__name__}"}
+                if site_key(p) in reported:
+                    try:
+                        p["health"]["reports"] = await asyncio.wait_for(
+                            recheck_reports(ctx, p["health"], reported[site_key(p)], site), 900)
+                    except Exception as e:
+                        print(f"  {p['provider']}: reports not re-checked ({type(e).__name__})", flush=True)
                 h = p["health"]
                 done.append(p["provider"])
                 plays = sum(f.get("state") == "live" for f in h.get("films") or [])

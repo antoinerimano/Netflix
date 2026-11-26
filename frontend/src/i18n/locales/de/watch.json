@@ -63,5 +63,57 @@
     "endTitle": "Das war die letzte Folge von {{show}}",
     "moreLikeThis": "Mehr davon",
     "close": "Schließen"
+  },
+  "problem": {
+    "open": "Problem bei der Wiedergabe?",
+    "title": "Problem bei der Wiedergabe?",
+    "question": "Was stimmt bei {{source}} nicht?",
+    "kinds": {
+      "not_playing": "Es spielt nicht ab",
+      "wrong_title": "Falscher Film oder falsche Folge",
+      "no_sound": "Kein Ton",
+      "out_of_sync": "Ton nicht synchron",
+      "no_subtitles": "Keine Untertitel"
+    },
+    "note": "Ton, Untertitel und Qualität kommen vom Player der jeweiligen Quelle: Eine andere Quelle hat sie vielleicht.",
+    "thanks": "Danke, notiert. {{source}} wird heute Nacht zuerst geprüft.",
+    "failed": "Senden fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
+    "status": "Status der Quellen"
+  },
+  "status": {
+    "title": "Status",
+    "subtitle": "Läuft Taurus, und welche Quellen spielen gerade ab. Taurus hostet keine Videos: Jede Quelle ist der Player einer anderen Website.",
+    "siteUp": "Taurus läuft",
+    "siteDown": "Taurus ist nicht erreichbar",
+    "siteDownText": "Unser Server antwortet von hier aus nicht. Wenn andere Websites laden, ist Taurus vielleicht für alle ausgefallen: Versuche es in ein paar Minuten erneut.",
+    "sourcesWorking": "Funktionierende Quellen: {{working}} von {{total}}",
+    "noSourceWorking": "Gerade funktioniert keine Quelle. Versuche es später erneut.",
+    "updated": "Aktualisiert {{when}}",
+    "testText": "Eine Quelle öffnet sich bei dir nicht? Teste alle Quellen über deine Verbindung: für alle ausgefallen oder nur für dich?",
+    "test": "Über meine Verbindung testen",
+    "testing": "Wird getestet…",
+    "testAgain": "Erneut testen",
+    "allReachable": "Alle funktionierenden Quellen sind über deine Verbindung erreichbar.",
+    "blockedHere": "Für alle erreichbar, aber nicht über deine Verbindung: {{blocked}}. Dein Netzwerk, ein DNS-Filter oder ein Werbeblocker hält sie vielleicht auf: Versuche ein anderes Netzwerk oder schalte den Blocker für Taurus aus.",
+    "sources": "Quellen",
+    "noSources": "Keine Quelle anzuzeigen.",
+    "note": "Unser Server erreicht jede Quelle alle 15 Minuten, und jede Nacht spielt ein Test auf jeder einige Filme und Folgen ab.",
+    "checked": "Letzte Prüfung {{when}}",
+    "neverChecked": "Noch nicht geprüft",
+    "scout": "Nächtlicher Wiedergabetest ({{date}}): {{played}} von {{tested}} Testtiteln abgespielt",
+    "scoutNoVerdict": "Nächtlicher Wiedergabetest ({{date}}): kein Ergebnis",
+    "viewers": "Zuschauer, letzte 24 Std.: {{share}} der Wiedergaben hat funktioniert",
+    "reports": "Gemeldete Probleme, letzte 24 Std.: {{reports}}",
+    "states": {
+      "up": "Funktioniert",
+      "problems": "Hat Probleme",
+      "down": "Ausgefallen",
+      "unknown": "Nicht geprüft"
+    },
+    "affected": {
+      "everyone": "Für alle ausgefallen",
+      "you": "Über deine Verbindung nicht erreichbar",
+      "ok": "Über deine Verbindung erreichbar"
+    }
   }
 }

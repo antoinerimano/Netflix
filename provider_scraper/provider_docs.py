@@ -241,6 +241,8 @@ async def main():
     json.dump({"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "probe_title": probe,
                # how tauruss plays them (provider_health.py tests in that setting)
                "site_origin": site.get("site_origin"), "test_titles": site.get("test_titles"),
+               # viewers' "Playback problem?" reports (ROADMAP 9.8): provider_health.py re-checks them
+               "reports": site.get("reports") or [],
                "providers": providers}, open(cfg.out, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     print(f"[+] {len(providers)} providers -> {cfg.out}")
 

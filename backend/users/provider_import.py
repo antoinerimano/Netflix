@@ -186,6 +186,19 @@ def scout_anime(health):
     return 0.0 if health.get("state") == "down" and "anime_verified" in health else None
 
 
+def _recheck_reports(key, results, now, lines):
+    """The scout played the titles viewers reported on this source (ROADMAP 9.8): its answer goes
+    on the reports (reco/problems.py, shown on the admin dashboard)."""
+    try:
+        from reco.problems import record_rechecks
+    except ImportError:  # the reco app is optional
+        return 0
+    marked = record_rechecks(key, results, now)
+    played = sum(1 for r in results if isinstance(r, dict) and r.get("state") == "live")
+    lines.append(f"{key}: re-checked {len(results)} reported title(s), {played} played ({marked} report(s) answered)")
+    return marked
+
+
 def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     """Apply a provider_catalog.json (dict). Returns (lines, stats)."""
     probe = catalog.get("probe_title") or {}
@@ -200,7 +213,7 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
     lines = []
     stats = {"created": 0, "created_enabled": 0, "new_backup": 0, "switched": 0,
              "known_ok": 0, "skipped_not_live": 0, "skipped_no_link": 0,
-             "fixed_link": 0, "tv_fixed": 0}
+             "fixed_link": 0, "tv_fixed": 0, "reports_checked": 0}
     now = timezone.now()
     stamp = (catalog.get("generated") or now.strftime("%Y-%m-%d %H:%M"))[:16]
 
@@ -224,6 +237,8 @@ def import_catalog(catalog, dry_run=False, min_sites=MIN_SITES_TO_ENABLE):
                 known.scout_check = note
                 known.scout_score = scout_score(health)
                 known.scout_anime = scout_anime(health)
+                if health.get("reports") and not dry_run:
+                    stats["reports_checked"] += _recheck_reports(known.key, health["reports"], now, lines)
                 if live and domain:
                     _apply_working_link(known, domain, movie_path, episode_path, health, lines, stats, stamp, now)
                 if not dry_run:

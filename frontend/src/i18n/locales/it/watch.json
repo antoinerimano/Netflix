@@ -63,5 +63,57 @@
     "endTitle": "Era l'ultimo episodio di {{show}}",
     "moreLikeThis": "Altri titoli simili",
     "close": "Chiudi"
+  },
+  "problem": {
+    "open": "Problema di riproduzione?",
+    "title": "Problema di riproduzione?",
+    "question": "Cosa non va su {{source}}?",
+    "kinds": {
+      "not_playing": "Non parte",
+      "wrong_title": "Film o episodio sbagliato",
+      "no_sound": "Niente audio",
+      "out_of_sync": "Audio fuori sincrono",
+      "no_subtitles": "Niente sottotitoli"
+    },
+    "note": "Audio, sottotitoli e qualità dipendono dal player di ogni fonte: un'altra fonte potrebbe averli.",
+    "thanks": "Grazie, segnalato. Stanotte {{source}} viene ricontrollata per prima.",
+    "failed": "Invio non riuscito. Controlla la connessione e riprova.",
+    "status": "Stato delle fonti"
+  },
+  "status": {
+    "title": "Stato",
+    "subtitle": "Se Taurus funziona e quali fonti riproducono adesso. Taurus non ospita video: ogni fonte è il player di un altro sito.",
+    "siteUp": "Taurus funziona",
+    "siteDown": "Impossibile raggiungere Taurus",
+    "siteDownText": "Il nostro server non risponde da qui. Se altri siti si aprono, Taurus potrebbe essere giù per tutti: riprova tra qualche minuto.",
+    "sourcesWorking": "Fonti funzionanti: {{working}} su {{total}}",
+    "noSourceWorking": "Nessuna fonte funziona al momento. Riprova più tardi.",
+    "updated": "Aggiornato {{when}}",
+    "testText": "Una fonte non si apre? Prova tutte le fonti dalla tua connessione: giù per tutti o solo per te?",
+    "test": "Prova dalla mia connessione",
+    "testing": "Prova in corso…",
+    "testAgain": "Riprova",
+    "allReachable": "Tutte le fonti funzionanti sono raggiungibili dalla tua connessione.",
+    "blockedHere": "Fonti attive per tutti ma non raggiungibili dalla tua connessione: {{blocked}}. La tua rete, un filtro DNS o un blocco pubblicità potrebbe fermarle: prova un'altra rete o disattiva il blocco per Taurus.",
+    "sources": "Fonti",
+    "noSources": "Nessuna fonte da mostrare.",
+    "note": "Il nostro server contatta ogni fonte ogni 15 minuti, e ogni notte un test riproduce alcuni film ed episodi su ciascuna.",
+    "checked": "Ultimo controllo {{when}}",
+    "neverChecked": "Non ancora controllata",
+    "scout": "Test notturno ({{date}}): {{played}} titoli di prova riprodotti su {{tested}}",
+    "scoutNoVerdict": "Test notturno ({{date}}): nessun verdetto",
+    "viewers": "Spettatori, ultime 24 h: ha funzionato il {{share}} delle riproduzioni",
+    "reports": "Problemi segnalati, ultime 24 h: {{reports}}",
+    "states": {
+      "up": "Funziona",
+      "problems": "Ha problemi",
+      "down": "Giù",
+      "unknown": "Non controllata"
+    },
+    "affected": {
+      "everyone": "Giù per tutti",
+      "you": "Non raggiungibile dalla tua connessione",
+      "ok": "Raggiungibile dalla tua connessione"
+    }
   }
 }

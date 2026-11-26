@@ -376,3 +376,35 @@ class AiUsage(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["feature", "created_at"])]
+
+
+class PlaybackReport(models.Model):
+    """
+    "Playback problem?" on the watch page (ROADMAP 9.8): a viewer says what's wrong with a source
+    on a title (or episode). Shown on the admin dashboard; export_providers hands the open ones to
+    the provider scout, which re-checks those sources first that night and plays the reported
+    title; import_providers writes its result here (checked_at / check_result).
+    """
+    NOT_PLAYING, WRONG_TITLE, NO_SOUND, OUT_OF_SYNC, NO_SUBTITLES = (
+        "not_playing", "wrong_title", "no_sound", "out_of_sync", "no_subtitles")
+    PROBLEMS = [
+        (NOT_PLAYING, "Doesn't play"),
+        (WRONG_TITLE, "Wrong film / episode"),
+        (NO_SOUND, "No sound"),
+        (OUT_OF_SYNC, "Sound out of sync"),
+        (NO_SUBTITLES, "No subtitles"),
+    ]
+
+    profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.SET_NULL)  # empty: signed out
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    season_number = models.PositiveSmallIntegerField(null=True, blank=True)
+    episode_number = models.PositiveSmallIntegerField(null=True, blank=True)
+    provider_key = models.CharField(max_length=40)
+    problem = models.CharField(max_length=20, choices=PROBLEMS)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    # the provider scout's re-check (import_providers)
+    checked_at = models.DateTimeField(null=True, blank=True)
+    check_result = models.CharField(max_length=200, blank=True, default="")
+
+    class Meta:
+        indexes = [models.Index(fields=["provider_key", "-created_at"])]

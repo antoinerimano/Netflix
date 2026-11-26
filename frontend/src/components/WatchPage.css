@@ -233,6 +233,21 @@
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
+/* the source chips + "Playback problem?" (ROADMAP 9.8) at the end of their line (the left in
+   Arabic / Urdu); on a narrow screen the chips scroll and the button stays */
+.watchpage__sourcesBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.watchpage__sourcesBar > .watchpage__providerRow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.watchpage__reportBtn {
+  flex: none;
+}
 .watchpage__chip {
   gap: var(--space-2);
 }
