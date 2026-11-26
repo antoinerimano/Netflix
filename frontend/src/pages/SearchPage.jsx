@@ -66,6 +66,7 @@ export default function SearchPage() {
   const [error, setError] = useState(null);
   const [recent, setRecent] = useState(readRecent);
   const [popular, setPopular] = useState(null);
+  const [attempt, setAttempt] = useState(0); // "Try again": the same URL, asked once more
   const inputRef = useRef(null);
 
   const setUrl = useCallback(
@@ -78,8 +79,10 @@ export default function SearchPage() {
     [location.search, navigate]
   );
 
-  // typing -> URL after a short pause (the URL drives the search: shareable, Back restores it)
-  useEffect(() => setQuery(urlQuery), [urlQuery]);
+  // typing -> URL after a short pause (the URL drives the search: shareable, Back restores it).
+  // The URL keeps the trimmed text: what is typed only follows it when it means something else
+  // (it ate the space just typed: "star " became "star" and "star wars" came out "starwars")
+  useEffect(() => setQuery((q) => (q.trim() === urlQuery ? q : urlQuery)), [urlQuery]);
   useEffect(() => {
     if (query.trim() === urlQuery) return undefined;
     const timer = setTimeout(() => setUrl({ q: query.trim() }), 300);
@@ -103,7 +106,7 @@ export default function SearchPage() {
     return () => {
       alive = false;
     };
-  }, [urlQuery, type, lng]); // lng: titles and "why it matched" come back in the app's language
+  }, [urlQuery, type, lng, attempt]); // lng: titles and "why it matched" come back in the app's language
 
   // before typing: popular titles (cached by the server); again in a new language
   useEffect(() => setPopular(null), [lng]);
@@ -185,7 +188,7 @@ export default function SearchPage() {
     body = <PosterSkeletons />;
   } else if (error) {
     body = (
-      <EmptyState tone="error" title={t('search.error')} actions={<Button variant="primary" onClick={() => setUrl({ q: urlQuery })}>{t('actions.tryAgain')}</Button>}>
+      <EmptyState tone="error" title={t('search.error')} actions={<Button variant="primary" onClick={() => setAttempt((n) => n + 1)}>{t('actions.tryAgain')}</Button>}>
         {friendlyError(error, 'results')}
       </EmptyState>
     );

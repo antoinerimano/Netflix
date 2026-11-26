@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { fetchUserProfile, fetchUserProfiles } from '../api/userApi';
 import { setActiveProfile } from '../utils/activeProfile';
-import { DEFAULT_APPEARANCE, setAppearance } from '../design/theme';
+import { setAppearance } from '../design/theme';
+import { clearSession } from '../utils/session';
 
 export const AuthContext = createContext();
 
@@ -24,10 +25,23 @@ export const AuthProvider = ({ children }) => {
         setActiveProfileId(existing);
         // its look may have changed on another device (Appearance page): take the saved one
         const uid = localStorage.getItem('userId');
+        const lookBefore = localStorage.getItem('appearance');
         if (uid) {
           fetchUserProfile(uid, existing)
             .then((p) => {
               if (localStorage.getItem('activeProfileId') !== existing || !p) return;
+              // picked on this device while the request was on its way (Appearance page): that
+              // choice is newer than the answer, keep it (the page saves it on the profile)
+              if (localStorage.getItem('appearance') !== lookBefore) {
+                let mine = null;
+                try {
+                  mine = JSON.parse(localStorage.getItem('activeProfile') || 'null')?.appearance;
+                } catch {
+                  /* unreadable copy: the server's */
+                }
+                localStorage.setItem('activeProfile', JSON.stringify(mine ? { ...p, appearance: mine } : p));
+                return;
+              }
               localStorage.setItem('activeProfile', JSON.stringify(p));
               setAppearance(p.appearance);
             })
@@ -54,14 +68,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isStaff');
-    localStorage.removeItem('activeProfileId');
-    localStorage.removeItem('activeProfile');
-    setAppearance(DEFAULT_APPEARANCE); // the sign-in page: the app's own look
+    clearSession(); // the profile's look too: the sign-in page has the app's own look
     setActiveProfileId(null);
     setIsAuthenticated(false);
   };

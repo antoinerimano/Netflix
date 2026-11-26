@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import Hero, { heroArtwork } from "../components/Hero";
-import { Button, Skeleton } from "../design";
+import { Button, EmptyState, Skeleton, friendlyError } from "../design";
 import { WandIcon } from "../design/icons";
 import "./HomePage.css";
 import Row, { TOP10_SIZE } from "../components/Row";
@@ -36,6 +36,8 @@ const HomePage = () => {
   const { t, i18n } = useTranslation("catalog");
   const [loading, setLoading] = useState(true);
   const [heroPick, setHeroPick] = useState(null);
+  const [loadError, setLoadError] = useState(null); // the rows didn't come: say so (it was a blank page)
+  const [attempt, setAttempt] = useState(0); // "Try again"
 
   // rows backend
   const [homeRows, setHomeRows] = useState([]);
@@ -68,6 +70,7 @@ const HomePage = () => {
     }
 
     setLoading(true);
+    setLoadError(null);
 
     fetchHomeRecoRows(pid)
       .then((data) => {
@@ -120,9 +123,11 @@ const HomePage = () => {
           setLoading(false);
         }, 150);
       })
-      .catch(() => {
+      .catch((e) => {
         if (!alive) return;
         setHomeRows([]);
+        setHeroPick(null);
+        setLoadError(e);
         setLoading(false);
       });
 
@@ -130,7 +135,7 @@ const HomePage = () => {
       alive = false;
     };
     // the language too: row titles, "why" lines, titles and synopses come back translated
-  }, [profileId, i18n.resolvedLanguage]);
+  }, [profileId, i18n.resolvedLanguage, attempt]);
 
   // --- Dedup global: un titre apparait une seule fois sur TOUTE la page ---
   // except in a Top 10: a chart keeps all its places (title #2 is #2 even if a row above has it)
@@ -198,7 +203,18 @@ const HomePage = () => {
   return (
     <div className="homepage">
       <Navbar />
-      <Hero hero={heroPick} />
+      {loadError ? (
+        <EmptyState
+          page
+          tone="error"
+          title={t("home.loadError")}
+          actions={<Button variant="primary" onClick={() => setAttempt((n) => n + 1)} data-tv-start="">{t("actions.tryAgain")}</Button>}
+        >
+          {friendlyError(loadError)}
+        </EmptyState>
+      ) : (
+        <Hero hero={heroPick} />
+      )}
 
       {needsTaste && !tasteDismissed ? (
         <aside className="taste-banner" aria-labelledby="taste-banner-title">

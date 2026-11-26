@@ -1,6 +1,7 @@
 {
   "episodeShort": "S{{season}} · F{{episode}}",
   "home": {
+    "loadError": "Deine Startseite konnte nicht geladen werden",
     "recommended": "Empfohlen",
     "rows": {
       "popular": "Gerade beliebt",

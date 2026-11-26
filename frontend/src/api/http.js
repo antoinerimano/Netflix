@@ -1,6 +1,7 @@
 // src/api/http.js
 import axios from "axios";
 import { currentLanguage } from "../i18n";
+import { clearSession } from "../utils/session";
 
 const API_BASE = import.meta.env.REACT_APP_API_BASE;
 
@@ -93,19 +94,14 @@ http.interceptors.response.use(
     }
 
     if (isJwtInvalidOrExpired(error)) {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      localStorage.removeItem("activeProfileId");
-
-      // ✅ aussi nettoyer ces items (tu les set dans Login.js)
-      localStorage.removeItem("userId");
-      localStorage.removeItem("user");
-      localStorage.removeItem("isStaff");
+      // the profile and its look go too (they stayed, and the next sign-in started with them)
+      clearSession();
 
       if (window.location.pathname !== "/login") {
         window.location.assign("/login");
       }
-      return;
+      // still a failure for the caller (it got `undefined` and crashed on `res.data`)
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

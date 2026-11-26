@@ -15,6 +15,7 @@ import { Button, SectionTitle, Toast } from '../../design';
 import { CheckIcon } from '../../design/icons';
 import {
   ACCENTS,
+  APPEARANCE_EVENT,
   BACKGROUNDS,
   DEFAULT_APPEARANCE,
   FONTS,
@@ -22,6 +23,7 @@ import {
   loadFont,
   normalizeAppearance,
   setAppearance,
+  storedAppearance,
   toProfileValue,
 } from '../../design/theme';
 import '../AccountManagement.css';
@@ -68,7 +70,14 @@ export default function AppearancePage() {
   const navigate = useNavigate();
   const [profile] = useState(readProfile);
   const userId = localStorage.getItem('userId');
-  const [look, setLook] = useState(() => normalizeAppearance(profile?.appearance));
+  // what is on screen (the profile's copy kept in this browser can be older: the look saved on
+  // another device is applied when the app starts, and the page showed the default meanwhile)
+  const [look, setLook] = useState(storedAppearance);
+  useEffect(() => {
+    const onChange = (e) => setLook(normalizeAppearance(e.detail));
+    window.addEventListener(APPEARANCE_EVENT, onChange);
+    return () => window.removeEventListener(APPEARANCE_EVENT, onChange);
+  }, []);
   const [status, setStatus] = useState(''); // '' | 'saving' | 'saved'
   const [toast, setToast] = useState({ message: '', tone: 'success' });
   const clearToast = useCallback(() => setToast({ message: '', tone: 'success' }), []);

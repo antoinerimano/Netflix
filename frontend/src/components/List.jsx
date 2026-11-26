@@ -69,10 +69,20 @@ const List = () => {
   };
 
   const handleRemove = (itemId) => {
-    const before = list;
+    const index = list.findIndex((i) => i.id === itemId);
+    const removed = list[index];
     setList((prev) => prev.filter((i) => i.id !== itemId));
     logActionBeacon({ title_id: itemId, action: 'add_to_list', surface: 'my_list', provider: 'remove' });
-    setInMyList(activeProfileId, itemId, false).catch(() => setList(before)); // put it back if it failed
+    // failed: only this title comes back, at its place (putting back the whole list as it was
+    // brought back the other titles removed meanwhile too)
+    setInMyList(activeProfileId, itemId, false).catch(() =>
+      setList((prev) => {
+        if (!removed || prev.some((i) => i.id === itemId)) return prev;
+        const next = [...prev];
+        next.splice(Math.min(index, next.length), 0, removed);
+        return next;
+      })
+    );
   };
 
   return (

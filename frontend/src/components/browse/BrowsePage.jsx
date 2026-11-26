@@ -145,9 +145,11 @@ export default function BrowsePage({ kind = 'movie' }) {
   const serviceName = (key) => services.find((s) => s.key === key)?.name || key;
 
   // search box -> URL after a short pause
-  useEffect(() => setQuery(filters.query), [filters.query]);
+  // (the URL keeps the trimmed text: typing only follows it when it means something else, or the
+  // space just typed was eaten during the pause)
+  useEffect(() => setQuery((q) => (q.trim() === filters.query ? q : filters.query)), [filters.query]);
   useEffect(() => {
-    if (query === filters.query) return undefined;
+    if (query.trim() === filters.query) return undefined;
     const timer = setTimeout(() => applyFilters({ query: query.trim() }), 350);
     return () => clearTimeout(timer);
   }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -155,8 +157,10 @@ export default function BrowsePage({ kind = 'movie' }) {
   // filters changed (or first visit): load pages 1..page of the URL at once (Back restores them)
   const scrollKey = `browse-scroll:${location.pathname}?${filtersKey}`;
   const restoreScroll = useRef(true);
+  const listKey = useRef(''); // the filters the items on screen were loaded for
   useEffect(() => {
     let alive = true;
+    listKey.current = `${kind}|${filtersKey}|${lng}`;
     setLoading(true);
     setError(null);
     const pages = Array.from({ length: urlPage }, (_, i) => i + 1);
@@ -217,9 +221,12 @@ export default function BrowsePage({ kind = 'movie' }) {
   const loadMore = useCallback(async () => {
     if (!hasMore || loadingMore || loading) return;
     setLoadingMore(true);
+    const forList = listKey.current;
     try {
       const next = page + 1;
       const res = await fetchTitlesPage({ type: apiType, section, page: next, pageSize: PAGE_SIZE, ...filters });
+      // the filters changed meanwhile: this page belongs to the old results
+      if (listKey.current !== forList) return;
       setItems((prev) => {
         const seen = new Set(prev.map((x) => x.id));
         return [...prev, ...(res.items || []).filter((x) => !seen.has(x.id))];

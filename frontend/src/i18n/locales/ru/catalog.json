@@ -1,6 +1,7 @@
 {
   "episodeShort": "С{{season}} · Э{{episode}}",
   "home": {
+    "loadError": "Не удалось загрузить главную страницу",
     "recommended": "Рекомендуем",
     "rows": {
       "popular": "Популярно сейчас",

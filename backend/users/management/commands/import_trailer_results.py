@@ -12,6 +12,10 @@ a title without a TMDB trailer): TMDB's was gone, blocked in its country or not 
 it took TMDB's next trailer or searched YouTube. The clip is saved with trailer_clip_for = the
 asked key ("-" for none), and the title page plays that video (users/trailers.py).
 
+"withdrawn" (and a "rejected" that carries withdrawn): a clip the worker made from a YouTube
+search and now turns down (make_previews.py --recheck-search: "NOVA" got a 1974 Chevrolet Nova).
+withdrawn = the clip's path: the title loses its clip when it is still that one.
+
 --clear-rejected: titles whose trailer the worker turned down (its YouTube name isn't the
 title's) lose their old trailers/{tmdb_id}.mp4 clip too: it was most likely the wrong video.
 """
@@ -53,7 +57,8 @@ class Command(BaseCommand):
             raise CommandError('Not a trailer-worker results file (no "results" object).')
 
         cdn = (getattr(settings, "BUNNY_CDN_BASE", "") or "").rstrip("/")
-        stats = {"saved": 0, "other_video": 0, "unchanged": 0, "stale": 0, "unknown": 0, "cleared": 0, "skipped": 0}
+        stats = {"saved": 0, "other_video": 0, "unchanged": 0, "stale": 0, "unknown": 0, "cleared": 0,
+                 "withdrawn": 0, "skipped": 0}
 
         with transaction.atomic():
             for r in results.values():
@@ -64,7 +69,7 @@ class Command(BaseCommand):
                 except (TypeError, ValueError):
                     stats["skipped"] += 1
                     continue
-                if status not in ("ok", "rejected"):
+                if status not in ("ok", "rejected", "withdrawn"):
                     stats["skipped"] += 1  # errors: the worker tries again later
                     continue
 
@@ -72,6 +77,15 @@ class Command(BaseCommand):
                     "id", "trailer_url", "trailer_clip_url", "trailer_clip_for").first()
                 if not title:
                     stats["unknown"] += 1
+                    continue
+                gone = r.get("withdrawn") or ""
+                if status != "ok" and gone.startswith("previews/") and title.trailer_clip_url.endswith("/" + gone):
+                    stats["withdrawn"] += 1
+                    if not opts["dry_run"]:
+                        Title.objects.filter(pk=title.pk).update(trailer_clip_url="", trailer_clip_for="")
+                    continue
+                if status == "withdrawn":
+                    stats["skipped"] += 1  # its clip was already taken off (or replaced)
                     continue
                 current = youtube_key(title.trailer_url)
                 asked = r.get("asked_key", r.get("youtube_key")) or ""  # results.json v1: no asked_key

@@ -3,7 +3,7 @@
 // and the active-profile bookkeeping. Used by "Who's watching?" and the account page.
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createProfile, updateProfile, deleteProfile } from '../../api/userApi';
+import { createProfile, patchProfile, deleteProfile } from '../../api/userApi';
 import { Button, Modal } from '../../design';
 import ProfileForm, { EMPTY_PROFILE } from './ProfileForm';
 import { getActiveProfileId, setActiveProfile, clearActiveProfile } from '../../utils/activeProfile';
@@ -32,7 +32,10 @@ export default function ProfileEditor({ editing, onClose, onDone, canDelete = tr
       onDone({ type: 'added', profile: { ...values, ...(created || {}) } });
       return;
     }
-    const updated = await updateProfile(userId, editing.id, { ...editing, ...values });
+    // only what the form edits: the whole profile as the list loaded it sent back its other
+    // fields too, so a look (or a history pause) changed meanwhile on another device was undone
+    const fields = Object.fromEntries(Object.keys(EMPTY_PROFILE).map((k) => [k, values[k]]));
+    const updated = await patchProfile(userId, editing.id, fields);
     const profile = { ...editing, ...values, ...(updated || {}) };
     if (String(editing.id) === getActiveProfileId()) setActiveProfile(profile);
     setConfirmDelete(false);

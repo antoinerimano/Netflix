@@ -120,7 +120,9 @@ const MovieDetail = () => {
       .then((data) => alive && setMovie(data))
       .catch((err) => {
         console.error('Failed to fetch movie:', err);
-        if (alive) setLoadError(err);
+        if (!alive) return;
+        setMovie(null); // not the previous movie's page under this address
+        setLoadError(err);
       })
       .finally(() => alive && setLoading(false));
     return () => {
