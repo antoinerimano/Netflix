@@ -158,6 +158,9 @@ class Title(models.Model):
     # when manage.py sync_tmdb_watch_providers last read on TMDB which streaming services (Netflix,
     # Prime Video...) offer it in each country (TitleOnService, null = never): refreshed every 30 days
     services_synced_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # "anime" / "kdrama" / "": the Anime and K-drama sections (users/sections.py, ROADMAP 9.5),
+    # worked out from genre / original language / countries / keywords on every save
+    section = models.CharField(max_length=8, blank=True, default="", db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)
@@ -185,10 +188,16 @@ class Title(models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        from .sections import SOURCE_FIELDS, section_of
+
         self.collection_id = self.collection_id_of(self.belongs_to_collection)
+        if not set(SOURCE_FIELDS) & self.get_deferred_fields():  # .only() rows: no extra queries
+            self.section = section_of(self)
         update_fields = kwargs.get("update_fields")
         if update_fields is not None and "belongs_to_collection" in update_fields:
-            kwargs["update_fields"] = {*update_fields, "collection_id"}
+            kwargs["update_fields"] = update_fields = {*update_fields, "collection_id"}
+        if update_fields is not None and set(update_fields) & set(SOURCE_FIELDS):
+            kwargs["update_fields"] = {*update_fields, "section"}
         super().save(*args, **kwargs)
 
 
@@ -451,6 +460,11 @@ class Provider(models.Model):
         null=True, blank=True,
         help_text="Share of the test titles the scout's last nightly check played (0-1). Ranks sources "
                   "that have no success rate yet, and the automatic switch tries the best ones first.",
+    )
+    scout_anime = models.FloatField(
+        null=True, blank=True,
+        help_text="Share of the anime test episodes (One Piece, late seasons too) the scout's last nightly "
+                  "check played (0-1, empty: not tested). For anime, the sources that missed them are tried last.",
     )
 
     # filled by the health check (check_providers)

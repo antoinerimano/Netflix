@@ -60,7 +60,7 @@ HREFLANGS = {"zh": "zh-Hans", "pt": "pt-BR"}
 # Routes of the app (frontend/src/App.js) that aren't title / actor pages. Keep in sync.
 APP_ROUTES = [re.compile(p) for p in (
     r"^/$",
-    r"^/(profiles|search|movies|tv|list|register|login|create-profile|choose-subscription)/?$",
+    r"^/(profiles|search|movies|tv|anime|kdrama|list|register|login|create-profile|choose-subscription)/?$",
     r"^/(taste|import|calendar|history|stats|pick|ask|appearance)/?$",
     r"^/(collection|lists)/[^/]+/?$",
     r"^/account/[^/]+/?$",

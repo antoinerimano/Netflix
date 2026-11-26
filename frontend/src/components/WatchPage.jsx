@@ -347,8 +347,9 @@ export default function WatchPage() {
         saved: prefsLoaded && hasPrefsRef.current ? savedKeyRef.current : null,
         profile: serverPref?.profile,
         failed: serverPref?.failed,
+        anime: title?.section === "anime", // ROADMAP 9.5: the sources that play anime first
       }),
-    [providers, serverPref, prefsLoaded]
+    [providers, serverPref, prefsLoaded, title?.section]
   );
   sourceOrderRef.current = sourceOrder;
 

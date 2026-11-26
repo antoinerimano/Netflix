@@ -43,12 +43,16 @@
     "choose": "Choose files",
     "tvHint": "On a TV? Files can't be picked with a remote: open {{url}} on your phone or computer, signed in to this account.",
     "entryTitle": "Your history elsewhere",
-    "entryLabel": "Letterboxd or IMDb",
+    "entryLabel": "Letterboxd, IMDb, MyAnimeList or AniList",
     "entryValue": "Bring your ratings and watched titles for better recommendations.",
     "entryAction": "Import",
     "errors": {
-      "unknown_format": "We couldn't read that file. Upload the export from Letterboxd (.zip) or IMDb (.csv).",
-      "too_big": "That file is too big (10 MB at most)."
+      "unknown_format": "We couldn't read that file. Upload the export from Letterboxd (.zip), IMDb (.csv) or MyAnimeList (.xml.gz).",
+      "too_big": "That file is too big (10 MB at most).",
+      "bad_username": "Type your AniList user name (letters, digits, _ or -).",
+      "anilist_not_found": "We couldn't find that AniList list. Check the name, and that your list is public.",
+      "anilist_unavailable": "AniList isn't answering right now. Try again in a few minutes.",
+      "anilist_empty": "That AniList list is empty."
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -62,6 +66,20 @@
       "step1": "On imdb.com, open Your ratings, select ⋯ then Export. IMDb tells you when the file is ready.",
       "step2": "Do the same with your Watchlist if you want it in My List.",
       "step3": "Upload the .csv files here (several at once is fine)."
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "Anime list export (.xml.gz)",
+      "step1": "On myanimelist.net, open myanimelist.net/panel.php?go=export, choose Anime List and select Export My List.",
+      "step2": "Upload the .xml.gz file here, no need to unzip it. Every season of a show counts for the show."
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "Your public list, by user name",
+      "step1": "Type your AniList user name, or paste your profile link. Your anime list must be public.",
+      "label": "AniList user name",
+      "placeholder": "e.g. Alice",
+      "import": "Import my list"
     },
     "done": {
       "title": "Import done",

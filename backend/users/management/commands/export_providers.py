@@ -8,7 +8,10 @@ tauruss plays them:
   providers    every provider with its current link (tested first, so a wrong domain or link
                structure is found and fixed by the next import_providers)
   test_titles  what the viewers watch lately (movies, episodes, with their runtime), topped up
-               with popular titles: a provider with a limited catalog shows up
+               with popular titles: a provider with a limited catalog shows up; "anime": anime
+               episodes (ROADMAP 9.5), One Piece 1x01 and a late season of the most popular
+               anime shows (TMDB numbers its long shows by season: a player that counts
+               episodes from 1 to 1100 plays the wrong one), -> Provider.scout_anime
 """
 import json
 
@@ -27,6 +30,10 @@ LEGACY_MOVIES = [
 ]
 LEGACY_EPISODES = [
     {"tmdb": 1668, "imdb": "tt0108778", "season": 1, "episode": 1, "name": "Friends 1x01", "minutes": 22},
+]
+ANIME = 4
+LEGACY_ANIME = [
+    {"tmdb": 37854, "imdb": "tt0388629", "season": 1, "episode": 1, "name": "One Piece 1x01", "minutes": 24},
 ]
 
 
@@ -82,7 +89,36 @@ def test_titles(movies=MOVIES, episodes=EPISODES):
         add_episode(t, 1, 1)
         if len(picked_eps) >= episodes:
             break
-    return {"movies": picked_movies, "episodes": picked_eps}
+    return {"movies": picked_movies, "episodes": picked_eps, "anime": anime_episodes()}
+
+
+def anime_episodes(count=ANIME):
+    """
+    -> [{tmdb, imdb, season, episode, name, minutes}]: One Piece 1x01, then the most popular anime
+    shows of the catalog (Title.section, users/sections.py), each at E1 of its last aired season
+    (a late season: what a player with its own episode numbering gets wrong).
+    """
+    from django.utils import timezone
+
+    picked = list(LEGACY_ANIME)
+    seen = {e["tmdb"] for e in picked}
+    today = timezone.now().date()
+    shows = Title.objects.filter(type=Title.TV, section="anime", tmdb_id__isnull=False).order_by("-popularity")[:40]
+    for t in shows:
+        if len(picked) >= count:
+            break
+        if t.tmdb_id in seen:
+            continue
+        aired = sorted(Episode.objects.filter(season__tv=t, season__season_number__gte=1, episode_number=1,
+                                              air_date__lte=today)
+                       .values_list("season__season_number", "runtime"))
+        if not aired:
+            continue
+        season, runtime = aired[-1]
+        seen.add(t.tmdb_id)
+        picked.append({"tmdb": t.tmdb_id, "imdb": t.imdb_code or "", "season": season, "episode": 1,
+                       "name": f"{t.title[:50]} {season}x01", "minutes": runtime or 24})
+    return picked
 
 
 def _last_year():

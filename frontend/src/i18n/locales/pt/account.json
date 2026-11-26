@@ -44,12 +44,16 @@
     "choose": "Escolher arquivos",
     "tvHint": "Numa TV? Não dá para escolher arquivos com o controle remoto: abra {{url}} no celular ou no computador, conectado a esta conta.",
     "entryTitle": "Seu histórico em outros lugares",
-    "entryLabel": "Letterboxd ou IMDb",
+    "entryLabel": "Letterboxd, IMDb, MyAnimeList ou AniList",
     "entryValue": "Traga suas notas e títulos assistidos para recomendações melhores.",
     "entryAction": "Importar",
     "errors": {
-      "unknown_format": "Não conseguimos ler esse arquivo. Envie a exportação do Letterboxd (.zip) ou do IMDb (.csv).",
-      "too_big": "Esse arquivo é grande demais (10 MB no máximo)."
+      "unknown_format": "Não conseguimos ler esse arquivo. Envie a exportação do Letterboxd (.zip), do IMDb (.csv) ou do MyAnimeList (.xml.gz).",
+      "too_big": "Esse arquivo é grande demais (10 MB no máximo).",
+      "bad_username": "Digite seu nome de usuário do AniList (letras, números, _ ou -).",
+      "anilist_not_found": "Não encontramos essa lista do AniList. Confira o nome e se a sua lista é pública.",
+      "anilist_unavailable": "O AniList não está respondendo agora. Tente de novo em alguns minutos.",
+      "anilist_empty": "Essa lista do AniList está vazia."
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -63,6 +67,20 @@
       "step1": "No imdb.com, abra Suas avaliações, selecione ⋯ e depois Exportar. O IMDb avisa quando o arquivo estiver pronto.",
       "step2": "Faça o mesmo com a sua Watchlist se quiser que ela vá para Minha lista.",
       "step3": "Envie os arquivos .csv aqui (vários de uma vez, sem problema)."
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "Exportação da lista de animes (.xml.gz)",
+      "step1": "No myanimelist.net, abra myanimelist.net/panel.php?go=export, escolha Anime List e selecione Export My List.",
+      "step2": "Envie o arquivo .xml.gz aqui, não precisa descompactar. Cada temporada de uma série conta para a série."
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "Sua lista pública, pelo nome de usuário",
+      "step1": "Digite seu nome de usuário do AniList ou cole o link do seu perfil. Sua lista de animes precisa ser pública.",
+      "label": "Usuário do AniList",
+      "placeholder": "ex.: Alice",
+      "import": "Importar minha lista"
     },
     "done": {
       "title": "Importação concluída",

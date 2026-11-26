@@ -47,12 +47,16 @@
     "choose": "اختر الملفات",
     "tvHint": "على التلفاز؟ لا يمكن اختيار الملفات بجهاز التحكم: افتح {{url}} على هاتفك أو حاسوبك، مسجّلًا الدخول إلى هذا الحساب.",
     "entryTitle": "سجلك في مكان آخر",
-    "entryLabel": "Letterboxd أو IMDb",
+    "entryLabel": "Letterboxd أو IMDb أو MyAnimeList أو AniList",
     "entryValue": "أحضر تقييماتك والعناوين التي شاهدتها لتوصيات أفضل.",
     "entryAction": "استيراد",
     "errors": {
-      "unknown_format": "تعذّرت قراءة هذا الملف. ارفع ملف التصدير من Letterboxd (.zip) أو IMDb (.csv).",
-      "too_big": "هذا الملف كبير جدًا (10 ميغابايت كحد أقصى)."
+      "unknown_format": "تعذّرت قراءة هذا الملف. ارفع ملف التصدير من Letterboxd (.zip) أو IMDb (.csv) أو MyAnimeList (.xml.gz).",
+      "too_big": "هذا الملف كبير جدًا (10 ميغابايت كحد أقصى).",
+      "bad_username": "اكتب اسم المستخدم في AniList (حروف أو أرقام أو _ أو -).",
+      "anilist_not_found": "لم نجد قائمة AniList هذه. تحقّق من الاسم ومن أن قائمتك عامة.",
+      "anilist_unavailable": "AniList لا يستجيب الآن. حاول مرة أخرى بعد بضع دقائق.",
+      "anilist_empty": "قائمة AniList هذه فارغة."
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -66,6 +70,20 @@
       "step1": "على imdb.com، افتح Your ratings، واختر ⋯ ثم Export. سيُعلمك IMDb عندما يصبح الملف جاهزًا.",
       "step2": "افعل الشيء نفسه مع Watchlist إذا أردتها في قائمتي.",
       "step3": "ارفع ملفات .csv هنا (يمكن رفع عدة ملفات معًا)."
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "ملف تصدير قائمة الأنمي (.xml.gz)",
+      "step1": "على myanimelist.net افتح myanimelist.net/panel.php?go=export واختر Anime List ثم Export My List.",
+      "step2": "ارفع ملف ‎.xml.gz هنا، لا حاجة لفك ضغطه. كل مواسم المسلسل تُحسب للمسلسل نفسه."
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "قائمتك العامة، باسم المستخدم",
+      "step1": "اكتب اسم المستخدم في AniList أو الصق رابط ملفك الشخصي. يجب أن تكون قائمة الأنمي عامة.",
+      "label": "اسم المستخدم في AniList",
+      "placeholder": "مثلًا Alice",
+      "import": "استيراد قائمتي"
     },
     "done": {
       "title": "اكتمل الاستيراد",

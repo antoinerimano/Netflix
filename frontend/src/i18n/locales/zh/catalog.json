@@ -25,7 +25,9 @@
       "collections_next": "你的系列，接着看",
       "top10_movies": "今日电影 Top 10",
       "top10_tv": "本周剧集 Top 10",
-      "service": "在 {{name}} 上观看"
+      "service": "在 {{name}} 上观看",
+      "anime": "热门动漫",
+      "kdrama": "热门韩剧"
     },
     "why": {
       "similarTo": "与《{{title}}》相似",
@@ -171,6 +173,22 @@
       "none": "没有找到剧集",
       "more": "显示更多剧集",
       "count_other": "{{formatted}} 部剧集"
+    },
+    "anime": {
+      "title": "动漫",
+      "search": "搜索动漫",
+      "loadError": "无法加载动漫",
+      "none": "没有找到动漫",
+      "more": "显示更多动漫",
+      "count_other": "{{formatted}} 部动漫"
+    },
+    "kdrama": {
+      "title": "韩剧",
+      "search": "搜索韩剧",
+      "loadError": "无法加载韩剧",
+      "none": "没有找到韩剧",
+      "more": "显示更多韩剧",
+      "count_other": "{{formatted}} 部韩剧"
     },
     "all": "全部",
     "genre": "类型",

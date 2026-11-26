@@ -43,12 +43,16 @@
     "choose": "ফাইল বাছুন",
     "tvHint": "টিভিতে আছেন? রিমোট দিয়ে ফাইল বাছা যায় না: এই অ্যাকাউন্টে সাইন ইন করা ফোন বা কম্পিউটারে {{url}} খুলুন।",
     "entryTitle": "অন্য জায়গায় আপনার ইতিহাস",
-    "entryLabel": "Letterboxd বা IMDb",
+    "entryLabel": "Letterboxd, IMDb, MyAnimeList বা AniList",
     "entryValue": "আরও ভালো সুপারিশের জন্য আপনার রেটিং আর দেখা টাইটেল নিয়ে আসুন।",
     "entryAction": "ইমপোর্ট",
     "errors": {
-      "unknown_format": "ফাইলটি পড়া যায়নি। Letterboxd (.zip) বা IMDb (.csv)-এর এক্সপোর্ট আপলোড করুন।",
-      "too_big": "ফাইলটি খুব বড় (সর্বোচ্চ 10 MB)।"
+      "unknown_format": "ফাইলটি পড়া যায়নি। Letterboxd (.zip), IMDb (.csv) বা MyAnimeList (.xml.gz)-এর এক্সপোর্ট আপলোড করুন।",
+      "too_big": "ফাইলটি খুব বড় (সর্বোচ্চ 10 MB)।",
+      "bad_username": "আপনার AniList ইউজারনেম লিখুন (অক্ষর, সংখ্যা, _ বা -)।",
+      "anilist_not_found": "এই AniList তালিকাটি পাওয়া যায়নি। নামটি এবং তালিকাটি পাবলিক কিনা দেখুন।",
+      "anilist_unavailable": "AniList এখন সাড়া দিচ্ছে না। কয়েক মিনিট পরে আবার চেষ্টা করুন।",
+      "anilist_empty": "এই AniList তালিকাটি খালি।"
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -62,6 +66,20 @@
       "step1": "imdb.com-এ Your ratings খুলুন, ⋯ তারপর Export বাছুন। ফাইল তৈরি হলে IMDb জানাবে।",
       "step2": "Watchlist-ও My List-এ চাইলে একইভাবে এক্সপোর্ট করুন।",
       "step3": "এখানে .csv ফাইলগুলো আপলোড করুন (একসাথে কয়েকটিও চলবে)।"
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "অ্যানিমে তালিকার এক্সপোর্ট (.xml.gz)",
+      "step1": "myanimelist.net-এ myanimelist.net/panel.php?go=export খুলুন, Anime List বেছে নিয়ে Export My List দিন।",
+      "step2": ".xml.gz ফাইলটি এখানে আপলোড করুন, আনজিপ করার দরকার নেই। একটি শো-র প্রতিটি সিজন সেই শো হিসেবেই গোনা হয়।"
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "আপনার পাবলিক তালিকা, ইউজারনেম দিয়ে",
+      "step1": "আপনার AniList ইউজারনেম লিখুন, বা প্রোফাইলের লিংক পেস্ট করুন। আপনার অ্যানিমে তালিকা পাবলিক হতে হবে।",
+      "label": "AniList ইউজারনেম",
+      "placeholder": "যেমন Alice",
+      "import": "আমার তালিকা ইমপোর্ট করুন"
     },
     "done": {
       "title": "ইমপোর্ট শেষ",

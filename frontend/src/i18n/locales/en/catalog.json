@@ -25,7 +25,9 @@
       "collections_next": "Next in your collections",
       "top10_movies": "Top 10 movies today",
       "top10_tv": "Top 10 shows this week",
-      "service": "On {{name}}"
+      "service": "On {{name}}",
+      "anime": "Popular anime",
+      "kdrama": "Popular K-dramas"
     },
     "why": {
       "similarTo": "Similar to {{title}}",
@@ -175,6 +177,24 @@
       "more": "Show more shows",
       "count_one": "{{formatted}} show",
       "count_other": "{{formatted}} shows"
+    },
+    "anime": {
+      "title": "Anime",
+      "search": "Search anime",
+      "loadError": "Couldn't load anime",
+      "none": "No anime found",
+      "more": "Show more anime",
+      "count_one": "{{formatted}} anime",
+      "count_other": "{{formatted}} anime"
+    },
+    "kdrama": {
+      "title": "K-dramas",
+      "search": "Search K-dramas",
+      "loadError": "Couldn't load K-dramas",
+      "none": "No K-dramas found",
+      "more": "Show more K-dramas",
+      "count_one": "{{formatted}} K-drama",
+      "count_other": "{{formatted}} K-dramas"
     },
     "all": "All",
     "genre": "Genre",

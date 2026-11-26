@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import Movies from './components/Movies';
 import MovieDetail from './components/MovieDetail';
 import TVShows from './components/TVShows';
+import BrowsePage from './components/browse/BrowsePage';
 import TVShowDetail from './components/TVShowDetail';
 import List from './components/List';
 import Login from './components/Login';
@@ -174,6 +175,9 @@ function App() {
 
         {/* TV */}
         <Route path="/tv" element={<TVShows />} />
+        {/* Anime / K-dramas (ROADMAP 9.5): the browse page on one section */}
+        <Route path="/anime" element={<BrowsePage kind="anime" />} />
+        <Route path="/kdrama" element={<BrowsePage kind="kdrama" />} />
         <Route path="/tv/:id" element={<TVShowDetail />} />
 
         {/* User/account */}

@@ -25,7 +25,9 @@
       "collections_next": "التالي في سلاسلك",
       "top10_movies": "أفضل 10 أفلام اليوم",
       "top10_tv": "أفضل 10 مسلسلات هذا الأسبوع",
-      "service": "على {{name}}"
+      "service": "على {{name}}",
+      "anime": "أنمي رائج",
+      "kdrama": "دراما كورية رائجة"
     },
     "why": {
       "similarTo": "مشابه لـ {{title}}",
@@ -191,6 +193,32 @@
       "count_few": "{{formatted}} مسلسلات",
       "count_many": "{{formatted}} مسلسلًا",
       "count_other": "{{formatted}} مسلسل"
+    },
+    "anime": {
+      "title": "أنمي",
+      "search": "ابحث عن أنمي",
+      "loadError": "تعذّر تحميل الأنمي",
+      "none": "لم يتم العثور على أنمي",
+      "more": "عرض المزيد من الأنمي",
+      "count_zero": "{{formatted}} أنمي",
+      "count_one": "{{formatted}} أنمي",
+      "count_two": "{{formatted}} أنمي",
+      "count_few": "{{formatted}} أنمي",
+      "count_many": "{{formatted}} أنمي",
+      "count_other": "{{formatted}} أنمي"
+    },
+    "kdrama": {
+      "title": "دراما كورية",
+      "search": "ابحث عن دراما كورية",
+      "loadError": "تعذّر تحميل الدراما الكورية",
+      "none": "لم يتم العثور على دراما كورية",
+      "more": "عرض المزيد من الدراما الكورية",
+      "count_zero": "{{formatted}} مسلسل كوري",
+      "count_one": "{{formatted}} مسلسل كوري",
+      "count_two": "{{formatted}} مسلسل كوري",
+      "count_few": "{{formatted}} مسلسلات كورية",
+      "count_many": "{{formatted}} مسلسلًا كوريًا",
+      "count_other": "{{formatted}} مسلسل كوري"
     },
     "all": "الكل",
     "genre": "النوع",

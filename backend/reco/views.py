@@ -38,6 +38,7 @@ from .taste import has_taste_signal
 from .history import WATCH_SIGNALS, record_watch
 from .collections import next_in_collections_row
 from .top10 import service_rows, top10_rows
+from .section_rows import section_rows
 from .serializers import ImpressionInSerializer, ActionInSerializer, WatchProgressInSerializer
 
 
@@ -1221,12 +1222,18 @@ def _with_live_rows(payload, profile, region=DEFAULT_REGION):
     payload = {**payload, "needs_taste": not has_taste_signal(profile.id)}
     new_eps = _new_episodes_row()
     top = {row["row_type"]: row for row in top10_rows()}
-    services = service_rows(region, [tid for tid, _ in _interest_events(profile.id, 100)])
+    recent = [tid for tid, _ in _interest_events(profile.id, 100)]
+    services = service_rows(region, recent)
+    # "Popular anime" / "Popular K-dramas" for the profiles that watch them (ROADMAP 9.5)
+    watched = TitleAction.objects.filter(profile_id=profile.id, action__in=["outbound", "watched"]).values_list(
+        "title_id", flat=True)
+    sections = section_rows(recent, watched) if recent else []
     # first screen: Top 10 movies right after the first personal row (ROADMAP 9.4), then new
-    # episodes, Top 10 shows after the second, a service row after each of the next ones
+    # episodes, Top 10 shows after the second (then anime / K-dramas), a service row after each
+    # of the next ones
     rows = _interleave_live(list(payload.get("rows") or []), {
         1: [top.get("top10_movies"), new_eps if new_eps["items"] else None],
-        2: [top.get("top10_tv")],
+        2: [top.get("top10_tv"), *sections],
         **{3 + i: [row] for i, row in enumerate(services)},
     })
     cont = _continue_watching_row(profile)

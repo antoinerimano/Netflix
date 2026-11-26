@@ -43,12 +43,16 @@
     "choose": "Dateien auswählen",
     "tvHint": "Auf einem Fernseher? Mit einer Fernbedienung lassen sich keine Dateien auswählen: Öffne {{url}} auf deinem Handy oder Computer, angemeldet mit diesem Konto.",
     "entryTitle": "Dein Verlauf anderswo",
-    "entryLabel": "Letterboxd oder IMDb",
+    "entryLabel": "Letterboxd, IMDb, MyAnimeList oder AniList",
     "entryValue": "Bring deine Bewertungen und gesehenen Titel mit, für bessere Empfehlungen.",
     "entryAction": "Importieren",
     "errors": {
-      "unknown_format": "Diese Datei konnten wir nicht lesen. Lade den Export von Letterboxd (.zip) oder IMDb (.csv) hoch.",
-      "too_big": "Diese Datei ist zu groß (höchstens 10 MB)."
+      "unknown_format": "Diese Datei konnten wir nicht lesen. Lade den Export von Letterboxd (.zip), IMDb (.csv) oder MyAnimeList (.xml.gz) hoch.",
+      "too_big": "Diese Datei ist zu groß (höchstens 10 MB).",
+      "bad_username": "Gib deinen AniList-Benutzernamen ein (Buchstaben, Ziffern, _ oder -).",
+      "anilist_not_found": "Diese AniList-Liste haben wir nicht gefunden. Prüfe den Namen und ob deine Liste öffentlich ist.",
+      "anilist_unavailable": "AniList antwortet gerade nicht. Versuche es in ein paar Minuten noch einmal.",
+      "anilist_empty": "Diese AniList-Liste ist leer."
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -62,6 +66,20 @@
       "step1": "Öffne auf imdb.com Deine Bewertungen, wähle ⋯ und dann Exportieren. IMDb meldet sich, wenn die Datei fertig ist.",
       "step2": "Mach dasselbe mit deiner Watchlist, wenn du sie in Meiner Liste haben möchtest.",
       "step3": "Lade die .csv-Dateien hier hoch (auch mehrere auf einmal)."
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "Export der Anime-Liste (.xml.gz)",
+      "step1": "Öffne auf myanimelist.net die Seite myanimelist.net/panel.php?go=export, wähle Anime List und dann Export My List.",
+      "step2": "Lade die .xml.gz-Datei hier hoch, entpacken ist nicht nötig. Jede Staffel einer Serie zählt für die Serie."
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "Deine öffentliche Liste, per Benutzername",
+      "step1": "Gib deinen AniList-Benutzernamen ein oder füge den Link zu deinem Profil ein. Deine Anime-Liste muss öffentlich sein.",
+      "label": "AniList-Benutzername",
+      "placeholder": "z. B. Alice",
+      "import": "Meine Liste importieren"
     },
     "done": {
       "title": "Import abgeschlossen",

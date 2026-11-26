@@ -131,7 +131,9 @@ export function buildProviderLinks(providers, rawValues, kind = 'movie') {
       if (values.start > 0 && p.start_param) {
         url += `${url.includes('?') ? '&' : '?'}${encodeURIComponent(p.start_param)}=${Math.floor(values.start)}`;
       }
-      return { key: p.key, label: p.label, url, down: p.status === 'down', sendsEvents: !!p.sends_events };
+      // animeMiss: the scout's nightly anime test (ROADMAP 9.5) played under half of its episodes
+      const animeMiss = typeof p.scout_anime === 'number' && p.scout_anime < 0.5;
+      return { key: p.key, label: p.label, url, down: p.status === 'down', sendsEvents: !!p.sends_events, animeMiss };
     })
     .filter(Boolean);
 }
@@ -289,8 +291,9 @@ export const fetchTVShowsPage = async ({
   });
 };
 
-export const fetchGenres = async (type = 'movie') => {
-  const res = await API.get('/titles/genres/', { params: { type } });
+// section: 'anime' / 'kdrama' (ROADMAP 9.5), the genres of that page only
+export const fetchGenres = async (type = 'movie', section = '') => {
+  const res = await API.get('/titles/genres/', { params: { type, ...(section ? { section } : {}) } });
   return Array.isArray(res.data) ? res.data : [];
 };
 
@@ -329,8 +332,9 @@ export const fetchTitlesPage = async ({
   director = '',
   actor = '',
   service = '',
+  section = '', // 'anime' | 'kdrama': the Anime / K-drama pages (ROADMAP 9.5)
 } = {}) => {
-  const params = { type, page, page_size: pageSize, sort, query, genre, ratingMin, yearMin, yearMax, director, actor, service };
+  const params = { type, page, page_size: pageSize, sort, query, genre, ratingMin, yearMin, yearMax, director, actor, service, section };
   if (service) params.region = watchRegion(); // in the visitor's country ('' = the server decides)
   Object.keys(params).forEach((k) => (params[k] === '' || params[k] == null) && delete params[k]);
   return listTitlesPage(params);

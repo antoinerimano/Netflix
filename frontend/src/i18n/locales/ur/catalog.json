@@ -25,7 +25,9 @@
       "collections_next": "آپ کی سیریز میں اگلا",
       "top10_movies": "آج کی 10 بہترین فلمیں",
       "top10_tv": "اس ہفتے کے 10 بہترین شوز",
-      "service": "{{name}} پر"
+      "service": "{{name}} پر",
+      "anime": "مقبول اینیمے",
+      "kdrama": "مقبول کورین ڈرامے"
     },
     "why": {
       "similarTo": "{{title}} جیسی",
@@ -175,6 +177,24 @@
       "more": "مزید شوز دکھائیں",
       "count_one": "{{formatted}} شو",
       "count_other": "{{formatted}} شوز"
+    },
+    "anime": {
+      "title": "اینیمے",
+      "search": "اینیمے تلاش کریں",
+      "loadError": "اینیمے لوڈ نہیں ہو سکے",
+      "none": "کوئی اینیمے نہیں ملا",
+      "more": "مزید اینیمے دکھائیں",
+      "count_one": "{{formatted}} اینیمے",
+      "count_other": "{{formatted}} اینیمے"
+    },
+    "kdrama": {
+      "title": "کورین ڈرامے",
+      "search": "کورین ڈرامے تلاش کریں",
+      "loadError": "کورین ڈرامے لوڈ نہیں ہو سکے",
+      "none": "کوئی کورین ڈراما نہیں ملا",
+      "more": "مزید کورین ڈرامے دکھائیں",
+      "count_one": "{{formatted}} کورین ڈراما",
+      "count_other": "{{formatted}} کورین ڈرامے"
     },
     "all": "سب",
     "genre": "صنف",

@@ -25,7 +25,9 @@
       "collections_next": "La suite de vos sagas",
       "top10_movies": "Top 10 des films aujourd'hui",
       "top10_tv": "Top 10 des séries cette semaine",
-      "service": "Sur {{name}}"
+      "service": "Sur {{name}}",
+      "anime": "Anime populaires",
+      "kdrama": "K-dramas populaires"
     },
     "why": {
       "similarTo": "Semblable à {{title}}",
@@ -179,6 +181,26 @@
       "count_one": "{{formatted}} série",
       "count_many": "{{formatted}} séries",
       "count_other": "{{formatted}} séries"
+    },
+    "anime": {
+      "title": "Anime",
+      "search": "Rechercher des anime",
+      "loadError": "Impossible de charger les anime",
+      "none": "Aucun anime trouvé",
+      "more": "Afficher plus d'anime",
+      "count_one": "{{formatted}} anime",
+      "count_many": "{{formatted}} d'anime",
+      "count_other": "{{formatted}} anime"
+    },
+    "kdrama": {
+      "title": "K-dramas",
+      "search": "Rechercher des K-dramas",
+      "loadError": "Impossible de charger les K-dramas",
+      "none": "Aucun K-drama trouvé",
+      "more": "Afficher plus de K-dramas",
+      "count_one": "{{formatted}} K-drama",
+      "count_many": "{{formatted}} de K-dramas",
+      "count_other": "{{formatted}} K-dramas"
     },
     "all": "Tous",
     "genre": "Genre",

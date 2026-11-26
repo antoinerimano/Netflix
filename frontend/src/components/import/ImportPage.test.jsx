@@ -6,11 +6,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import '../../i18n';
 import ImportPage from './ImportPage';
-import { importFiles } from '../../api/importApi';
+import { importAniList, importFiles } from '../../api/importApi';
 
 vi.mock('../Navbar', () => ({ default: () => null }));
 vi.mock('../Footer', () => ({ default: () => null }));
-vi.mock('../../api/importApi', () => ({ importFiles: vi.fn() }));
+vi.mock('../../api/importApi', () => ({ importFiles: vi.fn(), importAniList: vi.fn() }));
 
 const SUMMARY = { liked: 2, disliked: 0, watched: 5, listed: 1, matched: 7, not_found: 1, not_found_examples: ['Lost (1999)'] };
 
@@ -53,4 +53,26 @@ test('Letterboxd first, IMDb a press away, an unreadable file is explained', asy
   fireEvent.change(container.querySelector('input[type="file"]'), { target: { files: [file] } });
   expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't read that file.");
   expect(importFiles).toHaveBeenCalledWith('7', [file]);
+});
+
+test('AniList: a user name, no file; a list that cannot be read is explained', async () => {
+  importAniList.mockRejectedValueOnce({ response: { status: 404, data: { code: 'anilist_not_found' } } });
+  importAniList.mockResolvedValueOnce(SUMMARY);
+  const { container } = renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: /AniList/ }));
+  expect(container.querySelector('input[type="file"]')).toBeNull();
+  const field = screen.getByRole('textbox', { name: 'AniList user name' });
+  fireEvent.change(field, { target: { value: ' Alice_1 ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Import my list' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Check the name, and that your list is public');
+  expect(importAniList).toHaveBeenCalledWith('7', 'Alice_1');
+  fireEvent.click(screen.getByRole('button', { name: 'Import my list' }));
+  expect(await screen.findByRole('heading', { name: 'Import done' })).toBeInTheDocument();
+});
+
+test('MyAnimeList: its export file (.xml.gz)', async () => {
+  const { container } = renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: /MyAnimeList/ }));
+  expect(container.querySelector('input[type="file"]')).toHaveAttribute('accept', '.xml,.gz');
+  expect(screen.getByText(/panel\.php\?go=export/)).toBeInTheDocument();
 });

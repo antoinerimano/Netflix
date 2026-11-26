@@ -25,7 +25,9 @@
       "collections_next": "Продолжение ваших франшиз",
       "top10_movies": "Топ-10 фильмов сегодня",
       "top10_tv": "Топ-10 сериалов за неделю",
-      "service": "На {{name}}"
+      "service": "На {{name}}",
+      "anime": "Популярное аниме",
+      "kdrama": "Популярные дорамы"
     },
     "why": {
       "similarTo": "Похоже на «{{title}}»",
@@ -183,6 +185,28 @@
       "count_few": "{{formatted}} сериала",
       "count_many": "{{formatted}} сериалов",
       "count_other": "{{formatted}} сериала"
+    },
+    "anime": {
+      "title": "Аниме",
+      "search": "Поиск аниме",
+      "loadError": "Не удалось загрузить аниме",
+      "none": "Аниме не найдено",
+      "more": "Показать ещё аниме",
+      "count_one": "{{formatted}} аниме",
+      "count_few": "{{formatted}} аниме",
+      "count_many": "{{formatted}} аниме",
+      "count_other": "{{formatted}} аниме"
+    },
+    "kdrama": {
+      "title": "Дорамы",
+      "search": "Поиск дорам",
+      "loadError": "Не удалось загрузить дорамы",
+      "none": "Дорамы не найдены",
+      "more": "Показать ещё дорамы",
+      "count_one": "{{formatted}} дорама",
+      "count_few": "{{formatted}} дорамы",
+      "count_many": "{{formatted}} дорам",
+      "count_other": "{{formatted}} дорамы"
     },
     "all": "Все",
     "genre": "Жанр",

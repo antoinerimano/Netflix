@@ -19,6 +19,14 @@ describe("orderSources", () => {
     expect(orderSources(providers, { saved: "a", failed: ["a"] })).toEqual(["b", "c", "a", "d"]);
   });
 
+  it("for an anime, the sources that missed the scout's anime episodes come after the others", () => {
+    const list = [{ key: "a", animeMiss: true }, P("b"), { key: "c", animeMiss: true }, P("d", true)];
+    expect(orderSources(list, { anime: true })).toEqual(["b", "a", "c", "d"]);
+    expect(orderSources(list, { anime: true, failed: ["b"] })).toEqual(["a", "c", "b", "d"]);
+    expect(orderSources(list, { anime: true, title: "c" })).toEqual(["c", "b", "a", "d"]); // it played this one
+    expect(orderSources(list)).toEqual(["a", "b", "c", "d"]); // not an anime: the server's order
+  });
+
   it("ignores keys that aren't sources of this title (disabled, no TV link)", () => {
     expect(orderSources([P("a"), P("b")], { title: "zz", failed: ["yy"] })).toEqual(["a", "b"]);
     expect(orderSources([], { title: "a" })).toEqual([]);

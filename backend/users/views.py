@@ -37,6 +37,7 @@ from .models import (
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .maturity import allowed_titles_q, request_profile
 from .watch_services import SERVICES, request_region
+from .sections import SECTIONS
 from .emails import send_templated_email
 from .search import search_titles
 from .i18n import current_language
@@ -558,6 +559,12 @@ class TitleViewSet(viewsets.ModelViewSet):
             region = request_region(self.request, request_profile(self.request))
             qs = qs.filter(services_rel__country=region, services_rel__service=service)
 
+        # section=anime|kdrama: the Anime / K-drama pages (Title.section, users/sections.py, ROADMAP 9.5);
+        # the profile's age limit above still applies (a Kids profile sees kids anime only)
+        section = (params.get("section") or "").strip().lower()
+        if section in SECTIONS:
+            qs = qs.filter(section=section)
+
         # sort: popular (default) | rating | newest | added | title
         sort = params.get("sort") or "popular"
         if sort == "added":
@@ -645,6 +652,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         t = request.query_params.get("type")
         if t in ("movie", "tv"):
             qs = qs.filter(type=t)
+        section = request.query_params.get("section")
+        if section in SECTIONS:  # the Anime / K-drama pages' genre chips
+            qs = qs.filter(section=section)
 
         genres_set = set()
         for g in qs.values_list("genre", flat=True):
@@ -790,7 +800,7 @@ def provider_list(request):
     rates = provider_success_rates()
     providers = list(Provider.objects.filter(enabled=True).values(
         "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority",
-        "scout_score",
+        "scout_score", "scout_anime",  # scout_anime: share of the anime test episodes it played (9.5)
     ))
 
     def known(v):

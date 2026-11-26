@@ -6,9 +6,12 @@
  *   1. what worked before: the source that last played this title (any device of this profile), the
  *      one picked here last, the one that last played for this profile;
  *   2. the server's order (down last, then what plays most for everyone / in the scout's nightly test);
+ *      for an anime (prefs.anime, ROADMAP 9.5), the sources the scout saw miss its anime episodes
+ *      (animeMiss: wrong episode numbering, no anime catalog) come after the others;
  *   3. the sources whose last try on this title didn't play;
  *   4. the ones our health check couldn't reach.
- * providers: [{ key, down }] (buildProviderLinks); prefs: { title, saved, profile, failed: [key] }.
+ * providers: [{ key, down, animeMiss }] (buildProviderLinks);
+ * prefs: { title, saved, profile, failed: [key], anime: bool }.
  */
 export function orderSources(providers, prefs = {}) {
   const byKey = new Map((providers || []).map((p) => [p.key, p]));
@@ -18,7 +21,8 @@ export function orderSources(providers, prefs = {}) {
   const group = (k) => {
     if (preferred.includes(k)) return 0; // worked before: even if the health check missed it
     if (failed.has(k)) return byKey.get(k).down ? 3 : 2;
-    return byKey.get(k).down ? 3 : 1;
+    if (byKey.get(k).down) return 3;
+    return prefs.anime && byKey.get(k).animeMiss ? 1.5 : 1;
   };
   // a stable sort: the order inside each group stays the server's
   return keys.map((k, i) => [group(k), i, k]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(([, , k]) => k);

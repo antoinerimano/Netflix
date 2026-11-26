@@ -25,7 +25,9 @@
       "collections_next": "आपकी फ़िल्म सीरीज़ में आगे",
       "top10_movies": "आज की टॉप 10 फ़िल्में",
       "top10_tv": "इस हफ़्ते के टॉप 10 शो",
-      "service": "{{name}} पर"
+      "service": "{{name}} पर",
+      "anime": "लोकप्रिय एनीमे",
+      "kdrama": "लोकप्रिय के-ड्रामा"
     },
     "why": {
       "similarTo": "{{title}} जैसी",
@@ -175,6 +177,24 @@
       "more": "और शो दिखाएँ",
       "count_one": "{{formatted}} शो",
       "count_other": "{{formatted}} शो"
+    },
+    "anime": {
+      "title": "एनीमे",
+      "search": "एनीमे खोजें",
+      "loadError": "एनीमे लोड नहीं हो सके",
+      "none": "कोई एनीमे नहीं मिला",
+      "more": "और एनीमे दिखाएँ",
+      "count_one": "{{formatted}} एनीमे",
+      "count_other": "{{formatted}} एनीमे"
+    },
+    "kdrama": {
+      "title": "के-ड्रामा",
+      "search": "के-ड्रामा खोजें",
+      "loadError": "के-ड्रामा लोड नहीं हो सके",
+      "none": "कोई के-ड्रामा नहीं मिला",
+      "more": "और के-ड्रामा दिखाएँ",
+      "count_one": "{{formatted}} के-ड्रामा",
+      "count_other": "{{formatted}} के-ड्रामा"
     },
     "all": "सभी",
     "genre": "शैली",

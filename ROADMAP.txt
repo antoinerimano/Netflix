@@ -582,12 +582,39 @@ visitors see on the first screen), the bigger ones after.
         many titles of the catalog each service has per country decides which rows show.
         Tests: users/test_watch_services.py (9), reco/test_top10.py (7), watchRegion.test.js (2),
         e2e/tests/top10.spec.js (3, remote only: arrows / OK / Back, focus overlap).
-[ ] 9.5 Anime (and K-drama) sections (Rive, Movy, HydraHD all have one; criterion 1)
-        TMDB already tells us: Animation + origin country JP (+ keyword "anime" 210024) = anime;
-        origin KR + Drama = K-drama. A nav entry / browse filter, home rows for profiles that watch
-        them, kids filter still applies. Episodes: check absolute numbering (One Piece) works with
-        each source; the scout marks anime-capable sources. Import: AniList / MyAnimeList lists in
-        /import beside Letterboxd and IMDb (7.2).
+[x] 9.5 Anime (and K-drama) sections (Rive, Movy, HydraHD all have one; criterion 1)
+        Which titles: Title.section ("anime" / "kdrama" / "", indexed), from the TMDB data the
+        syncs already store, no new TMDB call, no AI (users/sections.py): anime = Animation and
+        Japanese (original language ja), or TMDB keyword "anime" (210024), or made in Japan when
+        TMDB gave no language, movies and shows; K-drama = a Korean Drama show, not animated.
+        Title.save() works it out again; manage.py rebuild_title_indexes does it for the syncs'
+        bulk writes; migration users 0033 filled it once for the catalog.
+        Pages: /anime (movies and shows) and /kdrama, the browse page on one section
+        (?section= on /api/titles/ and /api/titles/genres/, the genre every title has isn't a
+        chip; all the filters, sorts and services of 9.4 work there). "Anime" in the top bar;
+        phones (6 tabs already) and the TV Shows / Movies pages reach them from chips at the start
+        of the genre bar. The profile's age limit still applies: a Kids profile sees kids anime only.
+        Home: "Popular anime" / "Popular K-dramas" after Top 10 shows for the profiles with 2+ of
+        their recent titles (liked, played, listed) in the section (reco/section_rows.py): the
+        section's most popular titles (20+ votes, cached 30 min) minus what they already watched.
+        Episodes: TMDB numbers long anime by season (One Piece 1x01 ... 22x..); a player that counts
+        1 to 1100 plays the wrong one. The scout now also plays anime episodes (One Piece 1x01, then
+        E1 of the last aired season of the most popular anime shows, test_titles "anime") with the
+        TV link that works: "anime 2/3" in its note, Provider.scout_anime (export_providers /
+        import_providers, /api/providers/). On an anime's watch page the sources under 1/2 there
+        go after the others (watch/sourceOrder.js), still before the failed / down ones.
+        Import (/import, beside Letterboxd / IMDb): AniList by user name (its public API, no key)
+        and MyAnimeList's export file (.xml / .xml.gz). Matched by any of their names (English,
+        romaji, Japanese) against title, original title and TMDB's other names, then without the
+        "Season 3" part, the catalog's anime first. completed / watching / on hold -> watched,
+        plan to watch -> My List, dropped -> only its score; scores as for the other imports.
+        Routes /anime and /kdrama added to seo.APP_ROUTES (users/test_seo.py checks every route).
+        Measured: only locally (seeded anime / K-drama titles in e2e; AniList mocked in the backend tests); how many
+        sources really play late anime seasons is known after the scout's first night with it.
+        Tests: users/test_sections.py (9), reco/test_section_rows.py (4), reco/test_imports.py (+4),
+        sourceOrder.test.js (+1), ImportPage.test.jsx, e2e/tests/anime.spec.js (4, remote only:
+        nav entry and chips, Kids profile, home row OK / Back, AniList + MyAnimeList import, focus
+        overlap); import / top10 / focus-overlap specs re-run (18 passed).
 [ ] 9.6 Quality and release status labels (HydraHD, LookMovie, Movy show HD / CAM / 4K)
         From TMDB release dates (free): a film still only in cinemas gets "In cinemas - digital
         release on <date>" and a Notify me (like 2.2) instead of a CAM nobody wants; "HD" once its
