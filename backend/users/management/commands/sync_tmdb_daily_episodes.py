@@ -15,6 +15,7 @@ from users.maturity import rating_fields
 from users.models import Title, TVShowExtras, Season, Episode, Actor
 from users.trailers import pick_trailer_url
 from users.jobs import tracked
+from users.tmdb_http import get_json
 
 # Stream links are not stored anymore: they are built from users.Provider templates.
 
@@ -119,10 +120,7 @@ class TMDbClient:
     def get(self, path: str, params: Optional[dict] = None) -> dict:
         params = dict(params or {})
         params["api_key"] = self.api_key
-        url = self.base + path
-        r = self.s.get(url, params=params, timeout=self.timeout)
-        r.raise_for_status()
-        return r.json()
+        return get_json(self.s, self.base + path, params, self.timeout, path)  # errors never show the key
 
 
 class Command(BaseCommand):

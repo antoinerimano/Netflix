@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
+from users.tmdb_http import redact
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ def check_tmdb(key):
     try:
         r = requests.get(TMDB_URL, params={"api_key": key}, timeout=TIMEOUT)
     except requests.RequestException as exc:
-        log.warning("config check: TMDB unreachable: %s", exc)
+        log.warning("config check: TMDB unreachable: %s", redact(exc))  # the URL holds the key
         return None
     if r.status_code in (401, 403):
         return _refused("TMDB_API_KEY", "TMDB", f"HTTP {r.status_code}: {r.text}")
