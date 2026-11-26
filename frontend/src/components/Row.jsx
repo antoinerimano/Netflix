@@ -214,6 +214,11 @@ const Row = ({ title: shownTitle, analyticsTitle, movies, variant }) => {
     accessibility: false, // its own arrow-key handling would fight the TV navigation
     speed: 450,
     cssEase: 'cubic-bezier(0.2, 0, 0, 1)',
+    // remote / keyboard presses come faster than the 450 ms slide: a new move replaces the one
+    // under way (react-slick drops slickGoTo while animating by default, leaving the focused card
+    // off screen), and the row's position is where it is going, not where it was
+    waitForAnimate: false,
+    beforeChange: (_, next) => { currentSlideRef.current = next; },
     // a fraction: part of the next card shows at the right edge (the row obviously scrolls)
     slidesToShow: 6.15,
     slidesToScroll: 1,
