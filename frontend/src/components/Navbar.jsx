@@ -29,6 +29,9 @@ const Navbar = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]); // [{id,title,poster,description,kind:'movie'|'tv'}]
   const [shareStatus, setShareStatus] = useState(''); // '', 'copied', 'shared'
+  // the search field (or one of its results) has the focus: on desktop / TV it widens over the
+  // links, which fade out meanwhile (Navbar.css .navbar--searching)
+  const [searching, setSearching] = useState(false);
   const [showIosInstall, setShowIosInstall] = useState(false);
   const installApp = useInstallApp();
 
@@ -255,7 +258,7 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}`}>
+    <nav className={`navbar${scrolled ? ' navbar--solid' : ''}${searching ? ' navbar--searching' : ''}`}>
       <div className="logo" tabIndex={0} role="button" aria-label={t('nav.home')} onClick={handleNavigateHome}>
         {isMobile ? (
           <img src="/logo/taurus_emblem.png" alt="Taurus" className="logo-img" />
@@ -292,7 +295,12 @@ const Navbar = () => {
         >
           <SearchIcon />
         </button>
-        <div className={`search-profile${onSearchPage ? ' is-hidden' : ''}`} ref={searchRef}>
+        <div
+          className={`search-profile${onSearchPage ? ' is-hidden' : ''}`}
+          ref={searchRef}
+          onFocus={() => setSearching(true)}
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setSearching(false); }}
+        >
           <SearchIcon className="search-profile__icon" aria-hidden="true" />
           <input
             type="search"

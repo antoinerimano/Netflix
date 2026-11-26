@@ -583,6 +583,32 @@
    field is narrower at rest (it still widens over its neighbours once used, see :focus-within) */
 @media (min-width: 901px) and (max-width: 1199px) {
   .search-profile {
-    width: clamp(150px, 15vw, 200px);
+    width: clamp(140px, 14vw, 180px);
+  }
+  .nav-links {
+    gap: var(--space-3); /* 7 links (Anime, 9.5): the default gap ran them under the field at 1024px */
+  }
+}
+
+/* narrow desktops (901-1023px): even a small field ran over the 7 links, so at rest it is just
+   the search icon; it widens once used (the links fade out meanwhile, below) */
+@media (min-width: 901px) and (max-width: 1023px) {
+  .search-profile {
+    width: 2.5rem;
+  }
+  .search-profile:not(:focus-within) input::placeholder {
+    color: transparent;
+  }
+}
+
+/* desktop / TV: while the search field is used it widens over the links (see :focus-within), so
+   they fade out instead of sitting under it (and can't be reached behind it); back on leaving */
+@media (min-width: 901px) {
+  .nav-links {
+    transition: opacity var(--duration-normal) var(--ease-standard), visibility var(--duration-normal);
+  }
+  .navbar--searching .nav-links {
+    opacity: 0;
+    visibility: hidden;
   }
 }
