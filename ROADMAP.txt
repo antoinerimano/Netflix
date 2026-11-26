@@ -459,3 +459,223 @@ leaves (a missing translation), and is told the TMDB data, never asked to guess 
         1280 / 1920px in English and French: no scroll, no cut label, no link under the search.
 Development (free: done in Claude Code on the current plan, no API credits): code review before
 merging, a failing e2e run on GitHub read and fixed, dependency updates with the tests run.
+
+9. CATCHING UP WITH THE BEST SITES ON THE LISTS (researched 2026-11-25)
+----------------------------------------------------------------------
+Where this comes from: ahoylist.net/movies-and-tv-shows lists 42 sites like ours (names and links
+only, no ranking). Users pick between them with FMHY's "Stream Site Grading" wiki
+(github.com/fmhy/FMHY/wiki/Stream-Site-Grading), the score the lists and Reddit point to. It
+gives 9 criteria 0-2 points each (max 18); an aggregator needs 18/18 to get FMHY's "star".
+Sites at 18/18 there and also on ahoylist: Movy, 7Movies, PopcornMovies, ShuttleTV, Flixer/Hexa,
+Rive, MovieBite, Primeshows, CinemaOS, Stellar, VidPlay. HydraHD, Nepu, Mapple, Willow: 16-17.
+Read on their home pages: Cineby "Without login, no ads", Top 10 today/week, browse by streaming
+service (Netflix, Prime, Max, Disney+...); HydraHD: "Airing today", Random, Keywords, Live
+sports, HD/CAM labels, a status page; Movy: Top 10, "Recently added in 4K", upcoming episodes;
+Rive: anime, K-drama, manga, live sports, AI; PrimeWire: TV schedule, forum, playlists, filters
+by streaming service / free links / quality; LookMovie: quality labels, "Playback issues?" link.
+
+Our score on the same grid (my reading of the code, not FMHY's):
+  1 Content (movies, TV, anime, 1080p, subtitles, quality) .. 1/2  no anime section; subtitles and
+                                                                   quality depend on each embed
+  2 Backup sources switch by themselves ................... 1/2  2.1 offers the next one, doesn't
+                                                                   go through all of them alone
+  3 Episode auto-next ..................................... 1/2  only when the embed does it
+  4 UI, player, search, settings .......................... 2/2
+  5 Watch lists + sync .................................... 2/2  (no Trakt / Simkl / AniList)
+  6 Discovery (recs, collections, random, sort, moods) .... 2/2  ahead of almost all of them
+  7 Redirect / pop-up ads ................................. 0-1  the embeds' pop-ups get through;
+                                                                   blocking them stops most players (9.1)
+  8 Mobile ................................................ 2/2
+  9 Own / custom player ................................... 0/2  iframes of other players; stays 0:
+                                                                   we host no films (9.10 dropped)
+  About 12/18, so ~15/18 at best. The gap is the player side (1, 2, 3, 7), not the app.
+Where we are already ahead (say it on the landing page and the listing request): TV remote on
+every page, kids profiles that really filter, 13 languages incl. right to left, "Ask Taurus",
+"What to watch?", recaps, Upcoming calendar, your year, shareable lists, Letterboxd / IMDb import.
+None of the 18/18 sites does more than 3-4 of these.
+
+Order: 9.2-9.3 first (they move the score from ~12 to ~14 for little work), then 9.4-9.7 (what
+visitors see on the first screen), the bigger ones after.
+
+[-] 9.1 "Block pop-ups" switch (dropped 2026-11-25: built, tested locally, then removed)
+        The idea: sandbox the player iframe (no allow-popups / allow-top-navigation) so the
+        embedded players can't open tabs or redirect the page. Built by an agent on the mini PC
+        (all tests passed), but on real sources most players notice their pop-ups are blocked
+        and refuse to play the video. Reverted. Criterion 7 stays as it is: the pop-ups are the
+        embeds' own ads; a source is only as clean as its player.
+[x] 9.2 Sources switch by themselves, through all of them (criterion 2)
+        A source that doesn't play -> the next one by itself ("CineSrc didn't play, trying VidFast…",
+        Undo for 10 s), through the whole list, then one clear screen: "No source played this",
+        Try again (the whole list once more, from the best one) / Choose a source (the remote goes
+        to the source chips). Report a problem waits for 9.8.
+        Order (watch/sourceOrder.js): what worked before (this title on any device, the one picked
+        here last, this profile), then the server's order, then the sources whose last try on this
+        title failed (GET /api/playback/ now returns "failed"), the unreachable ones last.
+        /api/providers/: down last, then the viewers' success rate, then the scout's last nightly
+        result (new Provider.scout_score = test films played / judged, set by import_providers,
+        migration users 0030), then the admin priority. A source with no plays yet is ranked by
+        the scout instead of the 0.5 default.
+        "Didn't play": never loaded in 15 s and sent no player message, or (players that send
+        events) loaded but no play / time event in 20 s. The iframe's load alone no longer counts.
+        No switch by itself while the viewer is busy with the player (full screen, pointer over it,
+        focus in the iframe), after Undo (the next one is only offered), or with the tab hidden
+        (decided when it's visible again).
+        Remote: the player tile has data-tv-inner (spatialNavigation.js): Up / Down from it reach
+        the buttons over it (Undo at the top), which the arrows used to skip. The all-failed screen
+        takes the focus on Try again; a notice that goes away puts the focus back on the player.
+        Measured: only locally (fake players in e2e), not yet on real sources.
+        Tests: reco/test_playback.py (6), users/test_provider_import.py (+2), sourceOrder.test.js
+        (8), spatialNavigation.test.js (+1), e2e/tests/watch-switch.spec.js (2, remote only: arrows
+        / OK / Back, focus overlap). Run: watch, focus-overlap, tv-remote, rtl e2e; reco + users.
+[x] 9.3 Next episode by the app, for every source (criterion 3)
+        At an episode's end, for every source: the player's "ended" event (CineSrc, Videasy, VidCore),
+        or its last 30 s when it sends times (episodes of 5 min or more) -> a card over the player,
+        bottom corner (bottom-left right to left, covers the small player on phones): "Next episode
+        in 10", S/E and name of the next one, its picture (TMDB still), a 10 s bar, Play now /
+        Cancel. At 0 the next episode loads on the same source (the one the viewer was on, not the
+        first of the list). Season end -> next season E1 (specials, season 0, never come next);
+        only aired episodes. Show end -> "That was the last episode of X": 3 titles like it (the
+        /similar/ endpoint, TMDB + embeddings), or a "More like this" button to the show's page.
+        Once per episode: Cancel, then the credits' "ended", doesn't bring it back. A player that
+        moves to another episode by itself (its own auto-next, Videasy sends S/E) is left alone.
+        A stale "ended" from the episode before (the first 3 s) is ignored.
+        Setting "Play next episode automatically" (Profile.autoplay_next, on by default, migration
+        users 0031; in the profile form beside Kids profile): off = the card waits for Play now.
+        "Still watching?" (Continue watching / Stop, no countdown) after 3 episodes that started
+        by themselves with no key press, click or focus in the player in between.
+        Remote: the card takes the focus on Play now (also out of the player's iframe in full
+        screen); Left / Right between its buttons, OK, Back = Cancel / Close (then Back leaves for
+        the title as before). The focus goes back to the player tile when the card goes.
+        Logic in watch/autoNext.js (findNextEpisode also feeds the header's "Next episode" button,
+        which now keeps the source too), the card in watch/UpNextCard.jsx + up-next.css.
+        Measured: only locally (fake players in e2e), not yet on real sources: which embeds send
+        "ended" / times in practice decides how often the card shows (the others: the header's
+        "Next episode" button, as before).
+        Tests: autoNext.test.js (12), users/test_autoplay_next.py (2), e2e/tests/watch-next.spec.js
+        (4, remote only: arrows / OK / Back, focus overlap). Run: watch, watch-switch, watch-next,
+        focus-overlap, tv-remote, rtl e2e (31 passed); vitest (117); users (195); i18n:check.
+[x] 9.4 Top 10 + browse by streaming service (Cineby, Movy, PrimeWire: on the first screen)
+        Top 10: home rows "Top 10 movies today" / "Top 10 shows this week", right after the first
+        personal row and the second one: a big number (outlined, on the start side, the right in
+        Arabic / Urdu) beside a poster card, 10 at most, numbered after the profile's age limit and
+        dislikes took theirs out; a chart keeps all its places (not removed by the page's
+        one-title-once rule). From TMDB /trending/movie/day and /trending/tv/week: their order was
+        never stored, now manage.py sync_tmdb_charts (every 6 h, 2 pages a chart, free) keeps it in
+        TitleChartEntry (only titles in the catalog; a chart that can't be read keeps its last
+        list). Our own plays mixed in (reco/top10.py blend) once there are 30+ (people x title,
+        movies today / shows this week): half the score from TMDB's position, half from our share,
+        so our viewers' favourite climbs and one only we watch can come in.
+        Services: TitleOnService (title, country, service), from TMDB's watch providers (JustWatch
+        data, free), subscription offers only (rent / buy aren't "on Netflix"), 8 services
+        (users/watch_services.py: Netflix, Prime Video, Disney+, Max, Apple TV+, Hulu, Paramount+,
+        Peacock, with their ads plans / old names). manage.py sync_tmdb_watch_providers: one TMDB
+        call per title, 6,000 a night most popular first, each title again every 30 days
+        (Title.services_synced_at). Home: up to 3 "On <service>" rows (10+ titles there), the
+        services the profile's titles are on first; browse pages: a "Streaming service" row of
+        chips in the Filters sheet (only the services with titles in the country,
+        GET /api/titles/services/), an "On Prime Video" pill, ?service=prime in the URL.
+        Country: the first browser language with a region (frontend utils/watchRegion.js, sent as
+        ?region=), else the profile's language region (fr -> FR, pt-BR -> BR), else US.
+        Browse sort "Recently added": newest id first (ids are given in the order titles come in).
+        Migration users 0032. Dashboard / daily check-up / scripts/job_locks.sh know the 2 new jobs.
+        Measured: only locally (seeded charts / services in e2e), not yet with real TMDB data: how
+        many titles of the catalog each service has per country decides which rows show.
+        Tests: users/test_watch_services.py (9), reco/test_top10.py (7), watchRegion.test.js (2),
+        e2e/tests/top10.spec.js (3, remote only: arrows / OK / Back, focus overlap).
+[x] 9.5 Anime (and K-drama) sections (Rive, Movy, HydraHD all have one; criterion 1)
+        Which titles: Title.section ("anime" / "kdrama" / "", indexed), from the TMDB data the
+        syncs already store, no new TMDB call, no AI (users/sections.py): anime = Animation and
+        Japanese (original language ja), or TMDB keyword "anime" (210024), or made in Japan when
+        TMDB gave no language, movies and shows; K-drama = a Korean Drama show, not animated.
+        Title.save() works it out again; manage.py rebuild_title_indexes does it for the syncs'
+        bulk writes; migration users 0033 filled it once for the catalog.
+        Pages: /anime (movies and shows) and /kdrama, the browse page on one section
+        (?section= on /api/titles/ and /api/titles/genres/, the genre every title has isn't a
+        chip; all the filters, sorts and services of 9.4 work there). "Anime" in the top bar;
+        phones (6 tabs already) and the TV Shows / Movies pages reach them from chips at the start
+        of the genre bar. The profile's age limit still applies: a Kids profile sees kids anime only.
+        Home: "Popular anime" / "Popular K-dramas" after Top 10 shows for the profiles with 2+ of
+        their recent titles (liked, played, listed) in the section (reco/section_rows.py): the
+        section's most popular titles (20+ votes, cached 30 min) minus what they already watched.
+        Episodes: TMDB numbers long anime by season (One Piece 1x01 ... 22x..); a player that counts
+        1 to 1100 plays the wrong one. The scout now also plays anime episodes (One Piece 1x01, then
+        E1 of the last aired season of the most popular anime shows, test_titles "anime") with the
+        TV link that works: "anime 2/3" in its note, Provider.scout_anime (export_providers /
+        import_providers, /api/providers/). On an anime's watch page the sources under 1/2 there
+        go after the others (watch/sourceOrder.js), still before the failed / down ones.
+        Import (/import, beside Letterboxd / IMDb): AniList by user name (its public API, no key)
+        and MyAnimeList's export file (.xml / .xml.gz). Matched by any of their names (English,
+        romaji, Japanese) against title, original title and TMDB's other names, then without the
+        "Season 3" part, the catalog's anime first. completed / watching / on hold -> watched,
+        plan to watch -> My List, dropped -> only its score; scores as for the other imports.
+        Routes /anime and /kdrama added to seo.APP_ROUTES (users/test_seo.py checks every route).
+        Measured: only locally (seeded anime / K-drama titles in e2e; AniList mocked in the backend tests); how many
+        sources really play late anime seasons is known after the scout's first night with it.
+        Tests: users/test_sections.py (9), reco/test_section_rows.py (4), reco/test_imports.py (+4),
+        sourceOrder.test.js (+1), ImportPage.test.jsx, e2e/tests/anime.spec.js (4, remote only:
+        nav entry and chips, Kids profile, home row OK / Back, AniList + MyAnimeList import, focus
+        overlap); import / top10 / focus-overlap specs re-run (18 passed).
+[-] 9.6 Quality and release status labels (dropped 2026-11-26: built, tested locally, removed)
+        HD / "In cinemas" / 4K labels on every card + "Airing today". Removed: the labels clutter
+        the artwork, and "In cinemas" was wrong too often (TMDB lacks digital dates for many films,
+        and its release dates mix festivals and cinemas).
+[-] 9.7 Try before signing up (dropped 2026-11-26: built, then removed)
+        Browsing and playing signed out. Removed: Taurus is built on recommendations for each
+        profile, and a signed-out visitor gets nothing personal, so it misses the point.
+[x] 9.8 "Playback problem?" + status page (LookMovie, HydraHD)
+        Watch page: "Playback problem?" at the end of the source chips' line (Right from the last
+        chip; the left end in Arabic / Urdu), only on an embedded source. A dialog (design system
+        Modal): "What's wrong on <source>?" It doesn't play / Wrong film or episode / No sound /
+        Sound out of sync / No subtitles (+ "sound, subtitles and quality come from each source's
+        own player"). Sent -> "Thanks, <source> is checked again first tonight" + Try <next source>
+        (the reported one counts as tried) / Source status. The "No source played this" screen
+        (9.2) also links to the status page.
+        Saved: PlaybackReport (reco, migration reco 0023): source, title, season / episode, problem,
+        profile (empty signed out), checked_at / check_result (the scout's answer).
+        POST /api/playback/report/ (reco/problems.py, signed out too, throttle "report" 30/hour per
+        IP, the same report by a profile within 6 h saved once). "Doesn't play" / "Wrong film" also
+        record a failed play for the profile (PlaybackOutcome): that source goes last on this title.
+        Dashboard: tile "Playback problems reported, 7 days" and a card per source (problems, how
+        many the scout re-checked) + the latest 15 with the scout's answer; admin list of reports.
+        Scout: export_providers sends "reports" (not re-checked, last 7 days, one per source +
+        title / episode, most reported first, 20 max) and puts the reported sources first;
+        provider_docs.py passes them on; provider_health.py checks those sources first, then plays
+        the reported titles (5 per source) with the link that works tonight (health "reports": state,
+        detail, a video far from TMDB's runtime noted as "maybe not this title");
+        import_providers writes the answer on the reports ("played in the scout's test" / "didn't
+        play ..." / "no verdict"). It tells plays / doesn't play, not sound, sync or subtitles.
+        Status page /status (public, footer link "Status", seo.APP_ROUTES): GET /api/status/
+        (AllowAny, no auth, cached 60 s): the site is up (database answers) + every enabled source:
+        Working / Having problems / Down / Not checked (down = the 15-min health check; problems =
+        3+ reports in 24 h, or under half of 5+ plays worked, or the scout under 1/2), its last
+        check, the scout's last night ("9 of 11 test titles played"), the viewers' share of plays
+        that worked in 24 h, the reports in 24 h. "Test from my connection": the browser asks each
+        source's site (no-cors fetch, 8 s): "Down for everyone" / "Not reachable from your
+        connection" (your network, a DNS filter, a blocker) / "Reachable"; Taurus not answering ->
+        "Can't reach Taurus". Each source is a remote stop (Down reads them all).
+        Measured: only locally (e2e, fake players); the scout part with a fake play (its helpers),
+        not on a real night yet: the deployed scout (~/provider-scout) must get the new
+        provider_docs.py / provider_health.py.
+        Tests: reco/test_problems.py (9: report signed in / out / refused, failed play, scout export
+        and answer, status page and states, dashboard), api/problemsApi.test.js (2),
+        e2e/tests/report-problem.spec.js (3, remote only: dialog with arrows / OK / Back, Try next,
+        status page test from my connection, Arabic right to left, focus overlap).
+        Run: report-problem, watch (watch, watch-switch, watch-next), focus-overlap, tv-remote, rtl,
+        guest e2e (37: all pass but rtl "mirrored row", the failure 9.6 already reported from
+        before 9.6); vitest (133); users + reco (395); lint; build; i18n:check; makemigrations --check.
+[ ] 9.9 Watch together, the cheap way (Hexa, Beech score points for it; 2.5 was skipped)
+        Some of our embeds have their own watch party (the VidPlus URL has watchparty=false in
+        docs/streaming-providers-notes.txt): turn it on for those and show a "Watch together"
+        button only on sources that have it. A synced one on any source would need our own player
+        (9.10, dropped): not planned.
+[-] 9.10 Our own player (dropped 2026-11-25: we host no films)
+        The 18/18 sites put their own player on direct streams; Taurus only embeds other sites'
+        players and won't host or pull streams, so criterion 9 stays 0/2. Subtitles, quality and
+        speed stay whatever each embed offers; 9.2 / 9.3 do auto-switch and auto-next around them.
+[ ] 9.11 Sync with Trakt / Simkl (criterion 5 counts it as a plus; was left out in 7.2)
+        Low priority: our own sync already scores 2/2. Only if users ask: scrobble plays to Trakt
+        / Simkl and pull their watchlist, behind a "Connect" button on the account page.
+[ ] 9.12 Get listed (once 9.2-9.3 are done and the score is ~14/18)
+        Ask FMHY to grade the site and ahoylist to add it (GitHub yarrlist/AhoyList,
+        r/ahoylistnet). Lead with what nobody else has (TV remote, kids profiles, 13 languages,
+        Ask Taurus). The landing page (alioupganghd.store) says the same.

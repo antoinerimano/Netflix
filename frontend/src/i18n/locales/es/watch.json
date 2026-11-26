@@ -29,7 +29,11 @@
     "help": "¿El vídeo no empieza? Prueba otra fuente.",
     "choose": "Elegir una fuente",
     "loadFailed": "No se pudieron cargar las fuentes.",
-    "switched": "{{from}} no cargó, se cambió a {{to}}.",
+    "trying": "{{from}} no se reprodujo, probando {{to}}…",
+    "undo": "Deshacer",
+    "allFailedTitle": "Ninguna fuente lo reprodujo",
+    "allFailedText": "Probamos todas las fuentes. Puede que estén saturadas: vuelve a intentarlo en un momento o elige una abajo.",
+    "tryAgain": "Reintentar",
     "notPlaying": "¿No se reproduce en {{source}}?",
     "try": "Probar {{source}}",
     "down": "¿sin conexión?",
@@ -47,5 +51,69 @@
     "soon": "Pronto",
     "comingSoon": "próximamente"
   },
-  "nextMovie": "Siguiente película"
+  "nextMovie": "Siguiente película",
+  "upNext": {
+    "in": "Siguiente episodio en {{seconds}}",
+    "playNow": "Reproducir ahora",
+    "cancel": "Cancelar",
+    "stillTitle": "¿Sigues viendo?",
+    "stillText": "{{show}}: varios episodios seguidos sin pulsar ninguna tecla.",
+    "continue": "Seguir viendo",
+    "stop": "Parar",
+    "endTitle": "Ese fue el último episodio de {{show}}",
+    "moreLikeThis": "Más títulos similares",
+    "close": "Cerrar"
+  },
+  "problem": {
+    "open": "¿Problema de reproducción?",
+    "title": "¿Problema de reproducción?",
+    "question": "¿Qué falla en {{source}}?",
+    "kinds": {
+      "not_playing": "No se reproduce",
+      "wrong_title": "Película o episodio equivocado",
+      "no_sound": "Sin sonido",
+      "out_of_sync": "Sonido desincronizado",
+      "no_subtitles": "Sin subtítulos"
+    },
+    "note": "El sonido, los subtítulos y la calidad dependen del reproductor de cada fuente: puede que otra fuente los tenga.",
+    "thanks": "Gracias, queda anotado. Esta noche se revisa {{source}} primero.",
+    "failed": "No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.",
+    "status": "Estado de las fuentes"
+  },
+  "status": {
+    "title": "Estado",
+    "subtitle": "Si Taurus funciona y qué fuentes reproducen ahora. Taurus no aloja vídeos: cada fuente es el reproductor de otro sitio.",
+    "siteUp": "Taurus funciona",
+    "siteDown": "No se puede conectar con Taurus",
+    "siteDownText": "Nuestro servidor no responde desde aquí. Si otros sitios abren, puede que Taurus esté caído para todos: inténtalo en unos minutos.",
+    "sourcesWorking": "Fuentes que funcionan: {{working}} de {{total}}",
+    "noSourceWorking": "Ninguna fuente funciona ahora. Inténtalo más tarde.",
+    "updated": "Actualizado {{when}}",
+    "testText": "¿Una fuente no te abre? Prueba todas las fuentes desde tu conexión: ¿caída para todos o solo para ti?",
+    "test": "Probar desde mi conexión",
+    "testing": "Probando…",
+    "testAgain": "Probar otra vez",
+    "allReachable": "Todas las fuentes que funcionan son accesibles desde tu conexión.",
+    "blockedHere": "Fuentes activas para todos pero inaccesibles desde tu conexión: {{blocked}}. Tu red, un filtro DNS o un bloqueador de anuncios puede detenerlas: prueba otra red o desactiva el bloqueador para Taurus.",
+    "sources": "Fuentes",
+    "noSources": "No hay fuentes que mostrar.",
+    "note": "Nuestro servidor contacta cada fuente cada 15 minutos, y cada noche una prueba reproduce algunas películas y episodios en cada una.",
+    "checked": "Última comprobación {{when}}",
+    "neverChecked": "Aún sin comprobar",
+    "scout": "Prueba nocturna ({{date}}): {{played}} de {{tested}} títulos de prueba reproducidos",
+    "scoutNoVerdict": "Prueba nocturna ({{date}}): sin veredicto",
+    "viewers": "Espectadores, últimas 24 h: funcionó el {{share}} de las reproducciones",
+    "reports": "Problemas reportados, últimas 24 h: {{reports}}",
+    "states": {
+      "up": "Funciona",
+      "problems": "Con problemas",
+      "down": "Caída",
+      "unknown": "Sin comprobar"
+    },
+    "affected": {
+      "everyone": "Caída para todos",
+      "you": "Inaccesible desde tu conexión",
+      "ok": "Accesible desde tu conexión"
+    }
+  }
 }

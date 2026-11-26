@@ -23,7 +23,12 @@
       "trending": "Trending",
       "new_episodes": "New episodes",
       "continue_watching": "Continue watching",
-      "collections_next": "Next in your collections"
+      "collections_next": "Next in your collections",
+      "top10_movies": "Top 10 movies today",
+      "top10_tv": "Top 10 shows this week",
+      "service": "On {{name}}",
+      "anime": "Popular anime",
+      "kdrama": "Popular K-dramas"
     },
     "why": {
       "similarTo": "Similar to {{title}}",
@@ -49,7 +54,8 @@
   "card": {
     "rated": "rated {{value}}",
     "newEpisode": "New · S{{season}} E{{episode}}",
-    "watched": "{{percent}} watched"
+    "watched": "{{percent}} watched",
+    "rank": "No. {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "Mute",
@@ -173,6 +179,24 @@
       "count_one": "{{formatted}} show",
       "count_other": "{{formatted}} shows"
     },
+    "anime": {
+      "title": "Anime",
+      "search": "Search anime",
+      "loadError": "Couldn't load anime",
+      "none": "No anime found",
+      "more": "Show more anime",
+      "count_one": "{{formatted}} anime",
+      "count_other": "{{formatted}} anime"
+    },
+    "kdrama": {
+      "title": "K-dramas",
+      "search": "Search K-dramas",
+      "loadError": "Couldn't load K-dramas",
+      "none": "No K-dramas found",
+      "more": "Show more K-dramas",
+      "count_one": "{{formatted}} K-drama",
+      "count_other": "{{formatted}} K-dramas"
+    },
     "all": "All",
     "genre": "Genre",
     "sortBy": "Sort by",
@@ -180,9 +204,11 @@
       "popular": "Popular",
       "rating": "Top rated",
       "newest": "Newest",
-      "title": "A–Z"
+      "title": "A–Z",
+      "added": "Recently added"
     },
     "filters": "Filters",
+    "service": "Streaming service",
     "activeFilters": "Active filters",
     "removeFilter": "Remove filter {{label}}",
     "clearAll": "Clear all",
@@ -197,6 +223,7 @@
     "actorPlaceholder": "e.g. Zendaya",
     "pillDirector": "Director: {{name}}",
     "pillActor": "With {{name}}",
+    "pillService": "On {{name}}",
     "years": {
       "any": "Any",
       "range": "{{from}}–{{to}}",

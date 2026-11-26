@@ -5,7 +5,7 @@ import { formatNumber } from "../i18n/format";
 import { genreName, splitGenres } from "./detail/DetailHero";
 import "./WatchPage.css";
 
-import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks } from "../api/titlesApi";
+import { fetchTitleById, fetchMovieById, fetchProviders, buildProviderLinks, fetchSimilarTitles } from "../api/titlesApi";
 import { saveWatchProgress, reportPlayback, fetchPreferredSource, fetchCollection } from "../api/recoApi";
 import { enterPlayer, setBackHandler } from "../tv/spatialNavigation";
 import { tmdbBackground, IMG } from "../utils/tmdbImage";
@@ -13,6 +13,10 @@ import { Button, Chip, EmptyState, Skeleton, Spinner } from "../design";
 import { ArrowLeftIcon, ChevronRightIcon, MaximizeIcon, LinkIcon } from "../design/icons";
 import WatchInfo from "./watch/WatchInfo";
 import { usePlayerRemote } from "./watch/playerRemote";
+import { isPlayerMessage, nextSource, orderSources } from "./watch/sourceOrder";
+import UpNextCard from "./watch/UpNextCard";
+import ReportProblem from "./watch/ReportProblem";
+import { NEXT_COUNTDOWN_S, findNextEpisode, isEpisodeEnding, upNextMode } from "./watch/autoNext";
 
 import {
   LEGACY_SOURCE_KEYS,
@@ -64,9 +68,23 @@ export default function WatchPage() {
   // smart playback
   const attemptRef = useRef(null); // current source: { key, startedAt, playing, reported, report(worked) }
   const iframeLoadedRef = useRef(false);
-  const autoFailedRef = useRef(new Set()); // sources that failed by themselves on this page
-  const [banner, setBanner] = useState(null); // { text, nextKey?, nextLabel? }
+  const autoFailedRef = useRef(new Set()); // sources tried on this page that didn't play
+  const autoOffRef = useRef(false); // "Undo" pressed: no more automatic switches for this title / episode
+  const sourceOrderRef = useRef([]);
+  const [banner, setBanner] = useState(null); // { text, nextKey?, nextLabel?, undoKey? }
+  const [allFailed, setAllFailed] = useState(null); // { count }: every source was tried, none played
+  const [reloadNonce, setReloadNonce] = useState(0); // "Try again" on the same source reloads it
+  const bannerRef = useRef(null);
+  const allFailedRef = useRef(null);
+  const pointerOverRef = useRef(false);
+  // next episode by the app (9.3): the card at an episode's end
+  const [upNext, setUpNext] = useState(null); // { mode: countdown | offer | still | end, next, seconds }
+  const [similar, setSimilar] = useState(null); // show over: "More like this" (null = not loaded)
+  const upNextRef = useRef(null);
+  const upNextDoneRef = useRef(false); // the card was shown for this episode: once per episode
+  const autoStartsRef = useRef(0); // episodes started by themselves since the last key press
   const [serverPref, setServerPref] = useState(undefined); // undefined = loading, null = unavailable
+  const [reportOpen, setReportOpen] = useState(false); // "Playback problem?" (9.8)
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // ✅ Default selection is NOT custom anymore (we auto-pick first provider)
@@ -153,28 +171,19 @@ export default function WatchPage() {
   }, [title?.id, isTV, seasonNumber, episodeNumber]);
 
   // Next aired episode: rest of this season, then the first episode of the next season
-  const nextEpisode = useMemo(() => {
-    if (!isTV || !Array.isArray(title?.seasons)) return null;
-    const today = new Date().toISOString().slice(0, 10);
-    const airedNumbers = (season) =>
-      (season?.episodes || [])
-        .filter((ep) => !ep.air_date || ep.air_date <= today)
-        .map((ep) => Number(ep.episode_number))
-        .sort((a, b) => a - b);
+  const nextEpisode = useMemo(
+    () => (isTV ? findNextEpisode(title?.seasons, seasonNumber, episodeNumber) : null),
+    [isTV, title, seasonNumber, episodeNumber]
+  );
 
-    const seasons = [...title.seasons].sort((a, b) => a.season_number - b.season_number);
-    const current = seasons.find((s) => Number(s.season_number) === Number(seasonNumber));
-    const laterInSeason = airedNumbers(current).find((n) => n > episodeNumber);
-    if (laterInSeason) return { season: seasonNumber, episode: laterInSeason };
-
-    for (const s of seasons) {
-      if (s.season_number > seasonNumber) {
-        const first = airedNumbers(s)[0];
-        if (first) return { season: s.season_number, episode: first };
-      }
+  // "Play next episode automatically" (profile setting, on by default)
+  const autoplayNext = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("activeProfile") || "{}")?.autoplay_next !== false;
+    } catch {
+      return true;
     }
-    return null;
-  }, [isTV, title, seasonNumber, episodeNumber]);
+  }, [activeProfileId]); // eslint-disable-line react-hooks/exhaustive-deps -- read again for another profile
 
   // a movie of a franchise: the next part in watch order (released), for the "Next movie" button
   const [nextPart, setNextPart] = useState(null);
@@ -203,6 +212,7 @@ export default function WatchPage() {
 
   const goToNextEpisode = useCallback(() => {
     if (!nextEpisode) return;
+    userPickedRef.current = true; // on the same source
     navigate(`/watch/${titleId}?season=${nextEpisode.season}&episode=${nextEpisode.episode}`, { replace: true });
   }, [navigate, titleId, nextEpisode]);
 
@@ -267,8 +277,13 @@ export default function WatchPage() {
     };
   }, [playerKeysHint]);
 
-  // TV remote Back / Escape: back to this title's details page (leaves full screen first)
-  useEffect(() => setBackHandler(goBack), [goBack]);
+  // TV remote Back / Escape: back to this title's details page (leaves full screen first);
+  // with the next-episode card up, Back is its Cancel
+  const cancelUpNextRef = useRef(null);
+  useEffect(
+    () => setBackHandler(upNext ? () => cancelUpNextRef.current?.() : goBack),
+    [goBack, upNext]
+  );
 
   // Links: provider domain + path template, filled with this movie / episode
   const providers = useMemo(() => {
@@ -326,6 +341,20 @@ export default function WatchPage() {
     };
   }, [titleId]);
 
+  // Every source in the order they're tried: what worked before first, what failed on this title last
+  const sourceOrder = useMemo(
+    () =>
+      orderSources(providers, {
+        title: serverPref?.title,
+        saved: prefsLoaded && hasPrefsRef.current ? savedKeyRef.current : null,
+        profile: serverPref?.profile,
+        failed: serverPref?.failed,
+        anime: title?.section === "anime", // ROADMAP 9.5: the sources that play anime first
+      }),
+    [providers, serverPref, prefsLoaded, title?.section]
+  );
+  sourceOrderRef.current = sourceOrder;
+
   // Starting source. Until the viewer picks one: custom link they saved > source that worked for this
   // title > the one they used here last > source that worked for this profile > best ranked provider.
   useEffect(() => {
@@ -343,20 +372,14 @@ export default function WatchPage() {
       return;
     }
 
-    const available = new Set(providers.map((p) => p.key));
-    const pick = [
-      serverPref?.title,
-      hasPrefsRef.current ? savedKeyRef.current : null,
-      serverPref?.profile,
-      providers[0]?.key,
-    ].find((key) => key && available.has(key));
+    const pick = sourceOrder[0];
 
     if (pick) {
       if (selectedKey !== pick) setSelectedKey(pick);
     } else if (selectedKey !== "custom") {
       setSelectedKey("custom"); // no provider can play this title
     }
-  }, [prefsLoaded, serverPref, title, providers, providerDefs, selectedKey, providersError]);
+  }, [prefsLoaded, serverPref, title, providers, providerDefs, selectedKey, providersError, sourceOrder]);
 
   // Save prefs
   useEffect(() => {
@@ -469,9 +492,18 @@ export default function WatchPage() {
   // Smart playback: did the current source play? Reported to the server (it opens the source that
   // worked next time, and ranks providers); falls back when a source never loads.
   useEffect(() => {
-    autoFailedRef.current = new Set(); // new title / episode: every source gets a fresh chance
+    // new title / episode: every source gets a fresh chance, and switches by itself again
+    autoFailedRef.current = new Set();
+    autoOffRef.current = false;
+    setAllFailed(null);
+    upNextDoneRef.current = false;
+    setUpNext(null);
+    setSimilar(null);
   }, [titleId, seasonNumber, episodeNumber]);
 
+  // The source didn't play: try the next one by itself (9.2), through the whole list, then one
+  // clear screen. "Played" = a real player event (play / time), not the iframe's load: a dead
+  // embed page loads too. Players that report nothing can only fail by never loading.
   useEffect(() => {
     iframeLoadedRef.current = false;
     const p = providers.find((x) => x.key === selectedKey);
@@ -480,73 +512,255 @@ export default function WatchPage() {
       return;
     }
     const pid = localStorage.getItem("activeProfileId");
-    const attempt = { key: p.key, startedAt: Date.now(), playing: false, reported: false };
+    const attempt = { key: p.key, startedAt: Date.now(), playing: false, alive: false, reported: false };
     attempt.report = (worked) => {
       if (attempt.reported || !pid) return;
       attempt.reported = true;
       reportPlayback({ profileId: pid, titleId: title.id, provider: p.key, worked }).catch(() => {});
     };
     attemptRef.current = attempt;
-    const nextSource = () =>
-      providers.find((x) => x.key !== p.key && !x.down && !autoFailedRef.current.has(x.key));
+    const timers = [];
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+
+    const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    // the viewer is busy with the player (its own play button, full screen): offer, don't switch
+    const engaged = () => isFullscreen() || pointerOverRef.current || document.activeElement === iframeRef.current;
+
+    const failed = () => {
+      if (attempt.playing || attempt.failed) return;
+      // tab in the background / full screen: decide when the viewer can see it
+      if (document.visibilityState !== "visible" || isFullscreen()) {
+        later(failed, 3000);
+        return;
+      }
+      attempt.failed = true;
+      attempt.report(false);
+      autoFailedRef.current.add(p.key);
+      const nextKey = nextSource(sourceOrderRef.current, p.key, autoFailedRef.current);
+      const next = providers.find((x) => x.key === nextKey);
+      if (!next) {
+        setBanner(null);
+        setAllFailed({ count: autoFailedRef.current.size });
+        return;
+      }
+      if (autoOffRef.current || engaged()) {
+        setBanner({ text: t("sources.notPlaying", { source: p.label }), nextKey: next.key, nextLabel: next.label });
+        return;
+      }
+      userPickedRef.current = true;
+      setBanner({ text: t("sources.trying", { from: p.label, to: next.label }), undoKey: p.key });
+      setSelectedKey(next.key);
+    };
 
     const onMessage = (e) => {
       if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return;
+      if (isPlayerMessage(e.data)) attempt.alive = true;
       if (readPlayerEvent(e.data)?.playing && !attempt.playing) {
         attempt.playing = true;
-        setBanner(null);
+        setBanner((b) => (b?.nextKey ? null : b)); // an offer to move on is moot; an Undo stays
+        setAllFailed(null);
         attempt.report(true);
       }
     };
     window.addEventListener("message", onMessage);
 
-    const timers = [
-      // the page never loaded: move on by itself
-      setTimeout(() => {
-        if (iframeLoadedRef.current || attempt.playing) return;
-        const next = nextSource();
-        if (!next) return;
-        attempt.report(false);
-        autoFailedRef.current.add(p.key);
-        userPickedRef.current = true;
-        setBanner({ text: t("sources.switched", { from: p.label, to: next.label }) });
-        setSelectedKey(next.key);
-      }, SOURCE_LOAD_TIMEOUT_MS),
-      // loaded but silent: only for players that report playback, offer the next source
-      p.sendsEvents &&
-        setTimeout(() => {
-          if (attempt.playing) return;
-          const next = nextSource();
-          if (next) setBanner({ text: t("sources.notPlaying", { source: p.label }), nextKey: next.key, nextLabel: next.label });
-        }, SOURCE_SILENT_TIMEOUT_MS),
-      // still on it after a while: it works (the only signal for players that report nothing)
-      setTimeout(() => {
-        if (document.visibilityState === "visible") attempt.report(true);
-      }, SOURCE_STAYED_MS),
-    ].filter(Boolean);
+    // the page never loaded
+    later(() => {
+      if (!iframeLoadedRef.current && !attempt.alive) failed();
+    }, SOURCE_LOAD_TIMEOUT_MS);
+    // a player that reports playback loaded, but never played
+    if (p.sendsEvents) later(failed, SOURCE_SILENT_TIMEOUT_MS);
+    // still on it after a while: it works (the only signal for players that report nothing)
+    later(() => {
+      if (document.visibilityState === "visible") attempt.report(true);
+    }, SOURCE_STAYED_MS);
 
     return () => {
       timers.forEach(clearTimeout);
       window.removeEventListener("message", onMessage);
     };
-  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers]); // eslint-disable-line react-hooks/exhaustive-deps -- t: only the banner text, a new language must not restart the source
+  }, [selectedKey, resolvedUrl, sourceType, title?.id, providers, reloadNonce]); // eslint-disable-line react-hooks/exhaustive-deps -- t: only the banner text, a new language must not restart the source
 
-  // "switched to X" notices go away by themselves; "Not playing?" offers stay until used
+  // A banner / screen with the focus goes away: the remote stays on the player, never on nothing
+  const keepFocusOnPlayer = useCallback((box) => {
+    if (box?.contains(document.activeElement)) playerWrapRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  // "trying X" notices go away by themselves; "Not playing?" offers stay until used
   useEffect(() => {
     if (!banner || banner.nextKey) return;
-    const timer = setTimeout(() => setBanner(null), 8000);
+    const timer = setTimeout(() => {
+      keepFocusOnPlayer(bannerRef.current);
+      setBanner(null);
+    }, banner.undoKey ? 10000 : 8000);
     return () => clearTimeout(timer);
-  }, [banner]);
+  }, [banner, keepFocusOnPlayer]);
+
+  // every source failed: the remote goes to "Try again" (unless the viewer is elsewhere on the page)
+  useEffect(() => {
+    if (!allFailed) return;
+    const a = document.activeElement;
+    if (!a || a === document.body || playerWrapRef.current?.contains(a)) {
+      allFailedRef.current?.querySelector("button")?.focus({ preventScroll: true });
+    }
+  }, [allFailed]);
 
   // Every source change made by the viewer goes through here
-  const switchSource = useCallback((key) => {
+  const switchSource = useCallback((key, { judge = true } = {}) => {
     const a = attemptRef.current;
     // left a source quickly without it ever playing: it didn't work
-    if (a && a.key !== key && !a.playing && Date.now() - a.startedAt < SOURCE_QUICK_LEAVE_MS) a.report(false);
+    if (judge && a && a.key !== key && !a.playing && Date.now() - a.startedAt < SOURCE_QUICK_LEAVE_MS) a.report(false);
     userPickedRef.current = true;
+    keepFocusOnPlayer(bannerRef.current);
+    keepFocusOnPlayer(allFailedRef.current);
     setBanner(null);
+    setAllFailed(null);
     setSelectedKey(key);
+  }, [keepFocusOnPlayer]);
+
+  // "Undo" on "X didn't play, trying Y": back to X, and no more switching by itself here
+  const undoSwitch = useCallback(
+    (key) => {
+      autoOffRef.current = true;
+      autoFailedRef.current.delete(key);
+      switchSource(key, { judge: false }); // the viewer chose: Y wasn't given its chance, not a failure
+    },
+    [switchSource]
+  );
+
+  // "Try again" on the all-failed screen: the whole list once more, from the best source
+  const retryAll = useCallback(() => {
+    autoFailedRef.current = new Set();
+    autoOffRef.current = false;
+    const first = sourceOrderRef.current[0];
+    keepFocusOnPlayer(allFailedRef.current);
+    setAllFailed(null);
+    setBanner(null);
+    userPickedRef.current = true;
+    if (first && first !== selectedKey) setSelectedKey(first);
+    else setReloadNonce((n) => n + 1);
+  }, [keepFocusOnPlayer, selectedKey]);
+
+  // "Playback problem?" sent, then "Try <next source>": the reported one counts as tried
+  const reportNext = useMemo(() => {
+    if (!reportOpen) return null;
+    const key = nextSource(sourceOrderRef.current, selectedKey, new Set([...autoFailedRef.current, selectedKey]));
+    return providers.find((p) => p.key === key) || null;
+  }, [reportOpen, selectedKey, providers]);
+
+  const tryAfterReport = useCallback(
+    (key) => {
+      autoFailedRef.current.add(selectedKey);
+      setReportOpen(false);
+      switchSource(key, { judge: false }); // the report already said how it went
+    },
+    [selectedKey, switchSource]
+  );
+
+  // "Choose a source": the remote goes to the chips under the player
+  const chooseSourceYourself = useCallback(() => {
+    const chips = [...document.querySelectorAll(".watchpage__providerRow .watchpage__chip")];
+    (chips.find((c) => c.classList.contains("is-selected")) || chips[0])?.focus({ preventScroll: false });
   }, []);
+
+  // Next episode by the app (9.3), for every source: on the player's "ended" event, or in the
+  // episode's last 30 s when the player sends times, a card: "Next episode in 10" (Play now /
+  // Cancel), "Still watching?" after 3 episodes started by themselves, "More like this" at the end.
+  useEffect(() => {
+    if (!isTV || sourceType !== "iframe" || !title?.id) return undefined;
+    const since = Date.now(); // a late message from the episode before (its page still unloading) isn't this one's end
+    const onMessage = (e) => {
+      if (!iframeRef.current || e.source !== iframeRef.current.contentWindow) return;
+      const ev = readPlayerEvent(e.data);
+      if (!ev) return;
+      // the player went to another episode by itself (its own auto-next): leave it to the player
+      if (ev.season && ev.episode && (ev.season !== seasonNumber || ev.episode !== episodeNumber)) {
+        upNextDoneRef.current = true;
+        keepFocusOnPlayer(upNextRef.current);
+        setUpNext(null);
+        return;
+      }
+      if (upNextDoneRef.current || !isEpisodeEnding(ev) || Date.now() - since < 3000) return;
+      upNextDoneRef.current = true;
+      const mode = upNextMode({ next: nextEpisode, autoplay: autoplayNext, autoStarts: autoStartsRef.current });
+      setUpNext({ mode, next: nextEpisode, seconds: NEXT_COUNTDOWN_S });
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [isTV, sourceType, title?.id, resolvedUrl, seasonNumber, episodeNumber, nextEpisode, autoplayNext, keepFocusOnPlayer]);
+
+  // someone is there: a key, a click, the player taking the focus -> no "Still watching?"
+  useEffect(() => {
+    const active = () => {
+      autoStartsRef.current = 0;
+    };
+    const onBlur = () => {
+      if (document.activeElement === iframeRef.current) active(); // a click in the player
+    };
+    window.addEventListener("keydown", active, true);
+    window.addEventListener("pointerdown", active, true);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", active, true);
+      window.removeEventListener("pointerdown", active, true);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, []);
+
+  const playNext = useCallback(
+    ({ auto = false } = {}) => {
+      const next = upNext?.next || nextEpisode;
+      if (!next) return;
+      autoStartsRef.current = auto ? autoStartsRef.current + 1 : 0;
+      keepFocusOnPlayer(upNextRef.current);
+      setUpNext(null);
+      userPickedRef.current = true; // the same source plays the next episode
+      navigate(`/watch/${titleId}?season=${next.season}&episode=${next.episode}`, { replace: true });
+    },
+    [upNext, nextEpisode, keepFocusOnPlayer, navigate, titleId]
+  );
+
+  const cancelUpNext = useCallback(() => {
+    keepFocusOnPlayer(upNextRef.current);
+    setUpNext(null);
+  }, [keepFocusOnPlayer]);
+  cancelUpNextRef.current = cancelUpNext;
+
+  // the countdown: Play now by itself at 0
+  useEffect(() => {
+    if (upNext?.mode !== "countdown") return undefined;
+    if (upNext.seconds <= 0) {
+      playNext({ auto: true });
+      return undefined;
+    }
+    const timer = setTimeout(
+      () => setUpNext((u) => (u?.mode === "countdown" ? { ...u, seconds: u.seconds - 1 } : u)),
+      1000
+    );
+    return () => clearTimeout(timer);
+  }, [upNext, playNext]);
+
+  // the card takes the remote (unless the viewer is elsewhere on the page); in full screen too
+  const upNextShown = upNext?.mode || "";
+  useEffect(() => {
+    if (!upNextShown) return;
+    const a = document.activeElement;
+    if (!a || a === document.body || playerWrapRef.current?.contains(a)) {
+      upNextRef.current?.querySelector("button")?.focus({ preventScroll: true });
+    }
+  }, [upNextShown]);
+
+  // show over: a few titles like this one
+  useEffect(() => {
+    if (upNextShown !== "end" || similar || !title?.id) return undefined;
+    let alive = true;
+    fetchSimilarTitles(title.id, 3)
+      .then((list) => alive && setSimilar(list.slice(0, 3)))
+      .catch(() => alive && setSimilar([]));
+    return () => {
+      alive = false;
+    };
+  }, [upNextShown, similar, title?.id]);
 
   // Watch progress from the player's own events (Videasy, CineSrc, VidCore "ended"):
   // saved every 15 s and on pause / seek / end, so "Continue watching" can resume and show a bar.
@@ -641,6 +855,7 @@ export default function WatchPage() {
 
     return (
       <iframe
+        key={reloadNonce}
         ref={iframeRef}
         className="watchpage__iframe"
         src={resolvedUrl}
@@ -657,7 +872,7 @@ export default function WatchPage() {
         }}
       />
     );
-  }, [resolvedUrl, sourceType, providersError, t]);
+  }, [resolvedUrl, sourceType, providersError, t, reloadNonce]);
 
   if (loading) {
     return (
@@ -750,6 +965,7 @@ export default function WatchPage() {
           // TV remote / keyboard: the player is a tile, OK = full screen with the remote
           // handed to the player (play / pause, seek...); Back leaves it
           tabIndex={sourceType !== "none" ? 0 : -1}
+          data-tv-inner="" // the remote reaches the buttons shown over it ("Undo", "Try again") with up / down
           aria-label={t("player.tileLabel")}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.target === e.currentTarget && sourceType !== "none") {
@@ -757,8 +973,14 @@ export default function WatchPage() {
               goFullscreen();
             }
           }}
-          onMouseEnter={() => setHoverPlayer(true)}
-          onMouseLeave={() => setHoverPlayer(false)}
+          onMouseEnter={() => {
+            pointerOverRef.current = true;
+            setHoverPlayer(true);
+          }}
+          onMouseLeave={() => {
+            pointerOverRef.current = false;
+            setHoverPlayer(false);
+          }}
         >
           {PlayerNode}
 
@@ -785,12 +1007,51 @@ export default function WatchPage() {
             </div>
           ) : null}
 
+          {allFailed ? (
+            <div ref={allFailedRef} className="watchpage__allFailed" role="alert">
+              <div className="watchpage__emptyCard">
+                <div className="watchpage__emptyTitle">{t("sources.allFailedTitle")}</div>
+                <div className="watchpage__emptyDesc">{t("sources.allFailedText")}</div>
+                <div className="watchpage__allFailedActions">
+                  <Button variant="primary" size="sm" onClick={retryAll}>
+                    {t("sources.tryAgain")}
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={chooseSourceYourself}>
+                    {t("player.chooseTitle")}
+                  </Button>
+                  <Button variant="ghost" size="sm" to="/status">
+                    {t("problem.status")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {upNext ? (
+            <UpNextCard
+              ref={upNextRef}
+              mode={upNext.mode}
+              next={upNext.next}
+              seconds={upNext.seconds}
+              showTitle={title.title}
+              similar={similar}
+              onPlay={() => playNext()}
+              onCancel={cancelUpNext}
+              onOpenTitle={(item) => navigate(`/${item.type === "tv" ? "tv" : "movies"}/${item.id}`)}
+              onMoreLikeThis={() => navigate(`/tv/${titleId}`)}
+            />
+          ) : null}
+
           {banner ? (
-            <div className="watchpage__softHint" role="status">
+            <div ref={bannerRef} className="watchpage__softHint" role="status">
               <div className="watchpage__softHintText">{banner.text}</div>
               {banner.nextKey ? (
                 <Button variant="secondary" size="sm" className="watchpage__softHintBtn" onClick={() => switchSource(banner.nextKey)}>
                   {t("sources.try", { source: banner.nextLabel })}
+                </Button>
+              ) : banner.undoKey ? (
+                <Button variant="secondary" size="sm" className="watchpage__softHintBtn" onClick={() => undoSwitch(banner.undoKey)}>
+                  {t("sources.undo")}
                 </Button>
               ) : null}
             </div>
@@ -807,6 +1068,8 @@ export default function WatchPage() {
             <h2 className="watchpage__sourcesTitle">{t("sources.title")}</h2>
             <p className="watchpage__sourcesHelp">{t("sources.help")}</p>
           </div>
+          {/* the chips, then "Playback problem?" on the same line: Right from the last chip reaches it */}
+          <div className="watchpage__sourcesBar">
           <div className="ui-scroller watchpage__providerRow" role="group" aria-label={t("sources.choose")}>
             {providers.map((p) => (
               <Chip
@@ -824,6 +1087,12 @@ export default function WatchPage() {
               <LinkIcon className="watchpage__chipIcon" aria-hidden="true" />
               {t("sources.custom")}
             </Chip>
+          </div>
+          {selectedProvider && sourceType === "iframe" ? (
+            <Button variant="ghost" size="sm" className="watchpage__reportBtn" onClick={() => setReportOpen(true)}>
+              {t("problem.open")}
+            </Button>
+          ) : null}
           </div>
 
           {selectedKey === "custom" ? (
@@ -860,6 +1129,19 @@ export default function WatchPage() {
           />
         </div>
       </main>
+
+      {selectedProvider ? (
+        <ReportProblem
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          source={selectedProvider}
+          titleId={title.id}
+          season={isTV ? seasonNumber : null}
+          episode={isTV ? episodeNumber : null}
+          next={reportNext}
+          onTryNext={tryAfterReport}
+        />
+      ) : null}
     </div>
   );
 }

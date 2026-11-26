@@ -23,7 +23,12 @@
       "trending": "Di tendenza",
       "new_episodes": "Nuovi episodi",
       "continue_watching": "Continua a guardare",
-      "collections_next": "Il seguito delle tue saghe"
+      "collections_next": "Il seguito delle tue saghe",
+      "top10_movies": "Top 10 film di oggi",
+      "top10_tv": "Top 10 serie della settimana",
+      "service": "Su {{name}}",
+      "anime": "Anime popolari",
+      "kdrama": "K-drama popolari"
     },
     "why": {
       "similarTo": "Simile a {{title}}",
@@ -49,7 +54,8 @@
   "card": {
     "rated": "voto {{value}}",
     "newEpisode": "Nuovo · S{{season}} E{{episode}}",
-    "watched": "{{percent}} visto"
+    "watched": "{{percent}} visto",
+    "rank": "N. {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "Disattiva audio",
@@ -177,6 +183,26 @@
       "count_many": "{{formatted}} serie",
       "count_other": "{{formatted}} serie"
     },
+    "anime": {
+      "title": "Anime",
+      "search": "Cerca anime",
+      "loadError": "Impossibile caricare gli anime",
+      "none": "Nessun anime trovato",
+      "more": "Mostra altri anime",
+      "count_one": "{{formatted}} anime",
+      "count_many": "{{formatted}} di anime",
+      "count_other": "{{formatted}} anime"
+    },
+    "kdrama": {
+      "title": "K-drama",
+      "search": "Cerca K-drama",
+      "loadError": "Impossibile caricare i K-drama",
+      "none": "Nessun K-drama trovato",
+      "more": "Mostra altri K-drama",
+      "count_one": "{{formatted}} K-drama",
+      "count_many": "{{formatted}} di K-drama",
+      "count_other": "{{formatted}} K-drama"
+    },
     "all": "Tutti",
     "genre": "Genere",
     "sortBy": "Ordina per",
@@ -184,9 +210,11 @@
       "popular": "Popolari",
       "rating": "Più votati",
       "newest": "Più recenti",
-      "title": "A–Z"
+      "title": "A–Z",
+      "added": "Aggiunti di recente"
     },
     "filters": "Filtri",
+    "service": "Servizio di streaming",
     "activeFilters": "Filtri attivi",
     "removeFilter": "Rimuovi il filtro {{label}}",
     "clearAll": "Cancella tutto",
@@ -201,6 +229,7 @@
     "actorPlaceholder": "es. Zendaya",
     "pillDirector": "Regia: {{name}}",
     "pillActor": "Con {{name}}",
+    "pillService": "Su {{name}}",
     "years": {
       "any": "Qualsiasi",
       "range": "{{from}}–{{to}}",

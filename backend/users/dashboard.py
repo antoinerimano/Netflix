@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.utils import timezone
 
-from reco.models import Notification, PlaybackOutcome, RecoHomeSnapshot, TitleAction
+from reco.models import Notification, PlaybackOutcome, PlaybackReport, RecoHomeSnapshot, TitleAction
+from reco.problems import dashboard_reports
 from reco.visits import live_stats, visitor_stats
 from .models import Episode, JobRun, Profile, Provider, ProviderCheck, Title, User
 
@@ -35,6 +36,8 @@ JOBS = [
     ("tag_titles", "AI title tags", timedelta(hours=30)),
     ("daily_checkup", "Daily check-up", timedelta(hours=30)),
     ("sync_tmdb_related", "TMDB related / other names", timedelta(hours=30)),
+    ("sync_tmdb_charts", "TMDB trending (Top 10 rows)", timedelta(hours=14)),
+    ("sync_tmdb_watch_providers", "Streaming services per country", timedelta(hours=30)),
     ("translate_titles", "AI translations (missing overviews)", timedelta(hours=30)),
     ("fix_actor_duplicates", "Actor duplicates (monthly)", timedelta(days=32)),
     # shell scripts, recorded by manage.py record_job
@@ -58,6 +61,9 @@ JOB_INFO = {
     "clean_db": ("Catalog", "Every night 04:30, 2 h 30 max", "Removes duplicates, refreshes each title from TMDB once a month"),
     "backfill_ratings": ("Catalog", "Every night 02:00", "Age ratings of new titles (what Kids profiles may see)"),
     "sync_tmdb_related": ("Catalog", "Every night 03:00", "TMDB's related titles and other names (search in every language)"),
+    "sync_tmdb_charts": ("Catalog", "Every 6 hours", 'TMDB trending today / this week: the "Top 10" home rows'),
+    "sync_tmdb_watch_providers": ("Catalog", "Every night 05:30",
+                                  'Which titles Netflix, Prime Video, Disney+... have in each country ("On Netflix" rows, browse filter)'),
     "rebuild_title_indexes": ("Catalog", "Every night 07:15", "Makes new and refreshed titles findable by keyword, studio, network"),
     "fix_actor_duplicates": ("Catalog", "1st of the month 02:30", "Merges actors listed twice on a title"),
     "trailer_worker": ("Catalog", "Every night 01:00, ~21 h (mini PC)",
@@ -284,6 +290,7 @@ def dashboard_view(request):
              .values("profile").distinct().count()),
             ("New accounts, 7 days", User.objects.filter(created_at__gte=since7).count()),
             ("Alert emails sent, 7 days", Notification.objects.filter(emailed_at__gte=since7).count()),
+            ("Playback problems reported, 7 days", PlaybackReport.objects.filter(created_at__gte=since7).count()),
         ],
         "visitors": visitor_stats(now),
         "live": live_stats(now),
@@ -291,6 +298,7 @@ def dashboard_view(request):
         "plays_top": plays_top,
         "plays_total": sum(d["n"] for d in plays),
         "providers": _providers(now),
+        "reports": dashboard_reports(now),  # "Playback problem?" (ROADMAP 9.8)
         "jobs": _job_board(_jobs(now)),
         "freshness": _freshness(titles_total),
         "titles_total": titles_total,

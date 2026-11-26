@@ -29,7 +29,11 @@
     "help": "Video not starting? Try another source.",
     "choose": "Choose a source",
     "loadFailed": "Failed to load sources.",
-    "switched": "{{from}} didn't load, switched to {{to}}.",
+    "trying": "{{from}} didn't play, trying {{to}}…",
+    "undo": "Undo",
+    "allFailedTitle": "No source played this",
+    "allFailedText": "We tried every source. They may be busy: try again in a moment, or choose one below.",
+    "tryAgain": "Try again",
     "notPlaying": "Not playing on {{source}}?",
     "try": "Try {{source}}",
     "down": "offline?",
@@ -47,5 +51,69 @@
     "soon": "Soon",
     "comingSoon": "coming soon"
   },
-  "nextMovie": "Next movie"
+  "nextMovie": "Next movie",
+  "upNext": {
+    "in": "Next episode in {{seconds}}",
+    "playNow": "Play now",
+    "cancel": "Cancel",
+    "stillTitle": "Still watching?",
+    "stillText": "{{show}}: a few episodes in a row without a key press.",
+    "continue": "Continue watching",
+    "stop": "Stop",
+    "endTitle": "That was the last episode of {{show}}",
+    "moreLikeThis": "More like this",
+    "close": "Close"
+  },
+  "problem": {
+    "open": "Playback problem?",
+    "title": "Playback problem?",
+    "question": "What's wrong on {{source}}?",
+    "kinds": {
+      "not_playing": "It doesn't play",
+      "wrong_title": "Wrong film or episode",
+      "no_sound": "No sound",
+      "out_of_sync": "Sound out of sync",
+      "no_subtitles": "No subtitles"
+    },
+    "note": "Sound, subtitles and quality come from each source's own player: another source may have them.",
+    "thanks": "Thanks, it's noted. {{source}} is checked again first tonight.",
+    "failed": "Couldn't send it. Check your connection and try again.",
+    "status": "Source status"
+  },
+  "status": {
+    "title": "Status",
+    "subtitle": "Is Taurus up, and which sources play right now. Taurus hosts no videos: each source is another site's player.",
+    "siteUp": "Taurus is up",
+    "siteDown": "Can't reach Taurus",
+    "siteDownText": "Our server didn't answer from here. If other sites open, Taurus may be down for everyone: try again in a few minutes.",
+    "sourcesWorking": "Sources working: {{working}} of {{total}}",
+    "noSourceWorking": "No source is working right now. Try again later.",
+    "updated": "Updated {{when}}",
+    "testText": "A source doesn't open for you? Test every source from your connection: down for everyone, or just for you?",
+    "test": "Test from my connection",
+    "testing": "Testing…",
+    "testAgain": "Test again",
+    "allReachable": "Every working source can be reached from your connection.",
+    "blockedHere": "Sources up for everyone but not reachable from your connection: {{blocked}}. Your network, a DNS filter or an ad blocker may stop them: try another network, or turn the blocker off for Taurus.",
+    "sources": "Sources",
+    "noSources": "No source to show.",
+    "note": "Our server reaches every source every 15 minutes, and every night a test plays a few films and episodes on each one.",
+    "checked": "Last check {{when}}",
+    "neverChecked": "Not checked yet",
+    "scout": "Nightly playback test ({{date}}): {{played}} of {{tested}} test titles played",
+    "scoutNoVerdict": "Nightly playback test ({{date}}): no verdict",
+    "viewers": "Viewers, last 24 h: {{share}} of plays worked",
+    "reports": "Problems reported, last 24 h: {{reports}}",
+    "states": {
+      "up": "Working",
+      "problems": "Having problems",
+      "down": "Down",
+      "unknown": "Not checked"
+    },
+    "affected": {
+      "everyone": "Down for everyone",
+      "you": "Not reachable from your connection",
+      "ok": "Reachable from your connection"
+    }
+  }
 }

@@ -49,13 +49,15 @@
   "footer": {
     "dmca": "DMCA नोटिस",
     "contact": "संपर्क",
-    "copyright": "© {{year}} Tauruss. सर्वाधिकार सुरक्षित।"
+    "copyright": "© {{year}} Tauruss. सर्वाधिकार सुरक्षित।",
+    "status": "स्थिति"
   },
   "nav": {
     "main": "मुख्य मेनू",
     "home": "होम",
     "movies": "फ़िल्में",
     "tv": "टीवी शो",
+    "anime": "एनीमे",
     "myList": "मेरी सूची",
     "search": "खोजें",
     "searchPlaceholder": "फ़िल्में और टीवी खोजें",

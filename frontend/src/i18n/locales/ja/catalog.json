@@ -23,7 +23,12 @@
       "trending": "話題の作品",
       "new_episodes": "新しいエピソード",
       "continue_watching": "視聴を続ける",
-      "collections_next": "シリーズの続き"
+      "collections_next": "シリーズの続き",
+      "top10_movies": "今日の映画トップ10",
+      "top10_tv": "今週の番組トップ10",
+      "service": "{{name}}で配信",
+      "anime": "人気のアニメ",
+      "kdrama": "人気の韓国ドラマ"
     },
     "why": {
       "similarTo": "{{title}}に似ています",
@@ -49,7 +54,8 @@
   "card": {
     "rated": "評価 {{value}}",
     "newEpisode": "新着 · S{{season}} E{{episode}}",
-    "watched": "{{percent}} 視聴済み"
+    "watched": "{{percent}} 視聴済み",
+    "rank": "{{rank}}位: {{title}}"
   },
   "trailer": {
     "mute": "ミュート",
@@ -169,6 +175,22 @@
       "more": "シリーズをもっと見る",
       "count_other": "{{formatted}}本のシリーズ"
     },
+    "anime": {
+      "title": "アニメ",
+      "search": "アニメを検索",
+      "loadError": "アニメを読み込めませんでした",
+      "none": "アニメが見つかりません",
+      "more": "アニメをもっと見る",
+      "count_other": "{{formatted}}本のアニメ"
+    },
+    "kdrama": {
+      "title": "韓国ドラマ",
+      "search": "韓国ドラマを検索",
+      "loadError": "韓国ドラマを読み込めませんでした",
+      "none": "韓国ドラマが見つかりません",
+      "more": "韓国ドラマをもっと見る",
+      "count_other": "{{formatted}}本の韓国ドラマ"
+    },
     "all": "すべて",
     "genre": "ジャンル",
     "sortBy": "並べ替え",
@@ -176,9 +198,11 @@
       "popular": "人気順",
       "rating": "評価順",
       "newest": "新しい順",
-      "title": "タイトル順"
+      "title": "タイトル順",
+      "added": "最近追加"
     },
     "filters": "絞り込み",
+    "service": "配信サービス",
     "activeFilters": "適用中の絞り込み",
     "removeFilter": "絞り込み「{{label}}」を解除",
     "clearAll": "すべて解除",
@@ -193,6 +217,7 @@
     "actorPlaceholder": "例：ゼンデイヤ",
     "pillDirector": "監督：{{name}}",
     "pillActor": "出演：{{name}}",
+    "pillService": "{{name}}で配信",
     "years": {
       "any": "指定なし",
       "range": "{{from}}–{{to}}",

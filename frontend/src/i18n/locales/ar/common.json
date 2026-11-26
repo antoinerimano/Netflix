@@ -49,13 +49,15 @@
   "footer": {
     "dmca": "إشعار DMCA",
     "contact": "اتصل بنا",
-    "copyright": "© {{year}} Tauruss. جميع الحقوق محفوظة."
+    "copyright": "© {{year}} Tauruss. جميع الحقوق محفوظة.",
+    "status": "الحالة"
   },
   "nav": {
     "main": "الرئيسية",
     "home": "الرئيسية",
     "movies": "أفلام",
     "tv": "مسلسلات",
+    "anime": "أنمي",
     "myList": "قائمتي",
     "search": "بحث",
     "searchPlaceholder": "ابحث عن أفلام ومسلسلات",

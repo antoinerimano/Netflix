@@ -66,6 +66,10 @@ export default function ProfilesPage() {
 
   const onEdited = async ({ type, profile }) => {
     setEditing(null);
+    // the profile in use was edited: the pages read its settings from here (e.g. autoplay_next)
+    if (type === 'saved' && profile?.id != null && String(profile.id) === getActiveProfileId()) {
+      localStorage.setItem('activeProfile', JSON.stringify(profile));
+    }
     await load();
     setToast(t(`toast.${type}`, { name: profile.name }));
     // a new profile from "Who's watching?": pick what it likes, then start watching with it

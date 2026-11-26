@@ -130,6 +130,8 @@ function pinnedAncestor(el) {
   return null;
 }
 
+const INNER_TILE = "[data-tv-inner]";
+
 function nearest(from, dir, list) {
   const a = from.getBoundingClientRect();
   const ca = center(a);
@@ -149,6 +151,9 @@ function nearest(from, dir, list) {
   for (const el of list) {
     if (el === from || el.contains(from)) continue;
     if (from.contains(el) && from.matches(CARD_WITH_ACTIONS)) continue; // card buttons: hold OK
+    // a tile that shows its own buttons over itself (the player's "Undo" / "Try again"): up / down
+    // from the tile reach the ones above / below its middle, left / right leave it as usual
+    const inside = (dir === "up" || dir === "down") && from.contains(el) && from.matches(INNER_TILE);
     const b = el.getBoundingClientRect();
     const cb = center(b);
     const dx = cb.x - ca.x;
@@ -171,7 +176,7 @@ function nearest(from, dir, list) {
     if (main <= 1) continue; // not in that direction
     // up / down: an element on the same line (a few pixels higher, a taller button beside) is
     // not "above": the boxes must not overlap vertically by more than half the smaller one
-    if (dir === "up" || dir === "down") {
+    if ((dir === "up" || dir === "down") && !inside) {
       const overlap = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
       if (overlap > Math.min(a.height, b.height) / 2) continue;
     }

@@ -23,7 +23,12 @@
       "trending": "ট্রেন্ডিং",
       "new_episodes": "নতুন পর্ব",
       "continue_watching": "দেখা চালিয়ে যান",
-      "collections_next": "আপনার সিরিজে এরপর"
+      "collections_next": "আপনার সিরিজে এরপর",
+      "top10_movies": "আজকের সেরা ১০টি সিনেমা",
+      "top10_tv": "এই সপ্তাহের সেরা ১০টি শো",
+      "service": "{{name}}-এ",
+      "anime": "জনপ্রিয় অ্যানিমে",
+      "kdrama": "জনপ্রিয় কে-ড্রামা"
     },
     "why": {
       "similarTo": "{{title}}-এর মতো",
@@ -49,7 +54,8 @@
   "card": {
     "rated": "রেটিং {{value}}",
     "newEpisode": "নতুন · S{{season}} E{{episode}}",
-    "watched": "{{percent}} দেখা হয়েছে"
+    "watched": "{{percent}} দেখা হয়েছে",
+    "rank": "{{rank}} নম্বর: {{title}}"
   },
   "trailer": {
     "mute": "মিউট",
@@ -173,6 +179,24 @@
       "count_one": "{{formatted}}টি শো",
       "count_other": "{{formatted}}টি শো"
     },
+    "anime": {
+      "title": "অ্যানিমে",
+      "search": "অ্যানিমে খুঁজুন",
+      "loadError": "অ্যানিমে লোড করা যায়নি",
+      "none": "কোনো অ্যানিমে পাওয়া যায়নি",
+      "more": "আরও অ্যানিমে দেখান",
+      "count_one": "{{formatted}}টি অ্যানিমে",
+      "count_other": "{{formatted}}টি অ্যানিমে"
+    },
+    "kdrama": {
+      "title": "কে-ড্রামা",
+      "search": "কে-ড্রামা খুঁজুন",
+      "loadError": "কে-ড্রামা লোড করা যায়নি",
+      "none": "কোনো কে-ড্রামা পাওয়া যায়নি",
+      "more": "আরও কে-ড্রামা দেখান",
+      "count_one": "{{formatted}}টি কে-ড্রামা",
+      "count_other": "{{formatted}}টি কে-ড্রামা"
+    },
     "all": "সব",
     "genre": "ধরন",
     "sortBy": "সাজান",
@@ -180,9 +204,11 @@
       "popular": "জনপ্রিয়",
       "rating": "সর্বোচ্চ রেটিং",
       "newest": "নতুন",
-      "title": "ক–ঞ"
+      "title": "ক–ঞ",
+      "added": "সম্প্রতি যোগ করা"
     },
     "filters": "ফিল্টার",
+    "service": "স্ট্রিমিং পরিষেবা",
     "activeFilters": "চালু ফিল্টার",
     "removeFilter": "ফিল্টার {{label}} সরান",
     "clearAll": "সব মুছুন",
@@ -197,6 +223,7 @@
     "actorPlaceholder": "যেমন Zendaya",
     "pillDirector": "পরিচালক: {{name}}",
     "pillActor": "{{name}}-এর সাথে",
+    "pillService": "{{name}}-এ",
     "years": {
       "any": "যেকোনো",
       "range": "{{from}}–{{to}}",

@@ -29,7 +29,11 @@
     "help": "视频无法播放？请尝试其他片源。",
     "choose": "选择片源",
     "loadFailed": "无法加载片源。",
-    "switched": "{{from}} 加载失败，已切换到 {{to}}。",
+    "trying": "{{from}} 未能播放，正在尝试 {{to}}…",
+    "undo": "撤销",
+    "allFailedTitle": "没有可以播放的来源",
+    "allFailedText": "我们已尝试所有来源。它们可能正忙：请稍后重试，或在下方选择一个来源。",
+    "tryAgain": "重试",
     "notPlaying": "{{source}} 无法播放？",
     "try": "尝试 {{source}}",
     "down": "离线？",
@@ -47,5 +51,69 @@
     "soon": "即将上线",
     "comingSoon": "即将上线"
   },
-  "nextMovie": "下一部"
+  "nextMovie": "下一部",
+  "upNext": {
+    "in": "下一集将在 {{seconds}} 秒后播放",
+    "playNow": "立即播放",
+    "cancel": "取消",
+    "stillTitle": "还在看吗？",
+    "stillText": "{{show}}：已连续播放多集，期间没有按键。",
+    "continue": "继续观看",
+    "stop": "停止",
+    "endTitle": "这是《{{show}}》的最后一集",
+    "moreLikeThis": "更多类似内容",
+    "close": "关闭"
+  },
+  "problem": {
+    "open": "播放有问题？",
+    "title": "播放有问题？",
+    "question": "{{source}} 出了什么问题？",
+    "kinds": {
+      "not_playing": "无法播放",
+      "wrong_title": "影片或剧集不对",
+      "no_sound": "没有声音",
+      "out_of_sync": "音画不同步",
+      "no_subtitles": "没有字幕"
+    },
+    "note": "声音、字幕和画质取决于各片源自己的播放器：其他片源可能有。",
+    "thanks": "谢谢，已记录。今晚会优先复查 {{source}}。",
+    "failed": "发送失败。请检查网络连接后重试。",
+    "status": "片源状态"
+  },
+  "status": {
+    "title": "状态",
+    "subtitle": "Taurus 是否正常，以及哪些片源现在能播放。Taurus 不托管任何视频：每个片源都是其他网站的播放器。",
+    "siteUp": "Taurus 运行正常",
+    "siteDown": "无法连接 Taurus",
+    "siteDownText": "从这里连不上我们的服务器。如果其他网站能打开，Taurus 可能对所有人都宕机了：请几分钟后再试。",
+    "sourcesWorking": "正常的片源：{{working}} / {{total}}",
+    "noSourceWorking": "目前没有可用的片源。请稍后再试。",
+    "updated": "更新于{{when}}",
+    "testText": "某个片源打不开？用你的网络测试所有片源：是所有人都打不开，还是只有你？",
+    "test": "用我的网络测试",
+    "testing": "正在测试…",
+    "testAgain": "重新测试",
+    "allReachable": "所有正常的片源都能从你的网络访问。",
+    "blockedHere": "对所有人正常、但你的网络访问不了的片源：{{blocked}}。可能被你的网络、DNS 过滤或广告拦截器挡住了：换个网络试试，或对 Taurus 关闭拦截器。",
+    "sources": "片源",
+    "noSources": "没有可显示的片源。",
+    "note": "我们的服务器每 15 分钟访问一次每个片源，每晚还会在每个片源上测试播放几部电影和剧集。",
+    "checked": "上次检查：{{when}}",
+    "neverChecked": "尚未检查",
+    "scout": "夜间播放测试（{{date}}）：{{tested}} 个测试片目中播放了 {{played}} 个",
+    "scoutNoVerdict": "夜间播放测试（{{date}}）：无结论",
+    "viewers": "观众，过去 24 小时：{{share}} 的播放成功",
+    "reports": "过去 24 小时报告的问题：{{reports}}",
+    "states": {
+      "up": "正常",
+      "problems": "有问题",
+      "down": "宕机",
+      "unknown": "未检查"
+    },
+    "affected": {
+      "everyone": "所有人都无法使用",
+      "you": "你的网络无法访问",
+      "ok": "你的网络可以访问"
+    }
+  }
 }

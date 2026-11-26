@@ -55,6 +55,8 @@
     "color": "颜色 {{color}}",
     "kids": "儿童个人资料",
     "kidsHint": "只显示适合儿童的作品，首页更简洁。",
+    "autoNext": "自动播放下一集",
+    "autoNextHint": "一集结束后，10 秒后在同一来源播放下一集。",
     "ageLimit": "年龄限制",
     "ageLimitHint": "分级高于此限制的作品将被隐藏。",
     "ageLimitKidsHint": "儿童个人资料最高为 7+（PG）。",

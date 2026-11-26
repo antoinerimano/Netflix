@@ -15,7 +15,7 @@ const LETTERBOXD = [
 test('import with the remote: sources, upload, summary, then home', async ({ page }) => {
   await signInAs(page, 'Kids', '/import');
   const sources = page.locator('.import-source');
-  await expect(sources).toHaveCount(2); // Letterboxd, IMDb
+  await expect(sources).toHaveCount(4); // Letterboxd, IMDb, MyAnimeList, AniList
 
   await remote(page, 'Down');
   await expect(sources.nth(0)).toBeFocused(); // starts on the selected source

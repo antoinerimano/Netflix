@@ -5,7 +5,7 @@ from .views import (
     ShowFollowView, NotificationListView,
 )
 from .taste import TasteView
-from .imports import ImportFilesView
+from .imports import ImportAniListView, ImportFilesView
 from .calendar import CalendarView
 from .history import HistoryView, HistoryItemView, HistoryPauseView, HistoryExportView
 from .stats import StatsView
@@ -15,6 +15,7 @@ from .pick import PickView
 from .recap import RecapView
 from .ask import AskView
 from .visits import VisitView
+from .problems import PlaybackReportView, StatusView
 
 urlpatterns = [
     path("events/impressions/", LogImpressionView.as_view()),
@@ -27,11 +28,14 @@ urlpatterns = [
     path("my-list/<int:title_id>/", MyListItemView.as_view()),
     path("ratings/<int:title_id>/", TitleRatingView.as_view()),
     path("playback/", PlaybackView.as_view()),
+    path("playback/report/", PlaybackReportView.as_view()),  # "Playback problem?" (ROADMAP 9.8)
+    path("status/", StatusView.as_view()),  # the public status page (9.8)
     path("follows/<int:title_id>/", ShowFollowView.as_view()),
     path("notifications/", NotificationListView.as_view()),
     path("notifications/read/", NotificationListView.as_view()),
     path("taste/", TasteView.as_view()),
     path("import/files/", ImportFilesView.as_view()),
+    path("import/anilist/", ImportAniListView.as_view()),
     path("calendar/", CalendarView.as_view()),
     path("history/", HistoryView.as_view()),
     path("history/pause/", HistoryPauseView.as_view()),

@@ -39,6 +39,10 @@
 15 2 * * 3 /usr/bin/flock -n /tmp/taurus_restore_test.lock /opt/taurus/scripts/test_backup_restore.sh >> /var/log/taurus_restore_test.log 2>&1
 # TMDB recommendations / similar + alternative titles (users/tmdb_related.py): 5,000 titles a night, free
 0 3 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_related.lock docker compose exec -T backend python manage.py sync_tmdb_related >> /var/log/taurus_related.log 2>&1
+# Top 10 home rows (users/management/commands/sync_tmdb_charts.py): TMDB trending movies today / shows this week, free
+15 */6 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_charts.lock docker compose exec -T backend python manage.py sync_tmdb_charts >> /var/log/taurus_charts.log 2>&1
+# streaming services per country (users/watch_services.py): "On Netflix" rows, browse filter; 6,000 titles a night, free
+30 5 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_watch_providers.lock docker compose exec -T backend python manage.py sync_tmdb_watch_providers >> /var/log/taurus_watch_providers.log 2>&1
 # daily check-up (users/checkup.py): emails staff only when a job / the disk / the AI budget has a problem
 0 7 * * * cd /opt/taurus && /usr/bin/flock -n /tmp/taurus_checkup.lock docker compose exec -T backend python manage.py daily_checkup >> /var/log/taurus_checkup.log 2>&1 && scripts/hc_ping.sh HC_PING_CHECKUP
 # age ratings from TMDB for titles never asked (users/maturity.py: what Kids / age-limited profiles may see), free

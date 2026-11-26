@@ -200,6 +200,7 @@ const Navbar = () => {
     userId ? navigate(`/account/${userId}`) : navigate('/login');
   const handleNavigateMovies = () => navigate('/movies');
   const handleNavigateTV = () => navigate('/tv');
+  const handleNavigateAnime = () => navigate('/anime');
   const handleNavigateList = () => navigate('/list');
   const handleNavigateCalendar = () => navigate('/calendar');
   const handleNavigateAsk = () => navigate('/ask');
@@ -243,6 +244,8 @@ const Navbar = () => {
     { path: '/', label: t('nav.home'), icon: <HomeIcon />, onClick: handleNavigateHome },
     { path: '/movies', label: t('nav.movies'), icon: <FilmIcon />, onClick: handleNavigateMovies },
     { path: '/tv', label: t('nav.tv'), icon: <TvIcon />, onClick: handleNavigateTV },
+    // Anime (ROADMAP 9.5): in the bar only; phones (6 tabs already) reach it from the TV Shows page
+    { path: '/anime', label: t('nav.anime'), onClick: handleNavigateAnime, tab: false },
     { path: '/list', label: t('nav.myList'), icon: <BookmarkIcon />, onClick: handleNavigateList },
     { path: '/calendar', label: t('nav.upcoming'), icon: <CalendarIcon />, onClick: handleNavigateCalendar },
     // "Ask Taurus" (reco/ask.py): shown as its short label ("Ask") in the bar and the phone tabs
@@ -446,7 +449,7 @@ const Navbar = () => {
     {/* phones: app-style tab bar at the bottom (thumb reach), the top bar keeps search + profile */}
     {isMobile && isAuthenticated ? (
       <nav className="tabbar" aria-label={t('nav.main')}>
-        {links.map((l) => (
+        {links.filter((l) => l.tab !== false).map((l) => (
           <button
             key={l.path}
             type="button"

@@ -49,13 +49,15 @@
   "footer": {
     "dmca": "Avis DMCA",
     "contact": "Contact",
-    "copyright": "© {{year}} Tauruss. Tous droits réservés."
+    "copyright": "© {{year}} Tauruss. Tous droits réservés.",
+    "status": "État"
   },
   "nav": {
     "main": "Navigation principale",
     "home": "Accueil",
     "movies": "Films",
     "tv": "Séries",
+    "anime": "Anime",
     "myList": "Ma liste",
     "search": "Rechercher",
     "searchPlaceholder": "Films et séries",

@@ -49,13 +49,15 @@
   "footer": {
     "dmca": "DMCA نوٹس",
     "contact": "رابطہ",
-    "copyright": "© {{year}} Tauruss۔ جملہ حقوق محفوظ ہیں۔"
+    "copyright": "© {{year}} Tauruss۔ جملہ حقوق محفوظ ہیں۔",
+    "status": "صورتحال"
   },
   "nav": {
     "main": "مرکزی",
     "home": "ہوم",
     "movies": "فلمیں",
     "tv": "ٹی وی شوز",
+    "anime": "اینیمے",
     "myList": "میری فہرست",
     "search": "تلاش",
     "searchPlaceholder": "فلمیں اور ٹی وی تلاش کریں",

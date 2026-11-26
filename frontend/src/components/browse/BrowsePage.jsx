@@ -1,7 +1,8 @@
 // src/components/browse/BrowsePage.js
 // Movies and TV Shows pages (one design for both): title + count, search box, genre chips,
-// sort, a Filters sheet (rating, decade, director / actor), active filter pills, a poster grid
-// that loads more as you scroll, skeletons / empty / error states.
+// sort, a Filters sheet (streaming service, rating, decade, director / actor), active filter pills, a poster grid
+// that loads more as you scroll, skeletons / empty / error states. Also the Anime / K-dramas pages
+// (kind "anime" / "kdrama", ROADMAP 9.5), linked from the genre bar of Movies / TV Shows.
 // State lives in the URL (shareable, Back restores it) and the scroll position is restored when
 // coming back from a title.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,23 +14,41 @@ import { genreName } from '../detail/DetailHero';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import MovieCard from '../MovieCard';
-import { fetchTitlesPage, fetchGenres } from '../../api/titlesApi';
+import { fetchTitlesPage, fetchGenres, fetchServices } from '../../api/titlesApi';
 import { Button, Chip, EmptyState, Modal, Skeleton, friendlyError } from '../../design';
 import { SearchIcon, CloseIcon } from '../../design/icons';
 import '../PosterCard.css';
 import './browse.css';
 
 const PAGE_SIZE = 48; // divisible by 2, 3, 4, 6 and 8 columns
-const FILTER_KEYS = ['query', 'genre', 'sort', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor'];
+const FILTER_KEYS = ['query', 'genre', 'sort', 'service', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor'];
+const ADVANCED_KEYS = ['service', 'ratingMin', 'yearMin', 'yearMax', 'director', 'actor']; // in the Filters sheet
 
 // labels: catalog:browse.sort.<key>
 const SORTS = [
   { value: '', key: 'popular' },
   { value: 'rating', key: 'rating' },
   { value: 'newest', key: 'newest' },
+  { value: 'added', key: 'added' }, // when it came into our catalog (ROADMAP 9.4)
   { value: 'title', key: 'title' },
 ];
 const RATINGS = ['', '6', '7', '8'];
+
+// Anime / K-dramas (ROADMAP 9.5): the same page on one section of the catalog (Title.section).
+// type: what the API lists ('' = movies and shows); its genre that every title has isn't a chip.
+const SECTIONS = {
+  anime: { type: '', section: 'anime', hiddenGenre: 'Animation' },
+  kdrama: { type: 'tv', section: 'kdrama', hiddenGenre: 'Drama' },
+};
+// the section pages linked from the genre bar of the Movies / TV Shows pages (phones have no
+// "Anime" tab: this is how they get there)
+const SECTION_LINKS = { movie: ['anime'], tv: ['anime', 'kdrama'] };
+const ANALYTICS = {
+  movie: ['movies_grid', 'Movies'],
+  tv: ['tv_grid', 'TV Shows'],
+  anime: ['anime_grid', 'Anime'],
+  kdrama: ['kdrama_grid', 'K-dramas'],
+};
 const THIS_YEAR = new Date().getFullYear();
 const DECADES = [
   { min: '', max: '' },
@@ -61,8 +80,12 @@ function decadeLabel(min, max) {
 export default function BrowsePage({ kind = 'movie' }) {
   const { t, i18n: instance } = useTranslation('catalog');
   const lng = instance.resolvedLanguage;
-  // "movie" / "tv" texts: catalog:browse.<kind>.*
+  // "movie" / "tv" / "anime" / "kdrama" texts: catalog:browse.<kind>.*
   const copy = { title: t(`browse.${kind}.title`), search: t(`browse.${kind}.search`) };
+  const sectionOf = SECTIONS[kind];
+  const apiType = sectionOf ? sectionOf.type : kind; // '' on the Anime page: movies and shows
+  const section = sectionOf?.section || '';
+  const [surface, analyticsTitle] = ANALYTICS[kind] || ANALYTICS.movie;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -78,6 +101,8 @@ export default function BrowsePage({ kind = 'movie' }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [genres, setGenres] = useState([]);
+  // streaming services with titles in the visitor's country (Netflix, Prime Video...), for the sheet
+  const [services, setServices] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState(filters); // inside the Filters sheet, applied on "Show"
   const [query, setQuery] = useState(filters.query); // search box (applied after a pause)
@@ -100,13 +125,24 @@ export default function BrowsePage({ kind = 'movie' }) {
   // genres for the chips (cached by the server)
   useEffect(() => {
     let alive = true;
-    fetchGenres(kind)
-      .then((g) => alive && setGenres(g))
+    fetchGenres(apiType, section)
+      .then((g) => alive && setGenres(sectionOf ? g.filter((x) => x !== sectionOf.hiddenGenre) : g))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [kind]);
+  }, [apiType, section, sectionOf]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchServices(apiType)
+      .then((r) => alive && setServices(r.services))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [apiType]);
+  const serviceName = (key) => services.find((s) => s.key === key)?.name || key;
 
   // search box -> URL after a short pause
   // (the URL keeps the trimmed text: typing only follows it when it means something else, or the
@@ -128,7 +164,7 @@ export default function BrowsePage({ kind = 'movie' }) {
     setLoading(true);
     setError(null);
     const pages = Array.from({ length: urlPage }, (_, i) => i + 1);
-    Promise.all(pages.map((p) => fetchTitlesPage({ type: kind, page: p, pageSize: PAGE_SIZE, ...filters })))
+    Promise.all(pages.map((p) => fetchTitlesPage({ type: apiType, section, page: p, pageSize: PAGE_SIZE, ...filters })))
       .then((results) => {
         if (!alive) return;
         const seen = new Set();
@@ -188,7 +224,7 @@ export default function BrowsePage({ kind = 'movie' }) {
     const forList = listKey.current;
     try {
       const next = page + 1;
-      const res = await fetchTitlesPage({ type: kind, page: next, pageSize: PAGE_SIZE, ...filters });
+      const res = await fetchTitlesPage({ type: apiType, section, page: next, pageSize: PAGE_SIZE, ...filters });
       // the filters changed meanwhile: this page belongs to the old results
       if (listKey.current !== forList) return;
       setItems((prev) => {
@@ -203,7 +239,7 @@ export default function BrowsePage({ kind = 'movie' }) {
     } finally {
       setLoadingMore(false);
     }
-  }, [hasMore, loadingMore, loading, page, kind, filters, setUrl]);
+  }, [hasMore, loadingMore, loading, page, apiType, section, filters, setUrl]);
 
   // more posters when the end of the grid comes near (the button stays for remotes / keyboards)
   const sentinelRef = useRef(null);
@@ -219,8 +255,9 @@ export default function BrowsePage({ kind = 'movie' }) {
     setDraft(filters);
     setFiltersOpen(true);
   };
-  const advancedCount = ['ratingMin', 'yearMin', 'yearMax', 'director', 'actor'].filter((k) => filters[k]).length;
+  const advancedCount = ADVANCED_KEYS.filter((k) => filters[k]).length;
   const pills = [
+    filters.service && { key: 'service', label: t('browse.pillService', { name: serviceName(filters.service) }), clear: { service: '' } },
     filters.ratingMin && { key: 'ratingMin', label: t('browse.ratingAtLeast', { value: filters.ratingMin }), clear: { ratingMin: '' } },
     (filters.yearMin || filters.yearMax) && {
       key: 'years',
@@ -256,7 +293,7 @@ export default function BrowsePage({ kind = 'movie' }) {
         title={t(`browse.${kind}.loadError`)}
         actions={<Button variant="primary" onClick={() => applyFilters({})}>{t('actions.tryAgain')}</Button>}
       >
-        {friendlyError(error, kind === 'tv' ? 'shows' : 'movies')}
+        {friendlyError(error, kind === 'movie' ? 'movies' : 'shows')}
       </EmptyState>
     );
   } else if (!items.length) {
@@ -276,9 +313,9 @@ export default function BrowsePage({ kind = 'movie' }) {
           {items.map((item, idx) => (
             <MovieCard
               key={item.id}
-              movie={{ ...item, type: item.type || kind }}
+              movie={{ ...item, type: item.type || apiType || 'tv' }}
               priority={idx < 12}
-              analytics={{ surface: kind === 'tv' ? 'tv_grid' : 'movies_grid', position: idx, row_title: kind === 'tv' ? 'TV Shows' : 'Movies' }}
+              analytics={{ surface, position: idx, row_title: analyticsTitle }}
             />
           ))}
         </div>
@@ -330,6 +367,11 @@ export default function BrowsePage({ kind = 'movie' }) {
           <Chip selected={!filters.genre} onClick={() => applyFilters({ genre: '' })}>
             {t('browse.all')}
           </Chip>
+          {(SECTION_LINKS[kind] || []).map((key) => (
+            <Chip key={key} className="browse__section-link" aria-pressed={undefined} onClick={() => navigate(`/${key}`)}>
+              {t(`browse.${key}.title`)}
+            </Chip>
+          ))}
           {genres.map((g) => (
             <Chip key={g} selected={filters.genre === g} onClick={() => applyFilters({ genre: filters.genre === g ? '' : g })}>
               {genreName(g)}
@@ -382,7 +424,7 @@ export default function BrowsePage({ kind = 'movie' }) {
           <>
             <Button
               variant="ghost"
-              onClick={() => setDraft((d) => ({ ...d, ratingMin: '', yearMin: '', yearMax: '', director: '', actor: '' }))}
+              onClick={() => setDraft((d) => ({ ...d, ...Object.fromEntries(ADVANCED_KEYS.map((k) => [k, ''])) }))}
             >
               {t('browse.reset')}
             </Button>
@@ -391,6 +433,7 @@ export default function BrowsePage({ kind = 'movie' }) {
               onClick={() => {
                 setFiltersOpen(false);
                 applyFilters({
+                  service: draft.service,
                   ratingMin: draft.ratingMin,
                   yearMin: draft.yearMin,
                   yearMax: draft.yearMax,
@@ -405,6 +448,22 @@ export default function BrowsePage({ kind = 'movie' }) {
         }
       >
         <div className="browse-filters">
+          {services.length ? (
+            <fieldset>
+              <legend>{t('browse.service')}</legend>
+              <div className="browse-filters__chips">
+                <Chip selected={!draft.service} onClick={() => setDraft((d) => ({ ...d, service: '' }))}>
+                  {t('browse.years.any')}
+                </Chip>
+                {services.map((s) => (
+                  <Chip key={s.key} selected={draft.service === s.key} onClick={() => setDraft((d) => ({ ...d, service: s.key }))}>
+                    {s.name}
+                  </Chip>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           <fieldset>
             <legend>{t('browse.rating')}</legend>
             <div className="browse-filters__chips">
@@ -417,7 +476,7 @@ export default function BrowsePage({ kind = 'movie' }) {
           </fieldset>
 
           <fieldset>
-            <legend>{kind === 'tv' ? t('detail.firstAired') : t('detail.released')}</legend>
+            <legend>{apiType === 'tv' ? t('detail.firstAired') : t('detail.released')}</legend>
             <div className="browse-filters__chips">
               {DECADES.map((d) => (
                 <Chip

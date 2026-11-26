@@ -42,12 +42,16 @@
     "choose": "选择文件",
     "tvHint": "在电视上？遥控器无法选择文件：请在已登录此账号的手机或电脑上打开 {{url}}。",
     "entryTitle": "你在其他平台的记录",
-    "entryLabel": "Letterboxd 或 IMDb",
+    "entryLabel": "Letterboxd、IMDb、MyAnimeList 或 AniList",
     "entryValue": "导入你的评分和已看作品，获得更好的推荐。",
     "entryAction": "导入",
     "errors": {
-      "unknown_format": "无法读取该文件。请上传 Letterboxd（.zip）或 IMDb（.csv）的导出文件。",
-      "too_big": "文件太大（最大 10 MB）。"
+      "unknown_format": "无法读取该文件。请上传 Letterboxd（.zip）、IMDb（.csv）或 MyAnimeList（.xml.gz）的导出文件。",
+      "too_big": "文件太大（最大 10 MB）。",
+      "bad_username": "请输入你的 AniList 用户名（字母、数字、_ 或 -）。",
+      "anilist_not_found": "找不到这个 AniList 列表。请检查用户名，并确认你的列表是公开的。",
+      "anilist_unavailable": "AniList 暂时没有响应，请过几分钟再试。",
+      "anilist_empty": "这个 AniList 列表是空的。"
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -61,6 +65,20 @@
       "step1": "在 imdb.com 打开“你的评分”，选择 ⋯ 然后“导出”。文件准备好后 IMDb 会通知你。",
       "step2": "如果想把 Watchlist 加入“我的片单”，用同样的方法导出。",
       "step3": "在这里上传 .csv 文件（可以一次上传多个）。"
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "动漫列表导出（.xml.gz）",
+      "step1": "在 myanimelist.net 打开 myanimelist.net/panel.php?go=export，选择 Anime List，然后点击 Export My List。",
+      "step2": "直接在这里上传 .xml.gz 文件，无需解压。一部剧的每一季都算作这部剧。"
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "你的公开列表，按用户名导入",
+      "step1": "输入你的 AniList 用户名，或粘贴你的个人主页链接。你的动漫列表必须是公开的。",
+      "label": "AniList 用户名",
+      "placeholder": "例如 Alice",
+      "import": "导入我的列表"
     },
     "done": {
       "title": "导入完成",

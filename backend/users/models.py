@@ -64,6 +64,9 @@ class Profile(models.Model):
     # "Appearance" page: {"font", "accent", "background"} ids chosen by the profile (frontend
     # design/theme.js); missing keys = the default look. Follows the profile on every device.
     appearance = models.JSONField(default=dict, blank=True)
+    # "Play next episode automatically" (watch page, ROADMAP 9.3): at an episode's end the next one
+    # starts after a 10 s countdown; off = the card waits for Play now.
+    autoplay_next = models.BooleanField(default=True)
 
 class PaymentHistory(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
@@ -152,6 +155,12 @@ class Title(models.Model):
     # nightly run takes the titles never read or read more than --stale-days ago, so a run cut off
     # (deploy, --max-minutes) carries on where it stopped
     tmdb_checked_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # when manage.py sync_tmdb_watch_providers last read on TMDB which streaming services (Netflix,
+    # Prime Video...) offer it in each country (TitleOnService, null = never): refreshed every 30 days
+    services_synced_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # "anime" / "kdrama" / "": the Anime and K-drama sections (users/sections.py, ROADMAP 9.5),
+    # worked out from genre / original language / countries / keywords on every save
+    section = models.CharField(max_length=8, blank=True, default="", db_index=True)
 
     director = models.CharField(max_length=255, blank=True, default="")
     cast = models.JSONField(default=list, blank=True)
@@ -179,10 +188,16 @@ class Title(models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        from .sections import SOURCE_FIELDS, section_of
+
         self.collection_id = self.collection_id_of(self.belongs_to_collection)
+        if not set(SOURCE_FIELDS) & self.get_deferred_fields():  # .only() rows: no extra queries
+            self.section = section_of(self)
         update_fields = kwargs.get("update_fields")
         if update_fields is not None and "belongs_to_collection" in update_fields:
-            kwargs["update_fields"] = {*update_fields, "collection_id"}
+            kwargs["update_fields"] = update_fields = {*update_fields, "collection_id"}
+        if update_fields is not None and set(update_fields) & set(SOURCE_FIELDS):
+            kwargs["update_fields"] = {*update_fields, "section"}
         super().save(*args, **kwargs)
 
 
@@ -359,6 +374,48 @@ class TitleNetwork(models.Model):
         return f"{self.title_id} net {self.network_norm}"
 
 
+class TitleOnService(models.Model):
+    """A title in a streaming service's subscription in a country ("On Netflix" rows, the browse
+    pages' service filter, ROADMAP 9.4). From TMDB's watch providers (JustWatch data, free),
+    manage.py sync_tmdb_watch_providers; only the services of users/watch_services.py SERVICES."""
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="services_rel")
+    country = models.CharField(max_length=2)        # ISO 3166-1, e.g. "FR"
+    service = models.CharField(max_length=16)       # SERVICES key, e.g. "netflix"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["title", "country", "service"], name="uniq_title_country_service"),
+        ]
+        indexes = [
+            models.Index(fields=["country", "service", "title"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title_id} on {self.service} ({self.country})"
+
+
+class TitleChartEntry(models.Model):
+    """One place in TMDB's trending charts ("Top 10" home rows, ROADMAP 9.4): manage.py
+    sync_tmdb_charts keeps the latest list of each chart, only titles in the catalog."""
+    MOVIE_DAY = "movie_day"   # /trending/movie/day
+    TV_WEEK = "tv_week"       # /trending/tv/week
+    CHARTS = [(MOVIE_DAY, "Movies today"), (TV_WEEK, "Shows this week")]
+
+    chart = models.CharField(max_length=16, choices=CHARTS)
+    position = models.PositiveSmallIntegerField()   # 1 = first on TMDB's list (gaps: titles we lack)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="+")
+    synced_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["chart", "position"]
+        constraints = [
+            models.UniqueConstraint(fields=["chart", "position"], name="uniq_chart_position"),
+        ]
+
+    def __str__(self):
+        return f"{self.chart} #{self.position}: {self.title_id}"
+
+
 class Provider(models.Model):
     """
     A streaming provider. Links are built on the fly as domain + path template, so
@@ -399,6 +456,16 @@ class Provider(models.Model):
     # check plays the test titles on every provider; shown in the admin
     scout_check = models.CharField(max_length=300, blank=True, default="",
                                    help_text="The scout's last nightly playback check.")
+    scout_score = models.FloatField(
+        null=True, blank=True,
+        help_text="Share of the test titles the scout's last nightly check played (0-1). Ranks sources "
+                  "that have no success rate yet, and the automatic switch tries the best ones first.",
+    )
+    scout_anime = models.FloatField(
+        null=True, blank=True,
+        help_text="Share of the anime test episodes (One Piece, late seasons too) the scout's last nightly "
+                  "check played (0-1, empty: not tested). For anime, the sources that missed them are tried last.",
+    )
 
     # filled by the health check (check_providers)
     status = models.CharField(max_length=10, choices=STATUSES, default=UNKNOWN)

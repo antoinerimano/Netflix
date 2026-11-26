@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from django.views.decorators.vary import vary_on_headers
 import random
 import re
@@ -31,10 +32,12 @@ from urllib.parse import quote
 
 from .models import (
     Actor, User, Subscription, Profile, PaymentHistory,
-    Title, Season, Episode, TVShowExtras, Provider
+    Title, Season, Episode, TVShowExtras, Provider, TitleOnService
 )
 from .throttles import AuthRateThrottle, PasswordResetRateThrottle
 from .maturity import allowed_titles_q, request_profile
+from .watch_services import SERVICES, request_region
+from .sections import SECTIONS
 from .emails import send_templated_email
 from .search import search_titles
 from .i18n import current_language
@@ -549,8 +552,25 @@ class TitleViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
 
-        # sort: popular (default) | rating | newest | title
+        # service=netflix: in that streaming service's subscription in the visitor's country
+        # (TitleOnService, users/watch_services.py; region = ?region= / Accept-Language / profile)
+        service = (params.get("service") or "").strip().lower()
+        if service in SERVICES:
+            region = request_region(self.request, request_profile(self.request))
+            qs = qs.filter(services_rel__country=region, services_rel__service=service)
+
+        # section=anime|kdrama: the Anime / K-drama pages (Title.section, users/sections.py, ROADMAP 9.5);
+        # the profile's age limit above still applies (a Kids profile sees kids anime only)
+        section = (params.get("section") or "").strip().lower()
+        if section in SECTIONS:
+            qs = qs.filter(section=section)
+
+        # sort: popular (default) | rating | newest | added | title
         sort = params.get("sort") or "popular"
+        if sort == "added":
+            # "Recently added": when the title came into our catalog. Ids are given in the order
+            # titles are added (the syncs, manage.py sync_tmdb_new_releases...): newest id first
+            return qs.order_by("-id")
         if sort == "rating":
             # enough votes for the average to mean something
             return qs.filter(vote_count__gte=1000).order_by("-vote_average", "-popularity", "-id")
@@ -632,6 +652,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         t = request.query_params.get("type")
         if t in ("movie", "tv"):
             qs = qs.filter(type=t)
+        section = request.query_params.get("section")
+        if section in SECTIONS:  # the Anime / K-drama pages' genre chips
+            qs = qs.filter(section=section)
 
         genres_set = set()
         for g in qs.values_list("genre", flat=True):
@@ -641,6 +664,30 @@ class TitleViewSet(viewsets.ModelViewSet):
             genres_set.update(parts)
 
         return Response(sorted(genres_set))
+
+    @action(detail=False, methods=["get"])
+    def services(self, request):
+        """
+        /api/titles/services/?type=movie|tv&region=FR: the streaming services with titles in the
+        visitor's country, biggest catalog first, for the browse pages' service filter:
+        {"region": "FR", "services": [{"key": "netflix", "name": "Netflix", "count": 812}, ...]}
+        """
+        region = request_region(request, request_profile(request))
+        t = request.query_params.get("type")
+        kind = t if t in ("movie", "tv") else ""
+        ck = f"titles:services:{region}:{kind}"
+        counts = cache.get(ck)
+        if counts is None:
+            qs = TitleOnService.objects.filter(country=region)
+            if kind:
+                qs = qs.filter(title__type=kind)
+            counts = dict(qs.values("service").annotate(n=models.Count("id")).values_list("service", "n"))
+            cache.set(ck, counts, 60 * 60)
+        services = [
+            {"key": key, "name": SERVICES[key]["name"], "count": n}
+            for key, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])) if key in SERVICES and n
+        ]
+        return Response({"region": region, "services": services})
 
     @action(detail=False, methods=["get"])
     @method_decorator(cache_page(60*60))
@@ -744,21 +791,28 @@ def provider_list(request):
     """
     GET /api/providers/
     Enabled stream providers; the client builds links as domain + path template
-    ({tmdb_id} {imdb_id} {season} {episode}). Order: down last, then success rate (smart playback),
-    then admin priority.
+    ({tmdb_id} {imdb_id} {season} {episode}). Order: down last, then success rate (smart playback;
+    the scout's last nightly result for a provider without one), then the scout, then admin priority.
+    The watch page tries them in this order when a source doesn't play (9.2).
     """
     from reco.views import provider_success_rates
 
     rates = provider_success_rates()
     providers = list(Provider.objects.filter(enabled=True).values(
-        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority"
+        "key", "label", "domain", "movie_path", "episode_path", "start_param", "sends_events", "status", "priority",
+        "scout_score", "scout_anime",  # scout_anime: share of the anime test episodes it played (9.5)
     ))
+
+    def known(v):
+        return v if v is not None else UNKNOWN_SUCCESS_RATE
+
     for p in providers:
         p["success_rate"] = rates.get(p["key"])  # None until enough plays were recorded
-    # down last, then the ones that play most often for everyone, then the admin priority
+    # down last, then the ones that play most often for everyone (or in the scout's test), then the admin priority
     data = sorted(providers, key=lambda p: (
         p["status"] == Provider.DOWN,
-        -(p["success_rate"] if p["success_rate"] is not None else UNKNOWN_SUCCESS_RATE),
+        -(p["success_rate"] if p["success_rate"] is not None else known(p["scout_score"])),
+        -known(p["scout_score"]),
         p.pop("priority"),
     ))
     response = Response(data)

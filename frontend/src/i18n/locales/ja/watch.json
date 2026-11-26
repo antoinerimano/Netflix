@@ -29,7 +29,11 @@
     "help": "動画が始まらない場合は、別のソースをお試しください。",
     "choose": "ソースを選択",
     "loadFailed": "ソースを読み込めませんでした。",
-    "switched": "{{from}}を読み込めなかったため、{{to}}に切り替えました。",
+    "trying": "{{from}} は再生されませんでした。{{to}} を試しています…",
+    "undo": "元に戻す",
+    "allFailedTitle": "どのソースでも再生できませんでした",
+    "allFailedText": "すべてのソースを試しました。混み合っているかもしれません。少し待ってからもう一度試すか、下から選んでください。",
+    "tryAgain": "もう一度試す",
     "notPlaying": "{{source}}で再生されませんか？",
     "try": "{{source}}を試す",
     "down": "オフライン？",
@@ -47,5 +51,69 @@
     "soon": "近日公開",
     "comingSoon": "近日公開"
   },
-  "nextMovie": "次の映画"
+  "nextMovie": "次の映画",
+  "upNext": {
+    "in": "次のエピソードまで {{seconds}}",
+    "playNow": "今すぐ再生",
+    "cancel": "キャンセル",
+    "stillTitle": "まだ視聴中ですか？",
+    "stillText": "{{show}}：キーを押さずに何話も続けて再生しています。",
+    "continue": "視聴を続ける",
+    "stop": "停止",
+    "endTitle": "{{show}} の最終話でした",
+    "moreLikeThis": "似たような作品",
+    "close": "閉じる"
+  },
+  "problem": {
+    "open": "再生の問題？",
+    "title": "再生の問題？",
+    "question": "{{source}}で何が問題ですか？",
+    "kinds": {
+      "not_playing": "再生されない",
+      "wrong_title": "作品やエピソードが違う",
+      "no_sound": "音が出ない",
+      "out_of_sync": "音ずれ",
+      "no_subtitles": "字幕がない"
+    },
+    "note": "音声・字幕・画質は各ソースのプレーヤー次第です。別のソースにはあるかもしれません。",
+    "thanks": "ありがとうございます。今夜{{source}}を最初に再確認します。",
+    "failed": "送信できませんでした。接続を確認して、もう一度お試しください。",
+    "status": "ソースの状況"
+  },
+  "status": {
+    "title": "状況",
+    "subtitle": "Taurusが動いているか、今どのソースが再生できるか。Taurusは動画をホストしていません。各ソースは他サイトのプレーヤーです。",
+    "siteUp": "Taurusは稼働中です",
+    "siteDown": "Taurusに接続できません",
+    "siteDownText": "ここからはサーバーが応答しません。他のサイトが開く場合、Taurusが全員にとって停止している可能性があります。数分後にお試しください。",
+    "sourcesWorking": "稼働中のソース：{{total}}件中{{working}}件",
+    "noSourceWorking": "現在、稼働中のソースはありません。後でお試しください。",
+    "updated": "{{when}}に更新",
+    "testText": "ソースが開かない場合は、ご自身の接続から全ソースをテストしてください。全員にとって停止中か、あなただけか分かります。",
+    "test": "自分の接続でテスト",
+    "testing": "テスト中…",
+    "testAgain": "もう一度テスト",
+    "allReachable": "稼働中のソースはすべてあなたの接続から届きます。",
+    "blockedHere": "全員には稼働中ですが、あなたの接続からは届かないソース：{{blocked}}。ネットワーク、DNSフィルター、広告ブロッカーが止めている可能性があります。別のネットワークを試すか、Taurusでブロッカーをオフにしてください。",
+    "sources": "ソース",
+    "noSources": "表示するソースがありません。",
+    "note": "サーバーは15分ごとに各ソースに接続し、毎晩テストで各ソースの映画とエピソードをいくつか再生しています。",
+    "checked": "最終確認 {{when}}",
+    "neverChecked": "未確認",
+    "scout": "夜間の再生テスト（{{date}}）：テスト作品{{tested}}件中{{played}}件を再生",
+    "scoutNoVerdict": "夜間の再生テスト（{{date}}）：判定なし",
+    "viewers": "視聴者、過去24時間：再生成功 {{share}}",
+    "reports": "報告された問題、過去24時間：{{reports}}",
+    "states": {
+      "up": "稼働中",
+      "problems": "問題あり",
+      "down": "停止中",
+      "unknown": "未確認"
+    },
+    "affected": {
+      "everyone": "全員にとって停止中",
+      "you": "あなたの接続から届きません",
+      "ok": "あなたの接続から届きます"
+    }
+  }
 }

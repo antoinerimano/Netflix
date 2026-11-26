@@ -1,22 +1,31 @@
 // src/components/import/ImportPage.jsx
 // "Import your history" (/import): ratings, watched titles and watchlist from Letterboxd or IMDb
-// export files into the active profile (backend reco/imports.py); the home page is rebuilt from
-// them. A TV can't pick files: the page says to open it on a phone or computer.
-// TV remote: the sources are a group (lands on the selected one), Down goes to "Choose files",
-// the result's "Go to your home page" is where the focus lands.
+// export files, or anime lists (ROADMAP 9.5: a MyAnimeList export file, a public AniList list by
+// user name) into the active profile (backend reco/imports.py); the home page is rebuilt from
+// them. A TV can't pick files: the page says to open it on a phone or computer; AniList works
+// with the remote (the user name field and its button).
+// TV remote: the sources are a group (lands on the selected one), Down goes to "Choose files" (or
+// the AniList field, then its button), the result's "Go to your home page" is where the focus lands.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
-import { importFiles } from '../../api/importApi';
+import { importAniList, importFiles } from '../../api/importApi';
 import { Avatar, Button, friendlyError } from '../../design';
 import { useFormat } from '../../i18n/format';
 import '../AccountManagement.css';
 import './import.css';
 
-const SOURCES = ['letterboxd', 'imdb'];
-const ACCEPT = { letterboxd: '.zip,.csv', imdb: '.csv' };
+const SOURCES = ['letterboxd', 'imdb', 'myanimelist', 'anilist'];
+const ACCEPT = { letterboxd: '.zip,.csv', imdb: '.csv', myanimelist: '.xml,.gz' };
+const STEPS = { letterboxd: ['step1', 'step2'], imdb: ['step1', 'step2', 'step3'], myanimelist: ['step1', 'step2'] };
+// the server's error codes that have their own text (import.errors.<code>)
+const KNOWN_ERRORS = ['unknown_format', 'too_big', 'bad_username', 'anilist_not_found', 'anilist_unavailable', 'anilist_empty'];
+const errorText = (t, err) => {
+  const code = err?.response?.data?.code;
+  return KNOWN_ERRORS.includes(code) ? t(`import.errors.${code}`) : friendlyError(err);
+};
 
 function activeProfile() {
   try {
@@ -85,7 +94,7 @@ function FilesPanel({ source, profileId, onDone }) {
   const input = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const steps = source === 'imdb' ? ['step1', 'step2', 'step3'] : ['step1', 'step2'];
+  const steps = STEPS[source];
   const here = `${window.location.host}/import`;
 
   const upload = async (e) => {
@@ -97,8 +106,7 @@ function FilesPanel({ source, profileId, onDone }) {
     try {
       onDone(await importFiles(profileId, files));
     } catch (err) {
-      const code = err?.response?.data?.code;
-      setError(code === 'unknown_format' || code === 'too_big' ? t(`import.errors.${code}`) : friendlyError(err));
+      setError(errorText(t, err));
       setBusy(false);
     }
   };
@@ -119,6 +127,55 @@ function FilesPanel({ source, profileId, onDone }) {
       </div>
       <p className="import-tv-hint">{t('import.tvHint', { url: here })}</p>
     </div>
+  );
+}
+
+/** AniList: a public list by user name (typed with the TV's keyboard too), no file. */
+function AniListPanel({ profileId, onDone }) {
+  const { t } = useTranslation('account');
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!name.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      onDone(await importAniList(profileId, name.trim()));
+    } catch (err) {
+      setError(errorText(t, err));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className="import-panel" onSubmit={submit}>
+      <ol className="import-steps">
+        <li>{t('import.anilist.step1')}</li>
+      </ol>
+      <label className="import-field">
+        <span>{t('import.anilist.label')}</span>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('import.anilist.placeholder')}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          dir="auto"
+          aria-invalid={error ? true : undefined}
+        />
+      </label>
+      {error ? <p className="import-error" role="alert">{error}</p> : null}
+      <div className="import-panel__actions">
+        <Button type="submit" variant="primary" loading={busy}>
+          {busy ? t('import.importing') : t('import.anilist.import')}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -161,7 +218,11 @@ export default function ImportPage() {
                 </button>
               ))}
             </div>
-            <FilesPanel key={source} source={source} profileId={profileId} onDone={onDone} />
+            {source === 'anilist' ? (
+              <AniListPanel key={source} profileId={profileId} onDone={onDone} />
+            ) : (
+              <FilesPanel key={source} source={source} profileId={profileId} onDone={onDone} />
+            )}
           </section>
         )}
       </main>

@@ -49,13 +49,15 @@
   "footer": {
     "dmca": "DMCA নোটিশ",
     "contact": "যোগাযোগ",
-    "copyright": "© {{year}} Tauruss. সর্বস্বত্ব সংরক্ষিত।"
+    "copyright": "© {{year}} Tauruss. সর্বস্বত্ব সংরক্ষিত।",
+    "status": "অবস্থা"
   },
   "nav": {
     "main": "প্রধান মেনু",
     "home": "হোম",
     "movies": "সিনেমা",
     "tv": "টিভি শো",
+    "anime": "অ্যানিমে",
     "myList": "আমার তালিকা",
     "search": "খুঁজুন",
     "searchPlaceholder": "সিনেমা ও টিভি খুঁজুন",

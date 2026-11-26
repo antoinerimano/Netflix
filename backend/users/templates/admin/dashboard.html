@@ -321,6 +321,40 @@
     </table>
   </section>
 
+  {# ---------- "Playback problem?" reports (reco/problems.py, ROADMAP 9.8) ---------- #}
+  <section class="dash-card" id="playback-reports">
+    <h2>Playback problems reported</h2>
+    <p class="dash-sub">Last {{ reports.days }} days · {{ reports.total|intcomma }} report{{ reports.total|pluralize }} from the watch page's "Playback problem?" · the provider scout re-checks the reported sources first every night and plays the reported title on them (it can tell "plays" from "doesn't play", not sound or subtitles) · <a href="{% url 'admin:reco_playbackreport_changelist' %}">all reports</a></p>
+    {% if reports.per_source %}
+      <table>
+        <tr><th>Source</th><th class="num">Reports</th><th>Problems</th><th class="num">Re-checked by the scout</th></tr>
+        {% for r in reports.per_source %}
+          <tr>
+            <td><strong>{{ r.label }}</strong></td>
+            <td class="num">{{ r.n|intcomma }}</td>
+            <td>{% for name, n in r.problems %}{{ name }} {{ n }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+            <td class="num">{{ r.checked }} / {{ r.n }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <h3>Latest</h3>
+      <table>
+        <tr><th>When</th><th>Title</th><th>Source</th><th>Problem</th><th>Scout re-check</th></tr>
+        {% for x in reports.latest %}
+          <tr>
+            <td class="quiet">{{ x.r.created_at|naturaltime }}</td>
+            <td>{{ x.r.title.title }}{% if x.episode %} <span class="quiet">{{ x.episode }}</span>{% endif %}</td>
+            <td>{{ x.source }}</td>
+            <td>{{ x.problem }}{% if not x.r.profile_id %} <span class="quiet">(signed out)</span>{% endif %}</td>
+            <td class="quiet">{% if x.r.checked_at %}{{ x.r.check_result }}{% else %}not yet{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="quiet">No report in the last {{ reports.days }} days.</p>
+    {% endif %}
+  </section>
+
   {# ---------- scheduled jobs (dashboard.py JOBS / JOB_INFO) ---------- #}
   <section class="dash-card" id="jobs">
     <h2>Scheduled jobs</h2>

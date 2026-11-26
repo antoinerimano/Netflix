@@ -154,7 +154,25 @@
   pointer-events: none;
 }
 
-/* "X didn't load, switched to Y" / "Not playing? Try Y" */
+/* Every source was tried, none played (9.2): one clear screen over the player */
+.watchpage__allFailed {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: rgba(var(--color-bg-rgb), 0.92);
+}
+.watchpage__allFailedActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-5);
+}
+
+/* "X didn't play, trying Y" (Undo) / "Not playing? Try Y" */
 .watchpage__softHint {
   position: absolute;
   left: 50%;
@@ -214,6 +232,21 @@
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
+}
+/* the source chips + "Playback problem?" (ROADMAP 9.8) at the end of their line (the left in
+   Arabic / Urdu); on a narrow screen the chips scroll and the button stays */
+.watchpage__sourcesBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.watchpage__sourcesBar > .watchpage__providerRow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.watchpage__reportBtn {
+  flex: none;
 }
 .watchpage__chip {
   gap: var(--space-2);

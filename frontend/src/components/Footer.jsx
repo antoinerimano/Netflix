@@ -2,6 +2,7 @@
 // Site footer + the DMCA notice (design system Modal: scrolls inside, closes with ×, Escape,
 // a click outside or the TV remote's Back).
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { Button, Modal } from '../design';
 import LanguagePicker from './LanguagePicker';
@@ -43,6 +44,9 @@ export default function Footer() {
         <button type="button" className="site-footer__link" onClick={() => setDmcaOpen(true)}>
           {t('footer.dmca')}
         </button>
+        <Link className="site-footer__link" to="/status">
+          {t('footer.status')}
+        </Link>
         <a className="site-footer__link" href={`mailto:${CONTACT}`}>
           {t('footer.contact')}
         </a>

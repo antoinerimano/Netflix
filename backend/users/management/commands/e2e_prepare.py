@@ -157,6 +157,40 @@ class Command(BaseCommand):
             Episode.objects.create(season=season, episode_number=e, name=f"Shift {e}", overview=f"Night {e}.",
                                    air_date=today + timedelta(days=days), runtime=45)
 
+        # Anime / K-dramas (ROADMAP 9.5): Title.section comes from genre + original language on
+        # save (users/sections.py); with Spirited Away, 3 anime (Chainsaw Man for adults only) and
+        # a K-drama
+        for name, tmdb_id, genre, lang, popularity, maturity in (
+            ("Frieren", 209867, "Animation, Fantasy", "ja", 60, 0),
+            ("Chainsaw Man", 114410, "Animation, Action", "ja", 58, 4),
+            ("Crash Landing on You", 94796, "Drama, Comedy", "ko", 50, 2),
+        ):
+            Title.objects.create(
+                type="tv", title=name, original_title=name, tmdb_id=tmdb_id, original_language=lang,
+                first_air_date="2020-01-01", release_year=2020, description=f"{name}: the English synopsis.",
+                genre=genre, primary_genre_norm=genre.split(",")[0].lower(), popularity=popularity,
+                vote_average=8.0, vote_count=3000, rating="8.0", maturity=maturity,
+                poster=f"https://image.tmdb.org/t/p/w500/e2e-{tmdb_id}.jpg",
+                landscape_image=f"https://image.tmdb.org/t/p/w780/e2e-{tmdb_id}-wide.jpg",
+            )
+
+        # Top 10 rows (TMDB trending, sync_tmdb_charts) and the streaming services in the US, the
+        # tests' browser region (watch_services.py): every title on Netflix (a home row needs 10),
+        # three on Prime Video (the browse filter only)
+        from users.models import TitleChartEntry, TitleOnService
+        now = timezone.now()
+        for chart, names in (
+            (TitleChartEntry.MOVIE_DAY, ["Inception", "Parasite", "Interstellar", "The Godfather", "Heat",
+                                         "Toy Story", "Spirited Away", "Amélie", "The Godfather Part II"]),
+            (TitleChartEntry.TV_WEEK, ["Night Shift", "Breaking Bad"]),
+        ):
+            for pos, name in enumerate(names, start=1):
+                TitleChartEntry.objects.create(chart=chart, position=pos, title=Title.objects.get(title=name), synced_at=now)
+        for t in Title.objects.all():
+            TitleOnService.objects.create(title=t, country="US", service="netflix")
+        for name in ("Heat", "Parasite", "Breaking Bad"):
+            TitleOnService.objects.create(title=Title.objects.get(title=name), country="US", service="prime")
+
         user = User.objects.create_user(E2E_EMAIL, "E2E User", E2E_PASSWORD)
         profiles = [
             Profile.objects.create(user=user, name="Alex", language_preference="en", age_restriction="NC-17"),
@@ -166,6 +200,8 @@ class Command(BaseCommand):
             Profile.objects.create(user=user, name="Sam", language_preference="en", age_restriction="NC-17"),
             # Arabic: the app right to left
             Profile.objects.create(user=user, name="Layla", language_preference="ar", age_restriction="NC-17"),
+            # watches anime: the "Popular anime" home row (ROADMAP 9.5)
+            Profile.objects.create(user=user, name="Mika", language_preference="en", age_restriction="NC-17"),
         ]
         for p in profiles:
             upsert_seed_snapshot(p)  # home rows right away (the cron builds them in production)
@@ -174,3 +210,18 @@ class Command(BaseCommand):
         heat = Title.objects.get(title="Heat")
         for p in profiles[:3] + profiles[4:]:
             TitleRating.objects.create(profile=p, title=heat, value=TitleRating.LIKE)
+        # Mika played an anime and listed another: enough for the "Popular anime" home row
+        # (reco/section_rows.py). Its own rows are two small ones, so the anime ones aren't already
+        # above it (the home page shows a title once)
+        from reco.models import RecoHomeSnapshot, TitleAction
+        from users.serializers import TitleHomeSerializer
+        mika = profiles[5]
+        TitleAction.objects.create(profile=mika, title=Title.objects.get(title="Spirited Away"), action="outbound",
+                                   session_id="e2e", provider="cinesrc")
+        TitleAction.objects.create(profile=mika, title=Title.objects.get(title="Frieren"), action="add_to_list",
+                                   session_id="e2e", provider="")
+        mine = lambda *names: TitleHomeSerializer(Title.objects.filter(title__in=names).order_by("id"), many=True).data
+        RecoHomeSnapshot.objects.filter(profile=mika).update(payload={"rows": [
+            {"row_type": "for_you", "title": "For you", "items": mine("Heat", "Amélie")},
+            {"row_type": "popular", "title": "Popular right now", "items": mine("Breaking Bad", "Toy Story")},
+        ]})

@@ -5,13 +5,15 @@ import Hero, { heroArtwork } from "../components/Hero";
 import { Button, EmptyState, Skeleton, friendlyError } from "../design";
 import { WandIcon } from "../design/icons";
 import "./HomePage.css";
-import Row from "../components/Row";
+import Row, { TOP10_SIZE } from "../components/Row";
 import Footer from "../components/Footer";
 import { fetchHomeRecoRows } from "../api/recoApi";
 import { useTranslation } from "react-i18next";
 import { rowTitle } from "../i18n/catalogText";
 
 const ROW_SIZE = 18;
+// "Top 10 movies today" / "Top 10 shows this week" (ROADMAP 9.4): numbered cards
+const isTop10 = (row) => String(row?.row_type || "").startsWith("top10_");
 
 // the "pick what you like" banner, closed on this device for this profile
 const tasteKey = (pid) => `tasteBannerClosed_${pid}`;
@@ -136,6 +138,7 @@ const HomePage = () => {
   }, [profileId, i18n.resolvedLanguage, attempt]);
 
   // --- Dedup global: un titre apparait une seule fois sur TOUTE la page ---
+  // except in a Top 10: a chart keeps all its places (title #2 is #2 even if a row above has it)
   const dedupedRows = useMemo(() => {
     const used = new Set();
 
@@ -143,15 +146,16 @@ const HomePage = () => {
     for (const row of homeRows || []) {
       const items = Array.isArray(row?.items) ? row.items : [];
       const filtered = [];
+      const chart = isTop10(row);
 
       for (const it of items) {
         const id = it?.id;
         if (id == null) continue;
         const n = Number(id);
-        if (used.has(n)) continue;
+        if (used.has(n) && !chart) continue;
         used.add(n);
         filtered.push(it);
-        if (filtered.length >= ROW_SIZE) break;
+        if (filtered.length >= (chart ? TOP10_SIZE : ROW_SIZE)) break;
       }
 
       if (filtered.length > 0) {
@@ -242,6 +246,7 @@ const HomePage = () => {
           title={rowTitle(row)}
           analyticsTitle={row.analytics_title || row.title || "Recommended"}
           movies={row.items || []}
+          variant={isTop10(row) ? "top10" : undefined}
         />
       ))}
 

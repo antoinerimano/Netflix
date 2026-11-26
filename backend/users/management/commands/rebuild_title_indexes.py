@@ -9,6 +9,8 @@ completes isn't found by keyword until this runs.
 Nightly from cron (ops/crontab): the titles that have keywords / companies / networks but no index
 row yet, and the titles clean_db read on TMDB in the last --since-days (their fields may have
 changed). --all: every title. Each title's rows are replaced, never the whole tables.
+Then Title.section (Anime / K-drama, users/sections.py) of the titles that may be in one: the syncs'
+bulk writes skip Title.save(), which works it out otherwise.
 (Actors are indexed by the syncs themselves: users.Actor.)
 """
 import re
@@ -25,6 +27,7 @@ from django.utils import timezone
 
 from users.countries import country_code
 from users.jobs import tracked
+from users.sections import SOURCE_FIELDS, section_of
 from users.models import (
     Title,
     TVShowExtras,
@@ -168,6 +171,35 @@ def index_rows(title, extra):
     return rows
 
 
+def section_candidates():
+    """Titles that are, or may be, Anime / K-drama (users/sections.py): in a section now,
+    animated, or Korean / unknown-language drama shows."""
+    return Title.objects.filter(
+        Q(section__gt="") | Q(genre__icontains="animation")
+        | (Q(type="tv") & Q(genre__icontains="drama") & Q(original_language__in=["ko", ""]))
+    )
+
+
+def update_sections(dry_run=False, batch=1000):
+    """Title.section again for the candidates; the number of titles whose section changed."""
+    changed = 0
+    last = 0
+    while True:
+        chunk = list(section_candidates().filter(id__gt=last).order_by("id").only("id", "section", *SOURCE_FIELDS)[:batch])
+        if not chunk:
+            return changed
+        last = chunk[-1].id
+        diff = []
+        for t in chunk:
+            section = section_of(t)
+            if section != t.section:
+                t.section = section
+                diff.append(t)
+        changed += len(diff)
+        if diff and not dry_run:
+            Title.objects.bulk_update(diff, ["section"], batch_size=500)
+
+
 class Command(BaseCommand):
     help = "Fill the title index tables (keywords / companies / countries / networks) for search and recommendations."
 
@@ -205,3 +237,5 @@ class Command(BaseCommand):
 
         self.stdout.write(f"[index] done: {len(ids)} titles, {written} index rows"
                           + (" (dry run, nothing written)" if opts["dry_run"] else ""))
+        fixed = update_sections(dry_run=opts["dry_run"], batch=opts["batch"])
+        self.stdout.write(f"[index] sections (anime / K-drama) changed: {fixed}")

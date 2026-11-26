@@ -139,3 +139,109 @@ class FileImportTests(ImportTestCase):
         self.assertEqual(res.status_code, 404)
         self.assertFalse(TitleRating.objects.exists())
 
+
+
+# ------------------------------------------------------------------ anime lists (ROADMAP 9.5)
+
+MAL_XML = """<?xml version="1.0" encoding="UTF-8" ?>
+<myanimelist>
+  <myinfo><user_name>alice</user_name></myinfo>
+  <anime><series_title><![CDATA[Shingeki no Kyojin]]></series_title><series_type>TV</series_type>
+    <my_score>9</my_score><my_status>Completed</my_status><my_finish_date>2021-02-03</my_finish_date></anime>
+  <anime><series_title><![CDATA[Shingeki no Kyojin Season 3 Part 2]]></series_title><series_type>TV</series_type>
+    <my_score>10</my_score><my_status>Completed</my_status><my_finish_date>0000-00-00</my_finish_date></anime>
+  <anime><series_title><![CDATA[Sen to Chihiro no Kamikakushi]]></series_title><series_type>Movie</series_type>
+    <my_score>0</my_score><my_status>Plan to Watch</my_status></anime>
+  <anime><series_title><![CDATA[Some Dropped Show]]></series_title><series_type>TV</series_type>
+    <my_score>0</my_score><my_status>Dropped</my_status></anime>
+  <anime><series_title><![CDATA[Not In The Catalog]]></series_title><series_type>TV</series_type>
+    <my_score>3</my_score><my_status>Dropped</my_status></anime>
+</myanimelist>
+"""
+
+
+def anilist_answer(*entries, status="COMPLETED"):
+    return {"data": {"MediaListCollection": {"lists": [{"entries": list(entries)}]}}}
+
+
+def anilist_entry(english, romaji, native, fmt="TV", year=2021, status="COMPLETED", score=0):
+    return {"status": status, "score": score, "updatedAt": 1700000000, "completedAt": {"year": None},
+            "media": {"format": fmt, "startDate": {"year": year},
+                      "title": {"english": english, "romaji": romaji, "native": native}}}
+
+
+class AnimeImportTests(ImportTestCase):
+    def setUp(self):
+        super().setUp()
+        from users.models import TitleAltName
+
+        def anime(title, original, kind="tv", **kw):
+            return Title.objects.create(type=kind, title=title, original_title=original, genre="Animation",
+                                        original_language="ja", popularity=80, vote_count=1000, **kw)
+
+        self.aot = anime("Attack on Titan", "進撃の巨人", first_air_date="2013-04-07")
+        TitleAltName.objects.create(title=self.aot, name="Shingeki no Kyojin", name_norm="shingeki no kyojin")
+        self.aot_live = Title.objects.create(type="tv", title="Attack on Titan", popularity=90, genre="Drama",
+                                             first_air_date="2013-01-01")  # same name, not an anime: not picked
+        self.spirited = anime("Spirited Away", "千と千尋の神隠し", kind="movie", release_year=2001)
+        TitleAltName.objects.create(title=self.spirited, name="Sen to Chihiro no Kamikakushi",
+                                    name_norm="sen to chihiro no kamikakushi")
+        self.frieren = anime("Frieren: Beyond Journey's End", "葬送のフリーレン", first_air_date="2023-09-29")
+
+    def test_myanimelist_export(self):
+        import gzip
+
+        data = gzip.compress(MAL_XML.encode("utf-8"))
+        res = self.post_files(SimpleUploadedFile("animelist_1_-_1.xml.gz", data, content_type="application/gzip"))
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(res.data["sources"], ["myanimelist"])
+        # both seasons are the one TMDB show: liked once; the film to watch is on My List
+        self.assertEqual(self.liked(), {self.aot.id})
+        self.assertEqual(list(MyListItem.objects.filter(profile=self.profile).values_list("title_id", flat=True)),
+                         [self.spirited.id])
+        self.assertEqual(self.watched(), {self.aot.id})
+        self.assertEqual(TitleRating.objects.get(profile=self.profile, title=self.aot).updated_at,
+                         datetime(2021, 2, 3, tzinfo=dt_timezone.utc))
+        # dropped without a score: skipped; dropped with 3/10 and not in the catalog: not found
+        self.assertEqual(res.data["not_found_examples"], ["Not In The Catalog"])
+
+    def test_plain_xml_and_entities_refused(self):
+        res = self.post_files(upload("animelist.xml", MAL_XML))
+        self.assertEqual(res.status_code, 200, res.data)
+        bomb = '<?xml version="1.0"?><!DOCTYPE m [<!ENTITY a "aaaa">]><myanimelist><anime>&a;</anime></myanimelist>'
+        self.assertEqual(self.post_files(upload("animelist.xml", bomb)).data["code"], "unknown_format")
+
+    def test_anilist_username(self):
+        answer = anilist_answer(
+            anilist_entry("Attack on Titan Final Season", "Shingeki no Kyojin: The Final Season", "進撃の巨人 The Final Season",
+                          year=2020, score=8.5),
+            anilist_entry("Frieren: Beyond Journey's End", "Sousou no Frieren", "葬送のフリーレン", year=2023, status="CURRENT"),
+            anilist_entry(None, "Sen to Chihiro no Kamikakushi", "千と千尋の神隠し", fmt="MOVIE", year=2001, status="PLANNING"),
+            anilist_entry("Some Music Video", "x", "x", fmt="MUSIC"),
+        )
+        fake = mock.Mock(status_code=200, json=mock.Mock(return_value=answer))
+        with mock.patch("reco.imports.requests.post", return_value=fake) as post:
+            res = self.client.post(f"/api/import/anilist/?profileId={self.profile.id}",
+                                   {"username": "https://anilist.co/user/Alice_1/animelist"}, format="json")
+        self.assertEqual(res.status_code, 200, res.data)
+        self.assertEqual(post.call_args.kwargs["json"]["variables"], {"name": "Alice_1"})
+        self.assertEqual(self.liked(), {self.aot.id})                       # 8.5/10, the anime and not the drama
+        self.assertEqual(self.watched(), {self.aot.id, self.frieren.id})    # watching: watched
+        self.assertTrue(MyListItem.objects.filter(profile=self.profile, title=self.spirited).exists())
+        self.assertEqual(res.data["not_found"], 0)
+        self.assertEqual(res.data["sources"], ["anilist"])
+
+    def test_anilist_errors(self):
+        url = f"/api/import/anilist/?profileId={self.profile.id}"
+        self.assertEqual(self.client.post(url, {"username": "no spaces!"}, format="json").data["code"], "bad_username")
+        missing = mock.Mock(status_code=404, json=mock.Mock(return_value={"errors": [{"status": 404}]}))
+        with mock.patch("reco.imports.requests.post", return_value=missing):
+            res = self.client.post(url, {"username": "nobody"}, format="json")
+        self.assertEqual((res.status_code, res.data["code"]), (404, "anilist_not_found"))
+        import requests
+
+        with mock.patch("reco.imports.requests.post", side_effect=requests.ConnectionError()):
+            res = self.client.post(url, {"username": "alice"}, format="json")
+        self.assertEqual((res.status_code, res.data["code"]), (502, "anilist_unavailable"))
+        self.assertEqual(self.client.post(f"/api/import/anilist/?profileId={self.bob_profile.id}",
+                                          {"username": "alice"}, format="json").status_code, 404)

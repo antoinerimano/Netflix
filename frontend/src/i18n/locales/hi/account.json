@@ -43,12 +43,16 @@
     "choose": "फ़ाइलें चुनें",
     "tvHint": "टीवी पर हैं? रिमोट से फ़ाइलें नहीं चुनी जा सकतीं: इस खाते से साइन इन करके अपने फ़ोन या कंप्यूटर पर {{url}} खोलें।",
     "entryTitle": "दूसरी जगहों पर आपका इतिहास",
-    "entryLabel": "Letterboxd या IMDb",
+    "entryLabel": "Letterboxd, IMDb, MyAnimeList या AniList",
     "entryValue": "बेहतर सिफ़ारिशों के लिए अपनी रेटिंग और देखे गए टाइटल लाएँ।",
     "entryAction": "इम्पोर्ट करें",
     "errors": {
-      "unknown_format": "यह फ़ाइल पढ़ी नहीं जा सकी। Letterboxd (.zip) या IMDb (.csv) का एक्सपोर्ट अपलोड करें।",
-      "too_big": "यह फ़ाइल बहुत बड़ी है (ज़्यादा से ज़्यादा 10 MB)।"
+      "unknown_format": "यह फ़ाइल पढ़ी नहीं जा सकी। Letterboxd (.zip), IMDb (.csv) या MyAnimeList (.xml.gz) का एक्सपोर्ट अपलोड करें।",
+      "too_big": "यह फ़ाइल बहुत बड़ी है (ज़्यादा से ज़्यादा 10 MB)।",
+      "bad_username": "अपना AniList यूज़रनेम लिखें (अक्षर, अंक, _ या -)।",
+      "anilist_not_found": "यह AniList सूची नहीं मिली। नाम जाँचें, और यह कि आपकी सूची सार्वजनिक है।",
+      "anilist_unavailable": "AniList अभी जवाब नहीं दे रहा। कुछ मिनट बाद फिर कोशिश करें।",
+      "anilist_empty": "यह AniList सूची खाली है।"
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -62,6 +66,20 @@
       "step1": "imdb.com पर Your ratings खोलें, ⋯ और फिर Export चुनें। फ़ाइल तैयार होने पर IMDb बताएगा।",
       "step2": "अगर Watchlist को My List में चाहते हैं, तो उसके लिए भी यही करें।",
       "step3": "यहाँ .csv फ़ाइलें अपलोड करें (एक साथ कई भी चलेंगी)।"
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "एनीमे सूची का एक्सपोर्ट (.xml.gz)",
+      "step1": "myanimelist.net पर myanimelist.net/panel.php?go=export खोलें, Anime List चुनें और Export My List दबाएँ।",
+      "step2": ".xml.gz फ़ाइल यहाँ अपलोड करें, अनज़िप करने की ज़रूरत नहीं। किसी शो का हर सीज़न उसी शो में गिना जाता है।"
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "आपकी सार्वजनिक सूची, यूज़रनेम से",
+      "step1": "अपना AniList यूज़रनेम लिखें, या अपनी प्रोफ़ाइल का लिंक पेस्ट करें। आपकी एनीमे सूची सार्वजनिक होनी चाहिए।",
+      "label": "AniList यूज़रनेम",
+      "placeholder": "जैसे Alice",
+      "import": "मेरी सूची इंपोर्ट करें"
     },
     "done": {
       "title": "इम्पोर्ट पूरा हुआ",

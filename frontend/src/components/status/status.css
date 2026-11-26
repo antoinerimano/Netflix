@@ -1,0 +1,136 @@
+/* src/components/status/status.css - the public status page (/status, ROADMAP 9.8).
+   Logical properties only: Arabic / Urdu mirror it. */
+.status-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-inline-size: 56rem;
+  margin-inline: auto;
+  padding: var(--space-8) var(--page-gutter) var(--space-12);
+}
+.status__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: var(--weight-black);
+}
+.status__subtitle,
+.status__note,
+.status__updated,
+.status__testText {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+}
+.status__note,
+.status__updated {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.status__summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-1);
+}
+.status__summaryTitle {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+.status__summaryText {
+  margin: var(--space-1) 0 0;
+}
+
+.status__test {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.status__testText {
+  margin: 0;
+}
+.status__testResult {
+  margin: 0;
+}
+
+.status__sectionTitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-md);
+}
+.status__sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.status-source {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+}
+.status-source__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.status-source__state {
+  margin-inline-start: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+.status-source__lines {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: calc(0.75rem + var(--space-3));
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+.status-source__you {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: calc(0.75rem + var(--space-3));
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.status-source__you--you,
+.status-source__you--everyone {
+  color: var(--color-warning);
+}
+.status-source__you--ok {
+  color: var(--color-success);
+}
+
+/* the state dot: green up, amber problems, red down, grey unknown */
+.status-source__dot {
+  flex: none;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  margin-block-start: 0.35em;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+.status-source__head .status-source__dot {
+  margin-block-start: 0;
+}
+.status-source--up .status-source__dot,
+.status__summary--up .status-source__dot {
+  background: var(--color-success);
+}
+.status-source--problems .status-source__dot,
+.status__summary--problems .status-source__dot {
+  background: var(--color-warning);
+}
+.status-source--down .status-source__dot,
+.status__summary--down .status-source__dot {
+  background: var(--color-danger);
+}

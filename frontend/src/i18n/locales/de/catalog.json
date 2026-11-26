@@ -23,7 +23,12 @@
       "trending": "Im Trend",
       "new_episodes": "Neue Folgen",
       "continue_watching": "Weiterschauen",
-      "collections_next": "Weiter in deinen Filmreihen"
+      "collections_next": "Weiter in deinen Filmreihen",
+      "top10_movies": "Top 10 Filme heute",
+      "top10_tv": "Top 10 Serien diese Woche",
+      "service": "Auf {{name}}",
+      "anime": "Beliebte Anime",
+      "kdrama": "Beliebte K-Dramen"
     },
     "why": {
       "similarTo": "Ähnlich wie {{title}}",
@@ -49,7 +54,8 @@
   "card": {
     "rated": "bewertet mit {{value}}",
     "newEpisode": "Neu · S{{season}} F{{episode}}",
-    "watched": "{{percent}} angesehen"
+    "watched": "{{percent}} angesehen",
+    "rank": "Platz {{rank}}: {{title}}"
   },
   "trailer": {
     "mute": "Stumm",
@@ -173,6 +179,24 @@
       "count_one": "{{formatted}} Serie",
       "count_other": "{{formatted}} Serien"
     },
+    "anime": {
+      "title": "Anime",
+      "search": "Anime suchen",
+      "loadError": "Anime konnten nicht geladen werden",
+      "none": "Keine Anime gefunden",
+      "more": "Mehr Anime anzeigen",
+      "count_one": "{{formatted}} Anime",
+      "count_other": "{{formatted}} Anime"
+    },
+    "kdrama": {
+      "title": "K-Dramen",
+      "search": "K-Dramen suchen",
+      "loadError": "K-Dramen konnten nicht geladen werden",
+      "none": "Keine K-Dramen gefunden",
+      "more": "Mehr K-Dramen anzeigen",
+      "count_one": "{{formatted}} K-Drama",
+      "count_other": "{{formatted}} K-Dramen"
+    },
     "all": "Alle",
     "genre": "Genre",
     "sortBy": "Sortieren nach",
@@ -180,9 +204,11 @@
       "popular": "Beliebt",
       "rating": "Am besten bewertet",
       "newest": "Neueste",
-      "title": "A–Z"
+      "title": "A–Z",
+      "added": "Neu hinzugefügt"
     },
     "filters": "Filter",
+    "service": "Streamingdienst",
     "activeFilters": "Aktive Filter",
     "removeFilter": "Filter {{label}} entfernen",
     "clearAll": "Alle löschen",
@@ -197,6 +223,7 @@
     "actorPlaceholder": "z. B. Zendaya",
     "pillDirector": "Regie: {{name}}",
     "pillActor": "Mit {{name}}",
+    "pillService": "Auf {{name}}",
     "years": {
       "any": "Beliebig",
       "range": "{{from}}–{{to}}",

@@ -23,7 +23,7 @@ export function rowTitle(row) {
     country: p.country ? regionName(p.country) : '',
   };
   // a row that needs a value the server didn't send keeps its own title
-  const needs = { in_lang: 'language', lang_trending: 'language', because: 'title', genre: 'genre', studio: 'name', network: 'name', actor: 'name', country: 'country', kw: 'keyword' };
+  const needs = { in_lang: 'language', lang_trending: 'language', because: 'title', genre: 'genre', studio: 'name', network: 'name', service: 'name', actor: 'name', country: 'country', kw: 'keyword' };
   if (!kind || (needs[kind] && !values[needs[kind]])) return fallback;
   return t(`catalog:home.rows.${kind}`, { ...values, defaultValue: fallback });
 }

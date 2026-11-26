@@ -30,6 +30,7 @@ export const EMPTY_PROFILE = {
   name: '',
   avatar_url: `color:${LETTER_COLORS[0]}`,
   is_kids: false,
+  autoplay_next: true, // "Play next episode automatically" (watch page, ROADMAP 9.3)
   age_restriction: 'NC-17',
   language_preference: '', // '' = the language the app is in when the form opens
 };
@@ -207,6 +208,13 @@ export default function ProfileForm({ initial = EMPTY_PROFILE, submitLabel, onSu
         onChange={(on) =>
           set({ is_kids: on, age_restriction: on && !KIDS_LIMITS.includes(values.age_restriction) ? 'G' : values.age_restriction })
         }
+      />
+
+      <Switch
+        checked={values.autoplay_next !== false}
+        label={t('form.autoNext')}
+        description={t('form.autoNextHint')}
+        onChange={(on) => set({ autoplay_next: on })}
       />
 
       <Field label={t('form.ageLimit')} hint={values.is_kids ? t('form.ageLimitKidsHint') : t('form.ageLimitHint')}>

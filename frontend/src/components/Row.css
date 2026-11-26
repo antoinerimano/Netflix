@@ -347,6 +347,48 @@ html.tv-keys .row .row-arrow {
   text-underline-offset: 4px;
 }
 
+/* ---------- Top 10 rows (ROADMAP 9.4): a big number, then a poster card ----------
+   The number is decoration (the card's aria-label says "No. 3: <title>"): never focused, it sits
+   on the slide's start side (the right in Arabic / Urdu) and never under the card's focus ring */
+.row--top10 .row-slide {
+  display: flex !important;
+  align-items: flex-end;
+}
+.row-top10__rank {
+  flex: 0 0 38%;
+  margin-inline-end: var(--space-1);
+  padding-block-end: 2.75rem; /* level with the poster's bottom, above its caption */
+  overflow: hidden;
+  color: rgba(var(--color-bg-deep-rgb), 0.9);
+  font-size: clamp(4rem, 8.5vw, 9.5rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.08em;
+  line-height: 0.8;
+  text-align: end;
+  -webkit-text-stroke: 3px var(--color-text-secondary);
+  paint-order: stroke fill;
+  user-select: none;
+}
+.row--top10 .row-slide__card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.row--top10 .movie-card {
+  aspect-ratio: 2 / 3;
+}
+@supports not (aspect-ratio: 1 / 1) {
+  .row--top10 .movie-card {
+    padding-top: 150%;
+  }
+}
+.row--top10 .row-card__type {
+  display: none; /* a narrow poster: the whole width for the title */
+}
+.row--top10 .row-slide:has(.movie-card:focus-visible) .row-top10__rank {
+  -webkit-text-stroke-color: var(--color-brand);
+}
+
 /* ---------- Touch / small screens ---------- */
 @media (hover: none) and (pointer: coarse) {
   .movie-card:hover,

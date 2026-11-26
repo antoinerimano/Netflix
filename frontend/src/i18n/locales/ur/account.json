@@ -43,12 +43,16 @@
     "choose": "فائلیں منتخب کریں",
     "tvHint": "ٹی وی پر ہیں؟ ریموٹ سے فائلیں منتخب نہیں ہو سکتیں: اپنے فون یا کمپیوٹر پر {{url}} کھولیں، اسی اکاؤنٹ میں سائن ان ہو کر۔",
     "entryTitle": "کہیں اور آپ کی تاریخ",
-    "entryLabel": "Letterboxd یا IMDb",
+    "entryLabel": "Letterboxd، IMDb، MyAnimeList یا AniList",
     "entryValue": "بہتر تجاویز کے لیے اپنی ریٹنگز اور دیکھے گئے ٹائٹلز لائیں۔",
     "entryAction": "امپورٹ",
     "errors": {
-      "unknown_format": "ہم یہ فائل نہیں پڑھ سکے۔ Letterboxd (.zip) یا IMDb (.csv) کی ایکسپورٹ فائل اپ لوڈ کریں۔",
-      "too_big": "یہ فائل بہت بڑی ہے (زیادہ سے زیادہ 10 MB)۔"
+      "unknown_format": "ہم یہ فائل نہیں پڑھ سکے۔ Letterboxd (.zip)، IMDb (.csv) یا MyAnimeList (.xml.gz) کی ایکسپورٹ فائل اپ لوڈ کریں۔",
+      "too_big": "یہ فائل بہت بڑی ہے (زیادہ سے زیادہ 10 MB)۔",
+      "bad_username": "اپنا AniList صارف نام لکھیں (حروف، ہندسے، _ یا -)۔",
+      "anilist_not_found": "یہ AniList فہرست نہیں ملی۔ نام چیک کریں، اور یہ کہ آپ کی فہرست پبلک ہے۔",
+      "anilist_unavailable": "AniList اس وقت جواب نہیں دے رہا۔ چند منٹ بعد دوبارہ کوشش کریں۔",
+      "anilist_empty": "یہ AniList فہرست خالی ہے۔"
     },
     "letterboxd": {
       "name": "Letterboxd",
@@ -62,6 +66,20 @@
       "step1": "imdb.com پر Your ratings کھولیں، ⋯ پھر Export منتخب کریں۔ فائل تیار ہونے پر IMDb آپ کو بتائے گا۔",
       "step2": "اگر آپ اپنی Watchlist میری فہرست میں چاہتے ہیں تو اس کے ساتھ بھی یہی کریں۔",
       "step3": ".csv فائلیں یہاں اپ لوڈ کریں (ایک ساتھ کئی بھی چلیں گی)۔"
+    },
+    "myanimelist": {
+      "name": "MyAnimeList",
+      "what": "اینیمے فہرست کی ایکسپورٹ (.xml.gz)",
+      "step1": "myanimelist.net پر myanimelist.net/panel.php?go=export کھولیں، Anime List چنیں اور Export My List دبائیں۔",
+      "step2": "‎.xml.gz فائل یہاں اپ لوڈ کریں، اَن زِپ کرنے کی ضرورت نہیں۔ کسی شو کا ہر سیزن اسی شو میں گنا جاتا ہے۔"
+    },
+    "anilist": {
+      "name": "AniList",
+      "what": "آپ کی پبلک فہرست، صارف نام سے",
+      "step1": "اپنا AniList صارف نام لکھیں، یا اپنی پروفائل کا لنک پیسٹ کریں۔ آپ کی اینیمے فہرست پبلک ہونی چاہیے۔",
+      "label": "AniList صارف نام",
+      "placeholder": "مثلاً Alice",
+      "import": "میری فہرست امپورٹ کریں"
     },
     "done": {
       "title": "امپورٹ مکمل",

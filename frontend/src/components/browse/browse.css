@@ -113,6 +113,18 @@
   -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
   mask-image: linear-gradient(to right, transparent, #000 var(--space-4), #000 calc(100% - var(--space-8)), transparent);
 }
+/* Anime / K-dramas: chips that open those pages (ROADMAP 9.5), set apart from the genre filters */
+.browse__section-link {
+  border-color: var(--color-brand);
+  color: var(--color-text);
+}
+.browse__section-link::after {
+  content: "›";
+  margin-inline-start: var(--space-1);
+}
+.browse__section-link:dir(rtl)::after {
+  content: "‹";
+}
 .browse__controls {
   display: flex;
   flex: none;
