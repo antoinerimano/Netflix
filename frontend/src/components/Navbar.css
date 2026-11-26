@@ -602,13 +602,14 @@
 }
 
 /* desktop / TV: while the search field is used it widens over the links (see :focus-within), so
-   they fade out instead of sitting under it (and can't be reached behind it); back on leaving */
+   they fade out instead of sitting under it; back on leaving. Only transparent, not hidden: the
+   remote's Left from the field must still reach them (spatial navigation skips hidden elements),
+   and focusing one ends the search, so they show again */
 @media (min-width: 901px) {
-  .nav-links {
-    transition: opacity var(--duration-normal) var(--ease-standard), visibility var(--duration-normal);
+  .nav-links li {
+    transition: opacity var(--duration-normal) var(--ease-standard);
   }
-  .navbar--searching .nav-links {
+  .navbar--searching .nav-links li {
     opacity: 0;
-    visibility: hidden;
   }
 }
