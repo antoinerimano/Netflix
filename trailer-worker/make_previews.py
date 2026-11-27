@@ -82,6 +82,13 @@ DELAY_MIN = float(os.getenv("DELAY_MIN", "10"))
 DELAY_MAX = float(os.getenv("DELAY_MAX", "20"))
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
 COOKIES_FILE = os.getenv("YTDLP_COOKIES_FILE", "").strip()  # optional, if YouTube insists
+# better than a cookies file: read live from a Firefox profile that refresh_cookies.sh opens on
+# YouTube before every run (headless), so Google renews the session itself, nobody exports again
+# ("firefox:/home/azurdev/snap/firefox/common/youtube-profile"). Wins over YTDLP_COOKIES_FILE.
+COOKIES_FROM_BROWSER = os.getenv("YTDLP_COOKIES_FROM_BROWSER", "").strip()
+# titles in a row where YouTube sent no video file, with and without the account: stop as if
+# refused (run.sh waits and tries again) instead of burning the night on errors
+NO_FORMATS_STOP = int(os.getenv("NO_FORMATS_STOP", "20"))
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "").strip()  # optional: TMDB's other trailers, other names
 MAX_VIDEOS = int(os.getenv("MAX_VIDEOS_PER_TITLE", "8"))  # videos looked at for one title, at most
 SEARCH_RESULTS = int(os.getenv("SEARCH_RESULTS", "10"))  # YouTube search results read (one request)
@@ -100,9 +107,18 @@ UNAVAILABLE_RE = re.compile(
     r"Video unavailable|This video is unavailable|Private video|has been removed|account .* terminated|"
     r"not (?:made this video )?available in your country|members-only|age.restricted|"
     r"Sign in to confirm your age|copyright", re.I)
+# YouTube sent the video's details but no video file (2026-11-27: its "SABR-only" experiment on
+# the account, on and off for hours). Without the account the same video works: tried once more
+# without cookies; still nothing = this machine's problem, not the title's (no attempt used up).
+NO_FORMATS_RE = re.compile(r"Requested format is not available", re.I)
+COOKIE_FLAGS = ("--cookies", "--cookies-from-browser")
 
 
 class Blocked(Exception):
+    pass
+
+
+class NoFormats(RuntimeError):
     pass
 
 
@@ -115,13 +131,33 @@ class Rejected(Exception):
 
 
 # ---------- shell ----------
+def without_cookies(cmd: list) -> list:
+    out, skip = [], False
+    for a in cmd:
+        if skip:
+            skip = False
+        elif a in COOKIE_FLAGS:
+            skip = True  # the flag and its value
+        else:
+            out.append(a)
+    return out
+
+
 def run(cmd: list, timeout: int = 300) -> str:
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        raise RuntimeError(f"timed out: {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}")
+    def once(c):
+        try:
+            return subprocess.run(c, capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"timed out: {c[0]} {c[1] if len(c) > 1 else ''}")
+
+    p = once(cmd)
+    if p.returncode != 0 and NO_FORMATS_RE.search(p.stderr or p.stdout or "") \
+            and any(f in cmd for f in COOKIE_FLAGS):
+        p = once(without_cookies(cmd))
     if p.returncode != 0:
         err = (p.stderr or p.stdout or "").strip()
+        if NO_FORMATS_RE.search(err):
+            raise NoFormats(err.splitlines()[-1] if err else "no video file")
         if BLOCKED_RE.search(err):
             raise Blocked(err.splitlines()[-1] if err else "blocked")
         if UNAVAILABLE_RE.search(err):
@@ -133,7 +169,9 @@ def run(cmd: list, timeout: int = 300) -> str:
 def ytdlp(*args: str) -> list:
     cmd = [sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-playlist", "--no-cache-dir",
            "--no-progress", "--quiet", "--no-warnings"]
-    if COOKIES_FILE:
+    if COOKIES_FROM_BROWSER:
+        cmd += ["--cookies-from-browser", COOKIES_FROM_BROWSER]
+    elif COOKIES_FILE:
         cmd += ["--cookies", COOKIES_FILE]
     return cmd + list(args)
 
@@ -467,7 +505,7 @@ def make_clip(job: dict, workdir: Path, info: dict | None = None, check: bool = 
         sources = [p for p in workdir.iterdir() if p.name.startswith("src.") and p.stat().st_size > 0]
         if not sources:
             raise RuntimeError("yt-dlp downloaded nothing")
-    except (Blocked, Unavailable):
+    except (Blocked, Unavailable, NoFormats):
         raise
     except Exception as e:  # noqa: BLE001
         # cutting the part out while downloading fails on some videos (ffmpeg exit code 8,
@@ -546,6 +584,7 @@ def clip_for_job(job: dict, workdir: Path):
     trailers, else a YouTube search. Raises Blocked (stop the run), NoVideo, or the last error."""
     names = [job.get("title", ""), job.get("original_title", "")]
     tried, why, errors = set(), [], []
+    no_files = 0
     state = {"details": None, "more_names": False}
 
     def details():
@@ -602,10 +641,14 @@ def clip_for_job(job: dict, workdir: Path):
             why.append(("unavailable", f"{key}: {str(e)[:160]}"))
         except Rejected as e:
             why.append(("rejected", f"{key}: {e}"))
+        except NoFormats as e:
+            errors.append(f"{key}: {str(e)[-300:]}")
+            no_files += 1
         except Exception as e:  # noqa: BLE001 (this video's problem: the next one)
             errors.append(f"{key}: {str(e)[-300:]}")
     if errors and not why:
-        raise RuntimeError(" | ".join(errors)[-500:])
+        # every video: no file from YouTube = the machine's problem (no attempt used up)
+        raise (NoFormats if no_files == len(errors) else RuntimeError)(" | ".join(errors)[-500:])
     if not tried:
         raise NoVideo("rejected", "no video found (TMDB has none, the search found none that fits)")
     status = "rejected" if any(k == "rejected" for k, _ in why) else "unavailable"
@@ -716,6 +759,8 @@ def recheck_audio(data: dict, results_path: Path, limit: int, dry_run: bool, dea
         except Unavailable:
             entry["audio"] = "gone"  # the clip already made stays
             print(f"{label} video gone, clip kept")
+        except NoFormats:
+            print(f"{label} no video file from YouTube, checked again next time")  # not an error
         except Exception as e:  # noqa: BLE001
             entry["audio_errors"] = entry.get("audio_errors", 0) + 1
             if entry["audio_errors"] >= MAX_ATTEMPTS:
@@ -822,8 +867,10 @@ def main() -> int:
     print(f"{len(jobs)} job(s), {len(todo)} to do")
     counts = {"ok": 0, "rejected": 0, "unavailable": 0, "error": 0}
     exit_code = 0
+    no_files_in_a_row = 0
 
     for i, job in enumerate(todo):
+        streak = no_files_in_a_row
         if stopping["now"] or (args.limit and i >= args.limit) or (deadline and time.monotonic() > deadline):
             break
         key = job_key(job)
@@ -848,6 +895,14 @@ def main() -> int:
         except NoVideo as e:
             entry.update(status=e.status, reason=str(e))
             print(f"{label} {e.status}: {str(e)[:300]}")
+        except NoFormats as e:
+            # tried again next time, the title's attempts untouched
+            entry.update(status="error", reason=str(e)[:500], attempts=prev.get("attempts", 0))
+            no_files_in_a_row += 1
+            print(f"{label} no video file from YouTube (with and without the account), not counted")
+            if NO_FORMATS_STOP and no_files_in_a_row >= NO_FORMATS_STOP:
+                print(f"{no_files_in_a_row} titles in a row without a video file: stopping, trying again later")
+                exit_code = EXIT_BLOCKED
         except Exception as e:  # noqa: BLE001 (one title's problem must not stop the run)
             entry.update(status="error", reason=str(e)[:500], attempts=prev.get("attempts", 0) + 1)
             print(f"{label} error: {str(e).splitlines()[-1] if str(e) else e}")
@@ -861,6 +916,10 @@ def main() -> int:
             results[key] = entry
             save_results(results_path, data)
         counts[entry["status"]] += 1
+        if no_files_in_a_row == streak:
+            no_files_in_a_row = 0  # this title got a file (or had its own problem)
+        if exit_code == EXIT_BLOCKED:
+            break
         if i + 1 < len(todo):
             time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
 

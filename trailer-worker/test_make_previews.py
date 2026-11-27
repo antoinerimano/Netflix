@@ -277,6 +277,21 @@ class ChooseVideoTests(unittest.TestCase):
                 clip_for_job(self.job, self.workdir)
         tmdb.assert_not_called()
 
+    def test_no_video_file_for_any_video_is_not_the_titles_error(self):
+        from make_previews import NoFormats, clip_for_job
+        details = {"videos": {"results": [{"site": "YouTube", "key": "BBBBBBBBBBB", "type": "Trailer"}]}}
+        with self._youtube({"AAAAAAAAAAA": NoFormats("no file"), "BBBBBBBBBBB": NoFormats("no file")}), \
+                mock.patch("make_previews.tmdb_details", return_value=details), \
+                mock.patch("make_previews.search_keys", return_value=[]):
+            with self.assertRaises(NoFormats):
+                clip_for_job(self.job, self.workdir)
+        with self._youtube({"AAAAAAAAAAA": NoFormats("no file"), "BBBBBBBBBBB": RuntimeError("ffmpeg 8")}), \
+                mock.patch("make_previews.tmdb_details", return_value=details), \
+                mock.patch("make_previews.search_keys", return_value=[]):
+            with self.assertRaises(RuntimeError) as cm:
+                clip_for_job(self.job, self.workdir)
+        self.assertNotIsInstance(cm.exception, NoFormats)  # a real error too: counted as before
+
     def test_the_server_ranking_is_used(self):
         from make_previews import SERVER_TRAILERS, tmdb_trailer_keys
         self.assertIsNotNone(SERVER_TRAILERS)  # backend/users/trailers.py next door
@@ -290,6 +305,72 @@ class ChooseVideoTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NoVideoFileTests(unittest.TestCase):
+    """2026-11-27: YouTube's "SABR-only" experiment on the account sent no video file for hours
+    ("Requested format is not available"); without the account the same videos worked."""
+    NO_FILE = "ERROR: [youtube] x: Requested format is not available. Use --list-formats for a list"
+
+    def _yt_dlp(self, *answers):
+        done = [subprocess.CompletedProcess([], code, stdout="out" if code == 0 else "", stderr=err)
+                for code, err in answers]
+        return mock.patch("make_previews.subprocess.run", side_effect=done)
+
+    def test_tried_again_without_the_account(self):
+        with self._yt_dlp((1, self.NO_FILE), (0, "")) as sp:
+            self.assertEqual(run(["yt-dlp", "--cookies", "c.txt", "-J", "URL"]), "out")
+        self.assertEqual(sp.call_args_list[1].args[0], ["yt-dlp", "-J", "URL"])
+        with self._yt_dlp((1, self.NO_FILE), (0, "")) as sp:
+            run(["yt-dlp", "--cookies-from-browser", "firefox:/p", "URL"])
+        self.assertEqual(sp.call_args_list[1].args[0], ["yt-dlp", "URL"])
+
+    def test_nothing_either_way_is_not_the_titles_error(self):
+        from make_previews import NoFormats
+        with self._yt_dlp((1, self.NO_FILE), (1, self.NO_FILE)):
+            with self.assertRaises(NoFormats):
+                run(["yt-dlp", "--cookies", "c.txt", "URL"])
+        with self._yt_dlp((1, "ERROR: ffmpeg exited with code 8")) as sp:  # not tried again
+            with self.assertRaises(RuntimeError) as cm:
+                run(["yt-dlp", "--cookies", "c.txt", "URL"])
+        self.assertNotIsInstance(cm.exception, NoFormats)
+        self.assertEqual(sp.call_count, 1)
+
+    def _run_jobs(self, n, clip_for_job):
+        import sys
+        import tempfile
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(tmp, ignore_errors=True))
+        jobs = tmp / "jobs.json"
+        jobs.write_text(json.dumps({"jobs": [{"type": "movie", "tmdb_id": i, "youtube_key": f"k{i:010d}",
+                                              "path": f"p{i}", "title": f"T{i}"} for i in range(n)]}))
+        results = tmp / "results.json"
+        results.write_text(json.dumps({"version": 1, "results": {
+            "movie:0:k0000000000": {"status": "error", "attempts": 2}}}))
+        import make_previews as mp
+        with mock.patch.object(sys, "argv", ["make_previews.py", str(jobs), "--results", str(results)]), \
+                mock.patch.multiple(mp, BUNNY_API_KEY="k", BUNNY_STORAGE_ZONE="z", NO_FORMATS_STOP=3,
+                                    lock=mock.DEFAULT, bunny_upload=mock.DEFAULT, clip_for_job=clip_for_job), \
+                mock.patch("make_previews.shutil.which", return_value="ffmpeg"), \
+                mock.patch("make_previews.time.sleep"), mock.patch("make_previews.signal.signal"):
+            code = mp.main()
+        return code, json.loads(results.read_text())["results"]
+
+    def test_no_attempt_used_up_and_a_long_streak_stops_the_run(self):
+        from make_previews import EXIT_BLOCKED, NoFormats
+        code, results = self._run_jobs(5, mock.Mock(side_effect=NoFormats("no file")))
+        self.assertEqual(code, EXIT_BLOCKED)  # run.sh waits, refreshes the cookies, tries again
+        self.assertEqual(len(results), 3)  # stopped after 3 in a row
+        self.assertEqual(results["movie:0:k0000000000"]["attempts"], 2)  # untouched
+        self.assertEqual(results["movie:1:k0000000001"]["attempts"], 0)
+
+    def test_a_title_that_works_ends_the_streak(self):
+        from make_previews import NoFormats
+        answers = [NoFormats("x"), NoFormats("x"), (Path("c.mp4"), {"bytes": 2048}, "k", "asked"),
+                   NoFormats("x"), NoFormats("x")]
+        code, results = self._run_jobs(5, mock.Mock(side_effect=answers))
+        self.assertEqual(code, 0)
+        self.assertEqual(len(results), 5)
 
 
 class ProgressTests(unittest.TestCase):
