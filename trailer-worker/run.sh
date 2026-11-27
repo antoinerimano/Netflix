@@ -17,6 +17,7 @@ finish() { tell_site "$@"; exit "${rc:-1}"; }
 echo "=== $(date '+%F %T') ==="
 tell_site --start --summary "Asking the site which titles need a clip"
 .venv/bin/pip install -q -U -r requirements.txt   # YouTube changes often: old yt-dlp versions stop working
+bash refresh_cookies.sh   # the account's YouTube session renewed by a headless Firefox, nobody needed
 
 if remote export_trailer_jobs > jobs.json.part; then
   mv jobs.json.part jobs.json
@@ -60,6 +61,7 @@ while :; do
     echo "YouTube refused: trying again in $pause min ($(date '+%T'))"
     give_results || echo "Couldn't give the results to the server (tried again at the end)"
     sleep $(( pause * 60 ))
+    bash refresh_cookies.sh   # a fresh session before trying again
   fi
   left=$(minutes_left)
   [ "$left" -le 0 ] && { rc=0; break; }

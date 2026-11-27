@@ -64,8 +64,16 @@ Every `PROGRESS_MINUTES` (60) it also gives the site the clips made so far, and 
 dashboard's "Trailer clips (mini PC)" row shows the run as *Running* with one line of progress
 (`manage.py record_job trailer_worker --start / --progress`, then the end, ok or failed): a run
 that is still going isn't mistaken for one that didn't work.
-If YouTube keeps refusing, give yt-dlp a YouTube account's cookies (`YTDLP_COOKIES_FILE`, a
-secondary account: exported from a browser where it is signed in). `crontab -e`:
+If YouTube keeps refusing, give yt-dlp a YouTube account's cookies (a secondary account).
+Best: a Firefox profile where it is signed in, on the mini PC
+(`YTDLP_COOKIES_FROM_BROWSER=firefox:/home/you/snap/firefox/common/youtube-profile`; its
+`cookies.sqlite` can be copied from another PC's profile once). Before every run
+`refresh_cookies.sh` opens YouTube in it, headless, for a minute: Google renews the session
+itself and yt-dlp reads the cookies straight from the profile, nobody exports them again.
+(`YTDLP_COOKIES_FILE`, an exported cookies.txt, still works but goes stale.)
+When YouTube sends a video's details but no video file ("Requested format is not available",
+its "SABR-only" experiment on the account), the same video is tried once without the account.
+`crontab -e`:
 
 ```
 0 1 * * * cd /home/you/taurus && (git pull -q --ff-only; trailer-worker/run.sh) >> /home/you/taurus/trailer-worker/run.log 2>&1
@@ -94,6 +102,8 @@ checked, this step takes a few seconds.
 | `YouTube refused (... not a bot)` | Too fast, or YouTube is wary of this address for a while. The run stops by itself and carries on the next night. If it keeps happening: raise `DELAY_MIN` / `DELAY_MAX`, or export your YouTube cookies (browser extension "Get cookies.txt LOCALLY") to a file and set `YTDLP_COOKIES_FILE`. |
 | `rejected: the video is called '...'` | TMDB's trailer is another video (fan upload, wrong film). Not uploaded. `import_trailer_results --clear-rejected` also removes the title's old clip, most likely wrong too. |
 | `unavailable` | Private / removed video. Tried again once TMDB lists another trailer. |
+| `no video file from YouTube (with and without the account), not counted` | YouTube's SABR experiment, also without cookies. Doesn't use up the title's attempts; `NO_FORMATS_STOP` (20) titles in a row: the run waits `BLOCKED_PAUSE_MINUTES`, refreshes the cookies and tries again. If it lasts for days: update yt-dlp (`.venv/bin/pip install -U "yt-dlp[default]"`, run.sh does it every night). |
+| `Cookie refresh: ...` | `refresh_cookies.sh`. "did not change": Firefox didn't open YouTube (snap, profile path); the run goes on with the old cookies and the fallback without them. |
 | `error` | Anything else; tried again on the next runs (3 times). |
 | `Another run is going` | The previous night's run hasn't finished: fine. |
 
