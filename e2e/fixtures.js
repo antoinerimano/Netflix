@@ -181,6 +181,9 @@ async function focusOverlaps(page, { scope = 'body' } = {}) {
       for (const n of els) {
         if (n === el || n.contains(el) || el.contains(n)) continue;
         if (pinnedOf(n) !== pinned) continue; // one of them scrolls under the other's bar
+        // gone while this one has the focus (the navbar links fade out while the search field,
+        // widened over them, is used): nothing on screen to overlap
+        if (!visible(n)) continue;
         const b = n.getBoundingClientRect();
         const ox = Math.min(v.r, b.right) - Math.max(v.l, b.left);
         const oy = Math.min(v.b, b.bottom) - Math.max(v.t, b.top);
